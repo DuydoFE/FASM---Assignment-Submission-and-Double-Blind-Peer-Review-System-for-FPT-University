@@ -1,49 +1,90 @@
+import { Link } from "react-router-dom";
+import { Search, Filter } from "lucide-react"; // Giả sử bạn đang dùng lucide-react cho icons
 
-import React from 'react';
-import { FiSearch } from 'react-icons/fi';
+// Bạn có thể tạo một component SVG riêng cho logo hoặc dùng thẻ img
+const FasmLogo = () => (
+  <div className="flex items-center space-x-2">
+    <div className="bg-orange-500 p-2 rounded-md">
+      {/* Icon đơn giản giống logo */}
+      <svg
+        width="24"
+        height="24"
+        viewBox="0 0 24 24"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <path
+          d="M4 4H20V18H4V4ZM6 8V16H18V8H6Z"
+          fill="white"
+        />
+      </svg>
+    </div>
+    <span className="font-bold text-2xl text-gray-800">FASM</span>
+  </div>
+);
+
 
 const Header = () => {
   return (
     <header className="bg-white shadow-sm sticky top-0 z-50">
       <div className="container mx-auto px-4">
-        <div className="flex justify-between items-center py-3">
-          {/* Left Section: Logo and Nav */}
+        <div className="flex items-center justify-between h-20">
+          {/* Phần bên trái: Logo và Navigation */}
           <div className="flex items-center space-x-8">
-            <div className="text-2xl font-bold text-orange-500">
-              FASM
-            </div>
+            <Link to="/">
+              <FasmLogo />
+            </Link>
+
             <nav className="hidden md:flex items-center space-x-6">
-              <a href="#" className="text-gray-600 hover:text-orange-500">Xem danh sách Assignment</a>
-              <a href="#" className="text-gray-600 hover:text-orange-500">Assignment của tôi</a>
+              <Link
+                to="/assignments"
+                className="text-gray-600 hover:text-orange-500 transition-colors"
+              >
+                Xem danh sách Assignment
+              </Link>
+              <Link
+                to="/my-assignments"
+                className="text-gray-600 hover:text-orange-500 transition-colors"
+              >
+                Assignment của tôi
+              </Link>
             </nav>
           </div>
 
-          {/* Right Section: Search and Auth */}
+          {/* Phần bên phải: Search và Buttons */}
           <div className="flex items-center space-x-4">
             {/* Search Bar */}
-            <div className="relative">
-              <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+            <div className="relative w-80">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <Search className="h-5 w-5 text-gray-400" />
+              </div>
               <input
                 type="text"
                 placeholder="Tìm kiếm bài tập, khóa học..."
-                className="pl-10 pr-4 py-2 w-64 border rounded-md bg-gray-50 focus:outline-none focus:ring-2 focus:ring-orange-400"
+                className="w-full pl-10 pr-16 py-2 border border-gray-300 rounded-lg focus:ring-orange-500 focus:border-orange-500"
               />
-              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-500 border rounded px-1.5 py-0.5">Ctrl+K</span>
+              <div className="absolute inset-y-0 right-0 pr-3 flex items-center space-x-2 text-gray-400 text-sm">
+                 <Filter className="h-4 w-4" />
+                 <span>Ctrl+K</span>
+              </div>
             </div>
 
             {/* Auth Buttons */}
-            <div className="flex items-center space-x-2">
-              <button className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-100">
-                Đăng nhập
-              </button>
-              <button className="px-4 py-2 bg-orange-500 text-white rounded-md hover:bg-orange-600">
-                Đăng ký
-              </button>
-            </div>
+            <Link
+              to="/login"
+              className="px-6 py-2 border border-gray-300 rounded-lg font-medium text-gray-700 hover:bg-gray-100 transition-colors"
+            >
+              Đăng nhập
+            </Link>
+            <Link
+              to="/register"
+              className="px-6 py-2 rounded-lg font-medium text-white bg-orange-500 hover:bg-orange-600 transition-colors"
+            >
+              Đăng ký
+            </Link>
           </div>
         </div>
       </div>
-      <div className="w-full h-1 bg-blue-500"></div>
     </header>
   );
 };
