@@ -1,12 +1,12 @@
-// src/config/router.jsx
+
 import { createBrowserRouter } from "react-router-dom";
 import Zustand from "../Zustand";
 import UseReactQuerry from "../component/UseReactQuerry";
 import Test from "../Test";
 
-// --- Import các component mới ---
 import MainLayout from "../layout/MainLayout";
 import HomePage from "../pages/HomePage/HomePage";
+import LoginPage from "../pages/Authenticate/LoginPage";
 
 export const router = createBrowserRouter([
   {
@@ -19,6 +19,10 @@ export const router = createBrowserRouter([
       },
    
     ],
+  },
+    {
+    path: "/login",
+    element: <LoginPage />,
   },
 
   {
