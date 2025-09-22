@@ -37,10 +37,18 @@ const Header = () => {
 
             <nav className="hidden md:flex items-center space-x-6">
               <Link
+                to="/"
+                className="text-gray-600 hover:text-orange-500 transition-colors"
+              >
+                
+                Home
+              </Link>
+                <Link
                 to="/assignments"
                 className="text-gray-600 hover:text-orange-500 transition-colors"
               >
-                Xem danh sách Assignment
+                
+                MiniDashBoard
               </Link>
               <Link
                 to="/my-assignments"
