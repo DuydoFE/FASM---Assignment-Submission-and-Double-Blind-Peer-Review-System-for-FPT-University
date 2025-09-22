@@ -1,25 +1,22 @@
-
-
 import React from 'react';
 import { ChevronRight, Upload, FileText, Calendar, CheckCircle, MessageSquare, Clock, Bell } from 'lucide-react';
-
-import AssignmentCard from '../../component/Dashboard/AssignmentCard';
-import CourseCard from '../../component/Dashboard/CourseCard';
+import AssignmentCard from '../../component/MiniDashBoard/AssignmentCard';
+import CourseCard from '../../component/MiniDashBoard/CourseCard';
 
 const MiniDashboard = () => {
   return (
     <div className="bg-gray-50 min-h-screen">
       <main className="p-8">
-   
+
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-800">Chào mừng trở lại, Khương Duy! 👋</h1>
           <p className="text-gray-600">Hôm nay bạn có 3 assignments cần hoàn thành và 2 thông báo mới.</p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-       
+   
           <div className="lg:col-span-2 space-y-8">
-       
+  
             <div className="bg-white p-6 rounded-lg shadow-sm">
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-xl font-bold text-gray-800">Assignments sắp hết hạn</h2>
@@ -34,7 +31,7 @@ const MiniDashboard = () => {
               </div>
             </div>
 
-      
+        
             <div className="bg-white p-6 rounded-lg shadow-sm">
               <h2 className="text-xl font-bold text-gray-800 mb-4">Hoạt động gần đây</h2>
               <ul className="space-y-4">
@@ -63,9 +60,9 @@ const MiniDashboard = () => {
             </div>
           </div>
 
-        
+
           <div className="space-y-8">
- 
+            {/* Thao tác nhanh */}
             <div className="bg-white p-6 rounded-lg shadow-sm">
               <h2 className="text-xl font-bold text-gray-800 mb-4">Thao tác nhanh</h2>
               <div className="space-y-3">
@@ -80,6 +77,7 @@ const MiniDashboard = () => {
                  </button>
               </div>
             </div>
+
 
             <div className="bg-white p-6 rounded-lg shadow-sm">
                 <div className="flex justify-between items-center mb-4">
@@ -118,9 +116,10 @@ const MiniDashboard = () => {
             <h2 className="text-xl font-bold text-gray-800">Lớp của bạn</h2>
             <p className="text-gray-600 mb-4">Các lớp học bạn đang tham gia</p>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <CourseCard title="Mobile App Development" code="PRM391" teacher="Nguyễn Văn A" students={45} schedule="Thứ 2, 7-10" />
-                <CourseCard title="Database Design" code="DBI202" teacher="Trần Thị B" students={38} schedule="Thứ 4, 1-4" />
-                <CourseCard title="Software Engineering" code="SWE201" teacher="Lê Văn C" students={42} schedule="Thứ 6, 7-10" />
+         
+                <CourseCard title="Mobile App Development" code="PRM391" teacher="Nguyễn Văn A" students={45} campus="Hồ Chí Minh" />
+                <CourseCard title="Database Design" code="DBI202" teacher="Trần Thị B" students={38} campus="Hồ Chí Minh" />
+                <CourseCard title="Software Engineering" code="SWE201" teacher="Lê Văn C" students={42} campus="Hồ Chí Minh" />
             </div>
         </div>
       </main>
