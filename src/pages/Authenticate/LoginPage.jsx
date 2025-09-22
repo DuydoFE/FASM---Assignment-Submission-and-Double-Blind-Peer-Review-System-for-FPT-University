@@ -1,7 +1,7 @@
 import React from "react";
-import { AlertCircle } from "lucide-react"; 
+import { AlertCircle } from "lucide-react"; /
 
-// Import hình ảnh
+
 import logo from "../../assets/img/Logo_FPT_Education.png";
 import backgroundImage from "../../assets/img/daihocfpt.png";
 
@@ -24,7 +24,6 @@ const GoogleIcon = (props) => (
   </svg>
 );
 
-
 const LoginPage = () => {
   return (
     <div
@@ -32,7 +31,7 @@ const LoginPage = () => {
       style={{ backgroundImage: `url(${backgroundImage})` }}
     >
       <div className="bg-white p-10 rounded-lg shadow-lg flex w-full max-w-4xl">
-       
+
         <div className="w-1/2 flex flex-col items-center pr-10">
           <img src={logo} alt="FPT Education Logo" className="w-40 mb-4" />
           <h1 className="text-xl font-bold text-orange-600 mb-6">
@@ -40,14 +39,29 @@ const LoginPage = () => {
           </h1>
           
           <div className="w-full">
+        
+            <select
+              defaultValue=""
+              className="w-full p-3 mb-4 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 bg-white text-gray-500"
+            >
+              <option value="" disabled>
+                Select Campus
+              </option>
+              <option value="hcm" className="text-black">Hồ Chí Minh</option>
+              <option value="hoalac" className="text-black">Hòa Lạc</option>
+              <option value="quynhon" className="text-black">Quy Nhơn</option>
+              <option value="danang" className="text-black">Đà Nẵng</option>
+            </select>
+        
+
             <input
               type="text"
-              placeholder="duynckse171155"
+              placeholder="Nhập tài khoàn wifi Student"
               className="w-full p-3 mb-4 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
             />
             <input
               type="password"
-              placeholder="•••••••••"
+              placeholder="Nhập mật khẩu"
               className="w-full p-3 mb-4 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
             />
             <button className="w-full py-3 bg-orange-600 text-white font-semibold rounded-md hover:bg-orange-700 transition-colors mb-4">
@@ -60,9 +74,10 @@ const LoginPage = () => {
           </a>
         </div>
 
-       
+
         <div className="w-px bg-gray-200"></div>
 
+   
         <div className="w-1/2 flex flex-col justify-center pl-10">
           <p className="text-gray-600 mb-4">Sign in with</p>
           
