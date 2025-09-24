@@ -8,6 +8,9 @@ import LoginPage from "../pages/Authenticate/LoginPage";
 
 import StudentDashBoard from "../pages/StudentDashBoard/StudentDashBoard";
 import StudentAssignmentPage from "../pages/StudentAssignmentPage/StudentAssignmentPage";
+import InstructorLayout from "../layout/InstructorLayout";
+import InstructorDashboard from "../pages/InstructorDashBoard/InstructorDashBoard";
+import InstructorClass from "../pages/InstructorClass/InstructorClass";
 
 export const router = createBrowserRouter([
   {
@@ -46,4 +49,25 @@ export const router = createBrowserRouter([
     path: "/a",
     element: <UseReactQuerry />,
   },
+  {
+    path: "",
+    element: <InstructorLayout />,
+    children: [
+      {
+        path: "instructordashboard",
+        element: <InstructorDashboard />,
+      },
+      {
+
+        path: "my-classes", 
+        element: <InstructorClass />,
+      },
+      {
+        
+        path: "my-assignments", 
+        element: <StudentAssignmentPage />,
+      },
+    ],
+  },
+  
 ]);
