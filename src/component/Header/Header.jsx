@@ -44,7 +44,7 @@ const Header = () => {
                 Home
               </Link>
                 <Link
-                to="/assignments"
+                to="/studentdashboard"
                 className="text-gray-600 hover:text-orange-500 transition-colors"
               >
                 
