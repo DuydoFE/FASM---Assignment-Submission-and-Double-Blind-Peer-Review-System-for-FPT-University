@@ -7,6 +7,7 @@ import HomePage from "../pages/HomePage/HomePage";
 import LoginPage from "../pages/Authenticate/LoginPage";
 
 import StudentDashBoard from "../pages/StudentDashBoard/StudentDashBoard";
+import StudentAssignmentPage from "../pages/StudentAssignmentPage/StudentAssignmentPage";
 
 export const router = createBrowserRouter([
   {
@@ -21,6 +22,11 @@ export const router = createBrowserRouter([
 
         path: "studentdashboard", 
         element: <StudentDashBoard />,
+      },
+      {
+        
+        path: "my-assignments", 
+        element: <StudentAssignmentPage />,
       },
     ],
   },
