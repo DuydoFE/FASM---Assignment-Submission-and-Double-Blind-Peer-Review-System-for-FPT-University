@@ -3,7 +3,7 @@ import { ChevronRight, Upload, FileText, Calendar, CheckCircle, MessageSquare, C
 import AssignmentCard from '../../component/MiniDashBoard/AssignmentCard';
 import CourseCard from '../../component/MiniDashBoard/CourseCard';
 
-const MiniDashboard = () => {
+const StudentDashBoard = () => {
   return (
     <div className="bg-gray-50 min-h-screen">
       <main className="p-8">
@@ -127,4 +127,4 @@ const MiniDashboard = () => {
   );
 };
 
-export default MiniDashboard;
+export default StudentDashBoard;

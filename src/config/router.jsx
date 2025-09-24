@@ -5,7 +5,8 @@ import Test from "../Test";
 import MainLayout from "../layout/MainLayout";
 import HomePage from "../pages/HomePage/HomePage";
 import LoginPage from "../pages/Authenticate/LoginPage";
-import MiniDashboard from "../pages/MiniDashboard/MiniDashboard"; 
+
+import StudentDashBoard from "../pages/StudentDashBoard/StudentDashBoard";
 
 export const router = createBrowserRouter([
   {
@@ -18,8 +19,8 @@ export const router = createBrowserRouter([
       },
       {
 
-        path: "minidashboard", 
-        element: <MiniDashboard />,
+        path: "studentdashboard", 
+        element: <StudentDashBoard />,
       },
     ],
   },
