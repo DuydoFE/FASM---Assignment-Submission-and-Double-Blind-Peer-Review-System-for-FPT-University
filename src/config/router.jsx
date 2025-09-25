@@ -11,6 +11,7 @@ import StudentAssignmentPage from "../pages/StudentAssignmentPage/StudentAssignm
 import InstructorLayout from "../layout/InstructorLayout";
 import InstructorDashboard from "../pages/InstructorDashBoard/InstructorDashBoard";
 import InstructorClass from "../pages/InstructorClass/InstructorClass";
+import InstructorCreatePassword from "../pages/InstructorCreatePassword/InstructorCreatePassword";
 
 export const router = createBrowserRouter([
   {
@@ -64,8 +65,8 @@ export const router = createBrowserRouter([
       },
       {
         
-        path: "my-assignments", 
-        element: <StudentAssignmentPage />,
+        path: "create-class-password", 
+        element: <InstructorCreatePassword />,
       },
     ],
   },
