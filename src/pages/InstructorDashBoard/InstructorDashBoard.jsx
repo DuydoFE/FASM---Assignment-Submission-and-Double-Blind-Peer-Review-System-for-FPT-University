@@ -4,7 +4,7 @@ import { Search, ArrowUpDown, Book, Users, Calendar, AlertTriangle, Clock } from
 // Dashboard Content Component
 const InstructorDashboard = () => {
    return (
-    <div className="max-w-7xl mx-auto px-6 py-8 bg-gray-50">
+    <div className="max-w-7xl mx-auto px-6 py-8 ">
       {/* Title */}
       <h1 className="text-3xl font-bold text-gray-900 mb-8">FALL2025</h1>
 
