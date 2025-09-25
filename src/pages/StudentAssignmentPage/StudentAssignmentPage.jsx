@@ -1,6 +1,7 @@
 import React from 'react';
 import { BookOpen, Plus, ChevronRight, HelpCircle, Smartphone, Server, Globe, Code } from 'lucide-react';
 import CourseListItem from '../../component/Assignment/CourseListItem';
+import EnrolledCourseCard from '../../component/Assignment/EnrolledCourseCard';
 
 const StudentAssignmentPage = () => {
   return (
@@ -13,9 +14,17 @@ const StudentAssignmentPage = () => {
         </div>
 
         <div className="bg-white rounded-lg shadow-sm p-8">
-          <h1 className="text-2xl font-bold text-gray-800 mb-8">Lớp Kì Này</h1>
-
-          <div className="text-center flex flex-col items-center py-12 border-b">
+          <h1 className="text-2xl font-bold text-gray-800 mb-8">Lớp Của Tôi</h1>
+            <EnrolledCourseCard 
+            subjectCode="SE"
+            title="Programming Mobile Devices - PRM391"
+            classCode="SE1715"
+            lecturer="TS. Nguyễn Văn Minh"
+            studentCount={42}
+            schedule="Thứ 2, 7:30-11:00"
+            assignmentCount={8}
+          />
+          {/* <div className="text-center flex flex-col items-center py-12 border-b">
             <BookOpen className="w-16 h-16 text-gray-400 mb-4" />
             <h2 className="text-xl font-bold text-gray-800 mb-2">Bạn chưa tham gia lớp học nào</h2>
             <p className="text-gray-600 mb-6">Hãy tham gia các lớp học để xem assignments và bắt đầu học tập</p>
@@ -23,7 +32,7 @@ const StudentAssignmentPage = () => {
               <Plus className="w-5 h-5 mr-2" />
               Chọn môn học để tham gia
             </button>
-          </div>
+          </div> */}
 
           <div className="py-8">
             <h3 className="text-lg font-bold text-gray-800">Chọn mã lớp để tham gia</h3>
@@ -60,25 +69,25 @@ const StudentAssignmentPage = () => {
                 icon={Smartphone}
                 iconColor="text-red-500"
                 title="Programming Mobile Devices"
-                code="PRM391"
+                code="SE1715"
               />
               <CourseListItem 
                 icon={Server}
                 iconColor="text-blue-500"
                 title="Cross-Platform Back-End with .NET"
-                code="PRN231"
+                code="SE1721"
               />
               <CourseListItem 
                 icon={Globe}
                 iconColor="text-purple-500"
                 title="Front-End Web Development with React"
-                code="FER201"
+                code="SE1712"
               />
               <CourseListItem 
                 icon={Code}
                 iconColor="text-yellow-600"
                 title="Programming Fundamentals using Java"
-                code="PRF192"
+                code="SE1712"
               />
             </div>
           </div>
