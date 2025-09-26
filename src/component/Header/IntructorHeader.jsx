@@ -4,7 +4,6 @@ import { Bell, Book, Calendar } from 'lucide-react';
 const FasmLogo = () => (
   <div className="flex items-center space-x-2">
     <div className="bg-orange-500 p-2 rounded-md">
-      {/* Icon đơn giản giống logo */}
       <svg
         width="24"
         height="24"
@@ -27,14 +26,12 @@ const InstructorHeader = () => {
     <header className="bg-white shadow-sm sticky top-0 z-50">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-20">
-          {/* Logo and Navigation */}
           <div className="flex items-center space-x-8">
             <Link to="/instructordashboard">
               <FasmLogo />
             </Link>
 
             <nav className="flex items-center space-x-6">
-              {/* Năm học */}
               <div className="flex items-center space-x-2">
                 <Calendar className="w-4 h-4 text-blue-600" />
                 <span className="text-gray-700 text-sm font-medium">Năm học:</span>
@@ -44,7 +41,6 @@ const InstructorHeader = () => {
                 </select>
               </div>
 
-              {/* Học kỳ */}
               <div className="flex items-center space-x-2">
                 <Book className="w-4 h-4 text-green-600" />
                 <span className="text-gray-700 text-sm font-medium">Học kỳ:</span>
@@ -54,7 +50,6 @@ const InstructorHeader = () => {
                 </select>
               </div>
 
-              {/* Menu links */}
               <Link
                 to="/instructordashboard"
                 className="text-gray-600 hover:text-orange-500 transition-colors font-medium"
@@ -76,7 +71,6 @@ const InstructorHeader = () => {
             </nav>
           </div>
 
-          {/* User Section */}
           <div className="flex items-center space-x-4">
             <div className="relative">
               <Bell className="w-5 h-5 text-gray-400" />

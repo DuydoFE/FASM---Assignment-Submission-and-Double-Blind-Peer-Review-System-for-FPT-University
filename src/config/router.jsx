@@ -10,8 +10,10 @@ import StudentDashBoard from "../pages/StudentDashBoard/StudentDashBoard";
 import StudentAssignmentPage from "../pages/StudentAssignmentPage/StudentAssignmentPage";
 import InstructorLayout from "../layout/InstructorLayout";
 import InstructorDashboard from "../pages/InstructorDashBoard/InstructorDashBoard";
-import InstructorClass from "../pages/InstructorClass/InstructorClass";
+import InstructorViewClass from "../pages/InstructorViewClass/InstructorViewClass";
 import InstructorCreatePassword from "../pages/InstructorCreatePassword/InstructorCreatePassword";
+import InstructorClassLayout from "../layout/InstructorClassLayout";
+import InstructorManageClass from "../pages/InstructorManageClass/InstructorManageClass";
 
 export const router = createBrowserRouter([
   {
@@ -61,13 +63,24 @@ export const router = createBrowserRouter([
       {
 
         path: "my-classes", 
-        element: <InstructorClass />,
+        element: <InstructorViewClass />,
       },
       {
         
         path: "create-class-password", 
         element: <InstructorCreatePassword />,
       },
+    ],
+  },
+  {
+    path: "",
+    element: <InstructorClassLayout />,
+    children: [
+      {
+        path: "manage-class",
+        element: <InstructorManageClass />,
+      },
+      
     ],
   },
   

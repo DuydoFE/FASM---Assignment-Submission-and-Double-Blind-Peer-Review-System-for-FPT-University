@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { Search, BookOpen, Play, CheckCircle, Clock, MoreHorizontal } from 'lucide-react';
 
-const InstructorClass = () => {
+const InstructorViewClass = () => {
   const [classes] = useState([
     {
       id: 1,
@@ -247,4 +247,4 @@ const InstructorClass = () => {
   );
 };
 
-export default InstructorClass;
+export default InstructorViewClass;
