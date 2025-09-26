@@ -26,12 +26,12 @@ export const router = createBrowserRouter([
       },
       {
 
-        path: "studentdashboard", 
+        path: "studentdashboard",
         element: <StudentDashBoard />,
       },
       {
-        
-        path: "my-assignments", 
+
+        path: "my-assignments",
         element: <StudentAssignmentPage />,
       },
     ],
@@ -62,12 +62,12 @@ export const router = createBrowserRouter([
       },
       {
 
-        path: "my-classes", 
+        path: "my-classes",
         element: <InstructorViewClass />,
       },
       {
-        
-        path: "create-class-password", 
+
+        path: "create-class-password",
         element: <InstructorCreatePassword />,
       },
     ],
@@ -77,11 +77,15 @@ export const router = createBrowserRouter([
     element: <InstructorClassLayout />,
     children: [
       {
+        index: true,
+        element: <InstructorManageClass />,
+      },
+      {
         path: "manage-class",
         element: <InstructorManageClass />,
       },
-      
     ],
-  },
-  
+  }
+
+
 ]);

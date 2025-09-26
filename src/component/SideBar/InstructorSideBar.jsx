@@ -6,10 +6,10 @@ const InstructorSideBar = () => {
   const location = useLocation();
   
   const menuItems = [
-    { id: 'manage-class', label: 'Danh sách lớp', icon: Users, path: '/instructor/manage-class' },
-    { id: 'assignment', label: 'Assignment', icon: FileText, path: '/instructor/assignment' },
-    { id: 'grading', label: 'Grading', icon: BarChart3, path: '/instructor/grading' },
-    { id: 'publish', label: 'Publish Mark', icon: Upload, path: '/instructor/publish' }
+    { id: 'manage-class', label: 'Danh sách lớp', icon: Users, path: '/manage-class' },
+    { id: 'assignment', label: 'Assignment', icon: FileText, path: '/manage-assignment' },
+    { id: 'grading', label: 'Grading', icon: BarChart3, path: '/manage-grading' },
+    { id: 'publish', label: 'Publish Mark', icon: Upload, path: '/publish-mark' }
   ];
 
   return (
