@@ -14,6 +14,7 @@ import InstructorViewClass from "../pages/InstructorViewClass/InstructorViewClas
 import InstructorCreatePassword from "../pages/InstructorCreatePassword/InstructorCreatePassword";
 import InstructorClassLayout from "../layout/InstructorClassLayout";
 import InstructorManageClass from "../pages/InstructorManageClass/InstructorManageClass";
+import InstructorManageAssignment from "../pages/InstructorManageAssignment/InstructorManageAssignment";
 
 export const router = createBrowserRouter([
   {
@@ -83,6 +84,10 @@ export const router = createBrowserRouter([
       {
         path: "manage-class",
         element: <InstructorManageClass />,
+      },
+      {
+        path: "manage-assignment",
+        element: <InstructorManageAssignment />,
       },
     ],
   }
