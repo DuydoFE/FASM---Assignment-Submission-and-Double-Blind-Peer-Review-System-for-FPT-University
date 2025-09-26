@@ -10,8 +10,11 @@ import StudentDashBoard from "../pages/StudentDashBoard/StudentDashBoard";
 import StudentAssignmentPage from "../pages/StudentAssignmentPage/StudentAssignmentPage";
 import InstructorLayout from "../layout/InstructorLayout";
 import InstructorDashboard from "../pages/InstructorDashBoard/InstructorDashBoard";
-import InstructorClass from "../pages/InstructorClass/InstructorClass";
+import InstructorViewClass from "../pages/InstructorViewClass/InstructorViewClass";
 import InstructorCreatePassword from "../pages/InstructorCreatePassword/InstructorCreatePassword";
+import InstructorClassLayout from "../layout/InstructorClassLayout";
+import InstructorManageClass from "../pages/InstructorManageClass/InstructorManageClass";
+import InstructorManageAssignment from "../pages/InstructorManageAssignment/InstructorManageAssignment";
 
 export const router = createBrowserRouter([
   {
@@ -24,12 +27,12 @@ export const router = createBrowserRouter([
       },
       {
 
-        path: "studentdashboard", 
+        path: "studentdashboard",
         element: <StudentDashBoard />,
       },
       {
-        
-        path: "my-assignments", 
+
+        path: "my-assignments",
         element: <StudentAssignmentPage />,
       },
     ],
@@ -60,15 +63,34 @@ export const router = createBrowserRouter([
       },
       {
 
-        path: "my-classes", 
-        element: <InstructorClass />,
+        path: "my-classes",
+        element: <InstructorViewClass />,
       },
       {
-        
-        path: "create-class-password", 
+
+        path: "create-class-password",
         element: <InstructorCreatePassword />,
       },
     ],
   },
-  
+  {
+    path: "",
+    element: <InstructorClassLayout />,
+    children: [
+      {
+        index: true,
+        element: <InstructorManageClass />,
+      },
+      {
+        path: "manage-class",
+        element: <InstructorManageClass />,
+      },
+      {
+        path: "manage-assignment",
+        element: <InstructorManageAssignment />,
+      },
+    ],
+  }
+
+
 ]);
