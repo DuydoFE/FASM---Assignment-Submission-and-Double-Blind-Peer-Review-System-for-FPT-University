@@ -1,6 +1,6 @@
 import React from 'react';
 
-const CourseListItem = ({ icon: Icon, iconColor, title, code }) => {
+const CourseListItem = ({ icon: Icon, iconColor, title, code, onJoinClick }) => {
   const colorClass = iconColor || 'text-gray-500';
 
   return (
@@ -14,7 +14,11 @@ const CourseListItem = ({ icon: Icon, iconColor, title, code }) => {
           <p className="text-sm text-gray-500">Mã lớp: {code}</p>
         </div>
       </div>
-      <button className="px-4 py-2 bg-teal-500 text-white font-semibold rounded-md hover:bg-teal-600 transition-colors text-sm">
+      {/* Sử dụng onJoinClick ở đây */}
+      <button 
+        onClick={onJoinClick} 
+        className="px-4 py-2 bg-teal-500 text-white font-semibold rounded-md hover:bg-teal-600 transition-colors text-sm"
+      >
         Tham gia
       </button>
     </div>
