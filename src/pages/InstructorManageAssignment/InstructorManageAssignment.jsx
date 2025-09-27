@@ -7,8 +7,8 @@ const InstructorManageAssignment = () => {
   const [formData, setFormData] = useState({
     title: '',
     description: '',
-    startDate: '',
-    endDate: ''
+    deadline: '',
+    documents: null
   });
 
   const [rubricCriteria, setRubricCriteria] = useState([]);
@@ -46,8 +46,28 @@ const InstructorManageAssignment = () => {
       name: '',
       description: '',
       weight: 0,
-      details: ['']
+      details: ['', '', '']
     }]);
+  };
+
+  const addDetailToCriteria = (criteriaId) => {
+    setRubricCriteria(prev =>
+      prev.map(c =>
+        c.id === criteriaId
+          ? { ...c, details: [...c.details, ''] }
+          : c
+      )
+    );
+  };
+
+  const removeDetailFromCriteria = (criteriaId, detailIndex) => {
+    setRubricCriteria(prev =>
+      prev.map(c =>
+        c.id === criteriaId
+          ? { ...c, details: c.details.filter((_, index) => index !== detailIndex) }
+          : c
+      )
+    );
   };
 
   const getTotalWeight = () => {
@@ -233,48 +253,38 @@ const InstructorManageAssignment = () => {
 
       {/* Create Assignment Popup */}
       {showPopup && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-start justify-center z-50 p-4 overflow-y-auto">
+          <div className="bg-white rounded-xl max-w-3xl w-full my-8">
             {/* Popup Header */}
             <div className="flex items-center justify-between p-6 border-b border-gray-200">
               <div className="flex items-center space-x-3">
-                <div className="bg-gray-100 p-2 rounded-lg">
-                  <Plus className="w-5 h-5 text-gray-600" />
-                </div>
                 <h2 className="text-xl font-semibold text-gray-900">Tạo bài tập mới</h2>
+                <p className="text-sm text-gray-500">Tạo và cấu hình bài tập cho sinh viên</p>
               </div>
-              <div className="flex items-center space-x-3">
-                <button className="text-gray-500 hover:text-gray-700 text-sm">
-                  Lưu nháp
-                </button>
-                <button className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg text-sm font-medium">
-                  Tạo
-                </button>
-                <button
-                  onClick={() => setShowPopup(false)}
-                  className="text-gray-400 hover:text-gray-600"
-                >
-                  <X className="w-6 h-6" />
-                </button>
-              </div>
+              <button
+                onClick={() => setShowPopup(false)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <X className="w-6 h-6" />
+              </button>
             </div>
 
-            <div className="p-6">
+            <div className="p-6 space-y-8">
               {/* Basic Information */}
-              <div className="mb-8">
+              <div>
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">Thông tin cơ bản</h3>
-
+                
                 <div className="space-y-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Tên bài tập <span className="text-red-500">*</span>
+                      Tiêu đề bài tập <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="text"
                       value={formData.title}
                       onChange={(e) => handleInputChange('title', e.target.value)}
-                      placeholder="Nhập tên bài tập..."
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                      placeholder="Nhập tiêu đề bài tập..."
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                     />
                   </div>
 
@@ -285,7 +295,7 @@ const InstructorManageAssignment = () => {
                       onChange={(e) => handleInputChange('description', e.target.value)}
                       placeholder="Mô tả chi tiết về bài tập, yêu cầu và hướng dẫn thực hiện..."
                       rows={4}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent resize-none"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent resize-none"
                     />
                   </div>
 
@@ -296,29 +306,27 @@ const InstructorManageAssignment = () => {
                       </label>
                       <input
                         type="date"
-                        value={formData.startDate}
-                        onChange={(e) => handleInputChange('startDate', e.target.value)}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                        value={formData.deadline}
+                        onChange={(e) => handleInputChange('deadline', e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Tài liệu <span className="text-red-500">*</span>
-                      </label>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Tài liệu</label>
                       <input
                         type="file"
-                        onChange={(e) => handleInputChange('file', e.target.files[0])}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                        onChange={(e) => handleInputChange('documents', e.target.files[0])}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                       />
                     </div>
                   </div>
                 </div>
               </div>
 
-              {/* Grading Scale Selection */}
-              <div className="mb-8">
+              {/* Grading Scale Section */}
+              <div>
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">Tiêu chí thang điểm (Rubric)</h3>
-
+                
                 <div className="bg-blue-50 p-4 rounded-lg mb-6">
                   <p className="text-sm text-blue-800 font-medium mb-3">Chọn loại thang điểm cho rubric:</p>
                   <div className="space-y-2">
@@ -338,94 +346,70 @@ const InstructorManageAssignment = () => {
                   </div>
                 </div>
 
-                {/* Rubric Criteria */}
-                <div className="space-y-6">
-                  {(selectedGradingScale === '100-point' || selectedGradingScale === 'percentage') && (
-                    <div className="flex items-center justify-between">
-                      <h4 className="font-medium text-gray-900">Tiêu chí đánh giá</h4>
-                      <div className="flex items-center space-x-4">
-                        <span className="text-sm text-gray-600">
-                          Tổng kết tỷ trọng: <span className={`font-medium ${getTotalWeight() === 100 ? 'text-green-600' : 'text-orange-600'}`}>
-                            {getTotalWeight()}{selectedGradingScale === '100-point' ? ' điểm' : '%'}
-                          </span>
-                        </span>
-                        <span className={`text-xs px-2 py-1 rounded-full ${getTotalWeight() === 100 ? 'bg-green-100 text-green-800' : 'bg-orange-100 text-orange-800'}`}>
-                          {getTotalWeight() === 100 ?
-                            (selectedGradingScale === '100-point' ? '100 điểm' : '100%') :
-                            getTotalWeight() < 100 ?
-                              `${100 - getTotalWeight()}${selectedGradingScale === '100-point' ? ' điểm' : '%'} còn lại` :
-                              `Vượt quá 100${selectedGradingScale === '100-point' ? ' điểm' : '%'}`
-                          }
-                        </span>
-                      </div>
-                    </div>
-                  )}
-
-                  {(selectedGradingScale === 'letter' || selectedGradingScale === 'pass-fail') && (
-                    <div className="flex items-center justify-between">
-                      <h4 className="font-medium text-gray-900">Tiêu chí đánh giá</h4>
-                      <span className="text-sm text-gray-500">Không sử dụng tỷ trọng điểm</span>
-                    </div>
-                  )}
-
+                {/* Criteria Section */}
+                <div className="space-y-4">
+                  <h4 className="font-medium text-gray-900">Tiêu chí đánh giá</h4>
+                  
                   {rubricCriteria.map((criteria, index) => (
                     <div key={criteria.id} className="border border-gray-200 rounded-lg p-4">
-                      <div className="flex items-start justify-between mb-4">
-                        <div className="flex-1">
-                          <div className="flex items-center space-x-3 mb-2">
-                            <span className="bg-orange-100 text-orange-800 px-2 py-1 rounded text-xs font-medium">
-                              {index + 1}
-                            </span>
-                            <input
-                              type="text"
-                              value={criteria.name}
-                              onChange={(e) => {
-                                setRubricCriteria(prev =>
-                                  prev.map(c =>
-                                    c.id === criteria.id ? { ...c, name: e.target.value } : c
-                                  )
-                                );
-                              }}
-                              placeholder="Tên tiêu chí đánh giá"
-                              className="flex-1 font-medium text-gray-900 bg-transparent border-none p-0 focus:ring-0"
-                            />
-                            {(selectedGradingScale === '100-point' || selectedGradingScale === 'percentage') && (
-                              <div className="flex items-center space-x-2">
-                                <input
-                                  type="number"
-                                  value={criteria.weight}
-                                  onChange={(e) => updateCriteriaWeight(criteria.id, e.target.value)}
-                                  className="w-16 px-2 py-1 border border-gray-300 rounded text-sm text-center"
-                                  min="0"
-                                  max="100"
-                                />
-                                {selectedGradingScale === 'percentage' && (
-                                  <span className="text-sm text-gray-500">%</span>
-                                )}
-                              </div>
-                            )}
-                          </div>
+                      <div className="flex items-start justify-between mb-3">
+                        <div className="flex items-center space-x-3 flex-1">
+                          <span className="bg-orange-100 text-orange-800 px-2 py-1 rounded text-xs font-medium">
+                            {index + 1}
+                          </span>
                           <input
                             type="text"
-                            value={criteria.description}
+                            value={criteria.name}
                             onChange={(e) => {
                               setRubricCriteria(prev =>
                                 prev.map(c =>
-                                  c.id === criteria.id ? { ...c, description: e.target.value } : c
+                                  c.id === criteria.id ? { ...c, name: e.target.value } : c
                                 )
                               );
                             }}
-                            placeholder="Mô tả chi tiết về tiêu chí này"
-                            className="w-full text-sm text-gray-600 bg-transparent border-none p-0 focus:ring-0"
+                            placeholder="Tên tiêu chí đánh giá"
+                            className="flex-1 font-medium text-gray-900 bg-transparent border-none p-0 focus:ring-0"
                           />
                         </div>
-                        <button
-                          onClick={() => deleteCriteria(criteria.id)}
-                          className="text-red-500 hover:text-red-700 p-1 ml-2"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
+                        
+                        <div className="flex items-center space-x-3">
+                          {(selectedGradingScale === '100-point' || selectedGradingScale === 'percentage') && (
+                            <div className="flex items-center space-x-2">
+                              <input
+                                type="number"
+                                value={criteria.weight}
+                                onChange={(e) => updateCriteriaWeight(criteria.id, e.target.value)}
+                                className="w-16 px-2 py-1 border border-gray-300 rounded text-sm text-center"
+                                min="0"
+                                max="100"
+                              />
+                              {selectedGradingScale === 'percentage' && (
+                                <span className="text-sm text-gray-500">%</span>
+                              )}
+                            </div>
+                          )}
+                          <button
+                            onClick={() => deleteCriteria(criteria.id)}
+                            className="text-red-500 hover:text-red-700 p-1"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
                       </div>
+
+                      <input
+                        type="text"
+                        value={criteria.description}
+                        onChange={(e) => {
+                          setRubricCriteria(prev =>
+                            prev.map(c =>
+                              c.id === criteria.id ? { ...c, description: e.target.value } : c
+                            )
+                          );
+                        }}
+                        placeholder="Mô tả chi tiết về tiêu chí này"
+                        className="w-full text-sm text-gray-600 bg-transparent border-none p-0 focus:ring-0 mb-3"
+                      />
 
                       <div className="space-y-2">
                         {criteria.details.map((detail, detailIndex) => (
@@ -439,11 +423,11 @@ const InstructorManageAssignment = () => {
                                   prev.map(c =>
                                     c.id === criteria.id
                                       ? {
-                                        ...c,
-                                        details: c.details.map((d, i) =>
-                                          i === detailIndex ? e.target.value : d
-                                        )
-                                      }
+                                          ...c,
+                                          details: c.details.map((d, i) =>
+                                            i === detailIndex ? e.target.value : d
+                                          )
+                                        }
                                       : c
                                   )
                                 );
@@ -451,21 +435,80 @@ const InstructorManageAssignment = () => {
                               placeholder="Chi tiết yêu cầu"
                               className="flex-1 text-sm text-gray-700 bg-transparent border-none p-0 focus:ring-0"
                             />
+                            {criteria.details.length > 1 && (
+                              <button
+                                onClick={() => removeDetailFromCriteria(criteria.id, detailIndex)}
+                                className="text-red-500 hover:text-red-700 p-1"
+                              >
+                                <X className="w-3 h-3" />
+                              </button>
+                            )}
                           </div>
                         ))}
+                        <button
+                          onClick={() => addDetailToCriteria(criteria.id)}
+                          className="text-sm text-orange-500 hover:text-orange-600 ml-6"
+                        >
+                          + Thêm chi tiết
+                        </button>
                       </div>
                     </div>
                   ))}
 
                   <button
                     onClick={addNewCriteria}
-                    className="w-full border-2 border-dashed border-gray-300 rounded-lg p-4 text-gray-500 hover:border-orange-300 hover:text-orange-500 transition-colors flex items-center justify-center space-x-2"
+                    className="w-full border-2 border-dashed border-orange-300 rounded-lg p-4 text-orange-500 hover:border-orange-400 hover:text-orange-600 transition-colors flex items-center justify-center space-x-2"
                   >
                     <Plus className="w-5 h-5" />
                     <span>Thêm tiêu chí đánh giá mới</span>
                   </button>
+
+                  {/* Weight Summary Table */}
+                  {(selectedGradingScale === '100-point' || selectedGradingScale === 'percentage') && rubricCriteria.length > 0 && (
+                    <div className="bg-blue-50 rounded-lg p-4">
+                      <div className="flex justify-between items-center mb-3">
+                        <h5 className="text-blue-800 font-medium">Tổng kết tỷ trọng</h5>
+                        <span className={`font-bold ${getTotalWeight() === 100 ? 'text-green-600' : 'text-orange-600'}`}>
+                          Tổng: {getTotalWeight()}{selectedGradingScale === '100-point' ? ' điểm' : '%'}
+                        </span>
+                      </div>
+                      <div className="space-y-1">
+                        {rubricCriteria.map((criteria, index) => (
+                          <div key={criteria.id} className="flex justify-between items-center text-sm">
+                            <span className="text-gray-700">
+                              {criteria.name || `Tiêu chí ${index + 1}`}
+                            </span>
+                            <span className="font-medium text-gray-900">
+                              {criteria.weight}{selectedGradingScale === '100-point' ? ' điểm' : '%'}
+                            </span>
+                          </div>
+                        ))}
+                        <div className="border-t border-blue-200 pt-2 mt-2">
+                          <div className="flex justify-between items-center text-sm font-medium">
+                            <span className="text-blue-800">Tổng cộng</span>
+                            <span className={`${getTotalWeight() === 100 ? 'text-green-600' : 'text-orange-600'}`}>
+                              {getTotalWeight()}{selectedGradingScale === '100-point' ? ' điểm' : '%'}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
+            </div>
+
+            {/* Footer Buttons */}
+            <div className="flex justify-end space-x-3 p-6 border-t border-gray-200 bg-gray-50">
+              <button
+                onClick={() => setShowPopup(false)}
+                className="px-4 py-2 text-gray-600 hover:text-gray-800 font-medium"
+              >
+                Lưu nháp
+              </button>
+              <button className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-2 rounded-lg font-medium transition-colors">
+                Tạo
+              </button>
             </div>
           </div>
         </div>
