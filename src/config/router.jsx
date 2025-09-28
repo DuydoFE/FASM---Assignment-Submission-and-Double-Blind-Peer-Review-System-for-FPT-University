@@ -16,6 +16,7 @@ import InstructorClassLayout from "../layout/InstructorClassLayout";
 import InstructorManageClass from "../pages/InstructorManageClass/InstructorManageClass";
 import InstructorManageAssignment from "../pages/InstructorManageAssignment/InstructorManageAssignment";
 import AssignmentDetailPage from "../pages/AssignmentDetailPage/AssignmentDetailPage";
+import StudentSubmitAssignmentPage from "../pages/StudentSubmitAssignmentPage/StudentSubmitAssignmentPage";
 
 export const router = createBrowserRouter([
   {
@@ -40,6 +41,10 @@ export const router = createBrowserRouter([
     
         path: "assignment/:courseId",
         element: <AssignmentDetailPage />,
+      },
+       {
+        path: "assignment/:courseId/:assignmentId",
+        element: <StudentSubmitAssignmentPage />,
       },
     ],
   },
