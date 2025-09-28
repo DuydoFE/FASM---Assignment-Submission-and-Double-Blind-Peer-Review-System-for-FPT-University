@@ -1,23 +1,35 @@
 import axios from "axios";
-// const baseUrl = "http://localhost:8080";
-const baseUrl = "http://68.183.180.21:8080";
-//
-const config = {
-  baseUrl,
+
+// Lấy baseURL từ env
+const baseUrl = import.meta.env.VITE_API_BASE_URL;
+
+const api = axios.create({
+  baseURL: baseUrl,
   timeout: 3000000,
-};
-const api = axios.create(config);
-api.defaults.baseURL = baseUrl;
-const handleBefore = (config) => {
-  const token = localStorage.getItem("token")?.replaceAll('"', "");
-  config.headers["Authorization"] = `Bearer ${token}`;
-  return config;
-};
-const handleError = (error) => {
-  console.log(error);
-  return;
-};
-api.interceptors.request.use(handleBefore, handleError);
-// api.interceptors.response.use(null, handleError);
+});
+
+// Thêm token vào header trước mỗi request
+api.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem("token")?.replaceAll('"', "");
+    if (token) {
+      config.headers["Authorization"] = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => {
+    console.error("Request error:", error);
+    return Promise.reject(error);
+  }
+);
+
+// Nếu muốn handle lỗi response
+// api.interceptors.response.use(
+//   (response) => response,
+//   (error) => {
+//     console.error("Response error:", error);
+//     return Promise.reject(error);
+//   }
+// );
 
 export default api;

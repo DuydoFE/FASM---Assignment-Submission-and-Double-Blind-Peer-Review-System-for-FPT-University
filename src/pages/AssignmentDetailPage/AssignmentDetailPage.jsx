@@ -1,4 +1,3 @@
-// src/pages/AssignmentDetailPage/AssignmentDetailPage.jsx
 import React from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { ChevronRight, Clock, BookCopy, CheckCircle, AlertTriangle, Award, Filter, ArrowUpDown } from 'lucide-react';
@@ -43,12 +42,12 @@ const assignments = [
 
 const AssignmentDetailPage = () => {
   const { courseId } = useParams(); // Lấy courseId từ URL
-  const course = courseData[courseId] || { code: courseId, title: 'Unknown Course' }; // Tìm dữ liệu khóa học
+  const course = courseData[courseId] || { code: courseId, title: 'Unknown Course' }; 
 
   return (
     <div className="bg-gray-50 min-h-screen p-8">
       <div className="max-w-7xl mx-auto">
-        {/* Breadcrumbs */}
+
         <div className="mb-6 flex items-center text-sm text-gray-600">
           <Link to="/dashboard" className="hover:underline">Dashboard</Link>
           <ChevronRight className="w-4 h-4 mx-1" />
@@ -57,7 +56,7 @@ const AssignmentDetailPage = () => {
           <span className="font-semibold text-gray-800">{course.code}</span>
         </div>
 
-        {/* Course Header */}
+ 
         <div className="mb-8">
             <div className="flex justify-between items-center">
                 <div>
@@ -120,7 +119,7 @@ const AssignmentDetailPage = () => {
         <AssignmentCard 
           key={assignment.id} 
           assignment={assignment} 
-          courseId={courseId} // Truyền courseId vào đây
+          courseId={courseId}
         />
     ))}
 </div>

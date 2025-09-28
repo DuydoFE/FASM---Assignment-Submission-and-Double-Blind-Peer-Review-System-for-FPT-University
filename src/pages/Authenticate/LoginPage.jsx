@@ -1,10 +1,14 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { AlertCircle } from "lucide-react";
-
 
 import logo from "../../assets/img/Logo_FPT_Education.png";
 import backgroundImage from "../../assets/img/daihocfpt.png";
-
+import { getCampus } from "../../service/campusService";
+import { toast } from "react-toastify";
+import { login } from "../../service/userService";
+import { loginRedux } from "../../redux/features/userSlice";
+import { useNavigate } from "react-router-dom";
+import { useDispatch } from "react-redux";
 
 const GoogleIcon = (props) => (
   <svg
@@ -25,69 +29,116 @@ const GoogleIcon = (props) => (
 );
 
 const LoginPage = () => {
+  const [campuses, setCampuses] = useState([]);
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [campusId, setCampusId] = useState("");
+
+  const fetchCampus = async () => {
+    const response = await getCampus();
+    setCampuses(response);
+  };
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
+  useEffect(() => {
+    fetchCampus();
+  }, []);
+
+const handleLogin = async () => {
+  const data = {
+    username,
+    password,
+    campusId,
+  };
+  try {
+    const result = await login(data);
+    console.log("Login success:", result);
+    dispatch(loginRedux(result));
+    toast.success("Login successful!");
+    // TODO: Lưu token, chuyển trang, vv.
+    localStorage.setItem("token", result.accessToken);
+    localStorage.setItem("refreshToken", result.refreshToken);
+    navigate("/");
+  } catch (error) {
+    console.error("Login failed:", error);
+    // TODO: show thông báo lỗi cho user
+    toast.error("Login failed. Please check your credentials.");
+  }
+};
+
   return (
     <div
       className="min-h-screen w-full flex items-center justify-center bg-cover bg-center font-sans"
       style={{ backgroundImage: `url(${backgroundImage})` }}
     >
       <div className="bg-white p-10 rounded-lg shadow-lg flex w-full max-w-4xl">
-
         <div className="w-1/2 flex flex-col items-center pr-10">
           <img src={logo} alt="FPT Education Logo" className="w-40 mb-4" />
           <h1 className="text-xl font-bold text-orange-600 mb-6">
             TRƯỜNG ĐẠI HỌC FPT
           </h1>
-          
+
           <div className="w-full">
-        
             <select
               defaultValue=""
+              onChange={(e) => setCampusId(e.target.value)}
               className="w-full p-3 mb-4 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 bg-white text-gray-500"
             >
               <option value="" disabled>
                 Select Campus
               </option>
-              <option value="hcm" className="text-black">Hồ Chí Minh</option>
-              <option value="hoalac" className="text-black">Hòa Lạc</option>
-              <option value="quynhon" className="text-black">Quy Nhơn</option>
-              <option value="danang" className="text-black">Đà Nẵng</option>
+              {campuses?.map((campus) => (
+                <option
+                  key={campus.campusId}
+                  value={campus.campusId}
+                  className="text-black"
+                >
+                  {campus.address}
+                </option>
+              ))}
             </select>
-        
 
             <input
               type="text"
-              placeholder="Nhập tài khoàn wifi Student"
+              placeholder="Nhập tài khoản wifi Student"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
               className="w-full p-3 mb-4 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
             />
             <input
               type="password"
               placeholder="Nhập mật khẩu"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
               className="w-full p-3 mb-4 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
             />
-            <button className="w-full py-3 bg-orange-600 text-white font-semibold rounded-md hover:bg-orange-700 transition-colors mb-4">
+            <button
+              onClick={handleLogin}
+              className="w-full py-3 bg-orange-600 text-white font-semibold rounded-md hover:bg-orange-700 transition-colors mb-4"
+            >
               Log in
             </button>
           </div>
-          
+
           <a href="#" className="text-sm text-blue-600 hover:underline">
             Lost password?
           </a>
         </div>
 
-
         <div className="w-px bg-gray-200"></div>
 
-   
         <div className="w-1/2 flex flex-col justify-center pl-10">
           <p className="text-gray-600 mb-4">Sign in with</p>
-          
+
           <button className="w-full flex items-center justify-center py-2.5 px-4 mb-6 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors">
             <GoogleIcon className="w-5 h-5 mr-3 text-red-500" />
-            <span className="text-sm text-gray-700">@fpt.edu.vn (For lecturer only)</span>
+            <span className="text-sm text-gray-700">
+              @fpt.edu.vn (For lecturer only)
+            </span>
           </button>
 
           <div className="flex items-center text-red-600">
-             <AlertCircle className="w-5 h-5 mr-2" />
+            <AlertCircle className="w-5 h-5 mr-2" />
             <span className="text-sm">Cookies notice</span>
           </div>
         </div>
