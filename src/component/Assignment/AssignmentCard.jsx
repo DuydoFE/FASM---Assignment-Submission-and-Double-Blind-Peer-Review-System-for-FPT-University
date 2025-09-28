@@ -1,8 +1,8 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom'; // 1. Import hook useNavigate để điều hướng
+import { useNavigate } from 'react-router-dom'; 
 import { AlertTriangle, Calendar, BarChart2, FileText, Download, Upload, Eye } from 'lucide-react';
 
-const AssignmentCard = ({ assignment, courseId }) => { // 2. Nhận prop courseId
+const AssignmentCard = ({ assignment, courseId }) => { 
   const navigate = useNavigate();
 
   const handleNavigate = () => {
