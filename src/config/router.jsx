@@ -104,7 +104,7 @@ export const router = createBrowserRouter([
       {
         path: "manage-submission",
         element: <InstructorManageSubmission />,
-      },
+      },      
     ],
   }
 
