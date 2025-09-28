@@ -1,65 +1,74 @@
 import { Link } from "react-router-dom";
-import { Search, Filter } from "lucide-react"; // Giả sử bạn đang dùng lucide-react cho icons
-
-// Bạn có thể tạo một component SVG riêng cho logo hoặc dùng thẻ img
-const FasmLogo = () => (
-  <div className="flex items-center space-x-2">
-    <div className="bg-orange-500 p-2 rounded-md">
-      {/* Icon đơn giản giống logo */}
-      <svg
-        width="24"
-        height="24"
-        viewBox="0 0 24 24"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
-      >
-        <path
-          d="M4 4H20V18H4V4ZM6 8V16H18V8H6Z"
-          fill="white"
-        />
-      </svg>
-    </div>
-    <span className="font-bold text-2xl text-gray-800">FASM</span>
-  </div>
-);
-
+import { Search, Filter, User, LogOut } from "lucide-react";
+import { getCurrentAccount } from "../../utils/accountUtils";
+import { useDispatch } from "react-redux";
+import { logout } from "../../redux/features/userSlice";
+import { Dropdown, Menu, Avatar, Button } from "antd";
+import { toast } from "react-toastify";
 
 const Header = () => {
+  const user = getCurrentAccount();
+  const dispatch = useDispatch();
+
+  const handleLogout = () => {
+    dispatch(logout());
+    toast.success("Đăng xuất thành công");
+    localStorage.removeItem("token");
+    localStorage.removeItem("refreshToken");
+  };
+
+  const menu = (
+    <Menu
+      items={[
+        {
+          key: "profile",
+          label: (
+            <Link to="/profile" className="flex items-center">
+              <User className="w-4 h-4 mr-2" /> Hồ sơ cá nhân
+            </Link>
+          ),
+        },
+        {
+          key: "logout",
+          label: (
+            <span onClick={handleLogout} className="flex items-center">
+              <LogOut className="w-4 h-4 mr-2" /> Đăng xuất
+            </span>
+          ),
+        },
+      ]}
+    />
+  );
+
   return (
     <header className="bg-white shadow-sm sticky top-0 z-50">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-20">
-          {/* Phần bên trái: Logo và Navigation */}
+          {/* Left: Logo + Nav */}
           <div className="flex items-center space-x-8">
             <Link to="/">
-              <FasmLogo />
+              <span className="font-bold text-2xl text-gray-800">FASM</span>
             </Link>
-
             <nav className="hidden md:flex items-center space-x-6">
-              <Link
-                to="/"
-                className="text-gray-600 hover:text-orange-500 transition-colors"
-              >
-                
+              <Link to="/" className="text-gray-600 hover:text-orange-500">
                 Home
               </Link>
-                <Link
+              <Link
                 to="/studentdashboard"
-                className="text-gray-600 hover:text-orange-500 transition-colors"
+                className="text-gray-600 hover:text-orange-500"
               >
-                
                 MiniDashBoard
               </Link>
               <Link
                 to="/my-assignments"
-                className="text-gray-600 hover:text-orange-500 transition-colors"
+                className="text-gray-600 hover:text-orange-500"
               >
                 Assignment của tôi
               </Link>
             </nav>
           </div>
 
-          {/* Phần bên phải: Search và Buttons */}
+          {/* Right: Search + Auth */}
           <div className="flex items-center space-x-4">
             {/* Search Bar */}
             <div className="relative w-80">
@@ -72,24 +81,42 @@ const Header = () => {
                 className="w-full pl-10 pr-16 py-2 border border-gray-300 rounded-lg focus:ring-orange-500 focus:border-orange-500"
               />
               <div className="absolute inset-y-0 right-0 pr-3 flex items-center space-x-2 text-gray-400 text-sm">
-                 <Filter className="h-4 w-4" />
-                 <span>Ctrl+K</span>
+                <Filter className="h-4 w-4" />
+                <span>Ctrl+K</span>
               </div>
             </div>
 
-            {/* Auth Buttons */}
-            <Link
-              to="/login"
-              className="px-6 py-2 border border-gray-300 rounded-lg font-medium text-gray-700 hover:bg-gray-100 transition-colors"
-            >
-              Đăng nhập
-            </Link>
-            <Link
-              to="/register"
-              className="px-6 py-2 rounded-lg font-medium text-white bg-orange-500 hover:bg-orange-600 transition-colors"
-            >
-              Đăng ký
-            </Link>
+            {/* Auth / User Menu */}
+            {user ? (
+              <Dropdown className="pb-2" overlay={menu} trigger={["hover"]}>
+                <Button type="text" className="flex items-center space-x-2">
+                  <Avatar
+                    src={
+                      user.avatar ||
+                      `https://ui-avatars.com/api/?name=${user.username}`
+                    }
+                  />
+                  <span className="font-medium text-gray-700">
+                    {user.username}
+                  </span>
+                </Button>
+              </Dropdown>
+            ) : (
+              <>
+                <Link
+                  to="/login"
+                  className="px-6 py-2 border border-gray-300 rounded-lg font-medium text-gray-700 hover:bg-gray-100 transition-colors"
+                >
+                  Đăng nhập
+                </Link>
+                <Link
+                  to="/register"
+                  className="px-6 py-2 rounded-lg font-medium text-white bg-orange-500 hover:bg-orange-600 transition-colors"
+                >
+                  Đăng ký
+                </Link>
+              </>
+            )}
           </div>
         </div>
       </div>

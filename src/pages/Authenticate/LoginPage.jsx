@@ -8,6 +8,7 @@ import { toast } from "react-toastify";
 import { login } from "../../service/userService";
 import { loginRedux } from "../../redux/features/userSlice";
 import { useNavigate } from "react-router-dom";
+import { useDispatch } from "react-redux";
 
 const GoogleIcon = (props) => (
   <svg
@@ -38,7 +39,7 @@ const LoginPage = () => {
     setCampuses(response);
   };
   const navigate = useNavigate();
-
+  const dispatch = useDispatch();
   useEffect(() => {
     fetchCampus();
   }, []);
@@ -52,7 +53,7 @@ const handleLogin = async () => {
   try {
     const result = await login(data);
     console.log("Login success:", result);
-    loginRedux(result)
+    dispatch(loginRedux(result));
     toast.success("Login successful!");
     // TODO: Lưu token, chuyển trang, vv.
     localStorage.setItem("token", result.accessToken);
