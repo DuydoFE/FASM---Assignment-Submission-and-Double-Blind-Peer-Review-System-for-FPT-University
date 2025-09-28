@@ -18,6 +18,7 @@ import InstructorManageAssignment from "../pages/InstructorManageAssignment/Inst
 import AssignmentDetailPage from "../pages/AssignmentDetailPage/AssignmentDetailPage";
 import StudentSubmitAssignmentPage from "../pages/StudentSubmitAssignmentPage/StudentSubmitAssignmentPage";
 import InstructorManageSubmission from "../pages/InstructorManageSubmission/InstructorManageSubmission";
+import InstructorSubmissionDetail from "../pages/InstructorSubmissionDetail/InstructorSubmissionDetail";
 
 export const router = createBrowserRouter([
   {
@@ -105,6 +106,10 @@ export const router = createBrowserRouter([
         path: "manage-submission",
         element: <InstructorManageSubmission />,
       },      
+      {
+        path: "submission-detail",
+        element: <InstructorSubmissionDetail />,
+      },
     ],
   }
 
