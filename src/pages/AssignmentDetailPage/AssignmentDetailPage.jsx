@@ -115,12 +115,15 @@ const AssignmentDetailPage = () => {
             </button>
         </div>
 
-        {/* Assignments List */}
-        <div className="space-y-6">
-            {assignments.map(assignment => (
-                <AssignmentCard key={assignment.id} assignment={assignment} />
-            ))}
-        </div>
+       <div className="space-y-6">
+    {assignments.map(assignment => (
+        <AssignmentCard 
+          key={assignment.id} 
+          assignment={assignment} 
+          courseId={courseId} // Truyền courseId vào đây
+        />
+    ))}
+</div>
       </div>
     </div>
   );
