@@ -40,10 +40,15 @@ export const router = createBrowserRouter([
       },
       {
 
+        path: "my-assignments",
+        element: <StudentAssignmentPage />,
+      },
+       {
+    
         path: "assignment/:courseId",
         element: <AssignmentDetailPage />,
       },
-      {
+       {
         path: "assignment/:courseId/:assignmentId",
         element: <StudentSubmitAssignmentPage />,
       },
