@@ -1,8 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useSelector } from 'react-redux'; // 1. Import useSelector
 import { BookOpen, Plus, ChevronRight, HelpCircle, Smartphone, Server, Globe, Code } from 'lucide-react';
 import CourseListItem from '../../component/Assignment/CourseListItem';
 import EnrolledCourseCard from '../../component/Assignment/EnrolledCourseCard';
 import JoinClassModal from '../../component/Assignment/JoinClassModal';
+
+// Import service và selector
+import { courseService } from '../../service/courseService'; // 2. Import courseService
+import { selectUser } from '../../redux/features/userSlice'; // 3. Import selector user
 
 const coursesData = [
   { id: 1, icon: Smartphone, iconColor: 'text-red-500', title: 'Programming Mobile Devices', code: 'SE1715', subjectCode: 'PRM391' },
@@ -12,10 +17,48 @@ const coursesData = [
 ];
 
 const StudentAssignmentPage = () => {
+   // 4. Lấy thông tin user đang đăng nhập từ Redux
+    const currentUser = useSelector(selectUser);
+     console.log("Current User from Redux:", currentUser);
+
+    // 5. Thêm state để lưu danh sách lớp đã tham gia, trạng thái loading và lỗi
+    const [enrolledCourses, setEnrolledCourses] = useState([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState(null);
+
+
 
    // State để quản lý modal
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedCourse, setSelectedCourse] = useState(null);
+
+// 6. Sử dụng useEffect để gọi API khi component được mount
+    useEffect(() => {
+        // Chỉ gọi API nếu đã có thông tin người dùng và ID của họ
+        if (currentUser && currentUser.userId) {
+            const fetchEnrolledCourses = async () => {
+                try {
+                    setIsLoading(true);
+                    setError(null);
+                    const response = await courseService.getEnrolledCoursesByStudentId(currentUser.userId);
+                    // Dữ liệu trả về nằm trong response.data.data
+                    setEnrolledCourses(response.data.data);
+                } catch (err) {
+                    console.error("Lỗi khi tải danh sách lớp học:", err);
+                    setError("Không thể tải danh sách lớp học. Vui lòng thử lại.");
+                } finally {
+                    setIsLoading(false);
+                }
+            };
+
+            fetchEnrolledCourses();
+        } else {
+            // Nếu không có user, dừng loading và có thể set enrolledCourses là mảng rỗng
+            setIsLoading(false);
+            setEnrolledCourses([]);
+        }
+    }, [currentUser]); // Dependency là currentUser, để hook chạy lại nếu user thay đổi (login/logout)
+
 
   // Hàm để mở modal
   const handleOpenModal = (course) => {
@@ -28,6 +71,48 @@ const StudentAssignmentPage = () => {
     setIsModalOpen(false);
     setSelectedCourse(null);
   };
+
+  // 7. Render giao diện dựa trên trạng thái loading, error và dữ liệu
+    const renderEnrolledCourses = () => {
+        if (isLoading) {
+            return <p className="text-center py-12">Đang tải danh sách lớp học...</p>;
+        }
+
+        if (error) {
+            return <p className="text-center py-12 text-red-500">{error}</p>;
+        }
+
+        if (enrolledCourses.length === 0) {
+            return (
+                <div className="text-center flex flex-col items-center py-12 border-b">
+                    <BookOpen className="w-16 h-16 text-gray-400 mb-4" />
+                    <h2 className="text-xl font-bold text-gray-800 mb-2">Bạn chưa tham gia lớp học nào</h2>
+                    <p className="text-gray-600 mb-6">Hãy tham gia các lớp học để xem assignments và bắt đầu học tập</p>
+                    <button className="flex items-center justify-center px-6 py-3 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700 transition-colors">
+                        <Plus className="w-5 h-5 mr-2" />
+                        Chọn môn học để tham gia
+                    </button>
+                </div>
+            );
+        }
+
+        return enrolledCourses.map(course => (
+            <EnrolledCourseCard
+                key={course.courseStudentId}
+                // Map dữ liệu từ API vào props của component
+                subjectCode={course.courseCode}
+                title={`${course.courseName} - ${course.courseCode}`}
+                classCode={course.courseInstanceName}
+                // Lưu ý: API không trả về các thông tin này, ta sẽ để giá trị mặc định
+                lecturer="N/A"
+                studentCount={0}
+                schedule="N/A"
+                assignmentCount={0}
+            />
+        ));
+    };
+
+
   return (
     <div className="bg-gray-100 min-h-screen p-8">
       <div className="max-w-7xl mx-auto">
@@ -39,15 +124,7 @@ const StudentAssignmentPage = () => {
 
         <div className="bg-white rounded-lg shadow-sm p-8">
           <h1 className="text-2xl font-bold text-gray-800 mb-8">Lớp Của Tôi</h1>
-            <EnrolledCourseCard 
-            subjectCode="SE"
-            title="Programming Mobile Devices - PRM391"
-            classCode="SE1715"
-            lecturer="TS. Nguyễn Văn Minh"
-            studentCount={42}
-            schedule="Thứ 2, 7:30-11:00"
-            assignmentCount={8}
-          />
+         {renderEnrolledCourses()}
           {/* <div className="text-center flex flex-col items-center py-12 border-b">
             <BookOpen className="w-16 h-16 text-gray-400 mb-4" />
             <h2 className="text-xl font-bold text-gray-800 mb-2">Bạn chưa tham gia lớp học nào</h2>
