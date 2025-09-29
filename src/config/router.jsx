@@ -52,6 +52,10 @@ export const router = createBrowserRouter([
         path: "assignment/:courseId/:assignmentId",
         element: <StudentSubmitAssignmentPage />,
       },
+       {
+        path: "assignment/:courseId/:assignmentId/review",
+        element: <PeerReviewPage />,
+      },
     ],
   },
   {

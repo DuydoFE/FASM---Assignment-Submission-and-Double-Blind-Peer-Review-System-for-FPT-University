@@ -15,8 +15,18 @@ const getAssignmentsByCourseInstanceId = async (courseInstanceId) => {
     throw error;
   }
 };
+const getAssignmentDetailsById = async (assignmentId) => {
+  try {
+    const response = await api.get(`/Assignment/${assignmentId}/details`);
+    return response.data.data; // Trả về object chi tiết
+  } catch (error) {
+    console.error(`Lỗi khi lấy chi tiết assignment ID ${assignmentId}:`, error);
+    throw error;
+  }
+};
 
 // Export service
 export const assignmentService = {
   getAssignmentsByCourseInstanceId,
+  getAssignmentDetailsById, // Thêm hàm mới vào export
 };
