@@ -1,9 +1,9 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { ChevronRight, Clock, BookCopy, CheckCircle, AlertTriangle, Award, Filter, ArrowUpDown } from 'lucide-react';
 import StatCard from '../../component/Assignment/StatCard';
 import AssignmentCard from '../../component/Assignment/AssignmentCard';
-
+import { assignmentService } from '../../service/assignmentService'; // 1. Import service
 
 // Dữ liệu giả lập
 const courseData = {
@@ -44,6 +44,57 @@ const AssignmentDetailPage = () => {
   const { courseId } = useParams(); // Lấy courseId từ URL
   const course = courseData[courseId] || { code: courseId, title: 'Unknown Course' }; 
 
+  // 2. Thêm state để quản lý dữ liệu, loading và lỗi
+  const [assignments, setAssignments] = useState([]);
+  const [courseInfo, setCourseInfo] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  // 3. Sử dụng useEffect để gọi API
+  useEffect(() => {
+    const fetchAssignments = async () => {
+      if (!courseId) return;
+      try {
+        setIsLoading(true);
+        setError(null);
+        const data = await assignmentService.getAssignmentsByCourseInstanceId(courseId);
+        setAssignments(data);
+
+        // Lấy thông tin chung của khóa học từ assignment đầu tiên (nếu có)
+        if (data && data.length > 0) {
+          const firstAssignment = data[0];
+          setCourseInfo({
+            code: firstAssignment.sectionCode,
+            title: firstAssignment.courseName,
+            subject: firstAssignment.courseCode,
+            campus: firstAssignment.campusName,
+            // Các thông tin khác như giảng viên, học kỳ cần được thêm vào API response nếu cần
+            instructor: 'N/A', 
+            year: new Date(firstAssignment.createdAt).getFullYear(),
+            semester: 'N/A'
+          });
+        }
+      } catch (err) {
+        setError("Không thể tải được danh sách bài tập. Vui lòng thử lại.");
+        console.error(err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchAssignments();
+  }, [courseId]); // Hook sẽ chạy lại nếu courseId thay đổi
+
+  // 4. Render giao diện dựa trên trạng thái
+  if (isLoading) {
+    return <div className="text-center p-8">Đang tải dữ liệu...</div>;
+  }
+
+  if (error) {
+    return <div className="text-center p-8 text-red-500">{error}</div>;
+  }
+
+
   return (
     <div className="bg-gray-50 min-h-screen p-8">
       <div className="max-w-7xl mx-auto">
@@ -57,20 +108,19 @@ const AssignmentDetailPage = () => {
         </div>
 
  
-        <div className="mb-8">
+        {courseInfo && (
+          <div className="mb-8">
             <div className="flex justify-between items-center">
                 <div>
-                    <p className="text-blue-600 font-semibold">{course.code}</p>
-                    <h1 className="text-3xl font-bold text-gray-900">{course.title}</h1>
+                    <p className="text-blue-600 font-semibold">{courseInfo.code} - {courseInfo.campus}</p>
+                    <h1 className="text-3xl font-bold text-gray-900">{courseInfo.title}</h1>
                     <div className="flex items-center text-gray-500 mt-2">
-                        <span>{course.subject}</span>
+                        <span>{courseInfo.subject}</span>
                         <span className="mx-2">•</span>
-                        <span>{course.instructor}</span>
+                        <span>Giảng viên: {courseInfo.instructor}</span>
                         <span className="mx-2">•</span>
                         <Clock size={14} className="mr-1" />
-                        <span>{course.year}</span>
-                        <span className="mx-2">•</span>
-                        <span>{course.semester}</span>
+                        <span>Năm học: {courseInfo.year}</span>
                     </div>
                 </div>
                 <div className="flex items-center px-3 py-1 text-sm font-semibold bg-green-100 text-green-700 rounded-full">
@@ -78,14 +128,15 @@ const AssignmentDetailPage = () => {
                     Đã tham gia
                 </div>
             </div>
-        </div>
+          </div>
+        )}
 
         {/* Stats Grid */}
         <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
             <StatCard icon={BookCopy} value="8" label="Tổng assignments" color="blue" />
             <StatCard icon={CheckCircle} value="3" label="Đã nộp" color="green" />
             <StatCard icon={Clock} value="2" label="Sắp hết hạn" color="red" />
-            <StatCard icon={AlertTriangle} value="1" label="Quá hạn" color="yellow" />
+            <StatCard icon={AlertTriangle} value="1" label="Lưu ý thời gian" color="yellow" />
             <StatCard icon={Award} value="2" label="Đã chấm điểm" color="purple" />
         </div>
 
@@ -115,14 +166,21 @@ const AssignmentDetailPage = () => {
         </div>
 
        <div className="space-y-6">
-    {assignments.map(assignment => (
-        <AssignmentCard 
-          key={assignment.id} 
-          assignment={assignment} 
-          courseId={courseId}
-        />
-    ))}
-</div>
+          {assignments.length > 0 ? (
+            assignments.map(assignment => (
+              <AssignmentCard 
+                key={assignment.assignmentId} 
+                assignment={assignment} 
+                courseId={courseId}
+              />
+            ))
+          ) : (
+            <div className="text-center bg-white p-12 rounded-lg border">
+              <h3 className="text-xl font-semibold">Chưa có bài tập nào</h3>
+              <p className="text-gray-600">Hiện tại chưa có bài tập nào được giao cho lớp học này.</p>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
