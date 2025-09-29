@@ -19,6 +19,10 @@ import AssignmentDetailPage from "../pages/AssignmentDetailPage/AssignmentDetail
 import StudentSubmitAssignmentPage from "../pages/StudentSubmitAssignmentPage/StudentSubmitAssignmentPage";
 import InstructorManageSubmission from "../pages/InstructorManageSubmission/InstructorManageSubmission";
 import InstructorSubmissionDetail from "../pages/InstructorSubmissionDetail/InstructorSubmissionDetail";
+import AdminLayout from "../layout/AdminLayout";
+import Dashboard from "../pages/Admin/Dashboard";
+import ManageClass from "../pages/Admin/ManageClass";
+import AssignmentPage from "../pages/Admin/AssignmentPage";
 
 export const router = createBrowserRouter([
   {
@@ -36,15 +40,10 @@ export const router = createBrowserRouter([
       },
       {
 
-        path: "my-assignments",
-        element: <StudentAssignmentPage />,
-      },
-       {
-    
         path: "assignment/:courseId",
         element: <AssignmentDetailPage />,
       },
-       {
+      {
         path: "assignment/:courseId/:assignmentId",
         element: <StudentSubmitAssignmentPage />,
       },
@@ -105,10 +104,28 @@ export const router = createBrowserRouter([
       {
         path: "manage-submission",
         element: <InstructorManageSubmission />,
-      },      
+      },
       {
         path: "submission-detail",
         element: <InstructorSubmissionDetail />,
+      },
+    ],
+  },
+  {
+    path: "/admin",
+    element: <AdminLayout />,
+    children: [
+      {
+        path: "dashboard",
+        element: <Dashboard />
+      },
+      {
+        path: "manage-class",
+        element: <ManageClass />
+      },
+      {
+        path: "assignments",
+        element: <AssignmentPage />
       },
     ],
   }
