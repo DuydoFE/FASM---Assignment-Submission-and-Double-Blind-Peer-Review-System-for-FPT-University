@@ -63,7 +63,7 @@ const InstructorHeader = () => {
                 Lớp học của tôi
               </Link>
               <Link
-                to="/instructordashboard"
+                to="/regrade-request"
                 className="text-gray-600 hover:text-orange-500 transition-colors font-medium"
               >
                 Đơn khiếu nại
