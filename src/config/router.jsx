@@ -22,6 +22,7 @@ import InstructorSubmissionDetail from "../pages/InstructorSubmissionDetail/Inst
 import InstructorManageGrading from "../pages/IntructorManageGrading/IntructorManageGrading";
 import InstructorGradingDetail from "../pages/IntructorGradingDetail/IntructorGradingDetail";
 import InstructorPublishMark from "../pages/InstructorPublishMark/InstructorPublishMark";
+import InstructorRegradeRequest from "../pages/IntructorRegradeRequest/IntructorRegradeRequest";
 import AdminLayout from "../layout/AdminLayout";
 import Dashboard from "../pages/Admin/Dashboard";
 import ManageClass from "../pages/Admin/ManageClass";
@@ -90,6 +91,11 @@ export const router = createBrowserRouter([
 
         path: "create-class-password",
         element: <InstructorCreatePassword />,
+      },
+      {
+
+        path: "regrade-request",
+        element: <InstructorRegradeRequest />,
       },
     ],
   },
