@@ -19,6 +19,8 @@ import AssignmentDetailPage from "../pages/AssignmentDetailPage/AssignmentDetail
 import StudentSubmitAssignmentPage from "../pages/StudentSubmitAssignmentPage/StudentSubmitAssignmentPage";
 import InstructorManageSubmission from "../pages/InstructorManageSubmission/InstructorManageSubmission";
 import InstructorSubmissionDetail from "../pages/InstructorSubmissionDetail/InstructorSubmissionDetail";
+import InstructorManageGrading from "../pages/IntructorManageGrading/IntructorManageGrading";
+import InstructorGradingDetail from "../pages/IntructorGradingDetail/IntructorGradingDetail";
 import AdminLayout from "../layout/AdminLayout";
 import Dashboard from "../pages/Admin/Dashboard";
 import ManageClass from "../pages/Admin/ManageClass";
@@ -113,6 +115,14 @@ export const router = createBrowserRouter([
       {
         path: "submission-detail",
         element: <InstructorSubmissionDetail />,
+      },
+      {
+        path: "manage-grading",
+        element: <InstructorManageGrading />,
+      },
+      {
+        path: "grading-detail",
+        element: <InstructorGradingDetail />,
       },
     ],
   },
