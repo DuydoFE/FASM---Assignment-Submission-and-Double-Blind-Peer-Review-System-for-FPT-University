@@ -51,16 +51,18 @@ const AssignmentDetailPage = () => {
   const [error, setError] = useState(null);
 
   // 3. Sử dụng useEffect để gọi API
-  useEffect(() => {
+   useEffect(() => {
     const fetchAssignments = async () => {
       if (!courseId) return;
+
       try {
         setIsLoading(true);
         setError(null);
         const data = await assignmentService.getAssignmentsByCourseInstanceId(courseId);
-        setAssignments(data);
+        
+        // Luôn set assignments là một mảng để tránh lỗi
+        setAssignments(data || []);
 
-        // Lấy thông tin chung của khóa học từ assignment đầu tiên (nếu có)
         if (data && data.length > 0) {
           const firstAssignment = data[0];
           setCourseInfo({
@@ -68,11 +70,13 @@ const AssignmentDetailPage = () => {
             title: firstAssignment.courseName,
             subject: firstAssignment.courseCode,
             campus: firstAssignment.campusName,
-            // Các thông tin khác như giảng viên, học kỳ cần được thêm vào API response nếu cần
-            instructor: 'N/A', 
-            year: new Date(firstAssignment.createdAt).getFullYear(),
-            semester: 'N/A'
+            year: new Date(firstAssignment.createdAt).getFullYear().toString(),
+            instructor: 'N/A', // Cần API riêng để lấy thông tin này
           });
+        } else {
+            // Xử lý trường hợp không có assignment nào
+            // Bạn có thể cần gọi một API khác để lấy thông tin lớp học ở đây
+            setCourseInfo({ code: courseId, title: `Lớp học ${courseId}` });
         }
       } catch (err) {
         setError("Không thể tải được danh sách bài tập. Vui lòng thử lại.");
@@ -83,8 +87,7 @@ const AssignmentDetailPage = () => {
     };
 
     fetchAssignments();
-  }, [courseId]); // Hook sẽ chạy lại nếu courseId thay đổi
-
+  }, [courseId]);
   // 4. Render giao diện dựa trên trạng thái
   if (isLoading) {
     return <div className="text-center p-8">Đang tải dữ liệu...</div>;
@@ -108,19 +111,21 @@ const AssignmentDetailPage = () => {
         </div>
 
  
-        {courseInfo && (
+      {courseInfo && (
           <div className="mb-8">
             <div className="flex justify-between items-center">
                 <div>
-                    <p className="text-blue-600 font-semibold">{courseInfo.code} - {courseInfo.campus}</p>
+                    <p className="text-blue-600 font-semibold">{courseInfo.code} {courseInfo.campus ? `- ${courseInfo.campus}`: ''}</p>
                     <h1 className="text-3xl font-bold text-gray-900">{courseInfo.title}</h1>
-                    <div className="flex items-center text-gray-500 mt-2">
+                    <div className="flex items-center text-gray-500 mt-2 space-x-2">
                         <span>{courseInfo.subject}</span>
-                        <span className="mx-2">•</span>
+                        <span>•</span>
                         <span>Giảng viên: {courseInfo.instructor}</span>
-                        <span className="mx-2">•</span>
-                        <Clock size={14} className="mr-1" />
-                        <span>Năm học: {courseInfo.year}</span>
+                        <span>•</span>
+                        <div className="flex items-center">
+                            <Clock size={14} className="mr-1" />
+                            <span>Năm học: {courseInfo.year}</span>
+                        </div>
                     </div>
                 </div>
                 <div className="flex items-center px-3 py-1 text-sm font-semibold bg-green-100 text-green-700 rounded-full">
@@ -165,7 +170,7 @@ const AssignmentDetailPage = () => {
             </button>
         </div>
 
-       <div className="space-y-6">
+      <div className="space-y-6">
           {assignments.length > 0 ? (
             assignments.map(assignment => (
               <AssignmentCard 
