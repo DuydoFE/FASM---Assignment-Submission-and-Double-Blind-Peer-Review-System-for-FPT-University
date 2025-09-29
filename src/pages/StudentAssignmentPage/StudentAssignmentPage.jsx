@@ -97,14 +97,21 @@ const StudentAssignmentPage = () => {
         }
 
         return enrolledCourses.map(course => (
-            <EnrolledCourseCard
-                key={course.courseStudentId}
-                // Map dữ liệu từ API vào props của component
-                subjectCode={course.courseCode}
-                title={`${course.courseName} - ${course.courseCode}`}
-                classCode={course.courseInstanceName}
-                // Lưu ý: API không trả về các thông tin này, ta sẽ để giá trị mặc định
-                lecturer="N/A"
+           <EnrolledCourseCard
+        key={course.courseStudentId}
+        subjectCode={course.courseCode}
+        title={`${course.courseName} - ${course.courseCode}`}
+        
+        // SỬA Ở ĐÂY: Truyền vào ID thay vì Name/Code
+        // Prop `classCode` của component sẽ nhận giá trị là ID
+        classCode={course.courseInstanceId} 
+
+        // Hiển thị classCode thật sự (courseInstanceName) ở một prop khác nếu cần,
+        // hoặc giữ nguyên vì nó đã có trong title hoặc một nơi khác.
+        // Ví dụ:
+        // displayCode={course.courseInstanceName} // Thêm một prop mới nếu cần hiển thị
+
+        lecturer="N/A"
                 studentCount={0}
                 schedule="N/A"
                 assignmentCount={0}
