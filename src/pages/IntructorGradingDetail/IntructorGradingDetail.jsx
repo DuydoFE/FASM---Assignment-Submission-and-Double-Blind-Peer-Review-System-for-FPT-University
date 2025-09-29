@@ -316,9 +316,6 @@ const IntructorGradingDetail = () => {
 
                         {/* Action Buttons */}
                         <div className="flex gap-3">
-                            <button className="flex-1 px-4 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium">
-                                Hủy bỏ
-                            </button>
                             <button className="flex-1 px-4 py-3 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors font-medium">
                                 Chấm bài điểm
                             </button>
