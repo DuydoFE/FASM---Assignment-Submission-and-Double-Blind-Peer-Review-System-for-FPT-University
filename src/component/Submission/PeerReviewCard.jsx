@@ -1,10 +1,18 @@
 // src/component/Submission/PeerReviewCard.jsx
 import React from 'react';
 import { Users, Shuffle } from 'lucide-react';
+import { useNavigate, useParams } from 'react-router-dom'; // Import hooks
 
 const PeerReviewCard = ({ completed, required }) => {
   const remaining = required - completed;
   const progressPercentage = required > 0 ? (completed / required) * 100 : 0;
+
+  const navigate = useNavigate();
+  const { courseId, assignmentId } = useParams(); // Lấy ID từ URL
+  const handleStartReview = () => {
+    // Điều hướng đến trang chấm chéo
+    navigate(`/assignment/${courseId}/${assignmentId}/review`);
+  };
 
   return (
     <div className="bg-yellow-50 border border-yellow-300 p-6 rounded-lg">
@@ -32,7 +40,10 @@ const PeerReviewCard = ({ completed, required }) => {
         ></div>
       </div>
 
-      <button className="w-full flex items-center justify-center px-4 py-2 bg-orange-500 text-white font-semibold rounded-md hover:bg-orange-600">
+    <button 
+        onClick={handleStartReview} // Thêm sự kiện onClick
+        className="w-full flex items-center justify-center px-4 py-2 bg-orange-500 text-white font-semibold rounded-md hover:bg-orange-600"
+      >
         <Shuffle className="w-4 h-4 mr-2" />
         Chấm bài ngẫu nhiên
       </button>

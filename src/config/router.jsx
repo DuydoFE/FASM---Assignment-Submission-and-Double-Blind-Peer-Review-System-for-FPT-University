@@ -23,6 +23,7 @@ import AdminLayout from "../layout/AdminLayout";
 import Dashboard from "../pages/Admin/Dashboard";
 import ManageClass from "../pages/Admin/ManageClass";
 import AssignmentPage from "../pages/Admin/AssignmentPage";
+import PeerReviewPage from "../pages/PeerReviewPage/PeerReviewPage";
 
 export const router = createBrowserRouter([
   {
@@ -54,7 +55,7 @@ export const router = createBrowserRouter([
       },
        {
         path: "assignment/:courseId/:assignmentId/review",
-        element: <PeerReviewPage />,
+        element: <PeerReviewPage/>,
       },
     ],
   },
