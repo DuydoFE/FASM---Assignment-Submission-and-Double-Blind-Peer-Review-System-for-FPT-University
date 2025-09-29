@@ -21,6 +21,7 @@ import InstructorManageSubmission from "../pages/InstructorManageSubmission/Inst
 import InstructorSubmissionDetail from "../pages/InstructorSubmissionDetail/InstructorSubmissionDetail";
 import InstructorManageGrading from "../pages/IntructorManageGrading/IntructorManageGrading";
 import InstructorGradingDetail from "../pages/IntructorGradingDetail/IntructorGradingDetail";
+import InstructorPublishMark from "../pages/InstructorPublishMark/InstructorPublishMark";
 import AdminLayout from "../layout/AdminLayout";
 import Dashboard from "../pages/Admin/Dashboard";
 import ManageClass from "../pages/Admin/ManageClass";
@@ -123,6 +124,10 @@ export const router = createBrowserRouter([
       {
         path: "grading-detail",
         element: <InstructorGradingDetail />,
+      },
+      {
+        path: "publish-mark",
+        element: <InstructorPublishMark />,
       },
     ],
   },
