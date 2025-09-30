@@ -28,6 +28,7 @@ import Dashboard from "../pages/Admin/Dashboard";
 import ManageClass from "../pages/Admin/ManageClass";
 import AssignmentPage from "../pages/Admin/AssignmentPage";
 import PeerReviewPage from "../pages/PeerReviewPage/PeerReviewPage";
+import ReviewSuccessPage from "../pages/PeerReviewPage/ReviewSuccessPage";
 
 export const router = createBrowserRouter([
   {
@@ -60,6 +61,10 @@ export const router = createBrowserRouter([
        {
         path: "assignment/:courseId/:assignmentId/review",
         element: <PeerReviewPage/>,
+      },
+      {
+        path: "/2",
+        element: <ReviewSuccessPage/>,
       },
     ],
   },
