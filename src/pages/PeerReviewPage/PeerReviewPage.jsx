@@ -101,8 +101,26 @@ const PeerReviewPage = () => {
       };
 
       await reviewService.submitPeerReview(payload);
-      alert("Gửi điểm thành công!");
-      navigate(-1);
+
+const totalScore = reviewData.rubric.criteria.reduce((acc, c) => {
+  const score = scores[c.criteriaId] || 0;
+  return acc + (score / c.maxScore) * (c.weight / 100);
+}, 0);
+
+navigate("/review-success", {
+  state: {
+    assignmentTitle: reviewData.assignmentTitle,
+    studentName: reviewData.studentName,
+    criteriaFeedbacks: reviewData.rubric.criteria.map((c) => ({
+      criteriaId: c.criteriaId,
+      criteriaName: c.criteriaName,
+      score: scores[c.criteriaId] || 0,
+      maxScore: c.maxScore,
+    })),
+    totalScore: Math.round(totalScore * 100),
+    generalFeedback: comment,
+  },
+});
     } catch (err) {
       alert("Có lỗi khi gửi điểm, vui lòng thử lại!");
     }

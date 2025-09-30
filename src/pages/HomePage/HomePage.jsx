@@ -26,11 +26,10 @@ const HomePage = () => {
       <section className="text-center py-20 lg:py-32">
         <div className="container mx-auto px-4">
           <h1 className="text-4xl lg:text-5xl font-bold text-gray-800 mb-4">
-            Chấm bài minh bạch
+            Transparent marking
           </h1>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto mb-8">
-            Nền tảng toàn diện giúp sinh viên nộp bài, chấm chéo và nhận phản
-            hồi chi tiết từ giảng viên.
+            Comprehensive platform for students to submit assignments, cross-grade and receive detailed feedback from instructors.
           </p>
           <div className="flex justify-center gap-4">
             <Link

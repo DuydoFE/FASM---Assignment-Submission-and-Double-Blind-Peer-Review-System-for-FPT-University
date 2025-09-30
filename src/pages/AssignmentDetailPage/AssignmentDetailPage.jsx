@@ -138,11 +138,11 @@ const AssignmentDetailPage = () => {
 
         {/* Stats Grid */}
         <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
-            <StatCard icon={BookCopy} value="8" label="Tổng assignments" color="blue" />
-            <StatCard icon={CheckCircle} value="3" label="Đã nộp" color="green" />
-            <StatCard icon={Clock} value="2" label="Sắp hết hạn" color="red" />
+            <StatCard icon={BookCopy} value="1" label="Tổng assignments" color="blue" />
+            <StatCard icon={CheckCircle} value="0" label="Đã nộp" color="green" />
+            <StatCard icon={Clock} value="0" label="Sắp hết hạn" color="red" />
             <StatCard icon={AlertTriangle} value="1" label="Lưu ý thời gian" color="yellow" />
-            <StatCard icon={Award} value="2" label="Đã chấm điểm" color="purple" />
+            
         </div>
 
         {/* Filter and Sort */}
