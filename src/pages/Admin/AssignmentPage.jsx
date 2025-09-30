@@ -1,62 +1,65 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 
 const AssignmentPage = () => {
-  const [classes, setClasses] = useState([]);
-  const [selectedClass, setSelectedClass] = useState(null);
+  const { classId } = useParams();
+  const [assignments, setAssignments] = useState([]);
   const [selectedAssignment, setSelectedAssignment] = useState(null);
+  const [showMenu, setShowMenu] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
-    const demoClasses = [
-      {
-        id: 1,
-        className: "Lớp Demo 101",
-        subject: "Toán Cao Cấp",
-        teacher: "Giảng viên A",
-        semester: "spring2025",
-        assignments: [
-          {
-            id: 1,
-            title: "Assignment 1 - Đại số tuyến tính",
-            content: "Giải các bài toán tuyến tính từ chương 1 đến chương 3.",
-            submissions: [
-              { studentName: "Sinh viên 1", submitted: true, score: 9 },
-              { studentName: "Sinh viên 2", submitted: false, score: null },
-              { studentName: "Sinh viên 3", submitted: true, score: 8 },
-            ]
-          },
-          {
-            id: 2,
-            title: "Assignment 2 - Giải tích",
-            content: "Bài tập về tích phân và đạo hàm.",
-            submissions: [
-              { studentName: "Sinh viên 1", submitted: true, score: 10 },
-              { studentName: "Sinh viên 2", submitted: false, score: null },
-              { studentName: "Sinh viên 3", submitted: true, score: 7 },
-            ]
-          }
-        ]
-      },
-      {
-        id: 2,
-        className: "Lớp Demo 102",
-        subject: "Lập trình C++",
-        teacher: "Giảng viên B",
-        semester: "summer2025",
-        assignments: [
-          {
-            id: 1,
-            title: "Assignment 1 - Cơ bản C++",
-            content: "Viết chương trình tính tổng các số nguyên.",
-            submissions: [
-              { studentName: "Sinh viên A", submitted: true, score: 8 },
-              { studentName: "Sinh viên B", submitted: false, score: null }
-            ]
-          }
-        ]
-      }
-    ];
-    setClasses(demoClasses);
-  }, []);
+    // Fake data: Assignments cho từng lớp
+    const demoAssignments = {
+      1: [
+        {
+          id: 101,
+          title: "Software Engineering Project",
+          description: "Build a small software project with ReactJS.",
+          deadline: "2025-11-01",
+          submissions: [
+            {
+              studentId: "IT001",
+              name: "IT Student 1",
+              email: "itstudent1@university.edu",
+              score: 85,
+            },
+            {
+              studentId: "IT002",
+              name: "IT Student 2",
+              email: "itstudent2@university.edu",
+              score: 90,
+            },
+          ],
+          notSubmitted: [
+            { studentId: "IT003", name: "IT Student 3", email: "itstudent3@university.edu" },
+            { studentId: "IT004", name: "IT Student 4", email: "itstudent4@university.edu" },
+          ],
+        },
+      ],
+      2: [
+        {
+          id: 201,
+          title: "Microeconomics Essay",
+          description: "Write a 2000-word essay about demand and supply.",
+          deadline: "2025-10-20",
+          submissions: [
+            {
+              studentId: "ECO001",
+              name: "Eco Student 1",
+              email: "ecostudent1@university.edu",
+              score: 88,
+            },
+          ],
+          notSubmitted: [
+            { studentId: "ECO002", name: "Eco Student 2", email: "ecostudent2@university.edu" },
+          ],
+        },
+      ],
+    };
+
+    setAssignments(demoAssignments[classId] || []);
+  }, [classId]);
 
   const tableStyle = {
     width: "100%",
@@ -64,120 +67,178 @@ const AssignmentPage = () => {
     marginBottom: "20px",
     boxShadow: "0px 2px 8px rgba(0,0,0,0.1)",
     borderRadius: "8px",
-    overflow: "hidden"
+    overflow: "hidden",
   };
 
   const thStyle = {
     padding: "10px",
     background: "#FF9800",
     color: "#fff",
-    textAlign: "left"
+    textAlign: "left",
   };
 
   const tdStyle = {
     padding: "10px",
-    borderBottom: "1px solid #eee"
-  };
-
-  const trHover = {
-    backgroundColor: "#f9f9f9"
+    borderBottom: "1px solid #eee",
   };
 
   return (
-    <div style={{ fontFamily: "Arial, sans-serif", padding: "20px", background: "#f5f5f5", minHeight: "100vh" }}>
-      
+    <div
+      style={{
+        fontFamily: "Arial, sans-serif",
+        padding: "20px",
+        background: "#f5f5f5",
+        minHeight: "100vh",
+      }}
+    >
       {/* Header */}
-      <div style={{
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "center",
-        background: "#FF9800",
-        color: "#fff",
-        padding: "15px 30px",
-        borderRadius: "8px",
-        marginBottom: "20px"
-      }}>
-        <h2>📑 View Assignments</h2>
-        <div>AdminUser ▼</div>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          background: "#FF9800",
+          color: "#fff",
+          padding: "15px 30px",
+          borderRadius: "8px",
+          marginBottom: "20px",
+          position: "relative",
+        }}
+      >
+        <h2>📚 Assignments</h2>
+        <div style={{ position: "relative" }}>
+          <button
+            onClick={() => setShowMenu(!showMenu)}
+            style={{
+              background: "transparent",
+              border: "none",
+              color: "#fff",
+              cursor: "pointer",
+            }}
+          >
+            AdminUser ▼
+          </button>
+          {showMenu && (
+            <div
+              style={{
+                position: "absolute",
+                right: 0,
+                top: "100%",
+                background: "#fff",
+                color: "#333",
+                borderRadius: "6px",
+                boxShadow: "0px 4px 10px rgba(0,0,0,0.2)",
+                padding: "10px",
+                minWidth: "150px",
+                zIndex: 2000,
+              }}
+            >
+              <div style={{ padding: "8px", cursor: "pointer" }}>Settings</div>
+              <div style={{ padding: "8px", cursor: "pointer", color: "red" }}>
+                Logout
+              </div>
+            </div>
+          )}
+        </div>
       </div>
 
-      {/* Danh sách lớp */}
-      {!selectedClass && (
-        <>
-          <h3>Danh sách lớp</h3>
+      {/* Assignment list */}
+      {!selectedAssignment ? (
+        <div>
+          <h3>Assignments for Class {classId}</h3>
           <table style={tableStyle}>
             <thead>
               <tr>
-                <th style={thStyle}>Tên lớp</th>
-                <th style={thStyle}>Môn học</th>
-                <th style={thStyle}>Giảng viên</th>
-                <th style={thStyle}>Học kỳ</th>
+                <th style={thStyle}>Title</th>
+                <th style={thStyle}>Deadline</th>
+                <th style={thStyle}>Submissions</th>
               </tr>
             </thead>
             <tbody>
-              {classes.map(cls => (
-                <tr key={cls.id} style={{ cursor: "pointer" }} onClick={() => setSelectedClass(cls)}>
-                  <td style={tdStyle}>{cls.className}</td>
-                  <td style={tdStyle}>{cls.subject}</td>
-                  <td style={tdStyle}>{cls.teacher}</td>
-                  <td style={tdStyle}>{cls.semester}</td>
+              {assignments.map((a) => (
+                <tr
+                  key={a.id}
+                  style={{ cursor: "pointer" }}
+                  onClick={() => setSelectedAssignment(a)}
+                >
+                  <td style={tdStyle}>{a.title}</td>
+                  <td style={tdStyle}>{a.deadline}</td>
+                  <td style={tdStyle}>
+                    {a.submissions.length} /{" "}
+                    {a.submissions.length + a.notSubmitted.length}
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
-        </>
-      )}
+        </div>
+      ) : (
+        <div>
+          <button
+            onClick={() => setSelectedAssignment(null)}
+            style={{
+              marginBottom: "15px",
+              padding: "8px 15px",
+              border: "none",
+              borderRadius: "6px",
+              background: "#2196F3",
+              color: "#fff",
+              cursor: "pointer",
+            }}
+          >
+            ← Back
+          </button>
 
-      {/* Danh sách assignment */}
-      {selectedClass && !selectedAssignment && (
-        <>
-          <button onClick={() => setSelectedClass(null)} style={{ marginBottom: "10px" }}>⬅ Quay lại danh sách lớp</button>
-          <h3>Assignments của lớp: {selectedClass.className}</h3>
+          <h3 style={{ color: "#FF9800" }}>{selectedAssignment.title}</h3>
+          <p>
+            <strong>Description:</strong> {selectedAssignment.description}
+          </p>
+          <p>
+            <strong>Deadline:</strong> {selectedAssignment.deadline}
+          </p>
+
+          <h4>Submitted Students</h4>
           <table style={tableStyle}>
             <thead>
               <tr>
-                <th style={thStyle}>Tên Assignment</th>
+                <th style={thStyle}>Student ID</th>
+                <th style={thStyle}>Name</th>
+                <th style={thStyle}>Email</th>
+                <th style={thStyle}>Score</th>
               </tr>
             </thead>
             <tbody>
-              {selectedClass.assignments.map(assign => (
-                <tr key={assign.id} style={{ cursor: "pointer" }} onClick={() => setSelectedAssignment(assign)}>
-                  <td style={tdStyle}>{assign.title}</td>
+              {selectedAssignment.submissions.map((s) => (
+                <tr key={s.studentId}>
+                  <td style={tdStyle}>{s.studentId}</td>
+                  <td style={tdStyle}>{s.name}</td>
+                  <td style={tdStyle}>{s.email}</td>
+                  <td style={tdStyle}>{s.score}</td>
                 </tr>
               ))}
             </tbody>
           </table>
-        </>
-      )}
 
-      {/* Chi tiết assignment */}
-      {selectedAssignment && (
-        <>
-          <button onClick={() => setSelectedAssignment(null)} style={{ marginBottom: "10px" }}>⬅ Quay lại assignments</button>
-          <h3>{selectedAssignment.title}</h3>
-          <p><strong>Đề bài:</strong> {selectedAssignment.content}</p>
-          <p><strong>Số lượng nộp:</strong> {selectedAssignment.submissions.filter(s => s.submitted).length} / {selectedAssignment.submissions.length}</p>
-
-          <h4>Chi tiết sinh viên</h4>
+          <h4>Not Submitted</h4>
           <table style={tableStyle}>
             <thead>
               <tr>
-                <th style={thStyle}>Họ tên</th>
-                <th style={thStyle}>Đã nộp</th>
-                <th style={thStyle}>Điểm</th>
+                <th style={thStyle}>Student ID</th>
+                <th style={thStyle}>Name</th>
+                <th style={thStyle}>Email</th>
               </tr>
             </thead>
             <tbody>
-              {selectedAssignment.submissions.map((sub, index) => (
-                <tr key={index} style={index % 2 ? trHover : {}}>
-                  <td style={tdStyle}>{sub.studentName}</td>
-                  <td style={tdStyle}>{sub.submitted ? "✅" : "❌"}</td>
-                  <td style={tdStyle}>{sub.score !== null ? sub.score : "-"}</td>
+              {selectedAssignment.notSubmitted.map((s) => (
+                <tr key={s.studentId}>
+                  <td style={tdStyle}>{s.studentId}</td>
+                  <td style={tdStyle}>{s.name}</td>
+                  <td style={tdStyle}>{s.email}</td>
                 </tr>
               ))}
             </tbody>
           </table>
-        </>
+        </div>
       )}
     </div>
   );

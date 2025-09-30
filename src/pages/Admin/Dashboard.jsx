@@ -4,37 +4,37 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recha
 const Dashboard = () => {
   const [showMenu, setShowMenu] = useState(false);
 
-  const username = "AdminUser"; // Tên account hiện tại
+  const username = "AdminUser"; // Current account name
 
   const stats = [
-    { title: "Tổng số lớp học", value: 12, color: "#FFA726" },
-    { title: "Tổng số sinh viên", value: 300, color: "#FFB74D" },
-    { title: "Tổng số giảng viên", value: 15, color: "#FF9800" },
-    { title: "Assignment đã tạo", value: 45, color: "#FB8C00" },
-    { title: "Assignment đã chấm", value: 32, color: "#F57C00" },
+    { title: "Total Classes", value: 12, color: "#FFA726" },
+    { title: "Total Students", value: 300, color: "#FFB74D" },
+    { title: "Total Teachers", value: 15, color: "#FF9800" },
+    { title: "Assignments Created", value: 45, color: "#FB8C00" },
+    { title: "Assignments Graded", value: 32, color: "#F57C00" },
   ];
 
   const chartData = [
-    { name: "Lớp học 1", assignments: 5 },
-    { name: "Lớp học 2", assignments: 8 },
-    { name: "Lớp học 3", assignments: 4 },
-    { name: "Lớp học 4", assignments: 6 },
-    { name: "Lớp học 5", assignments: 3 },
+    { name: "Class 1", assignments: 5 },
+    { name: "Class 2", assignments: 8 },
+    { name: "Class 3", assignments: 4 },
+    { name: "Class 4", assignments: 6 },
+    { name: "Class 5", assignments: 3 },
   ];
 
   return (
     <div style={{ fontFamily: "Arial, sans-serif", background: "#f9f9f9", minHeight: "100vh" }}>
       
-      {/* Header bar màu cam */}
+      {/* Orange header bar */}
       <div style={{
         display: "flex",
         justifyContent: "space-between",
         alignItems: "center",
         padding: "15px 30px",
-        background: "#FF9800", // màu cam
+        background: "#FF9800", // orange
         color: "#fff",
         position: "relative",
-        zIndex: 1000, // đảm bảo header đứng trên
+        zIndex: 1000,
       }}>
         <h2 style={{ margin: 0 }}>📊 Admin Dashboard</h2>
 
@@ -66,7 +66,7 @@ const Dashboard = () => {
               boxShadow: "0px 4px 10px rgba(0,0,0,0.2)",
               padding: "10px",
               minWidth: "150px",
-              zIndex: 2000, // đảm bảo menu nổi lên trên mọi component khác
+              zIndex: 2000,
             }}>
               <div style={{ padding: "8px", cursor: "pointer" }}>Manage Profile</div>
               <div style={{ padding: "8px", cursor: "pointer" }}>Settings</div>
@@ -79,7 +79,7 @@ const Dashboard = () => {
       {/* Body content */}
       <div style={{ padding: "30px" }}>
         
-        {/* Section thống kê */}
+        {/* Statistics section */}
         <div
           style={{
             display: "grid",
@@ -109,9 +109,9 @@ const Dashboard = () => {
           ))}
         </div>
 
-        {/* Section biểu đồ */}
+        {/* Chart section */}
         <div style={{ background: "#fff", padding: "20px", borderRadius: "12px", boxShadow: "0px 4px 10px rgba(0,0,0,0.1)" }}>
-          <h2 style={{ marginBottom: "20px", color: "#333" }}>📈 Assignment theo lớp học</h2>
+          <h2 style={{ marginBottom: "20px", color: "#333" }}>📈 Assignments by Class</h2>
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={chartData}>
               <XAxis dataKey="name" />
