@@ -5,19 +5,19 @@ const InstructorEnrollKey = () => {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
 
-  // Kiểm tra yêu cầu mật khẩu
+  // Password requirements
   const passwordRequirements = [
-    { text: 'Ít nhất 8 ký tự', check: password.length >= 8 },
-    { text: 'Chứa ít nhất 1 chữ hoa', check: /[A-Z]/.test(password) },
-    { text: 'Chứa ít nhất 1 số', check: /\d/.test(password) }
+    { text: 'At least 8 characters', check: password.length >= 8 },
+    { text: 'Contains at least 1 uppercase letter', check: /[A-Z]/.test(password) },
+    { text: 'Contains at least 1 number', check: /\d/.test(password) }
   ];
 
   const isValidPassword = passwordRequirements.every(req => req.check);
 
   const handleCreatePassword = () => {
     if (isValidPassword) {
-      alert('Mật khẩu đã được tạo thành công!');
-      // Logic tạo mật khẩu ở đây
+      alert('Password has been created successfully!');
+      // Password creation logic here
     }
   };
 
@@ -31,11 +31,11 @@ const InstructorEnrollKey = () => {
       <div className="bg-white border-b border-gray-200 px-6 py-4">
         <div className="flex items-center text-sm text-gray-600">
           <ArrowLeft size={20} className="mr-2 cursor-pointer hover:text-gray-800" />
-          <span className="hover:text-gray-800 cursor-pointer">Danh sách lớp học</span>
+          <span className="hover:text-gray-800 cursor-pointer">Class List</span>
           <span className="mx-2">›</span>
           <span className="hover:text-gray-800 cursor-pointer">WDU391 - SE1819</span>
           <span className="mx-2">›</span>
-          <span className="text-gray-800 font-medium">Thiết lập mật khẩu</span>
+          <span className="text-gray-800 font-medium">Set Class Password</span>
         </div>
       </div>
 
@@ -45,8 +45,8 @@ const InstructorEnrollKey = () => {
           <div className="lg:col-span-1 space-y-6">
             {/* Class Info Card */}
             <div className="bg-white rounded-lg border border-gray-200 p-6">
-              <div className="text-blue-600 text-sm font-medium mb-2">Thiết kế UI/UX</div>
-              <h2 className="text-xl font-bold text-gray-900 mb-1">Lớp SE1819</h2>
+              <div className="text-blue-600 text-sm font-medium mb-2">UI/UX Design</div>
+              <h2 className="text-xl font-bold text-gray-900 mb-1">Class SE1819</h2>
               <p className="text-gray-600">WDU391</p>
             </div>
 
@@ -55,9 +55,9 @@ const InstructorEnrollKey = () => {
               <div className="flex items-start gap-3">
                 <AlertCircle className="text-yellow-600 mt-0.5" size={20} />
                 <div>
-                  <h3 className="text-yellow-800 font-semibold mb-1">Bảo mật lớp học</h3>
+                  <h3 className="text-yellow-800 font-semibold mb-1">Class Security</h3>
                   <p className="text-yellow-700 text-sm">
-                    Mật khẩu này sẽ được sử dụng để bảo vệ thông tin lớp học và chỉ những sinh viên có mật khẩu mới có thể truy cập.
+                    This password will be used to protect class information. Only students who have the password will be able to access the class.
                   </p>
                 </div>
               </div>
@@ -69,10 +69,10 @@ const InstructorEnrollKey = () => {
             <div className="bg-white rounded-lg border border-gray-200 p-8">
               <div className="mb-8">
                 <h1 className="text-2xl font-bold text-gray-900 mb-2">
-                  Tạo mật khẩu cho lớp học
+                  Create Class Password
                 </h1>
                 <p className="text-gray-600">
-                  Vui lòng tạo mật khẩu an toàn để bảo vệ thông tin lớp học của bạn
+                  Please create a strong password to secure your class information
                 </p>
               </div>
 
@@ -80,14 +80,14 @@ const InstructorEnrollKey = () => {
                 {/* Password Input */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Mật khẩu lớp học
+                    Class Password
                   </label>
                   <div className="relative">
                     <input
                       type={showPassword ? 'text' : 'password'}
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      placeholder="Nhập mật khẩu..."
+                      placeholder="Enter password..."
                       className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
                     />
                     <button
@@ -102,7 +102,7 @@ const InstructorEnrollKey = () => {
 
                 {/* Password Requirements */}
                 <div>
-                  <p className="text-sm font-medium text-gray-700 mb-3">Yêu cầu mật khẩu:</p>
+                  <p className="text-sm font-medium text-gray-700 mb-3">Password Requirements:</p>
                   <div className="space-y-2">
                     {passwordRequirements.map((requirement, index) => (
                       <div key={index} className="flex items-center gap-2">
@@ -129,7 +129,7 @@ const InstructorEnrollKey = () => {
                     onClick={handleCancel}
                     className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
                   >
-                    Hủy
+                    Cancel
                   </button>
                   <button
                     onClick={handleCreatePassword}
@@ -140,7 +140,7 @@ const InstructorEnrollKey = () => {
                         : 'bg-gray-300 text-gray-500 cursor-not-allowed'
                     }`}
                   >
-                    Tạo mật khẩu
+                    Create Password
                   </button>
                 </div>
               </div>
