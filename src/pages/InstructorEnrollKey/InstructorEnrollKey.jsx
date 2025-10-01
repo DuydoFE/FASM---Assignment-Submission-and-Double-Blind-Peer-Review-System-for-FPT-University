@@ -3,9 +3,7 @@ import { ArrowLeft, Eye, EyeOff, AlertCircle, Check } from 'lucide-react';
 
 const InstructorEnrollKey = () => {
   const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   // Kiểm tra yêu cầu mật khẩu
   const passwordRequirements = [
@@ -15,10 +13,9 @@ const InstructorEnrollKey = () => {
   ];
 
   const isValidPassword = passwordRequirements.every(req => req.check);
-  const passwordsMatch = password === confirmPassword && password.length > 0;
 
   const handleCreatePassword = () => {
-    if (isValidPassword && passwordsMatch) {
+    if (isValidPassword) {
       alert('Mật khẩu đã được tạo thành công!');
       // Logic tạo mật khẩu ở đây
     }
@@ -26,7 +23,6 @@ const InstructorEnrollKey = () => {
 
   const handleCancel = () => {
     setPassword('');
-    setConfirmPassword('');
   };
 
   return (
@@ -104,32 +100,6 @@ const InstructorEnrollKey = () => {
                   </div>
                 </div>
 
-                {/* Confirm Password Input */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Xác nhận mật khẩu
-                  </label>
-                  <div className="relative">
-                    <input
-                      type={showConfirmPassword ? 'text' : 'password'}
-                      value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
-                      placeholder="Nhập lại mật khẩu..."
-                      className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                    >
-                      {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-                    </button>
-                  </div>
-                  {confirmPassword && !passwordsMatch && (
-                    <p className="text-red-600 text-sm mt-2">Mật khẩu không khớp</p>
-                  )}
-                </div>
-
                 {/* Password Requirements */}
                 <div>
                   <p className="text-sm font-medium text-gray-700 mb-3">Yêu cầu mật khẩu:</p>
@@ -163,9 +133,9 @@ const InstructorEnrollKey = () => {
                   </button>
                   <button
                     onClick={handleCreatePassword}
-                    disabled={!isValidPassword || !passwordsMatch}
+                    disabled={!isValidPassword}
                     className={`px-6 py-3 rounded-lg font-medium transition-colors ${
-                      isValidPassword && passwordsMatch
+                      isValidPassword
                         ? 'bg-orange-600 hover:bg-orange-700 text-white'
                         : 'bg-gray-300 text-gray-500 cursor-not-allowed'
                     }`}
