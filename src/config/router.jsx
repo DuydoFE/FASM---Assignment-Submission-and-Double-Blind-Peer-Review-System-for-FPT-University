@@ -99,8 +99,8 @@ export const router = createBrowserRouter([
       },
       {
 
-        path: "create-class-password",
-        element: <InstructorCreatePassword />,
+        path: "enroll-key",
+        element: <InstructorEnrollKey />,
       },
       {
 

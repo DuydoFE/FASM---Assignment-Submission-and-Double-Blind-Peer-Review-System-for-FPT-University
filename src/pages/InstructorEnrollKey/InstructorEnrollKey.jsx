@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { ArrowLeft, Eye, EyeOff, AlertCircle, Check } from 'lucide-react';
 
-const InstructorCreatePassword = () => {
+const InstructorEnrollKey = () => {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -182,4 +182,4 @@ const InstructorCreatePassword = () => {
   );
 };
 
-export default InstructorCreatePassword;
+export default InstructorEnrollKey;
