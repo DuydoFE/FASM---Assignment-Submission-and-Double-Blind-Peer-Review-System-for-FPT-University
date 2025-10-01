@@ -11,7 +11,7 @@ import StudentAssignmentPage from "../pages/StudentAssignmentPage/StudentAssignm
 import InstructorLayout from "../layout/InstructorLayout";
 import InstructorDashboard from "../pages/InstructorDashBoard/InstructorDashBoard";
 import InstructorViewClass from "../pages/InstructorViewClass/InstructorViewClass";
-import InstructorCreatePassword from "../pages/InstructorCreatePassword/InstructorCreatePassword";
+import InstructorEnrollKey from "../pages/InstructorEnrollKey/InstructorEnrollKey";
 import InstructorClassLayout from "../layout/InstructorClassLayout";
 import InstructorManageClass from "../pages/InstructorManageClass/InstructorManageClass";
 import InstructorManageAssignment from "../pages/InstructorManageAssignment/InstructorManageAssignment";
