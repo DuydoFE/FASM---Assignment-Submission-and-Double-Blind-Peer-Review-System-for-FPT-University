@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, ChevronDown } from 'lucide-react';
+import { Search, ChevronDown, Eye } from 'lucide-react';
 
 const IntructorManageGrading = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -87,7 +87,7 @@ const IntructorManageGrading = () => {
   };
 
   const getStatusStyle = (status) => {
-    switch(status) {
+    switch (status) {
       case 'graded': return 'bg-green-100 text-green-700';
       case 'submitted': return 'bg-green-100 text-green-700';
       case 'late': return 'bg-red-100 text-red-600';
@@ -97,7 +97,7 @@ const IntructorManageGrading = () => {
   };
 
   const getStatusText = (status) => {
-    switch(status) {
+    switch (status) {
       case 'graded': return 'Graded';
       case 'submitted': return 'Submitted';
       case 'late': return 'Late';
@@ -115,9 +115,8 @@ const IntructorManageGrading = () => {
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <h1 className="text-2xl font-bold text-gray-800 mb-6">Assignment Grading</h1>
-
         {/* Filters */}
-        <div className="grid grid-cols-3 gap-4 mb-6">
+        <div className="grid grid-cols-4 gap-4 mb-6">
           <div>
             <label className="block text-sm text-gray-600 mb-2">Class</label>
             <div className="relative">
@@ -127,7 +126,6 @@ const IntructorManageGrading = () => {
               <ChevronDown className="absolute right-3 top-3 w-5 h-5 text-gray-400 pointer-events-none" />
             </div>
           </div>
-
           <div>
             <label className="block text-sm text-gray-600 mb-2">Course</label>
             <div className="relative">
@@ -146,6 +144,13 @@ const IntructorManageGrading = () => {
               </select>
               <ChevronDown className="absolute right-3 top-3 w-5 h-5 text-gray-400 pointer-events-none" />
             </div>
+          </div>
+          <div>
+            <label className="block text-sm text-gray-600 mb-2">&nbsp;</label>
+            <button className="w-full px-4 py-2.5 rounded-lg bg-green-600 hover:bg-green-700 text-white font-medium flex items-center justify-center transition-colors">
+              <Eye className="inline w-4 h-4 mr-2" />
+              View Mark
+            </button>
           </div>
         </div>
 
