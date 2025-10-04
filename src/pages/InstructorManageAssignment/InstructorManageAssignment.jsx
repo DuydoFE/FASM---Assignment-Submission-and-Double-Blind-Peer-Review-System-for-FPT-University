@@ -1,23 +1,26 @@
 import React, { useState } from 'react';
-import { Plus, FileText, Clock, Lock, Calendar, X, Trash2 } from 'lucide-react';
+import { Plus, FileText, Clock, Lock, Calendar, X, Trash2, Upload, ChevronDown } from 'lucide-react';
 
 const InstructorManageAssignment = () => {
   const [showPopup, setShowPopup] = useState(false);
   const [selectedGradingScale, setSelectedGradingScale] = useState('percentage');
+  const [statusFilter, setStatusFilter] = useState('All');
   const [formData, setFormData] = useState({
     title: '',
     description: '',
     deadline: '',
-    documents: null
+    allowedExtensions: '',
+    maxFiles: 1,
+    courseWeight: 0
   });
 
   const [rubricCriteria, setRubricCriteria] = useState([]);
 
   const gradingScales = {
-    '100-point': { name: 'Thang 100 điểm (0-100)', showWeight: true },
-    'letter': { name: 'Thang chữ (A, B, C, D, F)', showWeight: false },
-    'percentage': { name: 'Thang % (0-100%)', showWeight: true },
-    'pass-fail': { name: 'Thang Pass/Fail', showWeight: false }
+    '100-point': { name: '100-Point Scale (0-100)', showWeight: true },
+    'letter': { name: 'Letter Grade (A, B, C, D, F)', showWeight: false },
+    'percentage': { name: 'Percentage Scale (0-100%)', showWeight: true },
+    'pass-fail': { name: 'Pass/Fail Scale', showWeight: false }
   };
 
   const handleInputChange = (field, value) => {
@@ -78,48 +81,58 @@ const InstructorManageAssignment = () => {
     {
       id: 1,
       title: "Lab 1: Figma Basics",
-      description: "Tạo wireframe cho trang web bán hàng",
+      description: "Create wireframe for e-commerce website",
       deadline: "25/12/2024",
       time: "23:59",
       submitted: 28,
       total: 35,
-      status: "Đang mở",
+      status: "Open",
       statusColor: "bg-green-100 text-green-800"
     },
     {
       id: 2,
       title: "Lab 2: User Research",
-      description: "Phỏng vấn người dùng và tạo persona",
+      description: "Conduct user interviews and create personas",
       deadline: "30/12/2024",
       time: "23:59",
       submitted: 15,
       total: 35,
-      status: "Đang mở",
+      status: "Open",
       statusColor: "bg-green-100 text-green-800"
     },
     {
       id: 3,
       title: "Assignment 1: Prototype",
-      description: "Tạo prototype tương tác với Figma",
+      description: "Create interactive prototype with Figma",
       deadline: "20/12/2024",
       time: "23:59",
       submitted: 35,
       total: 35,
-      status: "Đã đóng",
+      status: "Closed",
       statusColor: "bg-red-100 text-red-800"
     },
     {
       id: 4,
       title: "Final Project",
-      description: "Dự án cuối khóa - Thiết kế app hoàn chỉnh",
+      description: "Complete app design project",
       deadline: "10/01/2025",
       time: "23:59",
       submitted: 2,
       total: 35,
-      status: "Đang mở",
+      status: "Open",
       statusColor: "bg-green-100 text-green-800"
     }
   ];
+
+  const handleStatusClick = () => {
+    if (statusFilter === 'All') setStatusFilter('Open');
+    else if (statusFilter === 'Open') setStatusFilter('Closed');
+    else setStatusFilter('All');
+  };
+
+  const filteredAssignments = statusFilter === 'All' 
+    ? assignments 
+    : assignments.filter(a => a.status === statusFilter);
 
   const getDeadlineColor = (deadline) => {
     const today = new Date();
@@ -137,7 +150,7 @@ const InstructorManageAssignment = () => {
       {/* Header */}
       <div className="flex justify-between items-center mb-8">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Quản lý Assignment</h1>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Assignment Management</h1>
           <div className="flex items-center space-x-4">
             <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium">
               WDU391
@@ -152,7 +165,7 @@ const InstructorManageAssignment = () => {
           className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-lg flex items-center space-x-2 font-medium transition-colors"
         >
           <Plus className="w-5 h-5" />
-          <span>Tạo Assignment</span>
+          <span>Create Assignment</span>
         </button>
       </div>
 
@@ -161,7 +174,7 @@ const InstructorManageAssignment = () => {
         <div className="bg-white p-6 rounded-xl border border-gray-200">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-gray-600 text-sm font-medium">Tổng Assignment</p>
+              <p className="text-gray-600 text-sm font-medium">Total Assignments</p>
               <p className="text-3xl font-bold text-gray-900 mt-1">4</p>
             </div>
             <div className="bg-blue-100 p-3 rounded-lg">
@@ -173,7 +186,7 @@ const InstructorManageAssignment = () => {
         <div className="bg-white p-6 rounded-xl border border-gray-200">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-gray-600 text-sm font-medium">Đang mở</p>
+              <p className="text-gray-600 text-sm font-medium">Open</p>
               <p className="text-3xl font-bold text-green-600 mt-1">3</p>
             </div>
             <div className="bg-green-100 p-3 rounded-lg">
@@ -185,7 +198,7 @@ const InstructorManageAssignment = () => {
         <div className="bg-white p-6 rounded-xl border border-gray-200">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-gray-600 text-sm font-medium">Đã đóng</p>
+              <p className="text-gray-600 text-sm font-medium">Closed</p>
               <p className="text-3xl font-bold text-red-600 mt-1">1</p>
             </div>
             <div className="bg-red-100 p-3 rounded-lg">
@@ -198,14 +211,20 @@ const InstructorManageAssignment = () => {
       {/* Assignment Table */}
       <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
         <div className="grid grid-cols-12 gap-6 px-8 py-5 bg-gray-50 border-b border-gray-200 text-sm font-medium text-gray-700">
-          <div className="col-span-4">Tên Assignment</div>
+          <div className="col-span-4">Assignment Name</div>
           <div className="col-span-2 text-center">Deadline</div>
-          <div className="col-span-2 text-center">Nộp bài</div>
-          <div className="col-span-2 text-center">Trạng thái</div>
-          <div className="col-span-2 text-center">Thao tác</div>
+          <div className="col-span-2 text-center">Submissions</div>
+          <div 
+            className="col-span-2 text-center cursor-pointer select-none hover:text-orange-600 transition flex items-center justify-center gap-1"
+            onClick={handleStatusClick}
+          >
+            Status
+            <ChevronDown size={16} />
+          </div>
+          <div className="col-span-2 text-center">Actions</div>
         </div>
 
-        {assignments.map((assignment) => (
+        {filteredAssignments.map((assignment) => (
           <div key={assignment.id} className="grid grid-cols-12 gap-6 px-8 py-8 border-b border-gray-100 hover:bg-gray-50 items-center transition-colors">
             <div className="col-span-4 space-y-2">
               <h3 className="font-semibold text-gray-900 text-base">{assignment.title}</h3>
@@ -224,13 +243,13 @@ const InstructorManageAssignment = () => {
                 {assignment.submitted}/{assignment.total}
               </div>
               <div className="text-xs text-gray-500 mt-1">
-                {Math.round((assignment.submitted / assignment.total) * 100)}% hoàn thành
+                {Math.round((assignment.submitted / assignment.total) * 100)}% completed
               </div>
             </div>
 
             <div className="col-span-2 flex justify-center">
               <span className={`px-4 py-2 rounded-full text-sm font-medium ${assignment.statusColor} flex items-center space-x-2`}>
-                {assignment.status === "Đang mở" ? (
+                {assignment.status === "Open" ? (
                   <Clock className="w-4 h-4" />
                 ) : (
                   <Lock className="w-4 h-4" />
@@ -258,7 +277,7 @@ const InstructorManageAssignment = () => {
             {/* Popup Header */}
             <div className="flex items-center justify-between p-6 border-b border-gray-200">
               <div className="flex items-center space-x-3">
-                <h2 className="text-xl font-semibold text-gray-900">Tạo bài tập mới</h2>
+                <h2 className="text-xl font-semibold text-gray-900">Create New Assignment</h2>
               </div>
               <button
                 onClick={() => setShowPopup(false)}
@@ -271,28 +290,28 @@ const InstructorManageAssignment = () => {
             <div className="p-6 space-y-8">
               {/* Basic Information */}
               <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Thông tin cơ bản</h3>
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Basic Information</h3>
                 
                 <div className="space-y-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Tiêu đề bài tập <span className="text-red-500">*</span>
+                      Assignment Title <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="text"
                       value={formData.title}
                       onChange={(e) => handleInputChange('title', e.target.value)}
-                      placeholder="Nhập tiêu đề bài tập..."
+                      placeholder="Enter assignment title..."
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Mô tả</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
                     <textarea
                       value={formData.description}
                       onChange={(e) => handleInputChange('description', e.target.value)}
-                      placeholder="Mô tả chi tiết về bài tập, yêu cầu và hướng dẫn thực hiện..."
+                      placeholder="Detailed description of the assignment, requirements and instructions..."
                       rows={4}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent resize-none"
                     />
@@ -301,7 +320,7 @@ const InstructorManageAssignment = () => {
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Hạn nộp <span className="text-red-500">*</span>
+                        Deadline <span className="text-red-500">*</span>
                       </label>
                       <input
                         type="date"
@@ -311,12 +330,45 @@ const InstructorManageAssignment = () => {
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Tài liệu</label>
-                      <input
-                        type="file"
-                        onChange={(e) => handleInputChange('documents', e.target.files[0])}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                      />
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Assignment Weight <span className="text-red-500">*</span>
+                      </label>
+                      <div className="flex items-center space-x-2">
+                        <input
+                          type="number"
+                          value={formData.courseWeight}
+                          onChange={(e) => handleInputChange('courseWeight', parseFloat(e.target.value) || 0)}
+                          placeholder="0"
+                          min="0"
+                          max="100"
+                          step="0.1"
+                          className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                        />
+                        <span className="text-sm text-gray-600 font-medium">%</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* File Upload Settings */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Submission File Settings <span className="text-red-500">*</span>
+                    </label>
+                    
+                    <div className="space-y-4">
+                      {/* Allowed Extensions */}
+                      <div>
+                        <label className="block text-xs font-medium text-gray-600 mb-2">
+                          Allowed File Extensions
+                        </label>
+                        <input
+                          type="text"
+                          value={formData.allowedExtensions}
+                          onChange={(e) => handleInputChange('allowedExtensions', e.target.value)}
+                          placeholder="example: .pdf, .docx, .py, .java, .zip or leave empty for all types"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                        />
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -324,10 +376,10 @@ const InstructorManageAssignment = () => {
 
               {/* Grading Scale Section */}
               <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Tiêu chí thang điểm (Rubric)</h3>
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Grading Rubric</h3>
                 
                 <div className="bg-blue-50 p-4 rounded-lg mb-6">
-                  <p className="text-sm text-blue-800 font-medium mb-3">Chọn loại thang điểm cho rubric:</p>
+                  <p className="text-sm text-blue-800 font-medium mb-3">Select grading scale type:</p>
                   <div className="space-y-2">
                     {Object.entries(gradingScales).map(([key, scale]) => (
                       <label key={key} className="flex items-center">
@@ -347,7 +399,7 @@ const InstructorManageAssignment = () => {
 
                 {/* Criteria Section */}
                 <div className="space-y-4">
-                  <h4 className="font-medium text-gray-900">Tiêu chí đánh giá</h4>
+                  <h4 className="font-medium text-gray-900">Grading Criteria</h4>
                   
                   {rubricCriteria.map((criteria, index) => (
                     <div key={criteria.id} className="border border-gray-200 rounded-lg p-4">
@@ -366,7 +418,7 @@ const InstructorManageAssignment = () => {
                                 )
                               );
                             }}
-                            placeholder="Tên tiêu chí đánh giá"
+                            placeholder="Criteria name"
                             className="flex-1 font-medium text-gray-900 bg-transparent border-none p-0 focus:ring-0"
                           />
                         </div>
@@ -382,9 +434,7 @@ const InstructorManageAssignment = () => {
                                 min="0"
                                 max="100"
                               />
-                              {selectedGradingScale === 'percentage' && (
-                                <span className="text-sm text-gray-500">%</span>
-                              )}
+                              <span className="text-sm text-gray-500">%</span>
                             </div>
                           )}
                           <button
@@ -406,7 +456,7 @@ const InstructorManageAssignment = () => {
                             )
                           );
                         }}
-                        placeholder="Mô tả chi tiết về tiêu chí này"
+                        placeholder="Detailed description of this criteria"
                         className="w-full text-sm text-gray-600 bg-transparent border-none p-0 focus:ring-0 mb-3"
                       />
 
@@ -431,7 +481,7 @@ const InstructorManageAssignment = () => {
                                   )
                                 );
                               }}
-                              placeholder="Chi tiết yêu cầu"
+                              placeholder="Requirement detail"
                               className="flex-1 text-sm text-gray-700 bg-transparent border-none p-0 focus:ring-0"
                             />
                             {criteria.details.length > 1 && (
@@ -448,7 +498,7 @@ const InstructorManageAssignment = () => {
                           onClick={() => addDetailToCriteria(criteria.id)}
                           className="text-sm text-orange-500 hover:text-orange-600 ml-6"
                         >
-                          + Thêm chi tiết
+                          + Add detail
                         </button>
                       </div>
                     </div>
@@ -459,34 +509,34 @@ const InstructorManageAssignment = () => {
                     className="w-full border-2 border-dashed border-orange-300 rounded-lg p-4 text-orange-500 hover:border-orange-400 hover:text-orange-600 transition-colors flex items-center justify-center space-x-2"
                   >
                     <Plus className="w-5 h-5" />
-                    <span>Thêm tiêu chí đánh giá mới</span>
+                    <span>Add new grading criteria</span>
                   </button>
 
                   {/* Weight Summary Table */}
                   {(selectedGradingScale === '100-point' || selectedGradingScale === 'percentage') && rubricCriteria.length > 0 && (
                     <div className="bg-blue-50 rounded-lg p-4">
                       <div className="flex justify-between items-center mb-3">
-                        <h5 className="text-blue-800 font-medium">Tổng kết tỷ trọng</h5>
+                        <h5 className="text-blue-800 font-medium">Weight Summary</h5>
                         <span className={`font-bold ${getTotalWeight() === 100 ? 'text-green-600' : 'text-orange-600'}`}>
-                          Tổng: {getTotalWeight()}{selectedGradingScale === '100-point' ? ' điểm' : '%'}
+                          Total: {getTotalWeight()}%
                         </span>
                       </div>
                       <div className="space-y-1">
                         {rubricCriteria.map((criteria, index) => (
                           <div key={criteria.id} className="flex justify-between items-center text-sm">
                             <span className="text-gray-700">
-                              {criteria.name || `Tiêu chí ${index + 1}`}
+                              {criteria.name || `Criteria ${index + 1}`}
                             </span>
                             <span className="font-medium text-gray-900">
-                              {criteria.weight}{selectedGradingScale === '100-point' ? ' điểm' : '%'}
+                              {criteria.weight}%
                             </span>
                           </div>
                         ))}
                         <div className="border-t border-blue-200 pt-2 mt-2">
                           <div className="flex justify-between items-center text-sm font-medium">
-                            <span className="text-blue-800">Tổng cộng</span>
+                            <span className="text-blue-800">Total</span>
                             <span className={`${getTotalWeight() === 100 ? 'text-green-600' : 'text-orange-600'}`}>
-                              {getTotalWeight()}{selectedGradingScale === '100-point' ? ' điểm' : '%'}
+                              {getTotalWeight()}%
                             </span>
                           </div>
                         </div>
@@ -499,7 +549,7 @@ const InstructorManageAssignment = () => {
                                 </svg>
                               </div>
                               <span className="text-red-800 text-sm font-medium">
-                                Cảnh báo: Tổng tỷ trọng vượt quá 100{selectedGradingScale === '100-point' ? ' điểm' : '%'}!
+                                Warning: Total weight exceeds 100%!
                               </span>
                             </div>
                           </div>
@@ -517,10 +567,10 @@ const InstructorManageAssignment = () => {
                 onClick={() => setShowPopup(false)}
                 className="px-4 py-2 text-gray-600 hover:text-gray-800 font-medium"
               >
-                Lưu nháp
+                Save Draft
               </button>
               <button className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-2 rounded-lg font-medium transition-colors">
-                Tạo
+                Create
               </button>
             </div>
           </div>

@@ -11,7 +11,7 @@ import StudentAssignmentPage from "../pages/StudentAssignmentPage/StudentAssignm
 import InstructorLayout from "../layout/InstructorLayout";
 import InstructorDashboard from "../pages/InstructorDashBoard/InstructorDashBoard";
 import InstructorViewClass from "../pages/InstructorViewClass/InstructorViewClass";
-import InstructorCreatePassword from "../pages/InstructorCreatePassword/InstructorCreatePassword";
+import InstructorEnrollKey from "../pages/InstructorEnrollKey/InstructorEnrollKey";
 import InstructorClassLayout from "../layout/InstructorClassLayout";
 import InstructorManageClass from "../pages/InstructorManageClass/InstructorManageClass";
 import InstructorManageAssignment from "../pages/InstructorManageAssignment/InstructorManageAssignment";
@@ -28,6 +28,7 @@ import Dashboard from "../pages/Admin/Dashboard";
 import ManageClass from "../pages/Admin/ManageClass";
 import AssignmentPage from "../pages/Admin/AssignmentPage";
 import PeerReviewPage from "../pages/PeerReviewPage/PeerReviewPage";
+import ReviewSuccessPage from "../pages/PeerReviewPage/ReviewSuccessPage";
 
 export const router = createBrowserRouter([
   {
@@ -60,6 +61,10 @@ export const router = createBrowserRouter([
        {
         path: "assignment/:courseId/:assignmentId/review",
         element: <PeerReviewPage/>,
+      },
+      {
+        path: "/2",
+        element: <ReviewSuccessPage/>,
       },
     ],
   },
@@ -94,8 +99,8 @@ export const router = createBrowserRouter([
       },
       {
 
-        path: "create-class-password",
-        element: <InstructorCreatePassword />,
+        path: "enroll-key",
+        element: <InstructorEnrollKey />,
       },
       {
 
