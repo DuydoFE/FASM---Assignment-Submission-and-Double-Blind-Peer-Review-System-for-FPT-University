@@ -104,6 +104,8 @@ export const router = createBrowserRouter([
         element: <InstructorViewClass />,
       },
       {
+        path: "enroll-key",
+        element: <InstructorEnrollKey />,
       },
       {
         path: "regrade-request",
