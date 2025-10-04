@@ -24,7 +24,7 @@ const Header = () => {
           key: "profile",
           label: (
             <Link to="/profile" className="flex items-center">
-              <User className="w-4 h-4 mr-2" /> Hồ sơ cá nhân
+              <User className="w-4 h-4 mr-2" /> Profile
             </Link>
           ),
         },
@@ -63,7 +63,7 @@ const Header = () => {
                 to="/my-assignments"
                 className="text-gray-600 hover:text-orange-500"
               >
-                Assignment của tôi
+                My Assignments
               </Link>
             </nav>
           </div>
@@ -107,14 +107,9 @@ const Header = () => {
                   to="/login"
                   className="px-6 py-2 border border-gray-300 rounded-lg font-medium text-gray-700 hover:bg-gray-100 transition-colors"
                 >
-                  Đăng nhập
+                  Log in
                 </Link>
-                <Link
-                  to="/register"
-                  className="px-6 py-2 rounded-lg font-medium text-white bg-orange-500 hover:bg-orange-600 transition-colors"
-                >
-                  Đăng ký
-                </Link>
+             
               </>
             )}
           </div>
