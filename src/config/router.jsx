@@ -23,12 +23,18 @@ import InstructorManageGrading from "../pages/IntructorManageGrading/IntructorMa
 import InstructorGradingDetail from "../pages/IntructorGradingDetail/IntructorGradingDetail";
 import InstructorPublishMark from "../pages/InstructorPublishMark/InstructorPublishMark";
 import InstructorRegradeRequest from "../pages/IntructorRegradeRequest/IntructorRegradeRequest";
-import AdminLayout from "../layout/AdminLayout";
-import Dashboard from "../pages/Admin/Dashboard";
-import ManageClass from "../pages/Admin/ManageClass";
-import AssignmentPage from "../pages/Admin/AssignmentPage";
 import PeerReviewPage from "../pages/PeerReviewPage/PeerReviewPage";
 import ReviewSuccessPage from "../pages/PeerReviewPage/ReviewSuccessPage";
+
+// 👉 Import layout + page cho Admin
+import AdminLayout from "../layout/AdminLayout";
+import AdminDashboard from "../pages/Admin/AdminDashboard";
+import AdminUserManagement from "../pages/Admin/AdminUserManagement";
+import AdminClassManagement from "../pages/Admin/AdminClassManagement";
+import AdminClassDetail from "../pages/Admin/AdminClassDetail";
+import AdminAccountSettings from "../pages/Admin/AdminAccountSettings";
+import AdminClassAssignments from "../pages/Admin/AdminClassAssignments";
+import AdminAssignmentSubmissions from "../pages/Admin/AdminAssignmentSubmissions";
 
 export const router = createBrowserRouter([
   {
@@ -40,27 +46,28 @@ export const router = createBrowserRouter([
         element: <HomePage />,
       },
       {
-
         path: "studentdashboard",
         element: <StudentDashBoard />,
       },
       {
-
         path: "my-assignments",
         element: <StudentAssignmentPage />,
       },
-       {
-    
+      {
         path: "assignment/:courseId",
         element: <AssignmentDetailPage />,
       },
-       {
+      {
         path: "assignment/:courseId/:assignmentId",
         element: <StudentSubmitAssignmentPage />,
       },
-       {
+      {
         path: "assignment/:courseId/:assignmentId/review",
-        element: <PeerReviewPage/>,
+        element: <PeerReviewPage />,
+      },
+      {
+        path: "/2",
+        element: <ReviewSuccessPage />,
       },
       {
         path: "/2",
@@ -93,17 +100,12 @@ export const router = createBrowserRouter([
         element: <InstructorDashboard />,
       },
       {
-
         path: "my-classes",
         element: <InstructorViewClass />,
       },
       {
-
-        path: "enroll-key",
-        element: <InstructorEnrollKey />,
       },
       {
-
         path: "regrade-request",
         element: <InstructorRegradeRequest />,
       },
@@ -147,24 +149,19 @@ export const router = createBrowserRouter([
       },
     ],
   },
+  // 👉 Admin routes
   {
     path: "/admin",
     element: <AdminLayout />,
     children: [
-      {
-        path: "dashboard",
-        element: <Dashboard />
-      },
-      {
-        path: "manage-class",
-        element: <ManageClass />
-      },
-      {
-        path: "assignments",
-        element: <AssignmentPage />
-      },
+      { path: "dashboard", element: <AdminDashboard /> },
+      { path: "users", element: <AdminUserManagement /> },
+      { path: "classes", element: <AdminClassManagement /> },
+      { path: "classes/:id", element: <AdminClassDetail /> },
+      { path: "classes/:id/assignments", element: <AdminClassAssignments /> }, // ✅
+      { path: "classes/:id/assignments/:assignmentId", element: <AdminAssignmentSubmissions /> }, // ✅
+      { path: "settings", element: <AdminAccountSettings /> },
     ],
   }
-
 
 ]);

@@ -29,8 +29,6 @@ const HomePage = () => {
             Transparent marking
           </h1>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto mb-8">
-            Comprehensive platform for students to submit assignments,
-            cross-grade and receive detailed feedback from instructors.
           </p>
           <div className="flex justify-center gap-4">
             <Link
