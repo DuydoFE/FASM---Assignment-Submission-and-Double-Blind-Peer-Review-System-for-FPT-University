@@ -3,13 +3,14 @@ import { Edit3, Eye, ChevronDown } from 'lucide-react';
 
 const InstructorPublishMark = () => {
   const [selectedClass, setSelectedClass] = useState('SE1718');
-  const [selectedSubject, setSelectedSubject] = useState('WDU391 - Thiết kế UI/UX');
+  const [selectedSubject, setSelectedSubject] = useState('WDU391 - UI/UX Design');
   const [selectedAssignment, setSelectedAssignment] = useState('Lab 1: Figma Basics');
+  const [statusFilter, setStatusFilter] = useState('All'); // Toggle filter
 
   const [students, setStudents] = useState([
     {
       id: 1,
-      name: 'Nguyễn Văn An',
+      name: 'Nguyen Van An',
       mssv: '2021001234',
       peerReview: 8.5,
       instructorGrade: 8.2,
@@ -18,7 +19,7 @@ const InstructorPublishMark = () => {
     },
     {
       id: 2,
-      name: 'Trần Thị Bình',
+      name: 'Tran Thi Binh',
       mssv: '2021001235',
       peerReview: 7.8,
       instructorGrade: 7.5,
@@ -27,7 +28,7 @@ const InstructorPublishMark = () => {
     },
     {
       id: 3,
-      name: 'Lê Minh Cường',
+      name: 'Le Minh Cuong',
       mssv: '2021001236',
       peerReview: 9.2,
       instructorGrade: 8.8,
@@ -36,7 +37,7 @@ const InstructorPublishMark = () => {
     },
     {
       id: 4,
-      name: 'Phạm Thu Dung',
+      name: 'Pham Thu Dung',
       mssv: '2021001237',
       peerReview: 6.5,
       instructorGrade: 7.0,
@@ -45,7 +46,7 @@ const InstructorPublishMark = () => {
     },
     {
       id: 5,
-      name: 'Nguyễn Văn An',
+      name: 'Nguyen Van An',
       mssv: '2021001234',
       peerReview: 8.5,
       instructorGrade: 8.2,
@@ -54,7 +55,7 @@ const InstructorPublishMark = () => {
     },
     {
       id: 6,
-      name: 'Trần Thị Bình',
+      name: 'Tran Thi Binh',
       mssv: '2021001235',
       peerReview: 7.8,
       instructorGrade: 7.5,
@@ -63,7 +64,7 @@ const InstructorPublishMark = () => {
     },
     {
       id: 7,
-      name: 'Lê Minh Cường',
+      name: 'Le Minh Cuong',
       mssv: '2021001236',
       peerReview: 9.2,
       instructorGrade: 8.8,
@@ -72,7 +73,7 @@ const InstructorPublishMark = () => {
     },
     {
       id: 8,
-      name: 'Phạm Thu Dung',
+      name: 'Pham Thu Dung',
       mssv: '2021001237',
       peerReview: 6.5,
       instructorGrade: 7.0,
@@ -81,7 +82,7 @@ const InstructorPublishMark = () => {
     },
     {
       id: 9,
-      name: 'Nguyễn Văn An',
+      name: 'Nguyen Van An',
       mssv: '2021001234',
       peerReview: 8.5,
       instructorGrade: 8.2,
@@ -90,7 +91,7 @@ const InstructorPublishMark = () => {
     },
     {
       id: 10,
-      name: 'Trần Thị Bình',
+      name: 'Tran Thi Binh',
       mssv: '2021001235',
       peerReview: 7.8,
       instructorGrade: 7.5,
@@ -99,7 +100,7 @@ const InstructorPublishMark = () => {
     },
     {
       id: 11,
-      name: 'Lê Minh Cường',
+      name: 'Le Minh Cuong',
       mssv: '2021001236',
       peerReview: 9.2,
       instructorGrade: 8.8,
@@ -108,7 +109,7 @@ const InstructorPublishMark = () => {
     },
     {
       id: 12,
-      name: 'Phạm Thu Dung',
+      name: 'Pham Thu Dung',
       mssv: '2021001237',
       peerReview: 6.5,
       instructorGrade: 7.0,
@@ -117,9 +118,20 @@ const InstructorPublishMark = () => {
     }
   ]);
 
+  // Toggle cycle All -> Published -> Draft -> All
+  const handleStatusClick = () => {
+    if (statusFilter === 'All') setStatusFilter('Published');
+    else if (statusFilter === 'Published') setStatusFilter('Draft');
+    else setStatusFilter('All');
+  };
+
+  const filteredStudents = students.filter(student =>
+    statusFilter === 'All' || student.status === statusFilter
+  );
+
   const handleGradeEdit = (studentId, field, value) => {
-    setStudents(prev => prev.map(student => 
-      student.id === studentId 
+    setStudents(prev => prev.map(student =>
+      student.id === studentId
         ? { ...student, [field]: parseFloat(value) || 0 }
         : student
     ));
@@ -132,7 +144,7 @@ const InstructorPublishMark = () => {
   };
 
   const getStatusStyle = (status) => {
-    return status === 'Published' 
+    return status === 'Published'
       ? 'bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-medium'
       : 'bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full text-xs font-medium';
   };
@@ -140,15 +152,15 @@ const InstructorPublishMark = () => {
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-7xl mx-auto">
-        <h1 className="text-2xl font-bold text-gray-900 mb-6">Bảng Điểm Chính Thức</h1>
-        
+        <h1 className="text-2xl font-bold text-gray-900 mb-6">Official Grade Table</h1>
+
         {/* Filters */}
         <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Chọn lớp</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Select Class</label>
               <div className="relative">
-                <select 
+                <select
                   value={selectedClass}
                   onChange={(e) => setSelectedClass(e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none"
@@ -160,27 +172,27 @@ const InstructorPublishMark = () => {
                 <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
               </div>
             </div>
-            
+
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Chọn môn</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Select Subject</label>
               <div className="relative">
-                <select 
+                <select
                   value={selectedSubject}
                   onChange={(e) => setSelectedSubject(e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none"
                 >
-                  <option value="WDU391 - Thiết kế UI/UX">WDU391 - Thiết kế UI/UX</option>
+                  <option value="WDU391 - UI/UX Design">WDU391 - UI/UX Design</option>
                   <option value="PRF192 - Programming Fundamentals">PRF192 - Programming Fundamentals</option>
                   <option value="MAD101 - Mobile App Development">MAD101 - Mobile App Development</option>
                 </select>
                 <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
               </div>
             </div>
-            
+
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Chọn assignment</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Select Assignment</label>
               <div className="relative">
-                <select 
+                <select
                   value={selectedAssignment}
                   onChange={(e) => setSelectedAssignment(e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none"
@@ -192,11 +204,11 @@ const InstructorPublishMark = () => {
                 <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
               </div>
             </div>
-            
+
             <div>
               <button className="w-full bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md transition-colors duration-200 font-medium">
                 <Eye className="inline w-4 h-4 mr-2" />
-                Xem điểm
+                View Grades
               </button>
             </div>
           </div>
@@ -208,22 +220,28 @@ const InstructorPublishMark = () => {
             <table className="w-full">
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">STT</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Họ và Tên</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">MSSV</th>
-                  <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Điểm Peer Review TB</th>
-                  <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Điểm Giảng Viên</th>
-                  <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Điểm Final</th>
-                  <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Trạng Thái</th>
-                  <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Thao Tác</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">No.</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Student ID</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Full Name</th>
+                  <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Average Peer Review</th>
+                  <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Instructor Grade</th>
+                  <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Final Grade</th>
+                  <th
+                    onClick={handleStatusClick}
+                    className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer select-none hover:text-orange-600 transition flex items-center gap-1 justify-center"
+                  >
+                    Status
+                    <ChevronDown size={16} />
+                  </th>
+                  <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {students.map((student, index) => (
+                {filteredStudents.map((student, index) => (
                   <tr key={student.id} className="hover:bg-gray-50 transition-colors duration-150">
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{index + 1}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{student.name}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{student.mssv}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{student.name}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-center">
                       <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getGradeColor(student.peerReview)}`}>
                         {student.peerReview}
@@ -241,7 +259,7 @@ const InstructorPublishMark = () => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-center">
                       <span className={getStatusStyle(student.status)}>
-                        {student.status === 'Published' ? 'Published' : 'Draft'}
+                        {student.status}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-center">
@@ -259,10 +277,10 @@ const InstructorPublishMark = () => {
         {/* Action Buttons */}
         <div className="flex justify-end space-x-4 mt-6">
           <button className="px-6 py-2 border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50 transition-colors duration-200 font-medium">
-            Lưu nháp
+            Save Draft
           </button>
           <button className="px-6 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-md transition-colors duration-200 font-medium">
-            Công bố điểm
+            Publish Grades
           </button>
         </div>
       </div>
