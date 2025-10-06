@@ -22,7 +22,7 @@ const InstructorViewClass = () => {
           name: course.courseInstanceName,
           code: course.courseCode,
           classId: course.courseInstanceName,
-          students: 0, 
+          students: course.studentCount, 
           status: course.isMainInstructor ? 'active' : 'completed',
           statusText: course.isMainInstructor ? 'Đang học' : 'Đã kết thúc'
         }));
@@ -224,7 +224,7 @@ const InstructorViewClass = () => {
         </div>
 
         {!isLoading && filteredClasses.length === 0 && (
-          <div className="text-center py-12">
+          <div className="text-center py-12">t
             <div className="text-gray-400 mb-4">
               <Search size={48} className="mx-auto" />
             </div>
