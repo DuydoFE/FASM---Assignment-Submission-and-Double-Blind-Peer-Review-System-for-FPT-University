@@ -30,21 +30,23 @@ const InstructorHeader = () => {
   const user = getCurrentAccount();
   const dispatch = useDispatch();
   const navigate = useNavigate();
+
   const handleLogout = () => {
     dispatch(logout());
-    toast.success("Đăng xuất thành công");
+    toast.success("Logged out successfully");
     localStorage.removeItem("token");
     localStorage.removeItem("refreshToken");
     navigate("/");
   };
-    const menu = (
+
+  const menu = (
     <Menu
       items={[
         {
           key: "profile",
           label: (
             <Link to="/profile" className="flex items-center">
-              <User className="w-4 h-4 mr-2" /> Hồ sơ cá nhân
+              <User className="w-4 h-4 mr-2" /> Profile
             </Link>
           ),
         },
@@ -52,13 +54,14 @@ const InstructorHeader = () => {
           key: "logout",
           label: (
             <span onClick={handleLogout} className="flex items-center">
-              <LogOut className="w-4 h-4 mr-2" /> Đăng xuất
+              <LogOut className="w-4 h-4 mr-2" /> Logout
             </span>
           ),
         },
       ]}
     />
   );
+
   return (
     <header className="bg-white shadow-sm sticky top-0 z-50">
       <div className="container mx-auto px-4">
@@ -71,7 +74,7 @@ const InstructorHeader = () => {
             <nav className="flex items-center space-x-6">
               <div className="flex items-center space-x-2">
                 <Calendar className="w-4 h-4 text-blue-600" />
-                <span className="text-gray-700 text-sm font-medium">Năm học:</span>
+                <span className="text-gray-700 text-sm font-medium">Academic Year:</span>
                 <select className="border border-gray-200 rounded-lg px-3 py-1 text-sm shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
                   <option>2025</option>
                   <option>2026</option>
@@ -80,7 +83,7 @@ const InstructorHeader = () => {
 
               <div className="flex items-center space-x-2">
                 <Book className="w-4 h-4 text-green-600" />
-                <span className="text-gray-700 text-sm font-medium">Học kỳ:</span>
+                <span className="text-gray-700 text-sm font-medium">Semester:</span>
                 <select className="border border-gray-200 rounded-lg px-3 py-1 text-sm shadow-sm focus:ring-2 focus:ring-green-500 focus:border-green-500 transition">
                   <option>FALL 2025</option>
                   <option>SPRING 2026</option>
@@ -97,43 +100,42 @@ const InstructorHeader = () => {
                 to="/my-classes"
                 className="text-gray-600 hover:text-orange-500 transition-colors font-medium"
               >
-                Lớp học của tôi
+                My Classes
               </Link>
               <Link
                 to="/regrade-request"
                 className="text-gray-600 hover:text-orange-500 transition-colors font-medium"
               >
-                Đơn khiếu nại
+                Regrade Requests
               </Link>
             </nav>
           </div>
 
-            {user ? (
-              <Dropdown className="p-3" overlay={menu} trigger={["hover"]}>
-                <Button type="text" className="flex items-center space-x-2">
-                  <Avatar
-                    src={
-                      user.avatar ||
-                      `https://ui-avatars.com/api/?name=${user.username}`
-                    }
-                  />
-                  <span className="font-medium text-gray-700">
-                    {user.username}
-                  </span>
-                </Button>
-              </Dropdown>
-            ) : (
-              <>
-                <Link
-                  to="/login"
-                  className="px-6 py-2 border border-gray-300 rounded-lg font-medium text-gray-700 hover:bg-gray-100 transition-colors"
-                >
-                  Đăng nhập
-                </Link>
-        
-              </>
-            )}
-          </div>
+          {user ? (
+            <Dropdown className="p-3" overlay={menu} trigger={["hover"]}>
+              <Button type="text" className="flex items-center space-x-2">
+                <Avatar
+                  src={
+                    user.avatar ||
+                    `https://ui-avatars.com/api/?name=${user.username}`
+                  }
+                />
+                <span className="font-medium text-gray-700">
+                  {user.username}
+                </span>
+              </Button>
+            </Dropdown>
+          ) : (
+            <>
+              <Link
+                to="/login"
+                className="px-6 py-2 border border-gray-300 rounded-lg font-medium text-gray-700 hover:bg-gray-100 transition-colors"
+              >
+                Login
+              </Link>
+            </>
+          )}
+        </div>
       </div>
     </header>
   );
