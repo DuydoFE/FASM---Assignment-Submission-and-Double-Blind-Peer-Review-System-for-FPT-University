@@ -30,3 +30,12 @@ export const assignmentService = {
   getAssignmentsByCourseInstanceId,
   getAssignmentDetailsById, // Thêm hàm mới vào export
 };
+export const getStudentAssignments = async (studentId) => {
+  try {
+    const response = await api.get(`/Assignment/student/${studentId}`);
+    return response.data; // Trả về toàn bộ response data
+  } catch (error) {
+    console.error("Error fetching student assignments:", error);
+    throw error;
+  }
+};

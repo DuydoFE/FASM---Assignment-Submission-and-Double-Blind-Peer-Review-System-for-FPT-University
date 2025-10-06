@@ -1,30 +1,48 @@
 import React from 'react';
-// 👉 1. Import useSelector và selectUser
 import { useSelector } from 'react-redux';
-import { selectUser } from '../../redux/features/userSlice'; //  <== Hãy chắc chắn đường dẫn này đúng với cấu trúc dự án của bạn
+import { useQuery } from '@tanstack/react-query'; 
+import { selectUser } from '../../redux/features/userSlice'; 
+import { getStudentAssignments } from '../../service/assignmentService'; 
 
 import { ChevronRight, Upload, FileText, Calendar, CheckCircle, MessageSquare, Clock, Bell } from 'lucide-react';
 import AssignmentCard from '../../component/MiniDashBoard/AssignmentCard';
 import CourseCard from '../../component/MiniDashBoard/CourseCard';
 
+const getAssignmentColor = (days) => {
+  if (days <= 3) return 'red';
+  if (days <= 7) return 'yellow';
+  return 'green';
+};
+
+// 👉 Helper function để định dạng ngày tháng
+const formatDueDate = (dateString) => {
+    const options = { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' };
+    return new Date(dateString).toLocaleDateString('vi-VN', options);
+}
+
 const StudentDashBoard = () => {
-  // 👉 2. Lấy thông tin người dùng từ Redux store
   const currentUser = useSelector(selectUser);
+  const studentId = currentUser?.userId; // Lấy userId từ Redux state
+
+  
+  const { data: assignmentData, isLoading, isError } = useQuery({
+    queryKey: ['studentAssignments', studentId], // Key cho query, sẽ fetch lại nếu studentId thay đổi
+    queryFn: () => getStudentAssignments(studentId),
+    enabled: !!studentId, // Chỉ chạy query khi studentId đã có giá trị
+  });
+
+  // Lấy ra mảng assignments từ data trả về, nếu không có thì trả về mảng rỗng
+  const assignments = assignmentData?.data || [];
 
   return (
     <div className="bg-gray-50 min-h-screen">
       <main className="p-8">
-
         <div className="mb-8">
-          {/* 👉 3. Thay thế tên tĩnh bằng tên từ currentUser */}
-          <h1 className="text-3xl font-bold text-gray-800">Welcome , {currentUser?.firstName}! </h1>
-          {/* <p className="text-gray-600">Hôm nay bạn có 3 assignments cần hoàn thành và 2 thông báo mới.</p> */}
+          <h1 className="text-3xl font-bold text-gray-800">Welcome back, {currentUser?.firstName}! </h1>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-   
           <div className="lg:col-span-2 space-y-8">
-  
             <div className="bg-white p-6 rounded-lg shadow-sm">
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-xl font-bold text-gray-800">Assignments are about to expire</h2>
@@ -33,9 +51,23 @@ const StudentDashBoard = () => {
                 </a>
               </div>
               <div>
-                <AssignmentCard color="red" title="Mobile App Development - Final Project" subject="PRM391" dueDate="25/12/2024 23:59" remaining="2 days" />
-                <AssignmentCard color="yellow" title="Database Design Report" subject="DBI202" dueDate="28/12/2024 23:59" remaining="5 days" />
-                <AssignmentCard color="green" title="Software Engineering Documentation" subject="SWE201" dueDate="02/01/2025 23:59" remaining="10 days" />
+                {/* 👉 4. Render dữ liệu từ API */}
+                {isLoading && <p>Loading assignments...</p>}
+                {isError && <p className="text-red-500">Could not fetch assignments.</p>}
+                {!isLoading && !isError && assignments.length > 0 ? (
+                  assignments.map((assignment) => (
+                    <AssignmentCard
+                      key={assignment.assignmentId}
+                      color={getAssignmentColor(assignment.daysUntilDeadline)}
+                      title={assignment.title}
+                      subject={assignment.courseName}
+                      dueDate={formatDueDate(assignment.deadline)}
+                      remaining={`${assignment.daysUntilDeadline} days`}
+                    />
+                  ))
+                ) : (
+                  !isLoading && <p>No upcoming assignments.</p> // Hiển thị khi không có assignment nào
+                )}
               </div>
             </div>
 
