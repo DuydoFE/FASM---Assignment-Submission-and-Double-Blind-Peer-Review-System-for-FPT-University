@@ -6,15 +6,14 @@ const InstructorSubmissionDetail = () => {
     <div className="max-w-6xl mx-auto p-6 bg-white min-h-screen">
       {/* Breadcrumb */}
       <nav className="flex items-center gap-2 text-sm text-gray-500 mb-6">
-        <span>Danh sách lớp học</span>
+        <span>Class List</span>
         <ChevronRight className="w-4 h-4" />
-        <span>SE1819 - Thiết kế UI/UX</span>
+        <span>SE1819 - UI/UX Design</span>
         <ChevronRight className="w-4 h-4" />
-        <span>Bài tập 1</span>
+        <span>Assignment 1</span>
         <ChevronRight className="w-4 h-4" />
-        <span className="text-gray-800 font-medium">Nguyễn Văn An</span>
+        <span className="text-gray-800 font-medium">Nguyen Van An</span>
       </nav>
-     
 
       {/* Student Header */}
       <div className="flex items-center justify-between mb-8">
@@ -23,32 +22,32 @@ const InstructorSubmissionDetail = () => {
             NA
           </div>
           <div>
-            <h1 className="text-xl font-semibold text-gray-800">Nguyễn Văn An</h1>
-            <p className="text-gray-500">MSSV: 2021001</p>
+            <h1 className="text-xl font-semibold text-gray-800">Nguyen Van An</h1>
+            <p className="text-gray-500">Student ID: 2021001</p>
           </div>
         </div>
         <div className="text-right">
           <div className="flex items-center gap-2 mb-1">
             <span className="inline-flex px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-              Đã nộp
+              Submitted
             </span>
           </div>
-          <p className="text-sm text-gray-800 font-medium">Nộp lúc: 23/12/2024 14:30</p>
-          <p className="text-sm text-green-600">Trước hạn 2 ngày</p>
+          <p className="text-sm text-gray-800 font-medium">Submitted on: 23/12/2024 14:30</p>
+          <p className="text-sm text-green-600">2 days before deadline</p>
         </div>
       </div>
 
       {/* Assignment Details */}
       <div className="mb-8">
-        <h2 className="text-xl font-semibold text-gray-800 mb-3">Bài tập 1: Wireframe Design</h2>
+        <h2 className="text-xl font-semibold text-gray-800 mb-3">Assignment 1: Wireframe Design</h2>
         <p className="text-gray-600">
-          Thiết kế wireframe cho ứng dụng mobile shopping. Sinh viên cần tạo wireframe cho 5 màn hình chính của ứng dụng.
+          Design a wireframe for a mobile shopping application. Students need to create wireframes for 5 main screens of the application.
         </p>
       </div>
 
       {/* Submitted File */}
       <div className="mb-8">
-        <h3 className="text-lg font-medium text-gray-800 mb-4">File đã nộp</h3>
+        <h3 className="text-lg font-medium text-gray-800 mb-4">Submitted File</h3>
         
         <div className="border border-gray-200 rounded-lg p-4">
           <div className="flex items-center justify-between mb-4">
@@ -59,8 +58,8 @@ const InstructorSubmissionDetail = () => {
               <div>
                 <p className="font-medium text-gray-800">wireframe-design.fig</p>
                 <div className="flex items-center gap-4 text-sm text-gray-500">
-                  <span>📁 Kích thước: 2.4 MB</span>
-                  <span>🕒 Cập nhật: 23/12/2024 14:28</span>
+                  <span>📁 Size: 2.4 MB</span>
+                  <span>🕒 Updated: 23/12/2024 14:28</span>
                   <span>🎨 Figma Design File</span>
                 </div>
               </div>
@@ -68,11 +67,11 @@ const InstructorSubmissionDetail = () => {
             <div className="flex items-center gap-2">
               <button className="flex items-center gap-2 px-3 py-2 text-sm text-gray-600 hover:bg-gray-50 rounded-lg">
                 <Eye className="w-4 h-4" />
-                Xem trước
+                Preview
               </button>
               <button className="flex items-center gap-2 px-4 py-2 text-sm bg-blue-500 text-white rounded-lg hover:bg-blue-600">
                 <Download className="w-4 h-4" />
-                Tải xuống
+                Download
               </button>
             </div>
           </div>
@@ -87,16 +86,16 @@ const InstructorSubmissionDetail = () => {
               <div className="w-8 h-10 border border-gray-300 rounded"></div>
             </div>
             <h4 className="text-lg font-medium text-gray-600 mb-2">Wireframe Preview</h4>
-            <p className="text-sm text-gray-500 mb-6">5 màn hình thiết kế</p>
+            <p className="text-sm text-gray-500 mb-6">5 design screens</p>
             
             <div className="flex items-center justify-center gap-4">
               <button className="flex items-center gap-2 px-4 py-2 text-sm bg-white border border-gray-300 rounded-lg hover:bg-gray-50">
                 <Expand className="w-4 h-4" />
-                Toàn màn hình
+                Full Screen
               </button>
               <button className="flex items-center gap-2 px-4 py-2 text-sm bg-white border border-gray-300 rounded-lg hover:bg-gray-50">
                 <Maximize2 className="w-4 h-4" />
-                Phóng to
+                Zoom
               </button>
             </div>
           </div>
@@ -107,10 +106,10 @@ const InstructorSubmissionDetail = () => {
       <div className="flex items-center justify-between pt-6 border-t border-gray-200">
         <button className="flex items-center gap-2 px-4 py-2 text-gray-600 hover:bg-gray-50 rounded-lg">
           <ChevronLeft className="w-4 h-4" />
-          Quay lại danh sách
+          Back to List
         </button>
         <button className="px-6 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600">
-          Chấm điểm
+          Grade
         </button>
       </div>
     </div>

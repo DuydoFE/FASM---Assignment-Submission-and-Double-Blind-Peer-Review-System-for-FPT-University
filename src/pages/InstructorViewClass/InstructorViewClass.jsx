@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { Search, BookOpen, Play, CheckCircle, Clock, MoreHorizontal } from 'lucide-react';
+import { Search, BookOpen, Play, CheckCircle, Clock, MoreHorizontal, ChevronDown } from 'lucide-react';
 import { getInstructorCourses } from '../../service/courseInstructor';
 import { getCurrentAccount } from '../../utils/accountUtils';
 
@@ -7,6 +7,8 @@ const InstructorViewClass = () => {
   const currentUser = getCurrentAccount();
   const [classes, setClasses] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('All'); // Toggle filter
 
   useEffect(() => {
     const fetchClasses = async () => {
@@ -15,16 +17,16 @@ const InstructorViewClass = () => {
           console.error('No user ID found');
           return;
         }
-        console.log(currentUser)
+        console.log(currentUser);
         const coursesData = await getInstructorCourses(currentUser?.id);
         const formattedClasses = coursesData.map(course => ({
           id: course.id,
           name: course.courseInstanceName,
           code: course.courseCode,
           classId: course.courseInstanceName,
-          students: course.studentCount, 
+          students: course.studentCount,
           status: course.isMainInstructor ? 'active' : 'completed',
-          statusText: course.isMainInstructor ? 'Đang học' : 'Đã kết thúc'
+          statusText: course.isMainInstructor ? 'Ongoing' : 'Completed'
         }));
         setClasses(formattedClasses);
       } catch (error) {
@@ -37,14 +39,20 @@ const InstructorViewClass = () => {
     fetchClasses();
   }, [currentUser]);
 
-  const [searchTerm, setSearchTerm] = useState('');
+  // Toggle cycle All -> Active -> Completed -> All
+  const handleStatusClick = () => {
+    if (statusFilter === 'All') setStatusFilter('active');
+    else if (statusFilter === 'active') setStatusFilter('completed');
+    else setStatusFilter('All');
+  };
 
   const filteredClasses = useMemo(() => {
-    return classes.filter(cls => 
-      cls.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      cls.code.toLowerCase().includes(searchTerm.toLowerCase())
+    return classes.filter(cls =>
+      (cls.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+       cls.code.toLowerCase().includes(searchTerm.toLowerCase())) &&
+      (statusFilter === 'All' || cls.status === statusFilter)
     );
-  }, [classes, searchTerm]);
+  }, [classes, searchTerm, statusFilter]);
 
   const totalClasses = classes.length;
   const activeClasses = classes.filter(cls => cls.status === 'active').length;
@@ -83,10 +91,10 @@ const InstructorViewClass = () => {
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Tất cả các lớp học kì FALL2025
+            All Classes - FALL2025
           </h1>
           <p className="text-gray-600">
-            Quản lý và theo dõi tiến trình học tập của bạn
+            Manage and track your teaching progress
           </p>
         </div>
 
@@ -96,7 +104,7 @@ const InstructorViewClass = () => {
             <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
             <input
               type="text"
-              placeholder="Tìm kiếm môn học, mã lớp..."
+              placeholder="Search by course name or code..."
               className="w-full pl-12 pr-4 py-3 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -109,8 +117,8 @@ const InstructorViewClass = () => {
           <div className="bg-blue-50 border border-blue-200 rounded-xl p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-blue-600 font-medium mb-1">Tổng môn học</p>
-                <p className="text-3xl font-bold text-blue-700">{totalClasses} môn</p>
+                <p className="text-blue-600 font-medium mb-1">Total Courses</p>
+                <p className="text-3xl font-bold text-blue-700">{totalClasses} courses</p>
               </div>
               <div className="bg-blue-500 rounded-lg p-3">
                 <BookOpen className="text-white" size={24} />
@@ -121,8 +129,8 @@ const InstructorViewClass = () => {
           <div className="bg-green-50 border border-green-200 rounded-xl p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-green-600 font-medium mb-1">Đang học</p>
-                <p className="text-3xl font-bold text-green-700">{activeClasses} môn</p>
+                <p className="text-green-600 font-medium mb-1">Ongoing</p>
+                <p className="text-3xl font-bold text-green-700">{activeClasses} courses</p>
               </div>
               <div className="bg-green-500 rounded-lg p-3">
                 <Play className="text-white" size={24} />
@@ -133,8 +141,8 @@ const InstructorViewClass = () => {
           <div className="bg-orange-50 border border-orange-200 rounded-xl p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-orange-600 font-medium mb-1">Đã hoàn thành</p>
-                <p className="text-3xl font-bold text-orange-700">{completedClasses} môn</p>
+                <p className="text-orange-600 font-medium mb-1">Completed</p>
+                <p className="text-3xl font-bold text-orange-700">{completedClasses} courses</p>
               </div>
               <div className="bg-orange-500 rounded-lg p-3">
                 <CheckCircle className="text-white" size={24} />
@@ -145,8 +153,8 @@ const InstructorViewClass = () => {
           <div className="bg-purple-50 border border-purple-200 rounded-xl p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-purple-600 font-medium mb-1">Sắp bắt đầu</p>
-                <p className="text-3xl font-bold text-purple-700">{upcomingClasses} môn</p>
+                <p className="text-purple-600 font-medium mb-1">Upcoming</p>
+                <p className="text-3xl font-bold text-purple-700">{upcomingClasses} courses</p>
               </div>
               <div className="bg-purple-500 rounded-lg p-3">
                 <Clock className="text-white" size={24} />
@@ -160,7 +168,7 @@ const InstructorViewClass = () => {
           {isLoading ? (
             <div className="p-8 text-center">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-4"></div>
-              <p className="text-gray-500">Đang tải dữ liệu...</p>
+              <p className="text-gray-500">Loading data...</p>
             </div>
           ) : (
           <div className="overflow-x-auto">
@@ -168,19 +176,23 @@ const InstructorViewClass = () => {
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
                   <th className="text-left py-4 px-6 font-medium text-gray-700">
-                    Thông tin môn học
+                    Course Information
                   </th>
                   <th className="text-left py-4 px-6 font-medium text-gray-700">
-                    Lớp học
+                    Class
                   </th>
                   <th className="text-left py-4 px-6 font-medium text-gray-700">
-                    Sinh viên
+                    Students
+                  </th>
+                  <th
+                    onClick={handleStatusClick}
+                    className="text-left py-4 px-6 font-medium text-gray-700 cursor-pointer select-none hover:text-orange-600 transition flex items-center gap-1"
+                  >
+                    Status
+                    <ChevronDown size={16} />
                   </th>
                   <th className="text-left py-4 px-6 font-medium text-gray-700">
-                    Trạng thái
-                  </th>
-                  <th className="text-left py-4 px-6 font-medium text-gray-700">
-                    Thao tác
+                    Actions
                   </th>
                 </tr>
               </thead>
@@ -194,7 +206,6 @@ const InstructorViewClass = () => {
                         </h3>
                         <div className="flex items-center gap-4 text-sm text-gray-500">
                           <span>{cls.code}</span>
-                          
                         </div>
                       </div>
                     </td>
@@ -224,15 +235,15 @@ const InstructorViewClass = () => {
         </div>
 
         {!isLoading && filteredClasses.length === 0 && (
-          <div className="text-center py-12">t
+          <div className="text-center py-12">
             <div className="text-gray-400 mb-4">
               <Search size={48} className="mx-auto" />
             </div>
             <h3 className="text-lg font-medium text-gray-600 mb-2">
-              Không tìm thấy kết quả
+              No results found
             </h3>
             <p className="text-gray-500">
-              Thử thay đổi từ khóa tìm kiếm khác
+              Try adjusting your search keywords or status filter
             </p>
           </div>
         )}
