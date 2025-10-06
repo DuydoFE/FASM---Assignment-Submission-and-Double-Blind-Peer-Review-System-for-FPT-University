@@ -66,13 +66,10 @@ export const router = createBrowserRouter([
         element: <PeerReviewPage />,
       },
       {
-        path: "/2",
+        path: "/review-success",
         element: <ReviewSuccessPage />,
       },
-      {
-        path: "/2",
-        element: <ReviewSuccessPage/>,
-      },
+     
     ],
   },
   {

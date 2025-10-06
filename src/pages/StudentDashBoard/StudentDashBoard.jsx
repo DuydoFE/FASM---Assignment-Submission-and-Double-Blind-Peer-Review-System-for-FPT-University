@@ -1,15 +1,23 @@
 import React from 'react';
+// 👉 1. Import useSelector và selectUser
+import { useSelector } from 'react-redux';
+import { selectUser } from '../../redux/features/userSlice'; //  <== Hãy chắc chắn đường dẫn này đúng với cấu trúc dự án của bạn
+
 import { ChevronRight, Upload, FileText, Calendar, CheckCircle, MessageSquare, Clock, Bell } from 'lucide-react';
 import AssignmentCard from '../../component/MiniDashBoard/AssignmentCard';
 import CourseCard from '../../component/MiniDashBoard/CourseCard';
 
 const StudentDashBoard = () => {
+  // 👉 2. Lấy thông tin người dùng từ Redux store
+  const currentUser = useSelector(selectUser);
+
   return (
     <div className="bg-gray-50 min-h-screen">
       <main className="p-8">
 
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-800">Welcome back, Khương Duy! </h1>
+          {/* 👉 3. Thay thế tên tĩnh bằng tên từ currentUser */}
+          <h1 className="text-3xl font-bold text-gray-800">Welcome , {currentUser?.firstName}! </h1>
           {/* <p className="text-gray-600">Hôm nay bạn có 3 assignments cần hoàn thành và 2 thông báo mới.</p> */}
         </div>
 
