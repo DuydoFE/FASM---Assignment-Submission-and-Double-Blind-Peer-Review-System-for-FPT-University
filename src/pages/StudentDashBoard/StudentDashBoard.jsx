@@ -17,7 +17,7 @@ const StudentDashBoard = () => {
 
         <div className="mb-8">
           {/* 👉 3. Thay thế tên tĩnh bằng tên từ currentUser */}
-          <h1 className="text-3xl font-bold text-gray-800">Welcome back, {currentUser?.firstName}! </h1>
+          <h1 className="text-3xl font-bold text-gray-800">Welcome , {currentUser?.firstName}! </h1>
           {/* <p className="text-gray-600">Hôm nay bạn có 3 assignments cần hoàn thành và 2 thông báo mới.</p> */}
         </div>
 
