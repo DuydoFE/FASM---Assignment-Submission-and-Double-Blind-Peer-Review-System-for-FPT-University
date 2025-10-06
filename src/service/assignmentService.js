@@ -24,9 +24,31 @@ const getAssignmentDetailsById = async (assignmentId) => {
     throw error;
   }
 };
+const getStudentAssignments = async (studentId) => {
+  try {
+    // 👉 SỬA Ở ĐÂY: Đã xóa "/api" ở đầu.
+    const response = await api.get(`/Assignment/student/${studentId}`);
+    return response.data; // Trả về toàn bộ object { message, statusCode, data }
+  } catch (error) {
+    console.error(`Lỗi khi lấy danh sách assignment cho sinh viên ID ${studentId}:`, error);
+    throw error;
+  }
+};
+
+const getAssignmentRubric = async (assignmentId) => {
+  try {
+    const response = await api.get(`/StudentReview/assignment/${assignmentId}/rubric`);
+    return response.data.data;
+  } catch (error) {
+    console.error(`Lỗi khi lấy rubric cho assignment ID ${assignmentId}:`, error);
+    throw error;
+  }
+};
 
 // Export service
 export const assignmentService = {
   getAssignmentsByCourseInstanceId,
-  getAssignmentDetailsById, // Thêm hàm mới vào export
+  getAssignmentDetailsById,
+   getAssignmentRubric,
+  getStudentAssignments, // Thêm hàm mới vào export
 };

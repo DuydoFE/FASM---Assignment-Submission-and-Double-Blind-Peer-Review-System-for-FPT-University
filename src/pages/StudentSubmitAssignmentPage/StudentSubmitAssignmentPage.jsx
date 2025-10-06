@@ -13,6 +13,7 @@ import { assignmentService } from '../../service/assignmentService';
 import SubmissionGuideCard from '../../component/Submission/SubmissionGuideCard';
 import SubmissionCard from '../../component/Submission/SubmissionCard';
 import PeerReviewCard from '../../component/Submission/PeerReviewCard';
+import RubricCard from '../../component/Submission/RubricCard';
 
 // Hàm helper để định dạng ngày tháng
 const formatDate = (dateString) => {
@@ -43,18 +44,12 @@ const StudentSubmitAssignmentPage = () => {
         const data = await assignmentService.getAssignmentDetailsById(assignmentId);
         setAssignment(data);
 
-        // Cập nhật số bài cần review từ API
+
         if (data) {
           setPeerReviewProgress(prev => ({ ...prev, required: data.numPeerReviewsRequired }));
         }
 
-        // TODO: Gọi API để lấy trạng thái nộp bài thực tế của sinh viên
-        // const submissionStatus = await submissionService.getStatus(assignmentId, studentId);
-        // setHasSubmitted(submissionStatus.hasSubmitted);
-
-        // TODO: Gọi API để lấy tiến độ chấm chéo thực tế
-        // const reviewProgress = await reviewService.getProgress(assignmentId, studentId);
-        // setPeerReviewProgress({ completed: reviewProgress.completed, required: data.numPeerReviewsRequired });
+    
 
       } catch (err) {
         setError("Không thể tải thông tin chi tiết của bài tập. Vui lòng thử lại.");
@@ -172,6 +167,7 @@ const StudentSubmitAssignmentPage = () => {
                     </div>
                 </div>
             </div>
+            <RubricCard assignmentId={assignmentId} />
           </div>
 
           {/* Right Column: Submission Status */}
