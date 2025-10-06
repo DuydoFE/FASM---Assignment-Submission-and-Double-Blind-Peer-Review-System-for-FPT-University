@@ -1,10 +1,11 @@
 import React from 'react';
 import { useSelector } from 'react-redux';
-import { useQuery } from '@tanstack/react-query'; 
-import { selectUser } from '../../redux/features/userSlice'; 
-import { getStudentAssignments } from '../../service/assignmentService'; 
+import { useQuery } from '@tanstack/react-query';
+import { selectUser } from '../../redux/features/userSlice'; // Sửa lại đường dẫn nếu cần
+// 👉 1. Sửa lại cách import: import đối tượng assignmentService
+import { assignmentService } from '../../service/assignmentService'; 
 
-import { ChevronRight, Upload, FileText, Calendar, CheckCircle, MessageSquare, Clock, Bell } from 'lucide-react';
+import { ChevronRight, Link, Upload, FileText, Calendar, CheckCircle, MessageSquare, Clock, Bell } from 'lucide-react';
 import AssignmentCard from '../../component/MiniDashBoard/AssignmentCard';
 import CourseCard from '../../component/MiniDashBoard/CourseCard';
 
@@ -14,7 +15,6 @@ const getAssignmentColor = (days) => {
   return 'green';
 };
 
-// 👉 Helper function để định dạng ngày tháng
 const formatDueDate = (dateString) => {
     const options = { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' };
     return new Date(dateString).toLocaleDateString('vi-VN', options);
@@ -22,17 +22,18 @@ const formatDueDate = (dateString) => {
 
 const StudentDashBoard = () => {
   const currentUser = useSelector(selectUser);
-  const studentId = currentUser?.userId; // Lấy userId từ Redux state
+  const studentId = currentUser?.userId;
 
-  
   const { data: assignmentData, isLoading, isError } = useQuery({
-    queryKey: ['studentAssignments', studentId], // Key cho query, sẽ fetch lại nếu studentId thay đổi
-    queryFn: () => getStudentAssignments(studentId),
-    enabled: !!studentId, // Chỉ chạy query khi studentId đã có giá trị
+    queryKey: ['studentAssignments', studentId],
+    // 👉 2. Sửa lại cách gọi hàm: sử dụng assignmentService.getStudentAssignments
+    queryFn: () => assignmentService.getStudentAssignments(studentId),
+    enabled: !!studentId,
   });
 
-  // Lấy ra mảng assignments từ data trả về, nếu không có thì trả về mảng rỗng
   const assignments = assignmentData?.data || [];
+  const MAX_ASSIGNMENTS_TO_SHOW = 5;
+  const displayedAssignments = assignments.slice(0, MAX_ASSIGNMENTS_TO_SHOW);
 
   return (
     <div className="bg-gray-50 min-h-screen">
@@ -46,16 +47,17 @@ const StudentDashBoard = () => {
             <div className="bg-white p-6 rounded-lg shadow-sm">
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-xl font-bold text-gray-800">Assignments are about to expire</h2>
-                <a href="#" className="text-sm font-semibold text-orange-600 flex items-center">
-                  Xem tất cả <ChevronRight className="w-4 h-4 ml-1" />
-                </a>
+                {assignments.length > MAX_ASSIGNMENTS_TO_SHOW && (
+                   <Link to="/my-assignments" className="text-sm font-semibold text-orange-600 flex items-center">
+                    Xem tất cả <ChevronRight className="w-4 h-4 ml-1" />
+                  </Link>
+                )}
               </div>
               <div>
-                {/* 👉 4. Render dữ liệu từ API */}
                 {isLoading && <p>Loading assignments...</p>}
                 {isError && <p className="text-red-500">Could not fetch assignments.</p>}
-                {!isLoading && !isError && assignments.length > 0 ? (
-                  assignments.map((assignment) => (
+                {!isLoading && !isError && displayedAssignments.length > 0 ? (
+                  displayedAssignments.map((assignment) => (
                     <AssignmentCard
                       key={assignment.assignmentId}
                       color={getAssignmentColor(assignment.daysUntilDeadline)}
@@ -66,7 +68,7 @@ const StudentDashBoard = () => {
                     />
                   ))
                 ) : (
-                  !isLoading && <p>No upcoming assignments.</p> // Hiển thị khi không có assignment nào
+                  !isLoading && <p>No upcoming assignments.</p>
                 )}
               </div>
             </div>
