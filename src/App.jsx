@@ -1,3 +1,5 @@
+// src/App.jsx
+
 import { RouterProvider } from "react-router-dom";
 import { router } from "./config/router";
 import { Provider } from "react-redux";
@@ -6,16 +8,19 @@ import { PersistGate } from "redux-persist/integration/react";
 import AOS from "aos";
 import "aos/dist/aos.css";
 import { StateProvider } from "./Context/StateProvider";
-import { QueryClient, QueryClientProvider } from "react-query";
+// 👉 1. Cập nhật import thành @tanstack/react-query
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ToastContainer } from "react-toastify";
+
 AOS.init({
   duration: 1000,
 });
+
+// 👉 2. Tạo queryClient ở bên ngoài component
+const queryClient = new QueryClient();
+
 function App() {
-  // useRealtime((data) => {
-  //   console.log(data);
-  // });
-  const queryClient = new QueryClient();
+  // Dòng `const queryClient = new QueryClient();` đã được di chuyển ra ngoài
   return (
     <>
       <QueryClientProvider client={queryClient}>
