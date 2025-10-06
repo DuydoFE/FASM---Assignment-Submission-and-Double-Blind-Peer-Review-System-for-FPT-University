@@ -68,37 +68,41 @@ const LoginPage = () => {
     }
   };
 
-const handleLoginGoogle = () => {
-  window.location.href =
-    "https://localhost:7104/api/account/google-login?returnUrl=http://localhost:5173/login?google=true";
-};
-
-useEffect(() => {
-  const handleGoogleCallback = async () => {
-    const url = new URL(window.location.href);
-    const isGoogleCallback = url.searchParams.get("google"); // check param
-
-    if (isGoogleCallback) {
-      try {
-        console.log("Detected Google callback, fetching user info...");
-
-        const res = await axios.get("https://localhost:7104/api/account/me", {
-          withCredentials: true
-        });
-
-        dispatch(loginRedux(res.data));
-        toast.success("Google Login successful!");
-        navigate("/instructordashboard");
-      } catch (err) {
-        console.error("Failed to fetch user after Google callback:", err);
-        toast.error("Google Login failed.");
-        navigate("/login");
-      }
-    }
+  const handleLoginGoogle = () => {
+    window.location.href =
+      "https://localhost:7104/api/account/google-login?returnUrl=http://localhost:5173/login?google=true";
   };
 
-  handleGoogleCallback();
-}, []);
+  useEffect(() => {
+    const handleGoogleCallback = async () => {
+      const fullUrl = window.location.href;
+       const query = fullUrl.split('?').slice(1).join('&')
+       const params = new URLSearchParams(query);
+      const isGoogleCallback = params.get("google"); // check param
+      const accessToken = params.get("accessToken"); // check param
+      const refreshToken = params.get("refreshToken"); // check param
+      if (isGoogleCallback) {
+        try {
+          console.log("Detected Google callback, fetching user info...");
+
+          const res = await axios.get("https://localhost:7104/api/account/me", {
+            withCredentials: true
+          });
+          localStorage.setItem("token", accessToken);
+          localStorage.setItem("refreshToken", refreshToken);
+          dispatch(loginRedux(res.data.data));
+          toast.success("Google Login successful!");
+          navigate("/instructordashboard");
+        } catch (err) {
+          console.error("Failed to fetch user after Google callback:", err);
+          toast.error("Google Login failed.");
+          navigate("/login"); 
+        }
+      }
+    };
+
+    handleGoogleCallback();
+  }, []);
 
   return (
     <div

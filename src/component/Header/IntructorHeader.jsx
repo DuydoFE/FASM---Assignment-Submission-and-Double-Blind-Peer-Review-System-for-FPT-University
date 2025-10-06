@@ -1,5 +1,10 @@
-import { Link } from "react-router-dom";
-import { Bell, Book, Calendar } from 'lucide-react';
+import { Link, useNavigate } from "react-router-dom";
+import { Bell, Book, Calendar, LogOut, User } from 'lucide-react';
+import { getCurrentAccount } from "../../utils/accountUtils";
+import { useDispatch } from "react-redux";
+import { Avatar, Button, Dropdown, Menu } from "antd";
+import { logout } from "../../redux/features/userSlice";
+import { toast } from "react-toastify";
 
 const FasmLogo = () => (
   <div className="flex items-center space-x-2">
@@ -22,6 +27,38 @@ const FasmLogo = () => (
 );
 
 const InstructorHeader = () => {
+  const user = getCurrentAccount();
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const handleLogout = () => {
+    dispatch(logout());
+    toast.success("Đăng xuất thành công");
+    localStorage.removeItem("token");
+    localStorage.removeItem("refreshToken");
+    navigate("/");
+  };
+    const menu = (
+    <Menu
+      items={[
+        {
+          key: "profile",
+          label: (
+            <Link to="/profile" className="flex items-center">
+              <User className="w-4 h-4 mr-2" /> Hồ sơ cá nhân
+            </Link>
+          ),
+        },
+        {
+          key: "logout",
+          label: (
+            <span onClick={handleLogout} className="flex items-center">
+              <LogOut className="w-4 h-4 mr-2" /> Đăng xuất
+            </span>
+          ),
+        },
+      ]}
+    />
+  );
   return (
     <header className="bg-white shadow-sm sticky top-0 z-50">
       <div className="container mx-auto px-4">
@@ -71,22 +108,32 @@ const InstructorHeader = () => {
             </nav>
           </div>
 
-          <div className="flex items-center space-x-4">
-            <div className="relative">
-              <Bell className="w-5 h-5 text-gray-400" />
-              <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full text-xs text-white flex items-center justify-center">1</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center">
-                <span className="text-white text-sm font-medium">QL</span>
-              </div>
-              <div className="text-sm">
-                <div className="text-gray-900 font-medium">Quang Loc</div>
-                <div className="text-gray-500">Instructor - HCM</div>
-              </div>
-            </div>
+            {user ? (
+              <Dropdown className="p-3" overlay={menu} trigger={["hover"]}>
+                <Button type="text" className="flex items-center space-x-2">
+                  <Avatar
+                    src={
+                      user.avatar ||
+                      `https://ui-avatars.com/api/?name=${user.username}`
+                    }
+                  />
+                  <span className="font-medium text-gray-700">
+                    {user.username}
+                  </span>
+                </Button>
+              </Dropdown>
+            ) : (
+              <>
+                <Link
+                  to="/login"
+                  className="px-6 py-2 border border-gray-300 rounded-lg font-medium text-gray-700 hover:bg-gray-100 transition-colors"
+                >
+                  Đăng nhập
+                </Link>
+        
+              </>
+            )}
           </div>
-        </div>
       </div>
     </header>
   );
