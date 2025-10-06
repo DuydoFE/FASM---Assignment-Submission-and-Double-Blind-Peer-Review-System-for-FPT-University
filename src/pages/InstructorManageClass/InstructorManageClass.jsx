@@ -66,10 +66,10 @@ const InstructorManageClass = () => {
 
       <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
         <div className="grid grid-cols-6 gap-4 px-6 py-4 bg-gray-50 border-b border-gray-200 text-sm font-medium text-gray-700">
-          <div>IMAGE</div>
-          <div>MEMBER</div>
-          <div>FULL NAME</div>
-          <div>EMAIL</div>
+          <div>Image</div>
+          <div>Member</div>
+          <div>Full Name</div>
+          <div>Email</div>
           {/* STATUS header clickable with icon */}
           <div
             onClick={handleStatusClick}
@@ -78,7 +78,7 @@ const InstructorManageClass = () => {
             STATUS
             <ChevronDown size={16} />
           </div>
-          <div>ACTION</div>
+          <div>Action</div>
         </div>
 
         {filteredStudents.map((student) => (

@@ -204,8 +204,8 @@ const IntructorManageGrading = () => {
           <table className="w-full">
             <thead className="bg-gray-50 border-b border-gray-200">
               <tr>
+                <th className="px-6 py-3 text-left text-sm font-medium text-gray-600">Member</th>
                 <th className="px-6 py-3 text-left text-sm font-medium text-gray-600">Full Name</th>
-                <th className="px-6 py-3 text-left text-sm font-medium text-gray-600">Student ID</th>
                 <th className="px-6 py-3 text-left text-sm font-medium text-gray-600">Score</th>
                 <th className="px-6 py-3 text-left text-sm font-medium text-gray-600">Feedback</th>
                 <th className="px-6 py-3 text-left text-sm font-medium text-gray-600">Submission Time</th>
@@ -221,8 +221,8 @@ const IntructorManageGrading = () => {
             <tbody className="divide-y divide-gray-200">
               {filteredStudents.map((student) => (
                 <tr key={student.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 text-sm text-gray-800">{student.name}</td>
                   <td className="px-6 py-4 text-sm text-gray-600">{student.mssv}</td>
+                  <td className="px-6 py-4 text-sm text-gray-800">{student.name}</td>
                   <td className="px-6 py-4">
                     <span className={`inline-flex items-center justify-center w-20 h-10 border-2 rounded-lg font-semibold ${getScoreStyle(student.score)}`}>
                       {student.score !== null ? `${student.score} / ${maxScore}` : `-- / ${maxScore}`}
