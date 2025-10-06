@@ -1,4 +1,4 @@
-import { createBrowserRouter } from "react-router-dom";
+import { createBrowserRouter, Navigate } from "react-router-dom";
 import Zustand from "../Zustand";
 import UseReactQuerry from "../component/UseReactQuerry";
 import Test from "../Test";
@@ -25,6 +25,19 @@ import InstructorPublishMark from "../pages/InstructorPublishMark/InstructorPubl
 import InstructorRegradeRequest from "../pages/IntructorRegradeRequest/IntructorRegradeRequest";
 import PeerReviewPage from "../pages/PeerReviewPage/PeerReviewPage";
 import ReviewSuccessPage from "../pages/PeerReviewPage/ReviewSuccessPage";
+import { getCurrentAccount } from "../utils/accountUtils";
+import { toast } from "react-toastify";
+import { ROLE } from "../constant/roleEnum";
+const ProtectedRoute = ({ children, role }) => {
+  const user =  getCurrentAccount();
+  if (!user  || user?.roles[0] !== role) {
+    // User is not authenticated or doesn't have the required role
+    toast.error("You don't have permission to access this page!");
+    return <Navigate to="/" replace />;
+  }
+    // User has the required role, render the children
+  return children;
+};
 
 // 👉 Import layout + page cho Admin
 import AdminLayout from "../layout/AdminLayout";
@@ -94,7 +107,7 @@ export const router = createBrowserRouter([
     children: [
       {
         path: "instructordashboard",
-        element: <InstructorDashboard />,
+        element:   <ProtectedRoute role={ROLE.INSTRUCTOR}><InstructorDashboard /></ProtectedRoute>,
       },
       {
         path: "my-classes",
