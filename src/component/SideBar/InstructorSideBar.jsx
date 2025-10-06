@@ -6,7 +6,7 @@ const InstructorSideBar = () => {
   const location = useLocation();
   
   const menuItems = [
-    { id: 'manage-class', label: 'Danh sách lớp', icon: Users, path: '/manage-class' },
+    { id: 'manage-class', label: 'Class List', icon: Users, path: '/manage-class' },
     { id: 'assignment', label: 'Assignment', icon: FileText, path: '/manage-assignment' },
     { id: 'grading', label: 'Grading', icon: BarChart3, path: '/manage-grading' },
     { id: 'publish', label: 'Publish Mark', icon: Upload, path: '/publish-mark' }
@@ -15,7 +15,7 @@ const InstructorSideBar = () => {
   return (
     <div className="w-64 bg-white border-r border-gray-200 h-screen fixed left-0 top-20 z-40">
       <div className="p-6 border-b border-gray-200">
-        <h1 className="text-xl font-semibold text-gray-800">Quản lý lớp học</h1>
+        <h1 className="text-xl font-semibold text-gray-800">Class Management</h1>
       </div>
       
       <nav className="p-4">
