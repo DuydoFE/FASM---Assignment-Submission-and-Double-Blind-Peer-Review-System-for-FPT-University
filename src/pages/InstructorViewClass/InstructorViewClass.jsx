@@ -1,54 +1,41 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Search, BookOpen, Play, CheckCircle, Clock, MoreHorizontal } from 'lucide-react';
+import { getInstructorCourses } from '../../service/courseInstructor';
+import { getCurrentAccount } from '../../utils/accountUtils';
 
 const InstructorViewClass = () => {
-  const [classes] = useState([
-    {
-      id: 1,
-      name: "Thiết kế UI/UX",
-      code: "WDU391",
-      classId: "SE1819",
-      students: 35,
-      status: "active",
-      statusText: "Đang học"
-    },
-    {
-      id: 2,
-      name: "Lập trình Web",
-      code: "WED201",
-      classId: "SE1718",
-      students: 32,
-      status: "active",
-      statusText: "Đang học"
-    },
-    {
-      id: 3,
-      name: "Cơ sở dữ liệu",
-      code: "CSD302",
-      classId: "SE1817",
-      students: 29,
-      status: "completed",
-      statusText: "Đã kết thúc"
-    },
-    {
-      id: 4,
-      name: "Phân tích dữ liệu",
-      code: "PMG391",
-      classId: "SE1920",
-      students: 31,
-      status: "active",
-      statusText: "Đang học"
-    },
-    {
-      id: 5,
-      name: "Toán cao cấp",
-      code: "MAD201",
-      classId: "SE1921",
-      students: 30,
-      status: "upcoming",
-      statusText: "Sắp bắt đầu"
-    }
-  ]);
+  const currentUser = getCurrentAccount();
+  const [classes, setClasses] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchClasses = async () => {
+      try {
+        if (!currentUser?.id) {
+          console.error('No user ID found');
+          return;
+        }
+        console.log(currentUser)
+        const coursesData = await getInstructorCourses(currentUser?.id);
+        const formattedClasses = coursesData.map(course => ({
+          id: course.id,
+          name: course.courseInstanceName,
+          code: course.courseCode,
+          classId: course.courseInstanceName,
+          students: 0, 
+          status: course.isMainInstructor ? 'active' : 'completed',
+          statusText: course.isMainInstructor ? 'Đang học' : 'Đã kết thúc'
+        }));
+        setClasses(formattedClasses);
+      } catch (error) {
+        console.error('Failed to fetch instructor courses:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchClasses();
+  }, [currentUser]);
 
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -170,6 +157,12 @@ const InstructorViewClass = () => {
 
         {/* Classes Table */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+          {isLoading ? (
+            <div className="p-8 text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-4"></div>
+              <p className="text-gray-500">Đang tải dữ liệu...</p>
+            </div>
+          ) : (
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead className="bg-gray-50 border-b border-gray-200">
@@ -227,9 +220,10 @@ const InstructorViewClass = () => {
               </tbody>
             </table>
           </div>
+          )}
         </div>
 
-        {filteredClasses.length === 0 && (
+        {!isLoading && filteredClasses.length === 0 && (
           <div className="text-center py-12">
             <div className="text-gray-400 mb-4">
               <Search size={48} className="mx-auto" />
