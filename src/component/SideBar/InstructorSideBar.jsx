@@ -1,15 +1,36 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Search, Users, FileText, BarChart3, Upload } from 'lucide-react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useParams } from 'react-router-dom';
 
 const InstructorSideBar = () => {
   const location = useLocation();
-  
+  const { id: courseInstanceId } = useParams(); // Get courseInstanceId from URL
+
   const menuItems = [
-    { id: 'manage-class', label: 'Class List', icon: Users, path: '/instructor/manage-class/:id' },
-    { id: 'assignment', label: 'Assignment', icon: FileText, path: '/instructor/manage-assignment' },
-    { id: 'grading', label: 'Grading', icon: BarChart3, path: '/instructor/manage-grading' },
-    { id: 'publish', label: 'Publish Mark', icon: Upload, path: '/instructor/publish-mark' }
+    {
+      id: 'manage-class',
+      label: 'Class List',
+      icon: Users,
+      path: courseInstanceId ? `/instructor/manage-class/${courseInstanceId}` : '/instructor/manage-class/:id',
+    },
+    {
+      id: 'assignment',
+      label: 'Assignment',
+      icon: FileText,
+      path: courseInstanceId ? `/instructor/manage-assignment/${courseInstanceId}` : '/instructor/manage-assignment',
+    },
+    {
+      id: 'grading',
+      label: 'Grading',
+      icon: BarChart3,
+      path: courseInstanceId ? `/instructor/manage-grading/${courseInstanceId}` : '/instructor/manage-grading',
+    },
+    {
+      id: 'publish',
+      label: 'Publish Mark',
+      icon: Upload,
+      path: courseInstanceId ? `/instructor/publish-mark/${courseInstanceId}` : '/instructor/publish-mark',
+    },
   ];
 
   return (
@@ -17,12 +38,12 @@ const InstructorSideBar = () => {
       <div className="p-6 border-b border-gray-200">
         <h1 className="text-xl font-semibold text-gray-800">Class Management</h1>
       </div>
-      
+
       <nav className="p-4">
         {menuItems.map((item) => {
           const IconComponent = item.icon;
           const isActive = location.pathname === item.path;
-          
+
           return (
             <Link
               key={item.id}
