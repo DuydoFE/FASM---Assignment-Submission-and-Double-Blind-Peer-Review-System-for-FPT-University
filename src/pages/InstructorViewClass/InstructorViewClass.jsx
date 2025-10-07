@@ -1,14 +1,16 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { Search, BookOpen, Play, CheckCircle, Clock, MoreHorizontal, ChevronDown } from 'lucide-react';
-import { getInstructorCourses } from '../../service/courseInstructor';
 import { getCurrentAccount } from '../../utils/accountUtils';
+import { useNavigate } from 'react-router-dom';
+import { getInstructorCourses } from '../../service/courseInstructor';
 
 const InstructorViewClass = () => {
+  const navigate = useNavigate();
   const currentUser = getCurrentAccount();
   const [classes, setClasses] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('All'); // Toggle filter
+  const [statusFilter, setStatusFilter] = useState('All');
 
   useEffect(() => {
     const fetchClasses = async () => {
@@ -17,17 +19,19 @@ const InstructorViewClass = () => {
           console.error('No user ID found');
           return;
         }
-        console.log(currentUser);
+        
         const coursesData = await getInstructorCourses(currentUser?.id);
+        
         const formattedClasses = coursesData.map(course => ({
           id: course.id,
           name: course.courseInstanceName,
           code: course.courseCode,
           classId: course.courseInstanceName,
-          students: course.studentCount,
+          students: 0, // Placeholder; actual count can be fetched if needed
           status: course.isMainInstructor ? 'active' : 'completed',
           statusText: course.isMainInstructor ? 'Ongoing' : 'Completed'
         }));
+        
         setClasses(formattedClasses);
       } catch (error) {
         console.error('Failed to fetch instructor courses:', error);
@@ -39,7 +43,6 @@ const InstructorViewClass = () => {
     fetchClasses();
   }, [currentUser]);
 
-  // Toggle cycle All -> Active -> Completed -> All
   const handleStatusClick = () => {
     if (statusFilter === 'All') setStatusFilter('active');
     else if (statusFilter === 'active') setStatusFilter('completed');
@@ -171,66 +174,70 @@ const InstructorViewClass = () => {
               <p className="text-gray-500">Loading data...</p>
             </div>
           ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gray-50 border-b border-gray-200">
-                <tr>
-                  <th className="text-left py-4 px-6 font-medium text-gray-700">
-                    Course Information
-                  </th>
-                  <th className="text-left py-4 px-6 font-medium text-gray-700">
-                    Class
-                  </th>
-                  <th className="text-left py-4 px-6 font-medium text-gray-700">
-                    Students
-                  </th>
-                  <th
-                    onClick={handleStatusClick}
-                    className="text-left py-4 px-6 font-medium text-gray-700 cursor-pointer select-none hover:text-orange-600 transition flex items-center gap-1"
-                  >
-                    Status
-                    <ChevronDown size={16} />
-                  </th>
-                  <th className="text-left py-4 px-6 font-medium text-gray-700">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200">
-                {filteredClasses.map((cls) => (
-                  <tr key={cls.id} className="hover:bg-gray-50 transition-colors">
-                    <td className="py-4 px-6">
-                      <div>
-                        <h3 className="font-semibold text-gray-900 mb-1">
-                          {cls.name}
-                        </h3>
-                        <div className="flex items-center gap-4 text-sm text-gray-500">
-                          <span>{cls.code}</span>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="py-4 px-6">
-                      <span className="font-mono text-gray-900">{cls.classId}</span>
-                    </td>
-                    <td className="py-4 px-6">
-                      <span className="text-gray-900">{cls.students}</span>
-                    </td>
-                    <td className="py-4 px-6">
-                      <span className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium ${getStatusStyle(cls.status)}`}>
-                        {getStatusIcon(cls.status)}
-                        {cls.statusText}
-                      </span>
-                    </td>
-                    <td className="py-4 px-6">
-                      <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-                        <MoreHorizontal className="text-gray-400" size={16} />
-                      </button>
-                    </td>
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-gray-50 border-b border-gray-200">
+                  <tr>
+                    <th className="text-left py-4 px-6 font-medium text-gray-700">
+                      Course Information
+                    </th>
+                    <th className="text-left py-4 px-6 font-medium text-gray-700">
+                      Class
+                    </th>
+                    <th className="text-left py-4 px-6 font-medium text-gray-700">
+                      Students
+                    </th>
+                    <th
+                      onClick={handleStatusClick}
+                      className="text-left py-4 px-6 font-medium text-gray-700 cursor-pointer select-none hover:text-orange-600 transition flex items-center gap-1"
+                    >
+                      Status
+                      <ChevronDown size={16} />
+                    </th>
+                    <th className="text-left py-4 px-6 font-medium text-gray-700">
+                      Actions
+                    </th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                  {filteredClasses.map((cls) => (
+                    <tr 
+                      key={cls.id} 
+                      className="hover:bg-gray-50 transition-colors cursor-pointer"
+                      onClick={() => navigate(`/instructor/class/manage-class/${cls.id}`)}
+                    >
+                      <td className="py-4 px-6">
+                        <div>
+                          <h3 className="font-semibold text-gray-900 mb-1">
+                            {cls.name}
+                          </h3>
+                          <div className="flex items-center gap-4 text-sm text-gray-500">
+                            <span>{cls.code}</span>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="py-4 px-6">
+                        <span className="font-mono text-gray-900">{cls.classId}</span>
+                      </td>
+                      <td className="py-4 px-6">
+                        <span className="text-gray-900">{cls.students}</span>
+                      </td>
+                      <td className="py-4 px-6">
+                        <span className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium ${getStatusStyle(cls.status)}`}>
+                          {getStatusIcon(cls.status)}
+                          {cls.statusText}
+                        </span>
+                      </td>
+                      <td className="py-4 px-6">
+                        <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+                          <MoreHorizontal className="text-gray-400" size={16} />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           )}
         </div>
 

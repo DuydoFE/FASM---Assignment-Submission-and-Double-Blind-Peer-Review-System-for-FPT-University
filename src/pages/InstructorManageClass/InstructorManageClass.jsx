@@ -1,26 +1,73 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Search, Users, ChevronDown } from 'lucide-react';
+import { useParams } from 'react-router-dom';
+import { getStudentsInCourse } from '../../service/courseInstructor';
 
 const InstructorManageClass = () => {
+  const { id: courseInstanceId } = useParams();
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('All'); // toggle filter
+  const [statusFilter, setStatusFilter] = useState('All');
+  const [loading, setLoading] = useState(true);
+  const [courseInfo, setCourseInfo] = useState(null);
+  const [students, setStudents] = useState([]);
 
-  const students = [
-    { id: 'AN', code: 'SE171488', name: 'Tran Quang Loc', email: 'lociqse171488@fpt.edu.vn', status: 'Joined', bgColor: 'bg-blue-100 text-blue-800' },
-    { id: 'BT', code: 'SE171155', name: 'Nguyen Chinh Khuong Duy', email: 'duynck171155@fpt.edu.vn', status: 'Joined', bgColor: 'bg-yellow-100 text-yellow-800' },
-    { id: 'CD', code: 'SE17234', name: 'Le Minh Cuong', email: 'cuonglmse17234@fpt.edu.vn', status: 'Joined', bgColor: 'bg-blue-100 text-blue-800' },
-    { id: 'DH', code: 'SE201012', name: 'Pham Thuy Dung', email: 'phamthuydung@email.com', status: 'Not Joined', bgColor: 'bg-purple-100 text-purple-800' },
-    { id: 'EV', code: 'SE190510', name: 'Hoang Van Em', email: 'hoangvanem@email.com', status: 'Not Joined', bgColor: 'bg-red-100 text-red-800' }
+  const bgColors = [
+    'bg-blue-100 text-blue-800',
+    'bg-yellow-100 text-yellow-800',
+    'bg-green-100 text-green-800',
+    'bg-purple-100 text-purple-800',
+    'bg-red-100 text-red-800',
+    'bg-indigo-100 text-indigo-800'
   ];
 
-  // Toggle cycle All -> Joined -> Not Joined -> All
+  useEffect(() => {
+    const fetchStudents = async () => {
+      if (!courseInstanceId) {
+        console.error('No courseInstanceId provided');
+        setLoading(false);
+        return;
+      }
+      try {
+        setLoading(true);
+        const response = await getStudentsInCourse(courseInstanceId);
+
+        const mappedStudents = response.map((student, index) => ({
+          id: student.studentName
+            ? student.studentName.substring(0, 2).toUpperCase()
+            : 'ST',
+          code: student.studentCode,
+          name: student.studentName,
+          email: student.studentEmail,
+          status: student.status === 'Enrolled' ? 'Joined' : 'Not Joined',
+          bgColor: bgColors[index % bgColors.length],
+          enrolledAt: student.enrolledAt
+        }));
+
+        setStudents(mappedStudents);
+
+        if (response.length > 0) {
+          setCourseInfo({
+            courseCode: response[0].courseCode,
+            className: response[0].courseInstanceName
+          });
+        }
+      } catch (error) {
+        console.error('Failed to fetch students:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchStudents();
+  }, [courseInstanceId]);
+
   const handleStatusClick = () => {
     if (statusFilter === 'All') setStatusFilter('Joined');
     else if (statusFilter === 'Joined') setStatusFilter('Not Joined');
     else setStatusFilter('All');
   };
 
-  const filteredStudents = students.filter(student => {
+  const filteredStudents = students.filter((student) => {
     const matchesSearch =
       student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       student.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -32,26 +79,33 @@ const InstructorManageClass = () => {
     return matchesSearch && matchesStatus;
   });
 
+  if (!courseInstanceId) {
+    return <div className="p-4 text-red-500">Invalid class ID. Please navigate from the class list.</div>;
+  }
+
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
         <div>
           <h2 className="text-2xl font-bold text-gray-900">Student List</h2>
           <div className="flex items-center mt-2 space-x-4">
-            <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium">
-              WDU391
-            </span>
-            <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium">
-              SE17TB
-            </span>
+            {courseInfo && (
+              <>
+                <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium">
+                  {courseInfo.courseCode}
+                </span>
+                <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium">
+                  {courseInfo.className}
+                </span>
+              </>
+            )}
             <span className="text-gray-500 text-sm flex items-center">
               <Users className="w-4 h-4 mr-1" />
-              35 students
+              {students.length} students
             </span>
           </div>
         </div>
 
-        {/* Search */}
         <div className="relative">
           <Search className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
           <input
@@ -65,63 +119,87 @@ const InstructorManageClass = () => {
       </div>
 
       <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-        <div className="grid grid-cols-6 gap-4 px-6 py-4 bg-gray-50 border-b border-gray-200 text-sm font-medium text-gray-700">
-          <div>Image</div>
-          <div>Member</div>
-          <div>Full Name</div>
-          <div>Email</div>
-          {/* STATUS header clickable with icon */}
-          <div
-            onClick={handleStatusClick}
-            className="cursor-pointer select-none hover:text-orange-600 transition flex items-center gap-1"
-          >
-            STATUS
-            <ChevronDown size={16} />
+        {loading ? (
+          <div className="p-8 text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-4"></div>
+            <p className="text-gray-500">Loading students...</p>
           </div>
-          <div>Action</div>
-        </div>
-
-        {filteredStudents.map((student) => (
-          <div
-            key={student.code}
-            className="grid grid-cols-6 gap-4 px-6 py-4 border-b border-gray-100 hover:bg-gray-50 items-center"
-          >
-            <div className={`w-10 h-10 ${student.bgColor} rounded-full flex items-center justify-center font-semibold`}>
-              {student.id}
-            </div>
-            <div className="font-medium text-gray-900">{student.code}</div>
-            <div className="text-gray-900">{student.name}</div>
-            <div className="text-gray-600">{student.email}</div>
-            <div>
-              <span
-                className={`px-3 py-1 rounded-full text-xs font-medium ${
-                  student.status === 'Joined'
-                    ? 'bg-green-100 text-green-800'
-                    : 'bg-yellow-100 text-yellow-800'
-                }`}
+        ) : (
+          <div>
+            <div className="grid grid-cols-6 gap-4 px-6 py-4 bg-gray-50 border-b border-gray-200 text-sm font-medium text-gray-700">
+              <div>Image</div>
+              <div>Member</div>
+              <div>Full Name</div>
+              <div>Email</div>
+              <div
+                onClick={handleStatusClick}
+                className="cursor-pointer select-none hover:text-orange-600 transition flex items-center gap-1"
               >
-                {student.status}
-              </span>
+                STATUS
+                <ChevronDown size={16} />
+              </div>
+              <div>Action</div>
             </div>
-            <div>
-              <button className="text-red-500 hover:text-red-700">
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
+
+            {filteredStudents.map((student) => (
+              <div
+                key={student.code}
+                className="grid grid-cols-6 gap-4 px-6 py-4 border-b border-gray-100 hover:bg-gray-50 items-center"
+              >
+                <div
+                  className={`w-10 h-10 ${student.bgColor} rounded-full flex items-center justify-center font-semibold`}
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                  />
-                </svg>
-              </button>
-            </div>
+                  {student.id}
+                </div>
+                <div className="font-medium text-gray-900">{student.code}</div>
+                <div className="text-gray-900">{student.name}</div>
+                <div className="text-gray-600">{student.email}</div>
+                <div>
+                  <span
+                    className={`px-3 py-1 rounded-full text-xs font-medium ${
+                      student.status === 'Joined'
+                        ? 'bg-green-100 text-green-800'
+                        : 'bg-yellow-100 text-yellow-800'
+                    }`}
+                  >
+                    {student.status}
+                  </span>
+                </div>
+                <div>
+                  <button className="text-red-500 hover:text-red-700">
+                    <svg
+                      className="w-5 h-5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                      />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            ))}
+
+            {!loading && filteredStudents.length === 0 && (
+              <div className="text-center py-12">
+                <div className="text-gray-400 mb-4">
+                  <Search size={48} className="mx-auto" />
+                </div>
+                <h3 className="text-lg font-medium text-gray-600 mb-2">
+                  No results found
+                </h3>
+                <p className="text-gray-500">
+                  Try adjusting your search keywords or status filter
+                </p>
+              </div>
+            )}
           </div>
-        ))}
+        )}
       </div>
     </div>
   );

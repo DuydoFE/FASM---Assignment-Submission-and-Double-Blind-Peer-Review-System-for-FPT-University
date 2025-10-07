@@ -29,13 +29,13 @@ import { getCurrentAccount } from "../utils/accountUtils";
 import { toast } from "react-toastify";
 import { ROLE } from "../constant/roleEnum";
 const ProtectedRoute = ({ children, role }) => {
-  const user =  getCurrentAccount();
-  if (!user  || user?.roles[0] !== role) {
+  const user = getCurrentAccount();
+  if (!user || user?.roles[0] !== role) {
     // User is not authenticated or doesn't have the required role
     toast.error("You don't have permission to access this page!");
     return <Navigate to="/" replace />;
   }
-    // User has the required role, render the children
+  // User has the required role, render the children
   return children;
 };
 
@@ -82,7 +82,7 @@ export const router = createBrowserRouter([
         path: "/review-success",
         element: <ReviewSuccessPage />,
       },
-     
+
     ],
   },
   {
@@ -107,7 +107,7 @@ export const router = createBrowserRouter([
     children: [
       {
         path: "instructordashboard",
-        element:   <ProtectedRoute role={ROLE.INSTRUCTOR}><InstructorDashboard /></ProtectedRoute>,
+        element: <ProtectedRoute role={ROLE.INSTRUCTOR}><InstructorDashboard /></ProtectedRoute>,
       },
       {
         path: "my-classes",
@@ -124,7 +124,29 @@ export const router = createBrowserRouter([
     ],
   },
   {
-    path: "",
+    path: "/instructor",
+    element: <InstructorLayout />,
+    children: [
+      {
+        path: "instructordashboard",
+        element: <ProtectedRoute role={ROLE.INSTRUCTOR}><InstructorDashboard /></ProtectedRoute>,
+      },
+      {
+        path: "my-classes",
+        element: <InstructorViewClass />,
+      },
+      {
+        path: "enroll-key",
+        element: <InstructorEnrollKey />,
+      },
+      {
+        path: "regrade-request",
+        element: <InstructorRegradeRequest />,
+      },
+    ],
+  },
+  {
+    path: "/instructor/class",
     element: <InstructorClassLayout />,
     children: [
       {
@@ -132,7 +154,7 @@ export const router = createBrowserRouter([
         element: <InstructorManageClass />,
       },
       {
-        path: "manage-class",
+        path: "manage-class/:id",
         element: <InstructorManageClass />,
       },
       {
