@@ -204,7 +204,7 @@ const InstructorViewClass = () => {
                     <tr 
                       key={cls.id} 
                       className="hover:bg-gray-50 transition-colors cursor-pointer"
-                      onClick={() => navigate(`/instructor/class/manage-class/${cls.id}`)}
+                      onClick={() => navigate(`/instructor/manage-class/${cls.id}`)}
                     >
                       <td className="py-4 px-6">
                         <div>

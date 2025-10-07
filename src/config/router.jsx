@@ -146,7 +146,7 @@ export const router = createBrowserRouter([
     ],
   },
   {
-    path: "/instructor/class",
+    path: "/instructor",
     element: <InstructorClassLayout />,
     children: [
       {
