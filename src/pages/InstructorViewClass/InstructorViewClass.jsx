@@ -27,7 +27,7 @@ const InstructorViewClass = () => {
           name: course.courseInstanceName,
           code: course.courseCode,
           classId: course.courseInstanceName,
-          students: 0, // Placeholder; actual count can be fetched if needed
+          students: course.studentCount,
           status: course.isMainInstructor ? 'active' : 'completed',
           statusText: course.isMainInstructor ? 'Ongoing' : 'Completed'
         }));

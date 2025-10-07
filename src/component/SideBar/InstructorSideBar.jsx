@@ -4,7 +4,7 @@ import { Link, useLocation, useParams } from 'react-router-dom';
 
 const InstructorSideBar = () => {
   const location = useLocation();
-  const { id: courseInstanceId } = useParams(); // Get courseInstanceId from URL
+  const { id: courseInstanceId } = useParams(); 
 
   const menuItems = [
     {

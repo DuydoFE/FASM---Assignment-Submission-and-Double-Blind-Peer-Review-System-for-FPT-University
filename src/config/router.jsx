@@ -158,7 +158,7 @@ export const router = createBrowserRouter([
         element: <InstructorManageClass />,
       },
       {
-        path: "manage-assignment",
+        path: "manage-assignment/:id",
         element: <InstructorManageAssignment />,
       },
       {

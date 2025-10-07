@@ -19,3 +19,13 @@ export const getStudentsInCourse = async (courseInstanceId) => {
     throw error;
   }
 };
+
+export const getAssignments = async (courseInstanceId) => {
+  try {
+    const response = await api.get(`/Assignment/course-instance/${courseInstanceId}`);
+    return response.data.data;
+  } catch (error) {
+    console.error("Get Assignments Failed:", error);
+    throw error;
+  }
+};

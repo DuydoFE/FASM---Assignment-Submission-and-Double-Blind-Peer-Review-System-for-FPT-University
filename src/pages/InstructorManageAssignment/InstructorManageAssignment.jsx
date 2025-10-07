@@ -1,10 +1,16 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Plus, FileText, Clock, Lock, Calendar, X, Trash2, Upload, ChevronDown } from 'lucide-react';
 
+import { useParams } from 'react-router-dom';
+import { getAssignments } from '../../service/courseInstructor';
+
 const InstructorManageAssignment = () => {
+  const { id: courseInstanceId } = useParams();
   const [showPopup, setShowPopup] = useState(false);
   const [selectedGradingScale, setSelectedGradingScale] = useState('percentage');
   const [statusFilter, setStatusFilter] = useState('All');
+  const [assignments, setAssignments] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -77,52 +83,43 @@ const InstructorManageAssignment = () => {
     return rubricCriteria.reduce((sum, criteria) => sum + criteria.weight, 0);
   };
 
-  const assignments = [
-    {
-      id: 1,
-      title: "Lab 1: Figma Basics",
-      description: "Create wireframe for e-commerce website",
-      deadline: "25/12/2024",
-      time: "23:59",
-      submitted: 28,
-      total: 35,
-      status: "Open",
-      statusColor: "bg-green-100 text-green-800"
-    },
-    {
-      id: 2,
-      title: "Lab 2: User Research",
-      description: "Conduct user interviews and create personas",
-      deadline: "30/12/2024",
-      time: "23:59",
-      submitted: 15,
-      total: 35,
-      status: "Open",
-      statusColor: "bg-green-100 text-green-800"
-    },
-    {
-      id: 3,
-      title: "Assignment 1: Prototype",
-      description: "Create interactive prototype with Figma",
-      deadline: "20/12/2024",
-      time: "23:59",
-      submitted: 35,
-      total: 35,
-      status: "Closed",
-      statusColor: "bg-red-100 text-red-800"
-    },
-    {
-      id: 4,
-      title: "Final Project",
-      description: "Complete app design project",
-      deadline: "10/01/2025",
-      time: "23:59",
-      submitted: 2,
-      total: 35,
-      status: "Open",
-      statusColor: "bg-green-100 text-green-800"
+  // Fetch assignments when component mounts
+  useEffect(() => {
+    const fetchAssignments = async () => {
+      try {
+        setLoading(true);
+        const response = await getAssignments(courseInstanceId);
+
+        // Map the API response to match our UI structure
+        const mappedAssignments = response.map(assignment => ({
+          id: assignment.id,
+          title: assignment.title,
+          description: assignment.description,
+          guidelines: assignment.guidelines,
+          deadline: new Date(assignment.deadline).toLocaleDateString(),
+          time: new Date(assignment.deadline).toLocaleTimeString(),
+          weight: assignment.courseWeight || 0,
+          submitted: assignment.reviewCount,
+          total: assignment.submissionCount,
+          status: new Date(assignment.deadline) > new Date() ? "Open" : "Closed",
+          statusColor: new Date(assignment.deadline) > new Date()
+            ? "bg-green-100 text-green-800"
+            : "bg-red-100 text-red-800"
+        }));
+
+        setAssignments(mappedAssignments);
+      } catch (error) {
+        console.error("Failed to fetch assignments:", error);
+        // You might want to show an error message to the user
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (courseInstanceId) {
+      fetchAssignments();
     }
-  ];
+  }, [courseInstanceId]);
 
   const handleStatusClick = () => {
     if (statusFilter === 'All') setStatusFilter('Open');
@@ -130,9 +127,18 @@ const InstructorManageAssignment = () => {
     else setStatusFilter('All');
   };
 
-  const filteredAssignments = statusFilter === 'All' 
-    ? assignments 
+  const filteredAssignments = statusFilter === 'All'
+    ? assignments
     : assignments.filter(a => a.status === statusFilter);
+
+  if (loading) {
+    return (
+      <div className="p-8 text-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-4"></div>
+        <p className="text-gray-500">Loading assignments...</p>
+      </div>
+    );
+  }
 
   const getDeadlineColor = (deadline) => {
     const today = new Date();
@@ -210,14 +216,12 @@ const InstructorManageAssignment = () => {
 
       {/* Assignment Table */}
       <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-        <div className="grid grid-cols-12 gap-6 px-8 py-5 bg-gray-50 border-b border-gray-200 text-sm font-medium text-gray-700">
-          <div className="col-span-4">Assignment Name</div>
+        <div className="grid grid-cols-12 gap-4 px-6 py-4 bg-gray-50 border-b border-gray-200 text-sm font-medium text-gray-700">
+          <div className="col-span-3">Assignment Name</div>
+          <div className="col-span-2 text-center">Weight</div>
           <div className="col-span-2 text-center">Deadline</div>
           <div className="col-span-2 text-center">Submissions</div>
-          <div 
-            className="col-span-2 text-center cursor-pointer select-none hover:text-orange-600 transition flex items-center justify-center gap-1"
-            onClick={handleStatusClick}
-          >
+          <div className="col-span-1 text-center cursor-pointer select-none hover:text-orange-600 transition flex items-center justify-center gap-1">
             Status
             <ChevronDown size={16} />
           </div>
@@ -225,19 +229,23 @@ const InstructorManageAssignment = () => {
         </div>
 
         {filteredAssignments.map((assignment) => (
-          <div key={assignment.id} className="grid grid-cols-12 gap-6 px-8 py-8 border-b border-gray-100 hover:bg-gray-50 items-center transition-colors">
-            <div className="col-span-4 space-y-2">
-              <h3 className="font-semibold text-gray-900 text-base">{assignment.title}</h3>
-              <p className="text-sm text-gray-600 leading-relaxed">{assignment.description}</p>
+          <div
+            key={assignment.id}
+            className="grid grid-cols-12 gap-4 px-6 py-4 border-b border-gray-100 hover:bg-gray-50 items-center transition-colors"
+          >
+            <div className="col-span-3 space-y-1">
+              <h3 className="font-semibold text-gray-900 text-base truncate">{assignment.title}</h3>
+              {/* <p className="text-sm text-gray-600 line-clamp-2">{assignment.description}</p> */}
             </div>
-
+            <div className="col-span-2 text-center">
+              <span className="font-medium text-gray-900">{assignment.weight}%</span>
+            </div>
             <div className="col-span-2 text-center space-y-1">
               <div className={`font-medium text-base ${getDeadlineColor(assignment.deadline)}`}>
                 {assignment.deadline}
               </div>
               <div className="text-sm text-gray-500">{assignment.time}</div>
             </div>
-
             <div className="col-span-2 text-center">
               <div className="font-bold text-lg text-gray-900">
                 {assignment.submitted}/{assignment.total}
@@ -246,23 +254,29 @@ const InstructorManageAssignment = () => {
                 {Math.round((assignment.submitted / assignment.total) * 100)}% completed
               </div>
             </div>
-
-            <div className="col-span-2 flex justify-center">
-              <span className={`px-4 py-2 rounded-full text-sm font-medium ${assignment.statusColor} flex items-center space-x-2`}>
+            <div className="col-span-1 flex justify-center">
+              <span
+                className={`px-2 py-1 rounded-full text-xs font-medium ${assignment.statusColor} flex items-center space-x-1`}
+              >
                 {assignment.status === "Open" ? (
-                  <Clock className="w-4 h-4" />
+                  <Clock className="w-3 h-3" />
                 ) : (
-                  <Lock className="w-4 h-4" />
+                  <Lock className="w-3 h-3" />
                 )}
                 <span>{assignment.status}</span>
               </span>
             </div>
-
-            <div className="col-span-2 flex justify-center items-center space-x-3">
-              <button className="text-blue-600 hover:text-blue-800 p-3 hover:bg-blue-50 rounded-lg transition-colors">
+            <div className="col-span-2 flex justify-center items-center space-x-2">
+              <button
+                className="text-blue-600 hover:text-blue-800 p-1.5 hover:bg-blue-50 rounded-lg transition-colors"
+                title="View Schedule"
+              >
                 <Calendar className="w-5 h-5" />
               </button>
-              <button className="text-green-600 hover:text-green-800 p-3 hover:bg-green-50 rounded-lg transition-colors">
+              <button
+                className="text-green-600 hover:text-green-800 p-1.5 hover:bg-green-50 rounded-lg transition-colors"
+                title="View Details"
+              >
                 <FileText className="w-5 h-5" />
               </button>
             </div>
@@ -291,7 +305,7 @@ const InstructorManageAssignment = () => {
               {/* Basic Information */}
               <div>
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">Basic Information</h3>
-                
+
                 <div className="space-y-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -354,7 +368,7 @@ const InstructorManageAssignment = () => {
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Submission File Settings <span className="text-red-500">*</span>
                     </label>
-                    
+
                     <div className="space-y-4">
                       {/* Allowed Extensions */}
                       <div>
@@ -377,7 +391,7 @@ const InstructorManageAssignment = () => {
               {/* Grading Scale Section */}
               <div>
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">Grading Rubric</h3>
-                
+
                 <div className="bg-blue-50 p-4 rounded-lg mb-6">
                   <p className="text-sm text-blue-800 font-medium mb-3">Select grading scale type:</p>
                   <div className="space-y-2">
@@ -400,7 +414,7 @@ const InstructorManageAssignment = () => {
                 {/* Criteria Section */}
                 <div className="space-y-4">
                   <h4 className="font-medium text-gray-900">Grading Criteria</h4>
-                  
+
                   {rubricCriteria.map((criteria, index) => (
                     <div key={criteria.id} className="border border-gray-200 rounded-lg p-4">
                       <div className="flex items-start justify-between mb-3">
@@ -422,7 +436,7 @@ const InstructorManageAssignment = () => {
                             className="flex-1 font-medium text-gray-900 bg-transparent border-none p-0 focus:ring-0"
                           />
                         </div>
-                        
+
                         <div className="flex items-center space-x-3">
                           {(selectedGradingScale === '100-point' || selectedGradingScale === 'percentage') && (
                             <div className="flex items-center space-x-2">
@@ -472,11 +486,11 @@ const InstructorManageAssignment = () => {
                                   prev.map(c =>
                                     c.id === criteria.id
                                       ? {
-                                          ...c,
-                                          details: c.details.map((d, i) =>
-                                            i === detailIndex ? e.target.value : d
-                                          )
-                                        }
+                                        ...c,
+                                        details: c.details.map((d, i) =>
+                                          i === detailIndex ? e.target.value : d
+                                        )
+                                      }
                                       : c
                                   )
                                 );
