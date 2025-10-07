@@ -105,7 +105,7 @@ const AssignmentDetailPage = () => {
         <div className="mb-6 flex items-center text-sm text-gray-600">
           <Link to="/dashboard" className="hover:underline">Dashboard</Link>
           <ChevronRight className="w-4 h-4 mx-1" />
-          <Link to="/my-assignments" className="hover:underline">Assignment của tôi</Link>
+          <Link to="/my-assignments" className="hover:underline">My Assignmnent</Link>
           <ChevronRight className="w-4 h-4 mx-1" />
           <span className="font-semibold text-gray-800">{course.code}</span>
         </div>
@@ -138,10 +138,10 @@ const AssignmentDetailPage = () => {
 
         {/* Stats Grid */}
         <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
-            <StatCard icon={BookCopy} value="1" label="Tổng assignments" color="blue" />
-            <StatCard icon={CheckCircle} value="0" label="Đã nộp" color="green" />
-            <StatCard icon={Clock} value="0" label="Sắp hết hạn" color="red" />
-            <StatCard icon={AlertTriangle} value="1" label="Lưu ý thời gian" color="yellow" />
+            <StatCard icon={BookCopy} value="1" label="All assignments" color="blue" />
+            <StatCard icon={CheckCircle} value="0" label="Submitted" color="green" />
+            <StatCard icon={Clock} value="0" label="About to expire" color="red" />
+            <StatCard icon={AlertTriangle} value="1" label="Note the time" color="yellow" />
             
         </div>
 
