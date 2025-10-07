@@ -139,13 +139,13 @@ navigate("/review-success", {
             </Link>
             <ChevronRight className="w-4 h-4 mx-1" />
             <span className="font-semibold text-gray-800">
-              Chấm chéo bài làm
+             Peer Review
             </span>
           </div>
           <div className="flex justify-between items-center">
             <div>
               <h1 className="text-3xl font-bold text-gray-900">
-                Chấm chéo bài làm - {reviewData.assignmentTitle}
+                Peers Review - {reviewData.assignmentTitle}
               </h1>
               <p className="text-gray-500 mt-1">
                 Mobile UI/UX Design Fundamentals
@@ -160,7 +160,7 @@ navigate("/review-success", {
                 Quay lại
               </button>
               <button className="flex items-center px-4 py-2 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700">
-                <Star size={16} className="mr-2" /> Chấm điểm
+                <Star size={16} className="mr-2" /> Review
               </button>
             </div>
           </div>
@@ -179,16 +179,16 @@ navigate("/review-success", {
                   </div>
                   <div>
                     <p className="font-semibold">
-                      Bài làm đã đánh -{" "}
+                      Assigment -{" "}
                       {reviewData.studentName ?? "Sinh viên không xác định"}
                     </p>
                     <p className="text-sm text-gray-500">
-                      Nộp lúc: (4h) • ID bài làm: {reviewData.submissionId}
+                      Subimitted: (4h) • ID bài làm: {reviewData.submissionId}
                     </p>
                   </div>
                 </div>
                 <div className="px-3 py-1 text-sm font-semibold bg-yellow-100 text-yellow-700 rounded-full">
-                  Chưa chấm
+                  Not Reviewed
                 </div>
               </div>
               <div className="mt-4 pt-4 border-t flex items-center text-sm">
@@ -210,11 +210,11 @@ navigate("/review-success", {
             {/* Grading Form */}
             <div className="bg-white p-6 rounded-lg border">
               <div className="flex justify-between items-center mb-4">
-                <h3 className="text-xl font-bold">Form chấm điểm</h3>
+                <h3 className="text-xl font-bold">Form Grading</h3>
                 <div className="flex space-x-2">
                   <button className="flex items-center px-4 py-2 border rounded-md font-semibold text-blue-600 border-blue-200 hover:bg-blue-50 text-sm">
                     <Sparkles size={14} className="mr-2" />
-                    Chấm tham khảo
+                    Auto Score
                   </button>
                   <button className="flex items-center px-4 py-2 border rounded-md font-semibold text-gray-700 hover:bg-gray-100 text-sm">
                     <RotateCcw size={14} className="mr-2" />
@@ -237,7 +237,7 @@ navigate("/review-success", {
             <div className="bg-white p-6 rounded-lg border">
               <div className="flex justify-between items-center bg-blue-50 p-4 rounded-lg">
                 <span className="text-xl font-bold text-blue-800">
-                  Tổng điểm
+                  Total Score
                 </span>
                 <span className="text-3xl font-extrabold text-blue-600">
                   {totalScore}/100
@@ -245,7 +245,7 @@ navigate("/review-success", {
               </div>
               <div className="mt-6">
                 <label className="font-bold text-gray-800 mb-2 block">
-                  Nhận xét chi tiết
+                  Comment
                 </label>
                 <textarea
                   value={comment}
@@ -262,7 +262,7 @@ navigate("/review-success", {
                 onClick={handleSubmitReview}
               >
                 <Send size={18} className="mr-2" />
-                Gửi điểm
+                Send Review
               </button>
             </div>
           </div>

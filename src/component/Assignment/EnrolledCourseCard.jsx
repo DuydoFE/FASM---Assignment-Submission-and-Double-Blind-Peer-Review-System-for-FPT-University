@@ -34,7 +34,7 @@ const EnrolledCourseCard = ({
           </div>
         </div>
         <div className="px-3 py-1 text-sm font-semibold bg-green-100 text-green-700 rounded-full">
-          Đã tham gia
+          Joined
         </div>
       </div>
 
@@ -42,11 +42,11 @@ const EnrolledCourseCard = ({
       <div className="grid grid-cols-1 md:grid-cols-3 gap-x-6 gap-y-3 text-gray-600 text-sm mb-6">
         <div className="flex items-center">
           <User className="w-4 h-4 mr-2 text-gray-400" />
-          Giảng viên: {lecturer}
+          Instructor: {lecturer}
         </div>
         <div className="flex items-center">
           <Users className="w-4 h-4 mr-2 text-gray-400" />
-          {studentCount} sinh viên
+          {studentCount} Students
         </div>
         <div className="flex items-center">
           <Calendar className="w-4 h-4 mr-2 text-gray-400" />
@@ -66,11 +66,11 @@ const EnrolledCourseCard = ({
           className="flex items-center px-4 py-2 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700 transition-colors"
         >
           <Eye className="w-4 h-4 mr-2" />
-          Xem assignments
+          View assignments
         </button>
         <button className="flex items-center px-4 py-2 bg-white border border-gray-300 text-gray-700 font-semibold rounded-md hover:bg-gray-50 transition-colors">
           <Info className="w-4 h-4 mr-2" />
-          Chi tiết
+          Detail
         </button>
       </div>
     </div>
