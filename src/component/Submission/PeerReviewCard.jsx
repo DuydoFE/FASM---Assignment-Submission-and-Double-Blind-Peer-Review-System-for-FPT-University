@@ -22,16 +22,16 @@ const PeerReviewCard = ({ completed, required }) => {
           <h3 className="text-lg font-bold text-yellow-900">Chấm chéo bất kì</h3>
         </div>
         <span className="px-2 py-0.5 text-xs font-semibold bg-red-100 text-red-700 rounded-full">
-          Bắt buộc
+          Obligatory
         </span>
       </div>
       <p className="text-sm text-yellow-800 mb-4">
-        Chấm và đánh giá bài làm của đồng môn. Sinh viên cần chấm tối thiểu {required} bài.
+        Mark and evaluate the work of peers. Students are required to mark at least {required} Assigment.
       </p>
 
       <div className="flex justify-between items-center text-sm font-medium mb-1">
-        <span className="text-gray-700">Đã chấm: {completed}/{required} bài</span>
-        <span className="text-red-600">Còn lại: {remaining} bài</span>
+        <span className="text-gray-700">Scored: {completed}/{required} Assigment</span>
+        <span className="text-red-600">Remaining: {remaining} Assigment</span>
       </div>
       <div className="w-full bg-yellow-200 rounded-full h-2 mb-4">
         <div
@@ -45,7 +45,7 @@ const PeerReviewCard = ({ completed, required }) => {
         className="w-full flex items-center justify-center px-4 py-2 bg-orange-500 text-white font-semibold rounded-md hover:bg-orange-600"
       >
         <Shuffle className="w-4 h-4 mr-2" />
-        Chấm bài ngẫu nhiên
+        Peers Review
       </button>
     </div>
   );

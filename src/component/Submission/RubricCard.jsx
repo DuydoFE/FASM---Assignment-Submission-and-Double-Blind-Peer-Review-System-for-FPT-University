@@ -53,7 +53,7 @@ const RubricCard = ({ assignmentId }) => {
       {/* Tiêu đề card */}
       <div className="flex items-center mb-6">
         <ClipboardList className="w-6 h-6 text-blue-600 mr-3" />
-        <h2 className="text-xl font-bold text-gray-800">Tiêu chí chấm điểm</h2>
+        <h2 className="text-xl font-bold text-gray-800">Rubric</h2>
       </div>
 
       {/* Danh sách các tiêu chí */}
