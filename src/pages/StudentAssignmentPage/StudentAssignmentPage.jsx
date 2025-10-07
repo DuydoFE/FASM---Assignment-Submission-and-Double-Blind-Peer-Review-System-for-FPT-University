@@ -124,9 +124,9 @@ const StudentAssignmentPage = () => {
     <div className="bg-gray-100 min-h-screen p-8">
       <div className="max-w-7xl mx-auto">
         <div className="mb-4 flex items-center text-sm text-gray-600">
-          <span>Assignment của tôi</span>
+          <span>My Assignment</span>
           <ChevronRight className="w-4 h-4 mx-1" />
-          <span className="font-semibold text-gray-800">Assignment của tôi</span>
+          <span className="font-semibold text-gray-800">My Assignmnent</span>
         </div>
 
         <div className="bg-white rounded-lg shadow-sm p-8">
@@ -147,7 +147,7 @@ const StudentAssignmentPage = () => {
             <p className="text-sm text-gray-600 mb-4">Choose Class to join</p>
             <div className="flex items-center space-x-4">
               <div>
-                <label htmlFor="semester" className="block text-sm font-medium text-gray-700 mb-1">Học kỳ *</label>
+                <label htmlFor="semester" className="block text-sm font-medium text-gray-700 mb-1">Semester *</label>
                 <select id="semester" className="w-48 p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
                   <option>Fall 2025</option>
                   <option>Spring 2026</option>
@@ -155,7 +155,7 @@ const StudentAssignmentPage = () => {
                 </select>
               </div>
               <div>
-                <label htmlFor="year" className="block text-sm font-medium text-gray-700 mb-1">Năm học *</label>
+                <label htmlFor="year" className="block text-sm font-medium text-gray-700 mb-1">Years *</label>
                 <select id="year" className="w-48 p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
                   <option>2025</option>
                   <option>2026</option>
@@ -164,13 +164,13 @@ const StudentAssignmentPage = () => {
               </div>
               <div className="self-end">
                 <button className="px-5 py-2 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700 transition-colors">
-                  Lọc kết quả
+                  Filters
                 </button>
               </div>
             </div>
           </div>
               <div>
-              <h3 className="text-lg font-bold text-gray-800 mb-2">Kết quả tìm kiếm</h3>
+              <h3 className="text-lg font-bold text-gray-800 mb-2">Search results</h3>
               <div className="border rounded-lg">
                 {coursesData.map(course => (
                   <CourseListItem 
@@ -192,7 +192,7 @@ const StudentAssignmentPage = () => {
         <div className="text-center mt-8">
           <a href="#" className="inline-flex items-center text-sm text-gray-600 hover:text-blue-600">
             <HelpCircle className="w-4 h-4 mr-2" />
-            Cần hỗ trợ?
+            Help ?
           </a>
         </div>
          {/* Render Modal ở đây */}

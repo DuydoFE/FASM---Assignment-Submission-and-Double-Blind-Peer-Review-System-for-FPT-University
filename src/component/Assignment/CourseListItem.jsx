@@ -11,7 +11,7 @@ const CourseListItem = ({ icon: Icon, iconColor, title, code, onJoinClick }) => 
         </div>
         <div>
           <p className="font-semibold text-gray-800">{title}</p>
-          <p className="text-sm text-gray-500">Mã lớp: {code}</p>
+          <p className="text-sm text-gray-500">Class Code: {code}</p>
         </div>
       </div>
       {/* Sử dụng onJoinClick ở đây */}
@@ -19,7 +19,7 @@ const CourseListItem = ({ icon: Icon, iconColor, title, code, onJoinClick }) => 
         onClick={onJoinClick} 
         className="px-4 py-2 bg-teal-500 text-white font-semibold rounded-md hover:bg-teal-600 transition-colors text-sm"
       >
-        Tham gia
+        Join
       </button>
     </div>
   );

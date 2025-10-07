@@ -19,7 +19,7 @@ const PeerReviewCard = ({ completed, required }) => {
       <div className="flex justify-between items-start mb-3">
         <div className="flex items-center">
           <Users className="w-6 h-6 mr-3 text-yellow-700" />
-          <h3 className="text-lg font-bold text-yellow-900">Chấm chéo bất kì</h3>
+          <h3 className="text-lg font-bold text-yellow-900">Random Peers Review</h3>
         </div>
         <span className="px-2 py-0.5 text-xs font-semibold bg-red-100 text-red-700 rounded-full">
           Obligatory
