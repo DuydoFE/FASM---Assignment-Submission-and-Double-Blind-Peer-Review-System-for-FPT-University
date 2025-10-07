@@ -12,7 +12,7 @@ const Header = () => {
 
   const handleLogout = () => {
     dispatch(logout());
-    toast.success("Đăng xuất thành công");
+    toast.success("Logged out successfully");
     localStorage.removeItem("token");
     localStorage.removeItem("refreshToken");
   };
@@ -32,7 +32,7 @@ const Header = () => {
           key: "logout",
           label: (
             <span onClick={handleLogout} className="flex items-center">
-              <LogOut className="w-4 h-4 mr-2" /> Đăng xuất
+              <LogOut className="w-4 h-4 mr-2" /> Log Out
             </span>
           ),
         },
