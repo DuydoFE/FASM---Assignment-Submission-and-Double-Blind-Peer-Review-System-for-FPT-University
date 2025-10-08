@@ -28,8 +28,8 @@ const InstructorViewClass = () => {
           code: course.courseCode,
           classId: course.courseInstanceName,
           students: course.studentCount,
-          status: course.isMainInstructor ? 'active' : 'completed',
-          statusText: course.isMainInstructor ? 'Ongoing' : 'Completed'
+          status: course.courseInstanceStatus,
+          statusText: course.courseInstanceStatus
         }));
         
         setClasses(formattedClasses);
