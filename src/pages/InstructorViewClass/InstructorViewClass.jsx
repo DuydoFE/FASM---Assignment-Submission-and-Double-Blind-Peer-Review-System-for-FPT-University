@@ -1,8 +1,10 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { Search, BookOpen, Play, CheckCircle, Clock, MoreHorizontal, ChevronDown } from 'lucide-react';
+import { Search, BookOpen, Play, CheckCircle, Clock, ChevronDown, Key, X, Eye, EyeOff } from 'lucide-react';
 import { getCurrentAccount } from '../../utils/accountUtils';
 import { useNavigate } from 'react-router-dom';
 import { getInstructorCourses } from '../../service/courseInstructor';
+import { updateEnrollKey } from '../../service/courseInstanceService';
+import { toast } from 'react-toastify';
 
 const InstructorViewClass = () => {
   const navigate = useNavigate();
@@ -11,6 +13,10 @@ const InstructorViewClass = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
+  const [showKeyModal, setShowKeyModal] = useState(false);
+  const [selectedClass, setSelectedClass] = useState(null);
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
     const fetchClasses = async () => {
@@ -19,9 +25,9 @@ const InstructorViewClass = () => {
           console.error('No user ID found');
           return;
         }
-        
+
         const coursesData = await getInstructorCourses(currentUser?.id);
-        
+
         const formattedClasses = coursesData.map(course => ({
           id: course.id,
           name: course.courseInstanceName,
@@ -29,9 +35,10 @@ const InstructorViewClass = () => {
           classId: course.courseInstanceName,
           students: course.studentCount,
           status: course.courseInstanceStatus,
-          statusText: course.courseInstanceStatus
+          statusText: course.courseInstanceStatus,
+          enrollmentKey: course.enrollmentKey || ''
         }));
-        
+
         setClasses(formattedClasses);
       } catch (error) {
         console.error('Failed to fetch instructor courses:', error);
@@ -43,16 +50,52 @@ const InstructorViewClass = () => {
     fetchClasses();
   }, [currentUser]);
 
+  const handleKeyClick = (e, cls) => {
+    e.stopPropagation();
+    setSelectedClass(cls);
+    setPassword(cls.enrollmentKey || '');
+    setShowKeyModal(true);
+  };
+
+  const handleEditPassword = async () => {
+    try {
+      await updateEnrollKey(selectedClass.id, password, currentUser.id);
+      toast.success("Updated enroll key successfully!");
+      
+      // Update local state
+      setClasses(prevClasses =>
+        prevClasses.map(cls =>
+          cls.id === selectedClass.id
+            ? { ...cls, enrollmentKey: password }
+            : cls
+        )
+      );
+      setShowKeyModal(false);
+      setPassword('');
+    } catch (error) {
+      toast.error("Failed to update enroll key. Please try again.");
+      setShowKeyModal(false);
+      setPassword('');
+    }
+  };
+
   const handleStatusClick = () => {
     if (statusFilter === 'All') setStatusFilter('active');
     else if (statusFilter === 'active') setStatusFilter('completed');
     else setStatusFilter('All');
   };
 
+  // Password validation
+  const hasMinLength = password.length >= 8;
+  const hasLowercase = /[a-z]/.test(password);
+  const hasUppercase = /[A-Z]/.test(password);
+  const hasNumber = /[0-9]/.test(password);
+  const isPasswordValid = hasMinLength && hasLowercase && hasUppercase && hasNumber;
+
   const filteredClasses = useMemo(() => {
     return classes.filter(cls =>
       (cls.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-       cls.code.toLowerCase().includes(searchTerm.toLowerCase())) &&
+        cls.code.toLowerCase().includes(searchTerm.toLowerCase())) &&
       (statusFilter === 'All' || cls.status === statusFilter)
     );
   }, [classes, searchTerm, statusFilter]);
@@ -201,8 +244,8 @@ const InstructorViewClass = () => {
                 </thead>
                 <tbody className="divide-y divide-gray-200">
                   {filteredClasses.map((cls) => (
-                    <tr 
-                      key={cls.id} 
+                    <tr
+                      key={cls.id}
                       className="hover:bg-gray-50 transition-colors cursor-pointer"
                       onClick={() => navigate(`/instructor/manage-class/${cls.id}`)}
                     >
@@ -229,8 +272,11 @@ const InstructorViewClass = () => {
                         </span>
                       </td>
                       <td className="py-4 px-6">
-                        <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-                          <MoreHorizontal className="text-gray-400" size={16} />
+                        <button
+                          onClick={(e) => handleKeyClick(e, cls)}
+                          className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                        >
+                          <Key className="text-gray-400" size={16} />
                         </button>
                       </td>
                     </tr>
@@ -255,6 +301,158 @@ const InstructorViewClass = () => {
           </div>
         )}
       </div>
+
+      {/* Password Modal */}
+      {showKeyModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full flex overflow-hidden">
+            {/* Left Side - Class Info */}
+            <div className="w-2/5 bg-gradient-to-br from-blue-50 to-blue-100 p-8 flex flex-col">
+              <div className="mb-6">
+                <div className="text-blue-600 text-sm font-semibold mb-2">UI/UX Design</div>
+                <h2 className="text-2xl font-bold text-gray-900 mb-2">
+                  Class {selectedClass?.name}
+                </h2>
+                <div className="text-gray-600">{selectedClass?.code}</div>
+              </div>
+
+              <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-5 mt-auto">
+                <div className="flex items-start gap-3">
+                  <div className="w-5 h-5 rounded-full bg-yellow-400 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <svg className="w-3 h-3 text-yellow-800" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-yellow-900 mb-1">Class Security</h3>
+                    <p className="text-sm text-yellow-800 leading-relaxed">
+                      This password will be used to protect class information. Only students who have the password will be able to access the class.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Right Side - Password Form */}
+            <div className="w-3/5 p-8">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold text-gray-900">Update Class Password</h2>
+                <button
+                  onClick={() => setShowKeyModal(false)}
+                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                >
+                  <X size={24} className="text-gray-400" />
+                </button>
+              </div>
+
+              <p className="text-gray-600 mb-6">
+                Please change a strong password to secure your class information
+              </p>
+
+              {/* Password Input */}
+              <div className="mb-6">
+                <label className="block text-sm font-semibold text-gray-900 mb-3">
+                  Class Password
+                </label>
+                <div className="relative">
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                    placeholder="Enter password..."
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  >
+                    {showPassword ? <Eye size={20} /> : <EyeOff size={20} />}
+                  </button>
+                </div>
+              </div>
+
+              {/* Password Requirements */}
+              <div className="mb-8">
+                <h3 className="text-sm font-semibold text-gray-900 mb-3">Password Requirements:</h3>
+                <div className="space-y-2">
+                  <div className="flex items-center gap-3">
+                    <svg
+                      className={`w-5 h-5 ${hasMinLength ? 'text-green-500' : 'text-gray-300'}`}
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                    </svg>
+                    <span className={`text-sm ${hasMinLength ? 'text-gray-700' : 'text-gray-500'}`}>
+                      At least 8 characters
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <svg
+                      className={`w-5 h-5 ${hasUppercase ? 'text-green-500' : 'text-gray-300'}`}
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                    </svg>
+                    <span className={`text-sm ${hasLowercase ? 'text-gray-700' : 'text-gray-500'}`}>
+                      Contains at least 1 lowercase letter
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <svg
+                      className={`w-5 h-5 ${hasUppercase ? 'text-green-500' : 'text-gray-300'}`}
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                    </svg>
+                    <span className={`text-sm ${hasUppercase ? 'text-gray-700' : 'text-gray-500'}`}>
+                      Contains at least 1 uppercase letter
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <svg
+                      className={`w-5 h-5 ${hasNumber ? 'text-green-500' : 'text-gray-300'}`}
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                    </svg>
+                    <span className={`text-sm ${hasNumber ? 'text-gray-700' : 'text-gray-500'}`}>
+                      Contains at least 1 number
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex gap-4">
+                <button
+                  onClick={() => {
+                    setShowKeyModal(false);
+                    setPassword('');
+                  }}
+                  className="flex-1 px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleEditPassword}
+                  disabled={!isPasswordValid}
+                  className={`flex-1 px-6 py-3 rounded-lg font-medium transition-colors ${isPasswordValid
+                    ? 'bg-orange-500 text-white hover:bg-gray-500'
+                    : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                    }`}
+                >
+                  Update Password
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
