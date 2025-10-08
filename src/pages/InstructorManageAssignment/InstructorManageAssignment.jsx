@@ -2,8 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Plus, FileText, Clock, Lock, Calendar, X, Trash2, Upload, ChevronDown } from 'lucide-react';
 
 import { useParams } from 'react-router-dom';
-import { getAssignmentsByCourseInstanceId } from '../../service/courseInstructor';
-
+import { getAssignmentsByCourseInstanceId } from '../../service/assignmentService';
 const InstructorManageAssignment = () => {
   const { id: courseInstanceId } = useParams();
   const [showPopup, setShowPopup] = useState(false);

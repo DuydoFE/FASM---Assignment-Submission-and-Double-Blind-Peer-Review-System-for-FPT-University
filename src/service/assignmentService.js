@@ -5,7 +5,7 @@ import api from "../config/axios";
  * @param {number | string} courseInstanceId - ID của lớp học.
  * @returns {Promise<Array<Object>>} - Một promise trả về mảng các assignment.
  */
-const getAssignmentsByCourseInstanceId = async (courseInstanceId) => {
+export  const getAssignmentsByCourseInstanceId = async (courseInstanceId) => {
   try {
     // SỬA Ở ĐÂY: Đã xóa "/api" ở đầu.
     const response = await api.get(`/Assignment/course-instance/${courseInstanceId}`);
@@ -47,7 +47,7 @@ const getAssignmentRubric = async (assignmentId) => {
 
 // Export service
 export const assignmentService = {
-  getAssignmentsByCourseInstanceId,
+  
   getAssignmentDetailsById,
    getAssignmentRubric,
   getStudentAssignments, // Thêm hàm mới vào export
