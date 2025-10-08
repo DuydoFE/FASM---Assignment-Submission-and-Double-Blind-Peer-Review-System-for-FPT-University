@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Plus, FileText, Clock, Lock, Calendar, X, Trash2, Upload, ChevronDown } from 'lucide-react';
 
 import { useParams } from 'react-router-dom';
-import { getAssignments } from '../../service/courseInstructor';
+import { getAssignmentsByCourseInstanceId } from '../../service/courseInstructor';
 
 const InstructorManageAssignment = () => {
   const { id: courseInstanceId } = useParams();
@@ -88,7 +88,7 @@ const InstructorManageAssignment = () => {
     const fetchAssignments = async () => {
       try {
         setLoading(true);
-        const response = await getAssignments(courseInstanceId);
+        const response = await getAssignmentsByCourseInstanceId(courseInstanceId);
 
         // Map the API response to match our UI structure
         const mappedAssignments = response.map(assignment => ({

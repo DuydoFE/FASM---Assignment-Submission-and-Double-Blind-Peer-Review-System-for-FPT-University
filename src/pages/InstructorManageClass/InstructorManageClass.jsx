@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Search, Users, ChevronDown } from 'lucide-react';
 import { useParams } from 'react-router-dom';
-import { getStudentsInCourse } from '../../service/courseInstructor';
+import { getStudentsInCourse } from '../../service/courseStudentService';
 
 const InstructorManageClass = () => {
   const { id: courseInstanceId } = useParams();
