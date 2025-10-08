@@ -42,7 +42,6 @@ export default function AdminUserManagement() {
 
   const [selectedUser, setSelectedUser] = useState(null);
 
-  // Check if any filter/search is applied
   const isFiltering =
     filters.role || filters.campus || filters.status || filters.search;
 
@@ -72,44 +71,58 @@ export default function AdminUserManagement() {
 
       {/* Filter bar */}
       <div className="bg-white p-4 rounded-xl shadow-md flex flex-wrap gap-4">
-        <select
-          className="border rounded p-2"
-          value={filters.role}
-          onChange={(e) => setFilters({ ...filters, role: e.target.value })}
-        >
-          <option value="">Role</option>
-          <option value="student">Student</option>
-          <option value="instructor">Instructor</option>
-        </select>
-
+        {/* Always show campus first */}
         <select
           className="border rounded p-2"
           value={filters.campus}
-          onChange={(e) => setFilters({ ...filters, campus: e.target.value })}
+          onChange={(e) =>
+            setFilters({ ...filters, campus: e.target.value })
+          }
         >
-          <option value="">Campus</option>
+          <option value="">Select Campus</option>
           <option value="Hanoi">Hanoi</option>
           <option value="HCM">HCM</option>
           <option value="Da Nang">Da Nang</option>
         </select>
 
-        <select
-          className="border rounded p-2"
-          value={filters.status}
-          onChange={(e) => setFilters({ ...filters, status: e.target.value })}
-        >
-          <option value="">Status</option>
-          <option value="active">Active</option>
-          <option value="deactive">Deactive</option>
-        </select>
+        {/* Show other filters only when campus is selected */}
+        {filters.campus && (
+          <>
+            <select
+              className="border rounded p-2"
+              value={filters.role}
+              onChange={(e) =>
+                setFilters({ ...filters, role: e.target.value })
+              }
+            >
+              <option value="">Role</option>
+              <option value="student">Student</option>
+              <option value="instructor">Instructor</option>
+            </select>
 
-        <input
-          type="text"
-          placeholder="Search by name, email, studentId..."
-          className="border rounded p-2 flex-1"
-          value={filters.search}
-          onChange={(e) => setFilters({ ...filters, search: e.target.value })}
-        />
+            <select
+              className="border rounded p-2"
+              value={filters.status}
+              onChange={(e) =>
+                setFilters({ ...filters, status: e.target.value })
+              }
+            >
+              <option value="">Status</option>
+              <option value="active">Active</option>
+              <option value="deactive">Deactive</option>
+            </select>
+
+            <input
+              type="text"
+              placeholder="Search by name, email, studentId..."
+              className="border rounded p-2 flex-1"
+              value={filters.search}
+              onChange={(e) =>
+                setFilters({ ...filters, search: e.target.value })
+              }
+            />
+          </>
+        )}
       </div>
 
       {/* Table */}
@@ -237,7 +250,6 @@ export default function AdminUserManagement() {
               </button>
               <button
                 onClick={() => {
-                  // TODO: call API update user
                   console.log("Update user:", selectedUser);
                   setSelectedUser(null);
                 }}

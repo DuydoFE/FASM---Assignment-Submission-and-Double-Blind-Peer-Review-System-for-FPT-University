@@ -3,6 +3,9 @@ import axios from "axios";
 // Lấy baseURL từ env
 const baseUrl = import.meta.env.VITE_API_BASE_URL;
 
+console.log("✅ Base URL from ENV:", import.meta.env.VITE_API_BASE_URL);
+console.log("🌍 All env:", import.meta.env);
+
 const api = axios.create({
   baseURL: baseUrl,
   timeout: 3000000,

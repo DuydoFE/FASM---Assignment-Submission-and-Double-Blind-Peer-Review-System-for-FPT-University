@@ -1,8 +1,9 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom"; // 👈 import useNavigate
+import { useNavigate } from "react-router-dom";
 
 export default function AdminClassManagement() {
-    const navigate = useNavigate(); // 👈 khai báo navigate
+    const navigate = useNavigate();
+
     // Fake data
     const [classes, setClasses] = useState([
         {
@@ -47,14 +48,19 @@ export default function AdminClassManagement() {
 
     const filteredClasses = isFiltering
         ? classes.filter((c) => {
-            return (
-                (filters.semester ? c.semester === filters.semester : true) &&
-                (filters.major ? c.major === filters.major : true) &&
-                (filters.course ? c.course === filters.course : true) &&
-                (filters.campus ? c.campus === filters.campus : true)
-            );
-        })
+              return (
+                  (filters.semester ? c.semester === filters.semester : true) &&
+                  (filters.major ? c.major === filters.major : true) &&
+                  (filters.course ? c.course === filters.course : true) &&
+                  (filters.campus ? c.campus === filters.campus : true)
+              );
+          })
         : [];
+
+    // Fake import handler
+    const handleImport = () => {
+        alert("Import class list from file (feature under development)");
+    };
 
     return (
         <div className="space-y-6">
@@ -62,58 +68,86 @@ export default function AdminClassManagement() {
 
             {/* Filter & Actions */}
             <div className="bg-white p-4 rounded-xl shadow-md flex flex-wrap gap-4 items-center">
-                <select
-                    className="border rounded p-2"
-                    value={filters.semester}
-                    onChange={(e) => setFilters({ ...filters, semester: e.target.value })}
-                >
-                    <option value="">Semester</option>
-                    <option value="Spring 2025">Spring 2025</option>
-                    <option value="Fall 2025">Fall 2025</option>
-                </select>
-
-                <select
-                    className="border rounded p-2"
-                    value={filters.major}
-                    onChange={(e) => setFilters({ ...filters, major: e.target.value })}
-                >
-                    <option value="">Major</option>
-                    <option value="Software Engineering">Software Engineering</option>
-                    <option value="Artificial Intelligence">Artificial Intelligence</option>
-                </select>
-
-                <select
-                    className="border rounded p-2"
-                    value={filters.course}
-                    onChange={(e) => setFilters({ ...filters, course: e.target.value })}
-                >
-                    <option value="">Course</option>
-                    <option value="SE101">SE101</option>
-                    <option value="AI202">AI202</option>
-                </select>
-
+                {/* Campus filter always visible */}
                 <select
                     className="border rounded p-2"
                     value={filters.campus}
-                    onChange={(e) => setFilters({ ...filters, campus: e.target.value })}
+                    onChange={(e) =>
+                        setFilters({ ...filters, campus: e.target.value })
+                    }
                 >
-                    <option value="">Campus</option>
+                    <option value="">Select Campus</option>
                     <option value="Hanoi">Hanoi</option>
                     <option value="HCM">HCM</option>
                 </select>
 
-                <button
-                    onClick={() => setShowCreateSemester(true)}
-                    className="ml-auto px-4 py-2 bg-orange-500 text-white rounded hover:bg-orange-600"
-                >
-                    + Create Semester
-                </button>
-                <button
-                    onClick={() => setShowCreateClass(true)}
-                    className="px-4 py-2 bg-orange-500 text-white rounded hover:bg-orange-600"
-                >
-                    + Create Class
-                </button>
+                {/* Other filters only show after campus is chosen */}
+                {filters.campus && (
+                    <>
+                        <select
+                            className="border rounded p-2"
+                            value={filters.semester}
+                            onChange={(e) =>
+                                setFilters({ ...filters, semester: e.target.value })
+                            }
+                        >
+                            <option value="">Semester</option>
+                            <option value="Spring 2025">Spring 2025</option>
+                            <option value="Fall 2025">Fall 2025</option>
+                        </select>
+
+                        <select
+                            className="border rounded p-2"
+                            value={filters.major}
+                            onChange={(e) =>
+                                setFilters({ ...filters, major: e.target.value })
+                            }
+                        >
+                            <option value="">Major</option>
+                            <option value="Software Engineering">
+                                Software Engineering
+                            </option>
+                            <option value="Artificial Intelligence">
+                                Artificial Intelligence
+                            </option>
+                        </select>
+
+                        <select
+                            className="border rounded p-2"
+                            value={filters.course}
+                            onChange={(e) =>
+                                setFilters({ ...filters, course: e.target.value })
+                            }
+                        >
+                            <option value="">Course</option>
+                            <option value="SE101">SE101</option>
+                            <option value="AI202">AI202</option>
+                        </select>
+                    </>
+                )}
+
+                {/* Buttons */}
+                <div className="ml-auto flex flex-wrap gap-2">
+                    <button
+                        onClick={handleImport}
+                        className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 font-medium"
+                    >
+                        📂 Import Class List
+                    </button>
+
+                    <button
+                        onClick={() => setShowCreateSemester(true)}
+                        className="px-4 py-2 border border-gray-400 text-gray-700 rounded hover:bg-gray-100"
+                    >
+                        + Create Semester
+                    </button>
+                    <button
+                        onClick={() => setShowCreateClass(true)}
+                        className="px-4 py-2 border border-gray-400 text-gray-700 rounded hover:bg-gray-100"
+                    >
+                        + Create Class
+                    </button>
+                </div>
             </div>
 
             {/* Table */}
@@ -133,13 +167,19 @@ export default function AdminClassManagement() {
                         <tbody>
                             {filteredClasses.length === 0 ? (
                                 <tr>
-                                    <td colSpan={6} className="p-4 text-center text-gray-500">
+                                    <td
+                                        colSpan={6}
+                                        className="p-4 text-center text-gray-500"
+                                    >
                                         No classes found
                                     </td>
                                 </tr>
                             ) : (
                                 filteredClasses.map((c) => (
-                                    <tr key={c.id} className="border-b hover:bg-gray-50">
+                                    <tr
+                                        key={c.id}
+                                        className="border-b hover:bg-gray-50"
+                                    >
                                         <td className="p-2">{c.name}</td>
                                         <td className="p-2">{c.semester}</td>
                                         <td className="p-2">{c.major}</td>
@@ -147,13 +187,13 @@ export default function AdminClassManagement() {
                                         <td className="p-2">{c.campus}</td>
                                         <td className="p-2 space-x-2">
                                             <button
-                                                onClick={() => navigate(`/admin/classes/${c.id}`)}
+                                                onClick={() =>
+                                                    navigate(`/admin/classes/${c.id}`)
+                                                }
                                                 className="text-orange-500 hover:underline"
                                             >
                                                 View Detail
                                             </button>
-
-
                                             <button className="text-blue-500 hover:underline">
                                                 View Assignments
                                             </button>
@@ -168,7 +208,7 @@ export default function AdminClassManagement() {
                     </table>
                 ) : (
                     <p className="p-4 text-center text-gray-500">
-                        Please apply filters to display classes
+                        Please select a campus to start filtering classes
                     </p>
                 )}
             </div>
@@ -182,7 +222,10 @@ export default function AdminClassManagement() {
                             className="border rounded w-full p-2"
                             value={newSemester.term}
                             onChange={(e) =>
-                                setNewSemester({ ...newSemester, term: e.target.value })
+                                setNewSemester({
+                                    ...newSemester,
+                                    term: e.target.value,
+                                })
                             }
                         >
                             <option value="">Select Term</option>
@@ -196,7 +239,10 @@ export default function AdminClassManagement() {
                             className="border rounded w-full p-2"
                             value={newSemester.year}
                             onChange={(e) =>
-                                setNewSemester({ ...newSemester, year: e.target.value })
+                                setNewSemester({
+                                    ...newSemester,
+                                    year: e.target.value,
+                                })
                             }
                         />
                         <div className="flex justify-end space-x-2">
@@ -232,7 +278,10 @@ export default function AdminClassManagement() {
                             className="border rounded w-full p-2"
                             value={newClass.semester}
                             onChange={(e) =>
-                                setNewClass({ ...newClass, semester: e.target.value })
+                                setNewClass({
+                                    ...newClass,
+                                    semester: e.target.value,
+                                })
                             }
                         >
                             <option value="">Select Semester</option>
