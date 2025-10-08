@@ -1,8 +1,71 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Search, ArrowUpDown, Book, Users, Calendar, AlertTriangle, Clock } from 'lucide-react';
+import { getInstructorCourses } from '../../service/courseInstructor';
+import { getCurrentAccount } from '../../utils/accountUtils';
+import { useNavigate } from 'react-router-dom';
 
 // Dashboard Content Component
 const InstructorDashboard = () => {
+  const navigate = useNavigate();
+  const [courses, setCourses] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+  const currentUser = getCurrentAccount();
+
+  const getStatusStyle = (status) => {
+    switch (status) {
+      case 'active':
+        return 'bg-green-100 text-green-700 border border-green-200';
+      case 'completed':
+        return 'bg-orange-100 text-orange-700 border border-orange-200';
+      case 'upcoming':
+        return 'bg-purple-100 text-purple-700 border border-purple-200';
+      default:
+        return 'bg-gray-100 text-gray-700 border border-gray-200';
+    }
+  };
+
+  const getStatusIcon = (status) => {
+    switch (status) {
+      case 'active':
+        return <div className="w-2 h-2 bg-green-500 rounded-full"></div>;
+      case 'completed':
+        return <div className="w-2 h-2 bg-orange-500 rounded-full"></div>;
+      case 'upcoming':
+        return <div className="w-2 h-2 bg-purple-500 rounded-full"></div>;
+      default:
+        return <div className="w-2 h-2 bg-gray-500 rounded-full"></div>;
+    }
+  };
+
+  useEffect(() => {
+    const fetchCourses = async () => {
+      try {
+        setLoading(true);
+        if (!currentUser?.id) {
+          console.error('No user ID found');
+          return;
+        }
+        const response = await getInstructorCourses(currentUser.id);
+
+        // Map the API response to include status information
+        const mappedCourses = response.map(course => ({
+          ...course,
+          status: course.status ? 'active' : 'completed',
+          statusText: course.status ? 'Ongoing' : 'Completed'
+        }));
+
+        setCourses(mappedCourses);
+      } catch (error) {
+        console.error("Failed to fetch courses:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCourses();
+  }, [currentUser?.id]);
+
   return (
     <div className="max-w-7xl mx-auto px-6 py-8">
       {/* Title */}
@@ -18,7 +81,7 @@ const InstructorDashboard = () => {
             </div>
             <div>
               <p className="text-sm text-gray-500 mb-1">Total Classes</p>
-              <p className="text-3xl font-bold text-gray-900">3</p>
+              <p className="text-3xl font-bold text-gray-900">{courses.length}</p>
             </div>
           </div>
         </div>
@@ -31,24 +94,20 @@ const InstructorDashboard = () => {
             </div>
             <div>
               <p className="text-sm text-gray-500 mb-1">Total Students</p>
-              <p className="text-3xl font-bold text-gray-900">91</p>
-            </div>
-          </div>
-        </div>
-
-        {/* Current Classes */}
-        <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
-          <div className="flex items-center">
-            <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center mr-4">
-              <Calendar className="w-6 h-6 text-yellow-600" />
-            </div>
-            <div>
-              <p className="text-sm text-gray-500 mb-1">Current Classes</p>
-              <p className="text-3xl font-bold text-gray-900">3</p>
+              <p className="text-3xl font-bold text-gray-900">
+                {courses.reduce((total, course) => total + (course.studentCount || 0), 0)}
+              </p>
             </div>
           </div>
         </div>
       </div>
+
+      {loading && (
+        <div className="text-center py-12">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-4"></div>
+          <p className="text-gray-500">Loading courses...</p>
+        </div>
+      )}
 
       {/* Semester Classes Section */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 mb-8">
@@ -63,6 +122,8 @@ const InstructorDashboard = () => {
                   type="text"
                   placeholder="Search course..."
                   className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-64"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
                 />
               </div>
               <button className="flex items-center space-x-2 px-3 py-2 text-sm text-gray-600 hover:text-gray-900 border border-gray-300 rounded-lg">
@@ -76,69 +137,59 @@ const InstructorDashboard = () => {
         {/* Course Cards */}
         <div className="p-6">
           <div className="grid grid-cols-3 gap-6">
-            {/* PRO192 Card */}
-            <div className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow bg-white">
-              <div className="mb-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium text-blue-600">PRO192 - SE1718</span>
-                  <span className="px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full font-medium">Ongoing</span>
-                </div>
-              </div>
-              <h3 className="font-medium text-gray-900 mb-4 text-base">Basic Java Programming</h3>
-              <div className="space-y-2">
-                <div className="flex items-center text-sm text-gray-500">
-                  <Users className="w-4 h-4 mr-2" />
-                  <span>30 students</span>
-                </div>
-                <div className="flex items-center text-sm text-gray-500">
-                  <Clock className="w-4 h-4 mr-2" />
-                  <span>FALL2025</span>
-                </div>
-              </div>
-            </div>
+            {!loading && courses
+              .filter(course =>
+                course.courseCode.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                course.courseInstanceName.toLowerCase().includes(searchTerm.toLowerCase())
+              )
+              .map((course) => (
+                <div
+                  key={course.id}
+                  className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow bg-white cursor-pointer"
+                  onClick={() => navigate(`/instructor/manage-class/${course.id}`)}
+                >
+                  <div className="mb-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium text-blue-600">
+                        {course.courseCode} - {course.courseInstanceName}
+                      </span>
+                      <span className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium ${getStatusStyle(course.status)}`}>
+                        {getStatusIcon(course.status)}
+                        {course.statusText}
+                      </span>
+                    </div>
+                  </div>
+                  {/* <h3 className="font-medium text-gray-900 mb-4 text-base">
+                    {course.courseName}
+                  </h3> */}
+                  <h3 className="font-medium text-gray-900 mb-4 text-base">Basic Java Programming</h3>
 
-            {/* CSI102 Card */}
-            <div className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow bg-white">
-              <div className="mb-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium text-blue-600">CSI102 - SE1720</span>
-                  <span className="px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full font-medium">Ongoing</span>
+                  <div className="space-y-2">
+                    <div className="flex items-center text-sm text-gray-500">
+                      <Users className="w-4 h-4 mr-2" />
+                      <span>{course.studentCount} students</span>
+                    </div>
+                    <div className="flex items-center text-sm text-gray-500">
+                      <Clock className="w-4 h-4 mr-2" />
+                      <span>FALL2025</span>
+                    </div>
+                  </div>
                 </div>
-              </div>
-              <h3 className="font-medium text-gray-900 mb-4 text-base">Data Structures</h3>
-              <div className="space-y-2">
-                <div className="flex items-center text-sm text-gray-500">
-                  <Users className="w-4 h-4 mr-2" />
-                  <span>35 students</span>
-                </div>
-                <div className="flex items-center text-sm text-gray-500">
-                  <Clock className="w-4 h-4 mr-2" />
-                  <span>FALL2025</span>
-                </div>
-              </div>
-            </div>
-
-            {/* MAD201 Card */}
-            <div className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow bg-white">
-              <div className="mb-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium text-blue-600">MAD201 - SE1810</span>
-                  <span className="px-2 py-1 bg-yellow-100 text-yellow-700 text-xs rounded-full font-medium">Upcoming</span>
-                </div>
-              </div>
-              <h3 className="font-medium text-gray-900 mb-4 text-base">Advanced Mathematics</h3>
-              <div className="space-y-2">
-                <div className="flex items-center text-sm text-gray-500">
-                  <Users className="w-4 h-4 mr-2" />
-                  <span>26 students</span>
-                </div>
-                <div className="flex items-center text-sm text-gray-500">
-                  <Clock className="w-4 h-4 mr-2" />
-                  <span>FALL2025</span>
-                </div>
-              </div>
-            </div>
+              ))}
           </div>
+          {!loading && courses.length === 0 && (
+            <div className="text-center py-12">
+              <div className="text-gray-400 mb-4">
+                <Search size={48} className="mx-auto" />
+              </div>
+              <h3 className="text-lg font-medium text-gray-600 mb-2">
+                No courses found
+              </h3>
+              <p className="text-gray-500">
+                Try adjusting your search terms
+              </p>
+            </div>
+          )}
         </div>
       </div>
     </div>
