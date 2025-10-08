@@ -17,7 +17,7 @@ const InstructorManageAssignment = () => {
     deadline: '',
     allowedExtensions: '',
     maxFiles: 1,
-    courseWeight: 0
+    weight: 0
   });
 
   const [rubricCriteria, setRubricCriteria] = useState([]);
@@ -98,9 +98,11 @@ const InstructorManageAssignment = () => {
           guidelines: assignment.guidelines,
           deadline: new Date(assignment.deadline).toLocaleDateString(),
           time: new Date(assignment.deadline).toLocaleTimeString(),
-          weight: assignment.courseWeight || 0,
+          weight: assignment.weight || 0,
           submitted: assignment.reviewCount,
           total: assignment.submissionCount,
+          courseCode: assignment.courseCode,
+          sectionCode: assignment.sectionCode,
           status: new Date(assignment.deadline) > new Date() ? "Open" : "Closed",
           statusColor: new Date(assignment.deadline) > new Date()
             ? "bg-green-100 text-green-800"
@@ -159,10 +161,10 @@ const InstructorManageAssignment = () => {
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Assignment Management</h1>
           <div className="flex items-center space-x-4">
             <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium">
-              WDU391
+              {assignments.length > 0 ? assignments[0].courseCode : 'N/A'}
             </span>
             <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium">
-              SE1718
+              {assignments.length > 0 ? assignments[0].sectionCode : 'N/A'}
             </span>
           </div>
         </div>
@@ -279,6 +281,12 @@ const InstructorManageAssignment = () => {
               >
                 <FileText className="w-5 h-5" />
               </button>
+              <button
+                className="text-red-600 hover:text-red-800 p-1.5 hover:bg-red-50 rounded-lg transition-colors"
+                title="Delete Assignment"
+              >
+                <Trash2 className="w-5 h-5" />
+              </button>
             </div>
           </div>
         ))}
@@ -350,8 +358,8 @@ const InstructorManageAssignment = () => {
                       <div className="flex items-center space-x-2">
                         <input
                           type="number"
-                          value={formData.courseWeight}
-                          onChange={(e) => handleInputChange('courseWeight', parseFloat(e.target.value) || 0)}
+                          value={formData.weight}
+                          onChange={(e) => handleInputChange('weight', parseFloat(e.target.value) || 0)}
                           placeholder="0"
                           min="0"
                           max="100"
