@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Users, ChevronDown } from 'lucide-react';
+import { Search, Users, ChevronDown, Trash2 } from 'lucide-react';
 import { useParams } from 'react-router-dom';
 import { getStudentsInCourse } from '../../service/courseStudentService';
 
@@ -156,30 +156,17 @@ const InstructorManageClass = () => {
                 <div className="text-gray-600">{student.email}</div>
                 <div>
                   <span
-                    className={`px-3 py-1 rounded-full text-xs font-medium ${
-                      student.status === 'Joined'
+                    className={`px-3 py-1 rounded-full text-xs font-medium ${student.status === 'Joined'
                         ? 'bg-green-100 text-green-800'
                         : 'bg-yellow-100 text-yellow-800'
-                    }`}
+                      }`}
                   >
                     {student.status}
                   </span>
                 </div>
                 <div>
                   <button className="text-red-500 hover:text-red-700">
-                    <svg
-                      className="w-5 h-5"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                      />
-                    </svg>
+                    <Trash2 className="w-5 h-5" />
                   </button>
                 </div>
               </div>
