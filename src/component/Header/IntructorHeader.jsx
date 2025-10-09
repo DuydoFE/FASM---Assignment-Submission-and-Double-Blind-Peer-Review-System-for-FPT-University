@@ -72,23 +72,8 @@ const InstructorHeader = () => {
             </Link>
 
             <nav className="flex items-center space-x-6">
-              <div className="flex items-center space-x-2">
-                <Calendar className="w-4 h-4 text-blue-600" />
-                <span className="text-gray-700 text-sm font-medium">Academic Year:</span>
-                <select className="border border-gray-200 rounded-lg px-3 py-1 text-sm shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
-                  <option>2025</option>
-                  <option>2026</option>
-                </select>
-              </div>
-
-              <div className="flex items-center space-x-2">
-                <Book className="w-4 h-4 text-green-600" />
-                <span className="text-gray-700 text-sm font-medium">Semester:</span>
-                <select className="border border-gray-200 rounded-lg px-3 py-1 text-sm shadow-sm focus:ring-2 focus:ring-green-500 focus:border-green-500 transition">
-                  <option>FALL 2025</option>
-                  <option>SPRING 2026</option>
-                </select>
-              </div>
+              
+              
 
               <Link
                 to="/instructordashboard"
