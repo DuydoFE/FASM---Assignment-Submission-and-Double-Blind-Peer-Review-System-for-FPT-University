@@ -48,13 +48,37 @@ const InstructorDashboard = () => {
         }
         const response = await getInstructorCourses(currentUser.id);
 
-        // Map the API response to include status information
-        const mappedCourses = response.map(course => ({
-          ...course,
-          status: course.status ? 'active' : 'completed',
-          statusText: course.status ? 'Ongoing' : 'Completed'
-        }));
+        const mappedCourses = response.map(course => {
+          let status, statusText;
 
+          // Map API's courseInstanceStatus to the UI's status values
+          switch (course.courseInstanceStatus) {
+            case 'Upcoming':
+              status = 'upcoming';
+              statusText = 'Upcoming';
+              break;
+            case 'Ongoing':
+              status = 'active';
+              statusText = 'Ongoing';
+              break;
+            case 'Completed':
+              status = 'completed';
+              statusText = 'Completed';
+              break;
+            default:
+              status = 'upcoming'; // Default fallback
+              statusText = 'Upcoming';
+          }
+
+          return {
+            ...course,
+            status,
+            statusText,
+            semester: course.semesterName
+          };
+        });
+
+        console.log('Mapped Courses:', mappedCourses); // Debug the mapped statuses
         setCourses(mappedCourses);
       } catch (error) {
         console.error("Failed to fetch courses:", error);
@@ -69,7 +93,7 @@ const InstructorDashboard = () => {
   return (
     <div className="max-w-7xl mx-auto px-6 py-8">
       {/* Title */}
-      <h1 className="text-3xl font-bold text-gray-900 mb-8">FALL2025</h1>
+      <h1 className="text-3xl font-bold text-gray-900 mb-8">{courses[0]?.semester}</h1>
 
       {/* Stats Cards */}
       <div className="grid grid-cols-4 gap-6 mb-8">
@@ -159,9 +183,6 @@ const InstructorDashboard = () => {
                       </span>
                     </div>
                   </div>
-                  {/* <h3 className="font-medium text-gray-900 mb-4 text-base">
-                    {course.courseName}
-                  </h3> */}
                   <h3 className="font-medium text-gray-900 mb-4 text-base">Basic Java Programming</h3>
 
                   <div className="space-y-2">
@@ -171,7 +192,7 @@ const InstructorDashboard = () => {
                     </div>
                     <div className="flex items-center text-sm text-gray-500">
                       <Clock className="w-4 h-4 mr-2" />
-                      <span>FALL2025</span>
+                      <span>{course.semester}</span>
                     </div>
                   </div>
                 </div>
