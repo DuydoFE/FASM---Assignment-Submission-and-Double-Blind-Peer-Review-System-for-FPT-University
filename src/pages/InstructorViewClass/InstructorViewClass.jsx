@@ -2,7 +2,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { Search, BookOpen, Play, CheckCircle, Clock, ChevronDown, Key, X, Eye, EyeOff } from 'lucide-react';
 import { getCurrentAccount } from '../../utils/accountUtils';
 import { useNavigate } from 'react-router-dom';
-import { getInstructorCourses } from '../../service/courseInstructor';
+import { getInstructorCourses } from '../../service/courseInstructorService';
 import { updateEnrollKey } from '../../service/courseInstanceService';
 import { toast } from 'react-toastify';
 

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Search, Users, Trash2 } from 'lucide-react';
 import { useParams } from 'react-router-dom';
-import { getStudentsInCourse } from '../../service/courseStudentService';
+import { getStudentsInCourse, removeStudentFromCourse } from '../../service/courseService';
 
 const InstructorManageClass = () => {
   const { id: courseInstanceId } = useParams();
@@ -9,6 +9,7 @@ const InstructorManageClass = () => {
   const [loading, setLoading] = useState(true);
   const [courseInfo, setCourseInfo] = useState(null);
   const [students, setStudents] = useState([]);
+  const [deleting, setDeleting] = useState(false);
 
   const bgColors = [
     'bg-blue-100 text-blue-800',
@@ -38,7 +39,10 @@ const InstructorManageClass = () => {
           name: student.studentName,
           email: student.studentEmail,
           bgColor: bgColors[index % bgColors.length],
-          enrolledAt: student.enrolledAt
+          enrolledAt: student.enrolledAt,
+          courseStudentId: student.courseStudentId,
+          userId: student.userId,
+          courseInstanceId: student.courseInstanceId
         }));
 
         setStudents(mappedStudents);
@@ -136,7 +140,26 @@ const InstructorManageClass = () => {
                 <div className="text-gray-900">{student.name}</div>
                 <div className="text-gray-600">{student.email}</div>
                 <div>
-                  <button className="text-red-500 hover:text-red-700">
+                  <button 
+                    className="text-red-500 hover:text-red-700 disabled:opacity-50"
+                    onClick={() => {
+                      if (window.confirm(`Are you sure you want to remove ${student.name} from this class?`)) {
+                        setDeleting(true);
+                        removeStudentFromCourse(student.userId, student.courseInstanceId, student.courseStudentId)
+                          .then(() => {
+                            setStudents(students.filter(s => s.courseStudentId !== student.courseStudentId));
+                          })
+                          .catch((error) => {
+                            console.error('Failed to remove student:', error);
+                            alert('Failed to remove student. Please try again.');
+                          })
+                          .finally(() => {
+                            setDeleting(false);
+                          });
+                      }
+                    }}
+                    disabled={deleting}
+                  >
                     <Trash2 className="w-5 h-5" />
                   </button>
                 </div>
