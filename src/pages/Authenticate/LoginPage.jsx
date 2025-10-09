@@ -9,6 +9,8 @@ import { login } from "../../service/userService";
 import { loginRedux } from "../../redux/features/userSlice";
 import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
+import api from "../../config/axios";
+import axios from "axios";
 
 const GoogleIcon = (props) => (
   <svg
@@ -44,27 +46,63 @@ const LoginPage = () => {
     fetchCampus();
   }, []);
 
-const handleLogin = async () => {
-  const data = {
-    username,
-    password,
-    campusId,
+  const handleLogin = async () => {
+    const data = {
+      username,
+      password,
+      campusId,
+    };
+    try {
+      const result = await login(data);
+      console.log("Login success:", result);
+      dispatch(loginRedux(result));
+      toast.success("Login successful!");
+      // TODO: Lưu token, chuyển trang, vv.
+      localStorage.setItem("token", result.accessToken);
+      localStorage.setItem("refreshToken", result.refreshToken);
+      navigate("/");
+    } catch (error) {
+      console.error("Login failed:", error);
+      // TODO: show thông báo lỗi cho user
+      toast.error("Login failed. Please check your credentials.");
+    }
   };
-  try {
-    const result = await login(data);
-    console.log("Login success:", result);
-    dispatch(loginRedux(result));
-    toast.success("Login successful!");
-    // TODO: Lưu token, chuyển trang, vv.
-    localStorage.setItem("token", result.accessToken);
-    localStorage.setItem("refreshToken", result.refreshToken);
-    navigate("/");
-  } catch (error) {
-    console.error("Login failed:", error);
-    // TODO: show thông báo lỗi cho user
-    toast.error("Login failed. Please check your credentials.");
-  }
-};
+
+  const handleLoginGoogle = () => {
+    window.location.href =
+      "https://localhost:7104/api/account/google-login?returnUrl=http://localhost:5173/login?google=true";
+  };
+
+  useEffect(() => {
+    const handleGoogleCallback = async () => {
+      const fullUrl = window.location.href;
+       const query = fullUrl.split('?').slice(1).join('&')
+       const params = new URLSearchParams(query);
+      const isGoogleCallback = params.get("google"); // check param
+      const accessToken = params.get("accessToken"); // check param
+      const refreshToken = params.get("refreshToken"); // check param
+      if (isGoogleCallback) {
+        try {
+          console.log("Detected Google callback, fetching user info...");
+
+          const res = await axios.get("https://localhost:7104/api/account/me", {
+            withCredentials: true
+          });
+          localStorage.setItem("token", accessToken);
+          localStorage.setItem("refreshToken", refreshToken);
+          dispatch(loginRedux(res.data.data));
+          toast.success("Google Login successful!");
+          navigate("/instructordashboard");
+        } catch (err) {
+          console.error("Failed to fetch user after Google callback:", err);
+          toast.error("Google Login failed.");
+          navigate("/login"); 
+        }
+      }
+    };
+
+    handleGoogleCallback();
+  }, []);
 
   return (
     <div
@@ -130,7 +168,7 @@ const handleLogin = async () => {
         <div className="w-1/2 flex flex-col justify-center pl-10">
           <p className="text-gray-600 mb-4">Sign in with</p>
 
-          <button className="w-full flex items-center justify-center py-2.5 px-4 mb-6 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors">
+          <button onClick={handleLoginGoogle} className="w-full flex items-center justify-center py-2.5 px-4 mb-6 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors">
             <GoogleIcon className="w-5 h-5 mr-3 text-red-500" />
             <span className="text-sm text-gray-700">
               @fpt.edu.vn (For lecturer only)

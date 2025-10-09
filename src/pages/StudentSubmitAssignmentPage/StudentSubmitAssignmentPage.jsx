@@ -13,6 +13,7 @@ import { assignmentService } from '../../service/assignmentService';
 import SubmissionGuideCard from '../../component/Submission/SubmissionGuideCard';
 import SubmissionCard from '../../component/Submission/SubmissionCard';
 import PeerReviewCard from '../../component/Submission/PeerReviewCard';
+import RubricCard from '../../component/Submission/RubricCard';
 
 // Hàm helper để định dạng ngày tháng
 const formatDate = (dateString) => {
@@ -43,18 +44,12 @@ const StudentSubmitAssignmentPage = () => {
         const data = await assignmentService.getAssignmentDetailsById(assignmentId);
         setAssignment(data);
 
-        // Cập nhật số bài cần review từ API
+
         if (data) {
           setPeerReviewProgress(prev => ({ ...prev, required: data.numPeerReviewsRequired }));
         }
 
-        // TODO: Gọi API để lấy trạng thái nộp bài thực tế của sinh viên
-        // const submissionStatus = await submissionService.getStatus(assignmentId, studentId);
-        // setHasSubmitted(submissionStatus.hasSubmitted);
-
-        // TODO: Gọi API để lấy tiến độ chấm chéo thực tế
-        // const reviewProgress = await reviewService.getProgress(assignmentId, studentId);
-        // setPeerReviewProgress({ completed: reviewProgress.completed, required: data.numPeerReviewsRequired });
+    
 
       } catch (err) {
         setError("Không thể tải thông tin chi tiết của bài tập. Vui lòng thử lại.");
@@ -109,7 +104,7 @@ const StudentSubmitAssignmentPage = () => {
       <div className="max-w-7xl mx-auto">
         {/* Breadcrumbs */}
         <div className="mb-6 flex items-center text-sm text-gray-600">
-          <Link to="/my-assignments" className="hover:underline">Assignment của tôi</Link>
+          <Link to="/my-assignments" className="hover:underline">My Assigment</Link>
           <ChevronRight className="w-4 h-4 mx-1" />
           <Link to={`/assignment/${courseId}`} className="hover:underline">{assignment.sectionCode}</Link>
           <ChevronRight className="w-4 h-4 mx-1" />
@@ -120,7 +115,7 @@ const StudentSubmitAssignmentPage = () => {
         <div className="mb-8">
             <p className="text-blue-600 font-semibold">{assignment.sectionCode}</p>
             <h1 className="text-3xl font-bold text-gray-900">{assignment.courseName}</h1>
-            <p className="text-gray-500 mt-1">Giảng viên: N/A</p>
+            <p className="text-gray-500 mt-1">Instuctor: N/A</p>
         </div>
 
         {/* Main Content Grid */}
@@ -152,31 +147,32 @@ const StudentSubmitAssignmentPage = () => {
                     </div>
                     <div className="flex items-center">
                         <BarChart2 className="w-4 h-4 mr-1.5" />
-                        Trọng số: <span className="font-semibold ml-1">{`${(assignment.instructorWeight + assignment.peerWeight) * 100}%`}</span>
+                        Weight: <span className="font-semibold ml-1">{`${(assignment.instructorWeight + assignment.peerWeight) * 100}%`}</span>
                     </div>
                 </div>
 
                 {/* Card Details */}
                 <div className="mt-4 ml-10 pt-4 border-t border-gray-300">
-                    <p className="font-semibold mb-2">Mô tả chi tiết:</p>
+                    <p className="font-semibold mb-2">Detail:</p>
                     <p className="text-sm text-gray-700 mb-4 whitespace-pre-wrap">{assignment.guidelines}</p>
                     <div className="flex items-center space-x-3">
                         <button className="flex items-center px-4 py-2 bg-white border border-gray-300 text-gray-700 font-semibold rounded-md hover:bg-gray-50 text-sm">
                             <Info className="w-4 h-4 mr-2" />
-                            Xem chi tiết
+                           View Detail
                         </button>
                         <button className="flex items-center px-4 py-2 bg-white border border-gray-300 text-gray-700 font-semibold rounded-md hover:bg-gray-50 text-sm">
                             <Download className="w-4 h-4 mr-2" />
-                            Tải file đính kèm
+                            Download attach file
                         </button>
                     </div>
                 </div>
             </div>
+            <RubricCard assignmentId={assignmentId} />
           </div>
 
           {/* Right Column: Submission Status */}
            <div className="space-y-6">
-            <h2 className="text-xl font-bold text-gray-800">Nộp bài & Chấm bài</h2>
+            <h2 className="text-xl font-bold text-gray-800">Submit and Grading</h2>
             <SubmissionGuideCard />
             <SubmissionCard hasSubmitted={hasSubmitted} />
             {assignment.peerWeight > 0 && ( // Chỉ hiển thị nếu có chấm chéo

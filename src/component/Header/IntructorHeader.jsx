@@ -1,5 +1,10 @@
-import { Link } from "react-router-dom";
-import { Bell, Book, Calendar } from 'lucide-react';
+import { Link, useNavigate } from "react-router-dom";
+import { Bell, Book, Calendar, LogOut, User } from 'lucide-react';
+import { getCurrentAccount } from "../../utils/accountUtils";
+import { useDispatch } from "react-redux";
+import { Avatar, Button, Dropdown, Menu } from "antd";
+import { logout } from "../../redux/features/userSlice";
+import { toast } from "react-toastify";
 
 const FasmLogo = () => (
   <div className="flex items-center space-x-2">
@@ -22,6 +27,41 @@ const FasmLogo = () => (
 );
 
 const InstructorHeader = () => {
+  const user = getCurrentAccount();
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    dispatch(logout());
+    toast.success("Logged out successfully");
+    localStorage.removeItem("token");
+    localStorage.removeItem("refreshToken");
+    navigate("/");
+  };
+
+  const menu = (
+    <Menu
+      items={[
+        {
+          key: "profile",
+          label: (
+            <Link to="/profile" className="flex items-center">
+              <User className="w-4 h-4 mr-2" /> Profile
+            </Link>
+          ),
+        },
+        {
+          key: "logout",
+          label: (
+            <span onClick={handleLogout} className="flex items-center">
+              <LogOut className="w-4 h-4 mr-2" /> Logout
+            </span>
+          ),
+        },
+      ]}
+    />
+  );
+
   return (
     <header className="bg-white shadow-sm sticky top-0 z-50">
       <div className="container mx-auto px-4">
@@ -34,7 +74,7 @@ const InstructorHeader = () => {
             <nav className="flex items-center space-x-6">
               <div className="flex items-center space-x-2">
                 <Calendar className="w-4 h-4 text-blue-600" />
-                <span className="text-gray-700 text-sm font-medium">Năm học:</span>
+                <span className="text-gray-700 text-sm font-medium">Academic Year:</span>
                 <select className="border border-gray-200 rounded-lg px-3 py-1 text-sm shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
                   <option>2025</option>
                   <option>2026</option>
@@ -43,7 +83,7 @@ const InstructorHeader = () => {
 
               <div className="flex items-center space-x-2">
                 <Book className="w-4 h-4 text-green-600" />
-                <span className="text-gray-700 text-sm font-medium">Học kỳ:</span>
+                <span className="text-gray-700 text-sm font-medium">Semester:</span>
                 <select className="border border-gray-200 rounded-lg px-3 py-1 text-sm shadow-sm focus:ring-2 focus:ring-green-500 focus:border-green-500 transition">
                   <option>FALL 2025</option>
                   <option>SPRING 2026</option>
@@ -60,32 +100,41 @@ const InstructorHeader = () => {
                 to="/my-classes"
                 className="text-gray-600 hover:text-orange-500 transition-colors font-medium"
               >
-                Lớp học của tôi
+                My Classes
               </Link>
               <Link
                 to="/regrade-request"
                 className="text-gray-600 hover:text-orange-500 transition-colors font-medium"
               >
-                Đơn khiếu nại
+                Regrade Requests
               </Link>
             </nav>
           </div>
 
-          <div className="flex items-center space-x-4">
-            <div className="relative">
-              <Bell className="w-5 h-5 text-gray-400" />
-              <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full text-xs text-white flex items-center justify-center">1</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center">
-                <span className="text-white text-sm font-medium">QL</span>
-              </div>
-              <div className="text-sm">
-                <div className="text-gray-900 font-medium">Quang Loc</div>
-                <div className="text-gray-500">Instructor - HCM</div>
-              </div>
-            </div>
-          </div>
+          {user ? (
+            <Dropdown className="p-3" overlay={menu} trigger={["hover"]}>
+              <Button type="text" className="flex items-center space-x-2">
+                <Avatar
+                  src={
+                    user.avatar ||
+                    `https://ui-avatars.com/api/?name=${user.username}`
+                  }
+                />
+                <span className="font-medium text-gray-700">
+                  {user.username}
+                </span>
+              </Button>
+            </Dropdown>
+          ) : (
+            <>
+              <Link
+                to="/login"
+                className="px-6 py-2 border border-gray-300 rounded-lg font-medium text-gray-700 hover:bg-gray-100 transition-colors"
+              >
+                Login
+              </Link>
+            </>
+          )}
         </div>
       </div>
     </header>

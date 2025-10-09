@@ -1,34 +1,34 @@
 import React, { useState } from 'react';
 import { ArrowLeft, Download, Eye, Star, ChevronDown, Sparkles } from 'lucide-react';
 
-const IntructorGradingDetail = () => {
+const InstructorGradingDetail = () => {
     const [score, setScore] = useState(8.5);
     const [showAllReviews, setShowAllReviews] = useState(false);
 
     const peerReviews = [
         {
             id: 1,
-            name: 'Trần Thị Bình',
+            name: 'Tran Thi Binh',
             studentId: '2021002',
             date: '24/12/2024',
             score: 8.2,
-            comment: 'Bài làm đề bài: Layout đẹp và mạch lạc bài hóa. Tuy nhiên cũ thể cải thiện thêm về typography để tăng tính readable. Overall all âm tương tự Design: 8/10  UX: 8/10  Technical: 7/10',
+            comment: 'The work meets the requirements: Beautiful and coherent layout. However, typography can be improved to increase readability. Overall: Design: 8/10 UX: 8/10 Technical: 7/10',
         },
         {
             id: 2,
-            name: 'Lê Minh Cường',
+            name: 'Le Minh Cuong',
             studentId: '2021003',
             date: '22/12/2024',
             score: 7.8,
-            comment: 'Design concept tốt và có ý tưởng sáng tạo. Color scheme phù hợp nhưng cần cải ý hơn về spacing giữa các elements. Code implementation còng khá ổn.',
+            comment: 'Good design concept with creative ideas. Suitable color scheme but needs better spacing between elements. Code implementation is quite stable.',
         },
         {
             id: 3,
-            name: 'Phạm Thu Duyên',
+            name: 'Pham Thu Duyen',
             studentId: '2021004',
             date: '23/12/2024',
             score: 7.5,
-            comment: 'Bài làm có potential tốt, thiết kế logic và user journey được pay night tỷ. Tuy nhiên visual design có thể tôtd hơn cả về UI optimal performance.',
+            comment: 'The work has good potential, logical design and detailed user journey analysis. However, visual design can be better in terms of UI and performance optimization.',
         }
     ];
 
@@ -43,8 +43,8 @@ const IntructorGradingDetail = () => {
                         <ArrowLeft className="w-5 h-5 text-gray-600" />
                     </button>
                     <div>
-                        <h1 className="text-lg font-semibold text-gray-800">Chi tiết bài làm</h1>
-                        <p className="text-sm text-gray-500">Bài tập: Thiết kế giao diện ứdụng mobile</p>
+                        <h1 className="text-lg font-semibold text-gray-800">Submission Details</h1>
+                        <p className="text-sm text-gray-500">Assignment: Mobile App Interface Design</p>
                     </div>
                 </div>
             </div>
@@ -55,34 +55,34 @@ const IntructorGradingDetail = () => {
                     <div className="col-span-2 space-y-6">
                         {/* Student Info */}
                         <div className="bg-white rounded-lg border border-gray-200 p-6">
-                            <h2 className="text-sm font-semibold text-gray-700 mb-3">Thông tin sinh viên</h2>
+                            <h2 className="text-sm font-semibold text-gray-700 mb-3">Student Information</h2>
                             <div className="space-y-1 text-sm">
-                                <p className="text-gray-800">Họ và tên: <span className="font-medium">Nguyễn Văn An</span></p>
-                                <p className="text-gray-600">MSSV: SE174488</p>
-                                <p className="text-gray-600">Lớp: SE1718</p>
+                                <p className="text-gray-800">Full Name: <span className="font-medium">Nguyen Van An</span></p>
+                                <p className="text-gray-600">Student ID: SE174488</p>
+                                <p className="text-gray-600">Class: SE1718</p>
                             </div>
                         </div>
 
                         {/* Submission Status */}
                         <div className="bg-white rounded-lg border border-gray-200 p-6">
-                            <h2 className="text-sm font-semibold text-gray-700 mb-3">Trạng thái nộp bài</h2>
+                            <h2 className="text-sm font-semibold text-gray-700 mb-3">Submission Status</h2>
                             <div className="flex items-start gap-3">
                                 <div className="flex items-center gap-2 px-3 py-1.5 bg-green-100 text-green-700 rounded-full text-sm font-medium">
-                                    Đã nộp
+                                    Submitted
                                 </div>
                                 <div className="flex items-center gap-2 px-3 py-1.5 bg-blue-100 text-blue-700 rounded-full text-sm font-medium">
-                                    Đúng hạn
+                                    On Time
                                 </div>
                             </div>
                             <div className="mt-3 text-sm text-gray-600 space-y-1">
-                                <p>Thời gian nộp: <span className="font-medium">23/12/2024 - 14:30</span></p>
+                                <p>Submission Time: <span className="font-medium">23/12/2024 - 14:30</span></p>
                                 <p>Deadline: <span className="font-medium">25/12/2024 - 23:59</span></p>
                             </div>
                         </div>
 
                         {/* File Submission */}
                         <div className="bg-white rounded-lg border border-gray-200 p-6">
-                            <h2 className="text-sm font-semibold text-gray-700 mb-3">File đã nộp</h2>
+                            <h2 className="text-sm font-semibold text-gray-700 mb-3">Submitted File</h2>
                             <div className="flex items-center justify-between p-4 bg-blue-50 rounded-lg border border-blue-200">
                                 <div className="flex items-center gap-3">
                                     <div className="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center">
@@ -93,17 +93,17 @@ const IntructorGradingDetail = () => {
                                     <div>
                                         <p className="text-sm font-medium text-gray-800">mobile-app-design.pdf</p>
                                         <p className="text-xs text-gray-500">8.2 MB • Uploaded: 23/12/2024 - 14:30</p>
-                                        <p className="text-xs text-green-600 mt-1">Đã kiểm: 23/12/2024 - 16:30</p>
+                                        <p className="text-xs text-green-600 mt-1">Checked: 23/12/2024 - 16:30</p>
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-2">
                                     <button className="p-2 hover:bg-blue-100 rounded-lg transition-colors">
                                         <Eye className="w-4 h-4 text-gray-600" />
-                                        <span className="text-xs text-gray-600 ml-1">Xem trước</span>
+                                        <span className="text-xs text-gray-600 ml-1">Preview</span>
                                     </button>
                                     <button className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm font-medium flex items-center gap-2">
                                         <Download className="w-4 h-4" />
-                                        Tải xuống
+                                        Download
                                     </button>
                                 </div>
                             </div>
@@ -116,12 +116,12 @@ const IntructorGradingDetail = () => {
                                     <svg className="w-5 h-5 text-gray-600" fill="currentColor" viewBox="0 0 20 20">
                                         <path d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" />
                                     </svg>
-                                    <h2 className="text-sm font-semibold text-gray-700">Peer Review (Đánh giá từ bạn cùng lớp)</h2>
+                                    <h2 className="text-sm font-semibold text-gray-700">Peer Review (Classmate Evaluations)</h2>
                                 </div>
-                                <span className="text-sm text-gray-500">Điểm TB: <span className="font-semibold text-blue-600">7.8</span></span>
+                                <span className="text-sm text-gray-500">Average Score: <span className="font-semibold text-blue-600">7.8</span></span>
                             </div>
 
-                            <p className="text-sm text-gray-600 mb-4">5 đánh giá từ bạn cùng lớp</p>
+                            <p className="text-sm text-gray-600 mb-4">5 evaluations from classmates</p>
 
                             <div className="space-y-4">
                                 {visibleReviews.map((review) => (
@@ -133,15 +133,15 @@ const IntructorGradingDetail = () => {
                                                 </div>
                                                 <div>
                                                     <p className="font-medium text-gray-800 text-sm">{review.name} <span className="text-gray-400">({review.studentId})</span></p>
-                                                    <p className="text-xs text-gray-500">Đánh giá: {review.date}</p>
+                                                    <p className="text-xs text-gray-500">Evaluated: {review.date}</p>
                                                 </div>
                                             </div>
-                                            <div className="flex items-center gap-1 text-yellow-500">
-                                                <Star className="w-4 h-4 fill-current" />
-                                                <span className="font-semibold text-sm">{review.score}</span>
+                                            <div className="flex items-center gap-1">
+                                                <Star className="w-4 h-4 text-yellow-400 fill-current" />
+                                                <span className="text-sm font-semibold text-gray-800">{review.score}</span>
                                             </div>
                                         </div>
-                                        <p className="text-sm text-gray-700 mb-3">{review.comment}</p>
+                                        <p className="text-sm text-gray-600 leading-relaxed">{review.comment}</p>
                                     </div>
                                 ))}
                             </div>
@@ -151,44 +151,33 @@ const IntructorGradingDetail = () => {
                                     onClick={() => setShowAllReviews(true)}
                                     className="w-full mt-4 py-2 text-sm text-blue-600 hover:bg-blue-50 rounded-lg transition-colors flex items-center justify-center gap-1"
                                 >
-                                    Xem thêm 2 đánh giá
+                                    View More Reviews
                                     <ChevronDown className="w-4 h-4" />
                                 </button>
                             )}
                         </div>
 
-                        {/* AI Summary */}
-                        <div className="bg-gradient-to-br from-purple-50 to-blue-50 rounded-lg border border-purple-200 p-6">
-                            <div className="flex items-center justify-between mb-4">
-                                <h2 className="text-sm font-semibold text-gray-800 flex items-center gap-2">
-                                    <Sparkles className="w-5 h-5 text-purple-600" />
-                                    AI Summary & Analysis
-                                </h2>
-                                <button className="px-3 py-1.5 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-xs font-medium flex items-center gap-1">
-                                    <Sparkles className="w-3 h-3" />
-                                    Tạo AI Summary
-                                </button>
+                        {/* AI Feedback */}
+                        <div className="bg-white rounded-lg border border-gray-200 p-6">
+                            <div className="flex items-center gap-2 mb-4">
+                                <Sparkles className="w-5 h-5 text-purple-500" />
+                                <h2 className="text-sm font-semibold text-gray-700">AI Feedback</h2>
                             </div>
-
-                            <div className="space-y-4">
+                            <p className="text-xs text-gray-500 mb-4">Automatic Analysis by AI</p>
+                            <div className="space-y-4 text-sm text-gray-700">
                                 <div>
-                                    <div className="flex items-center gap-2 mb-2">
-                                        <span className="text-sm font-semibold text-gray-800">📊 Phân tích tổng quan:</span>
-                                    </div>
-                                    <p className="text-sm text-gray-700 leading-relaxed">
-                                        Bài làm thể hiện kỹ năng thiết kế tốt với layout hợp lý và màu sắc bắt mắt. Màu, logic sinh viên đã dụng đúng các nguyên tắc thiết kế UI/UX cơ bản.
-                                    </p>
-                                    <ul className="mt-2 space-y-1 text-sm text-gray-700">
-                                        <li>• <span className="font-medium">Điểm mạnh:</span></li>
-                                        <li className="ml-4">- Sử dụng typography nhất quán</li>
-                                        <li className="ml-4">- Color palette phù hợp với chủ đề</li>
-                                        <li className="ml-4">- Layout rõ ràng</li>
+                                    <h3 className="font-medium text-gray-800 mb-2">Strengths:</h3>
+                                    <ul className="list-disc pl-4 space-y-1 text-gray-600">
+                                        <li>Clear and intuitive wireframe structure</li>
+                                        <li>Good use of color scheme and typography</li>
+                                        <li>Smooth user journey and logical flow</li>
                                     </ul>
-                                    <ul className="mt-2 space-y-1 text-sm text-gray-700">
-                                        <li>• <span className="font-medium">Cần cải thiện:</span></li>
-                                        <li className="ml-4">- Tăng contrast cho accessibility</li>
-                                        <li className="ml-4">- Cân thiện visual hierarchy</li>
-                                        <li className="ml-4">- Optimize spacing between elements</li>
+                                </div>
+                                <div>
+                                    <h3 className="font-medium text-gray-800 mb-2">Areas for Improvement:</h3>
+                                    <ul className="list-disc pl-4 space-y-1 text-gray-600">
+                                        <li>Improve visual hierarchy</li>
+                                        <li>Optimize spacing between elements</li>
                                     </ul>
                                 </div>
                             </div>
@@ -199,7 +188,7 @@ const IntructorGradingDetail = () => {
                     <div className="space-y-6">
                         {/* Overall Score */}
                         <div className="bg-white rounded-lg border border-gray-200 p-6">
-                            <h2 className="text-sm font-semibold text-gray-700 mb-4">Điểm tổng kết hiện tại</h2>
+                            <h2 className="text-sm font-semibold text-gray-700 mb-4">Current Overall Score</h2>
                             <div className="flex items-center justify-center mb-4">
                                 <div className="relative">
                                     <svg className="w-24 h-24 transform -rotate-90">
@@ -228,7 +217,7 @@ const IntructorGradingDetail = () => {
                                 </div>
                             </div>
                             <div className="text-center text-sm text-gray-600">
-                                <p className="font-medium">Điểm: 8.2/10</p>
+                                <p className="font-medium">Score: 8.2/10</p>
                             </div>
                         </div>
 
@@ -236,7 +225,7 @@ const IntructorGradingDetail = () => {
                         <div className="bg-white rounded-lg border border-gray-200 p-6">
                             <div className="flex items-center gap-2 mb-3">
                                 <span className="text-lg">📊</span>
-                                <h3 className="text-sm font-semibold text-gray-700">Điểm số</h3>
+                                <h3 className="text-sm font-semibold text-gray-700">Score</h3>
                             </div>
                             <div className="flex items-center gap-2">
                                 <button
@@ -267,49 +256,49 @@ const IntructorGradingDetail = () => {
                                     +
                                 </button>
                             </div>
-                            <p className="text-xs text-gray-500 text-center mt-2">Điểm tối đa: 10đ</p>
+                            <p className="text-xs text-gray-500 text-center mt-2">Maximum Score: 10</p>
                         </div>
 
                         {/* Detailed Criteria */}
                         <div className="bg-white rounded-lg border border-gray-200 p-6">
                             <div className="flex items-center gap-2 mb-3">
                                 <span className="text-lg">📋</span>
-                                <h3 className="text-sm font-semibold text-gray-700">Nhận xét chi tiết</h3>
+                                <h3 className="text-sm font-semibold text-gray-700">Detailed Comments</h3>
                             </div>
                             <textarea
-                                placeholder="Nhập nhận xét chi tiết về bài làm của sinh viên..."
+                                placeholder="Enter detailed comments on the student's work..."
                                 className="w-full min-h-[200px] px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm text-gray-700 resize-y"
                                 defaultValue=""
                             />
-                            <p className="text-xs text-gray-500 mt-2">Gợi ý: Nêu rõ điểm mạnh, điểm cần cải thiện và đánh giá tổng quan</p>
+                            <p className="text-xs text-gray-500 mt-2">Suggestion: Clearly state strengths, areas for improvement, and overall evaluation</p>
                         </div>
 
                         {/* Grading Criteria */}
                         <div className="bg-white rounded-lg border border-gray-200 p-6">
-                            <h3 className="text-sm font-semibold text-gray-700 mb-3">Tiêu chí chấm điểm</h3>
+                            <h3 className="text-sm font-semibold text-gray-700 mb-3">Grading Criteria</h3>
                             <div className="space-y-3">
                                 <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
                                     <div className="flex items-center justify-between mb-1">
-                                        <p className="text-sm font-medium text-gray-800">Thiết kế Wireframe</p>
+                                        <p className="text-sm font-medium text-gray-800">Wireframe Design</p>
                                         <span className="text-xs font-semibold text-gray-600">40%</span>
                                     </div>
-                                    <p className="text-xs text-gray-600">Cấu trúc và bố cục wireframe, sự rõ ràng và mạch lạc trong thiết kế, tính khả thi của layout</p>
+                                    <p className="text-xs text-gray-600">Wireframe structure and layout, clarity and coherence in design, layout feasibility</p>
                                 </div>
 
                                 <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
                                     <div className="flex items-center justify-between mb-1">
-                                        <p className="text-sm font-medium text-gray-800">Prototype tương tác</p>
+                                        <p className="text-sm font-medium text-gray-800">Interactive Prototype</p>
                                         <span className="text-xs font-semibold text-gray-600">30%</span>
                                     </div>
-                                    <p className="text-xs text-gray-600">Mức độ tương tác, sự mượt mà của transitions, tính năng hoạt động đúng logic, trải nghiệm người dùng</p>
+                                    <p className="text-xs text-gray-600">Level of interaction, smoothness of transitions, correct logical functionality, user experience</p>
                                 </div>
 
                                 <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
                                     <div className="flex items-center justify-between mb-1">
-                                        <p className="text-sm font-medium text-gray-800">Báo cáo phân tích UX</p>
+                                        <p className="text-sm font-medium text-gray-800">UX Analysis Report</p>
                                         <span className="text-xs font-semibold text-gray-600">30%</span>
                                     </div>
-                                    <p className="text-xs text-gray-600">Chiều sâu và chất lượng phân tích ý kiến người dùng, nghiên cứu user journey cụ thể, giải pháp được đề xuất</p>
+                                    <p className="text-xs text-gray-600">Depth and quality of user feedback analysis, specific user journey research, proposed solutions</p>
                                 </div>
                             </div>
                         </div>
@@ -317,7 +306,7 @@ const IntructorGradingDetail = () => {
                         {/* Action Buttons */}
                         <div className="flex gap-3">
                             <button className="flex-1 px-4 py-3 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors font-medium">
-                                Chấm bài điểm
+                                Grade Submission
                             </button>
                         </div>
                     </div>
@@ -327,4 +316,4 @@ const IntructorGradingDetail = () => {
     );
 }
 
-export default IntructorGradingDetail;
+export default InstructorGradingDetail;

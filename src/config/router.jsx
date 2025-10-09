@@ -1,4 +1,4 @@
-import { createBrowserRouter } from "react-router-dom";
+import { createBrowserRouter, Navigate } from "react-router-dom";
 import Zustand from "../Zustand";
 import UseReactQuerry from "../component/UseReactQuerry";
 import Test from "../Test";
@@ -11,7 +11,7 @@ import StudentAssignmentPage from "../pages/StudentAssignmentPage/StudentAssignm
 import InstructorLayout from "../layout/InstructorLayout";
 import InstructorDashboard from "../pages/InstructorDashBoard/InstructorDashBoard";
 import InstructorViewClass from "../pages/InstructorViewClass/InstructorViewClass";
-import InstructorCreatePassword from "../pages/InstructorCreatePassword/InstructorCreatePassword";
+import InstructorEnrollKey from "../pages/InstructorEnrollKey/InstructorEnrollKey";
 import InstructorClassLayout from "../layout/InstructorClassLayout";
 import InstructorManageClass from "../pages/InstructorManageClass/InstructorManageClass";
 import InstructorManageAssignment from "../pages/InstructorManageAssignment/InstructorManageAssignment";
@@ -25,6 +25,19 @@ import InstructorPublishMark from "../pages/InstructorPublishMark/InstructorPubl
 import InstructorRegradeRequest from "../pages/IntructorRegradeRequest/IntructorRegradeRequest";
 import PeerReviewPage from "../pages/PeerReviewPage/PeerReviewPage";
 import ReviewSuccessPage from "../pages/PeerReviewPage/ReviewSuccessPage";
+import { getCurrentAccount } from "../utils/accountUtils";
+import { toast } from "react-toastify";
+import { ROLE } from "../constant/roleEnum";
+const ProtectedRoute = ({ children, role }) => {
+  const user = getCurrentAccount();
+  if (!user || user?.roles[0] !== role) {
+    // User is not authenticated or doesn't have the required role
+    toast.error("You don't have permission to access this page!");
+    return <Navigate to="/" replace />;
+  }
+  // User has the required role, render the children
+  return children;
+};
 
 // 👉 Import layout + page cho Admin
 import AdminLayout from "../layout/AdminLayout";
@@ -35,7 +48,6 @@ import AdminClassDetail from "../pages/Admin/AdminClassDetail";
 import AdminAccountSettings from "../pages/Admin/AdminAccountSettings";
 import AdminClassAssignments from "../pages/Admin/AdminClassAssignments";
 import AdminAssignmentSubmissions from "../pages/Admin/AdminAssignmentSubmissions";
-
 
 export const router = createBrowserRouter([
   {
@@ -67,9 +79,10 @@ export const router = createBrowserRouter([
         element: <PeerReviewPage />,
       },
       {
-        path: "/2",
+        path: "/review-success",
         element: <ReviewSuccessPage />,
       },
+
     ],
   },
   {
@@ -94,15 +107,15 @@ export const router = createBrowserRouter([
     children: [
       {
         path: "instructordashboard",
-        element: <InstructorDashboard />,
+        element: <ProtectedRoute role={ROLE.INSTRUCTOR}><InstructorDashboard /></ProtectedRoute>,
       },
       {
         path: "my-classes",
         element: <InstructorViewClass />,
       },
       {
-        path: "create-class-password",
-        element: <InstructorCreatePassword />,
+        path: "enroll-key",
+        element: <InstructorEnrollKey />,
       },
       {
         path: "regrade-request",
@@ -111,7 +124,29 @@ export const router = createBrowserRouter([
     ],
   },
   {
-    path: "",
+    path: "/instructor",
+    element: <InstructorLayout />,
+    children: [
+      {
+        path: "instructordashboard",
+        element: <ProtectedRoute role={ROLE.INSTRUCTOR}><InstructorDashboard /></ProtectedRoute>,
+      },
+      {
+        path: "my-classes",
+        element: <InstructorViewClass />,
+      },
+      {
+        path: "enroll-key",
+        element: <InstructorEnrollKey />,
+      },
+      {
+        path: "regrade-request",
+        element: <InstructorRegradeRequest />,
+      },
+    ],
+  },
+  {
+    path: "/instructor",
     element: <InstructorClassLayout />,
     children: [
       {
@@ -119,11 +154,11 @@ export const router = createBrowserRouter([
         element: <InstructorManageClass />,
       },
       {
-        path: "manage-class",
+        path: "manage-class/:id",
         element: <InstructorManageClass />,
       },
       {
-        path: "manage-assignment",
+        path: "manage-assignment/:id",
         element: <InstructorManageAssignment />,
       },
       {
