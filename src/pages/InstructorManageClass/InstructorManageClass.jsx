@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Search, Users, Trash2 } from 'lucide-react';
 import { useParams } from 'react-router-dom';
-import { getStudentsInCourse, removeStudentFromCourse } from '../../service/courseStudentService';
-import { getCurrentAccount } from '../../utils/accountUtils';
+import { getStudentsInCourse, removeStudentFromCourse } from '../../service/courseService';
 
 const InstructorManageClass = () => {
   const { id: courseInstanceId } = useParams();

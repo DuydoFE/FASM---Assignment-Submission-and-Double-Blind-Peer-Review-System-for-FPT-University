@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Search, ArrowUpDown, Book, Users, Calendar, AlertTriangle, Clock } from 'lucide-react';
-import { getInstructorCourses } from '../../service/courseInstructor';
+import { getInstructorCourses } from '../../service/courseInstructorService';
 import { getCurrentAccount } from '../../utils/accountUtils';
 import { useNavigate } from 'react-router-dom';
 
