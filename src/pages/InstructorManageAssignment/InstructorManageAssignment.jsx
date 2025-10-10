@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, FileText, Clock, Lock, Calendar, X, Trash2, Upload, ChevronDown } from 'lucide-react';
+import { toast } from "react-toastify";
 
 import { useParams } from 'react-router-dom';
-import { getAssignmentsByCourseInstanceId } from '../../service/assignmentService';
+import { getAssignmentsByCourseInstanceId, assignmentService } from '../../service/assignmentService';
 const InstructorManageAssignment = () => {
   const { id: courseInstanceId } = useParams();
   const [showPopup, setShowPopup] = useState(false);
@@ -10,6 +11,10 @@ const InstructorManageAssignment = () => {
   const [statusFilter, setStatusFilter] = useState('All');
   const [assignments, setAssignments] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [showUpdateDeadlineModal, setShowUpdateDeadlineModal] = useState(false);
+  const [selectedAssignment, setSelectedAssignment] = useState(null);
+  const [newDeadline, setNewDeadline] = useState('');
+  const [newTime, setNewTime] = useState('');
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -91,7 +96,7 @@ const InstructorManageAssignment = () => {
 
         // Map the API response to match our UI structure
         const mappedAssignments = response.map(assignment => ({
-          id: assignment.id,
+          id: assignment.assignmentId,
           title: assignment.title,
           description: assignment.description,
           guidelines: assignment.guidelines,
@@ -126,6 +131,69 @@ const InstructorManageAssignment = () => {
     if (statusFilter === 'All') setStatusFilter('Open');
     else if (statusFilter === 'Open') setStatusFilter('Closed');
     else setStatusFilter('All');
+  };
+
+  const handleUpdateDeadlineClick = (assignment) => {
+    setSelectedAssignment(assignment);
+
+    const [day, month, year] = assignment.deadline.split('/');
+    const formattedDate = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+    setNewDeadline(formattedDate);
+
+    const timeArr = assignment.time.split(':');
+    const formattedTime = `${timeArr[0].padStart(2, '0')}:${timeArr[1].padStart(2, '0')}`;
+    setNewTime(formattedTime);
+
+    setShowUpdateDeadlineModal(true);
+  };
+
+  const handleSaveDeadline = async () => {
+    if (!newDeadline || !newTime) {
+      alert('Please enter both date and time');
+      return;
+    }
+
+    try {
+      // Combine date and time into a single ISO string
+      const [year, month, day] = newDeadline.split('-');
+      const [hours, minutes] = newTime.split(':');
+      const deadlineDate = new Date(year, month - 1, day, hours, minutes);
+
+      // Call API to update deadline
+      await assignmentService.extendDeadline(selectedAssignment.id, deadlineDate.toISOString());
+
+      // Update the UI
+      setAssignments(prev =>
+        prev.map(a =>
+          a.id === selectedAssignment.id
+            ? {
+              ...a,
+              deadline: deadlineDate.toLocaleDateString(),
+              time: deadlineDate.toLocaleTimeString(),
+              status: deadlineDate > new Date() ? "Open" : "Closed",
+              statusColor: deadlineDate > new Date()
+                ? "bg-green-100 text-green-800"
+                : "bg-red-100 text-red-800"
+            }
+            : a
+        )
+      );
+      toast.success('Deadline extended successfully!');
+      setShowUpdateDeadlineModal(false);
+      setNewDeadline('');
+      setNewTime('');
+      setSelectedAssignment(null);
+    } catch (error) {
+      console.error('Failed to extend deadline:', error);
+      toast.error('Failed to extend deadline. Please try again.');
+    }
+  };
+
+  const handleCloseDeadlineModal = () => {
+    setShowUpdateDeadlineModal(false);
+    setSelectedAssignment(null);
+    setNewDeadline('');
+    setNewTime('');
   };
 
   const filteredAssignments = statusFilter === 'All'
@@ -269,8 +337,9 @@ const InstructorManageAssignment = () => {
             </div>
             <div className="col-span-2 flex justify-center items-center space-x-2">
               <button
+                onClick={() => handleUpdateDeadlineClick(assignment)}
                 className="text-blue-600 hover:text-blue-800 p-1.5 hover:bg-blue-50 rounded-lg transition-colors"
-                title="View Schedule"
+                title="Extend Deadline"
               >
                 <Calendar className="w-5 h-5" />
               </button>
@@ -290,6 +359,77 @@ const InstructorManageAssignment = () => {
           </div>
         ))}
       </div>
+
+      {/* Update Deadline Modal */}
+      {showUpdateDeadlineModal && selectedAssignment && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-xl font-bold text-gray-900">Extend Deadline</h2>
+              <button
+                onClick={handleCloseDeadlineModal}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-4 mb-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Assignment: <span className="font-semibold text-gray-900">{selectedAssignment.title}</span>
+                </label>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  New Date <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="date"
+                  value={newDeadline}
+                  onChange={(e) => setNewDeadline(e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  New Time <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="time"
+                  value={newTime}
+                  onChange={(e) => setNewTime(e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none"
+                />
+              </div>
+
+              <div className="bg-gray-50 p-3 rounded-lg">
+                <p className="text-sm text-gray-600">
+                  <span className="font-medium">Current deadline:</span> {selectedAssignment.deadline} at {selectedAssignment.time}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={handleCloseDeadlineModal}
+                className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSaveDeadline}
+                className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 flex items-center gap-2"
+              >
+                <Calendar className="w-4 h-4" />
+                Extend
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Create Assignment Popup */}
       {showPopup && (

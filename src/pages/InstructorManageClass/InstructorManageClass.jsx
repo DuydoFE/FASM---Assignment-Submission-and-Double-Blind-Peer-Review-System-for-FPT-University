@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Users, Trash2 } from 'lucide-react';
+import { Search, Users, Trash2, Plus, X } from 'lucide-react';
 import { useParams } from 'react-router-dom';
 import { getStudentsInCourse, removeStudentFromCourse } from '../../service/courseService';
 
@@ -10,6 +10,10 @@ const InstructorManageClass = () => {
   const [courseInfo, setCourseInfo] = useState(null);
   const [students, setStudents] = useState([]);
   const [deleting, setDeleting] = useState(false);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [studentCode, setStudentCode] = useState('');
+  const [modalError, setModalError] = useState('');
+  const [addingStudent, setAddingStudent] = useState(false);
 
   const bgColors = [
     'bg-blue-100 text-blue-800',
@@ -71,6 +75,54 @@ const InstructorManageClass = () => {
     );
   });
 
+  const handleAddStudent = async (e) => {
+    e.preventDefault();
+    setModalError('');
+
+    if (!studentCode.trim()) {
+      setModalError('Please enter a student code');
+      return;
+    }
+
+    try {
+      setAddingStudent(true);
+      // Gọi API để thêm học sinh
+      // await addStudentToCourse(courseInstanceId, studentCode);
+      
+      // Sau khi thêm thành công, refresh danh sách
+      const response = await getStudentsInCourse(courseInstanceId);
+      const mappedStudents = response.map((student, index) => ({
+        id: student.studentName
+          ? student.studentName.substring(0, 2).toUpperCase()
+          : 'ST',
+        code: student.studentCode,
+        name: student.studentName,
+        email: student.studentEmail,
+        bgColor: bgColors[index % bgColors.length],
+        enrolledAt: student.enrolledAt,
+        courseStudentId: student.courseStudentId,
+        userId: student.userId,
+        courseInstanceId: student.courseInstanceId
+      }));
+      setStudents(mappedStudents);
+
+      setStudentCode('');
+      setIsAddModalOpen(false);
+      alert('Student added successfully!');
+    } catch (error) {
+      console.error('Failed to add student:', error);
+      setModalError('Failed to add student. Please try again.');
+    } finally {
+      setAddingStudent(false);
+    }
+  };
+
+  const handleCloseModal = () => {
+    setStudentCode('');
+    setModalError('');
+    setIsAddModalOpen(false);
+  };
+
   if (!courseInstanceId) {
     return <div className="p-4 text-red-500">Invalid class ID. Please navigate from the class list.</div>;
   }
@@ -98,15 +150,25 @@ const InstructorManageClass = () => {
           </div>
         </div>
 
-        <div className="relative">
-          <Search className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-          <input
-            type="text"
-            placeholder="Search students..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-          />
+        <div className="flex gap-3 items-center">
+          <button
+            onClick={() => setIsAddModalOpen(true)}
+            className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 flex items-center gap-2"
+          >
+            <Plus className="w-4 h-4" />
+            Add Student
+          </button>
+
+          <div className="relative">
+            <Search className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Search students..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+            />
+          </div>
         </div>
       </div>
 
@@ -182,6 +244,57 @@ const InstructorManageClass = () => {
           </div>
         )}
       </div>
+
+      {/* Add Student Modal */}
+      {isAddModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-xl font-bold text-gray-900">Add Student</h2>
+              <button
+                onClick={handleCloseModal}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleAddStudent}>
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Student Code
+                </label>
+                <input
+                  type="text"
+                  value={studentCode}
+                  onChange={(e) => {
+                    setStudentCode(e.target.value);
+                    setModalError('');
+                  }}
+                  placeholder="Enter student code (e.g., SE123456)"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none"
+                  disabled={addingStudent}
+                  autoFocus
+                />
+                {modalError && (
+                  <p className="text-red-500 text-sm mt-2">{modalError}</p>
+                )}
+              </div>
+
+              <div className="flex gap-3 justify-end">
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 disabled:opacity-50 flex items-center gap-2"
+                  disabled={addingStudent}
+                >
+                  <Plus className="w-4 h-4" />
+                  {addingStudent ? 'Adding...' : 'Add'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

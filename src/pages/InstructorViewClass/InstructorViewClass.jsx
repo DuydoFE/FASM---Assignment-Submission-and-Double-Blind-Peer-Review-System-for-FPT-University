@@ -139,7 +139,7 @@ const InstructorViewClass = () => {
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            All Classes - FALL2025
+            All Classes 
           </h1>
           <p className="text-gray-600">
             Manage and track your teaching progress
@@ -224,7 +224,7 @@ const InstructorViewClass = () => {
                 <thead className="bg-gray-50 border-b border-gray-200">
                   <tr>
                     <th className="text-left py-4 px-6 font-medium text-gray-700">
-                      Course Information
+                      Course
                     </th>
                     <th className="text-left py-4 px-6 font-medium text-gray-700">
                       Class
@@ -254,11 +254,8 @@ const InstructorViewClass = () => {
                       <td className="py-4 px-6">
                         <div>
                           <h3 className="font-semibold text-gray-900 mb-1">
-                            {cls.name}
+                            {cls.code}
                           </h3>
-                          <div className="flex items-center gap-4 text-sm text-gray-500">
-                            <span>{cls.code}</span>
-                          </div>
                         </div>
                       </td>
                       <td className="py-4 px-6">
@@ -311,11 +308,10 @@ const InstructorViewClass = () => {
             {/* Left Side - Class Info */}
             <div className="w-2/5 bg-gradient-to-br from-blue-50 to-blue-100 p-8 flex flex-col">
               <div className="mb-6">
-                <div className="text-blue-600 text-sm font-semibold mb-2">UI/UX Design</div>
+                <div className="text-blue-600 text-sm font-semibold mb-2">{selectedClass?.code}</div>
                 <h2 className="text-2xl font-bold text-gray-900 mb-2">
                   Class {selectedClass?.name}
                 </h2>
-                <div className="text-gray-600">{selectedClass?.code}</div>
               </div>
 
               <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-5 mt-auto">
