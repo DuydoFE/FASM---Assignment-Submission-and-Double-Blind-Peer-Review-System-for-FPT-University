@@ -11,7 +11,6 @@ import StudentAssignmentPage from "../pages/StudentAssignmentPage/StudentAssignm
 import InstructorLayout from "../layout/InstructorLayout";
 import InstructorDashboard from "../pages/InstructorDashBoard/InstructorDashBoard";
 import InstructorViewClass from "../pages/InstructorViewClass/InstructorViewClass";
-import InstructorEnrollKey from "../pages/InstructorEnrollKey/InstructorEnrollKey";
 import InstructorClassLayout from "../layout/InstructorClassLayout";
 import InstructorManageClass from "../pages/InstructorManageClass/InstructorManageClass";
 import InstructorManageAssignment from "../pages/InstructorManageAssignment/InstructorManageAssignment";
@@ -102,20 +101,16 @@ export const router = createBrowserRouter([
     element: <UseReactQuerry />,
   },
   {
-    path: "",
+    path: "/instructor",
     element: <InstructorLayout />,
     children: [
       {
-        path: "instructordashboard",
+        path: "dashboard",
         element: <ProtectedRoute role={ROLE.INSTRUCTOR}><InstructorDashboard /></ProtectedRoute>,
       },
       {
         path: "my-classes",
         element: <InstructorViewClass />,
-      },
-      {
-        path: "enroll-key",
-        element: <InstructorEnrollKey />,
       },
       {
         path: "regrade-request",
@@ -134,10 +129,6 @@ export const router = createBrowserRouter([
       {
         path: "my-classes",
         element: <InstructorViewClass />,
-      },
-      {
-        path: "enroll-key",
-        element: <InstructorEnrollKey />,
       },
       {
         path: "regrade-request",

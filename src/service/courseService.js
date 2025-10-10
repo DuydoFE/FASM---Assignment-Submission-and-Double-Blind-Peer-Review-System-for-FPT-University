@@ -21,7 +21,13 @@ export const getStudentsInCourse = async (courseInstanceId) => {
 
 export const removeStudentFromCourse = async (userId, courseInstanceId, courseStudentId) => {
   try {
-    const response = await api.delete(`/CourseStudent/delete?userId=${userId}&courseInstanceId=${courseInstanceId}&courseStudentId=${courseStudentId}`);
+    const response = await api.delete("/CourseStudent/delete", {
+      params: {
+        userId,
+        courseInstanceId,
+        courseStudentId,
+      },
+    });
     return response.data;
   } catch (error) {
     console.error("Remove Student Failed:", error.response?.data || error.message);

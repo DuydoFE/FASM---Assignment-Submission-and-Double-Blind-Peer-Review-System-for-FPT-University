@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Search, Users, Trash2, Plus, X } from 'lucide-react';
 import { useParams } from 'react-router-dom';
 import { getStudentsInCourse, removeStudentFromCourse } from '../../service/courseService';
+import { toast } from 'react-toastify';
 
 const InstructorManageClass = () => {
   const { id: courseInstanceId } = useParams();
@@ -14,6 +15,8 @@ const InstructorManageClass = () => {
   const [studentCode, setStudentCode] = useState('');
   const [modalError, setModalError] = useState('');
   const [addingStudent, setAddingStudent] = useState(false);
+  const [confirmDeleteModal, setConfirmDeleteModal] = useState(false);
+  const [studentToDelete, setStudentToDelete] = useState(null);
 
   const bgColors = [
     'bg-blue-100 text-blue-800',
@@ -88,7 +91,7 @@ const InstructorManageClass = () => {
       setAddingStudent(true);
       // Gọi API để thêm học sinh
       // await addStudentToCourse(courseInstanceId, studentCode);
-      
+
       // Sau khi thêm thành công, refresh danh sách
       const response = await getStudentsInCourse(courseInstanceId);
       const mappedStudents = response.map((student, index) => ({
@@ -121,6 +124,38 @@ const InstructorManageClass = () => {
     setStudentCode('');
     setModalError('');
     setIsAddModalOpen(false);
+  };
+
+  const handleDeleteClick = (student) => {
+    setStudentToDelete(student);
+    setConfirmDeleteModal(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!studentToDelete) return;
+
+    try {
+      setDeleting(true);
+      await removeStudentFromCourse(
+        studentToDelete.userId,
+        studentToDelete.courseInstanceId,
+        studentToDelete.courseStudentId
+      );
+      setStudents(students.filter(s => s.courseStudentId !== studentToDelete.courseStudentId));
+      setConfirmDeleteModal(false);
+      setStudentToDelete(null);
+      toast.success('Student removed successfully!');
+    } catch (error) {
+      console.error('Failed to remove student:', error);
+      toast.error('Failed to remove student. Please try again.');
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  const handleCancelDelete = () => {
+    setConfirmDeleteModal(false);
+    setStudentToDelete(null);
   };
 
   if (!courseInstanceId) {
@@ -202,24 +237,9 @@ const InstructorManageClass = () => {
                 <div className="text-gray-900">{student.name}</div>
                 <div className="text-gray-600">{student.email}</div>
                 <div>
-                  <button 
+                  <button
                     className="text-red-500 hover:text-red-700 disabled:opacity-50"
-                    onClick={() => {
-                      if (window.confirm(`Are you sure you want to remove ${student.name} from this class?`)) {
-                        setDeleting(true);
-                        removeStudentFromCourse(student.userId, student.courseInstanceId, student.courseStudentId)
-                          .then(() => {
-                            setStudents(students.filter(s => s.courseStudentId !== student.courseStudentId));
-                          })
-                          .catch((error) => {
-                            console.error('Failed to remove student:', error);
-                            alert('Failed to remove student. Please try again.');
-                          })
-                          .finally(() => {
-                            setDeleting(false);
-                          });
-                      }
-                    }}
+                    onClick={() => handleDeleteClick(student)}
                     disabled={deleting}
                   >
                     <Trash2 className="w-5 h-5" />
@@ -283,6 +303,14 @@ const InstructorManageClass = () => {
 
               <div className="flex gap-3 justify-end">
                 <button
+                  type="button"
+                  onClick={handleCloseModal}
+                  className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 disabled:opacity-50"
+                  disabled={addingStudent}
+                >
+                  Cancel
+                </button>
+                <button
                   type="submit"
                   className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 disabled:opacity-50 flex items-center gap-2"
                   disabled={addingStudent}
@@ -292,6 +320,47 @@ const InstructorManageClass = () => {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Confirm Delete Modal */}
+      {confirmDeleteModal && studentToDelete && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-xl font-bold text-gray-900">Remove Student</h2>
+              <button
+                onClick={handleCancelDelete}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="mb-6">
+              <p className="text-gray-700 mb-4">
+                Are you sure you want to remove <span className="font-semibold">{studentToDelete.name}</span> from this class?
+              </p>
+            </div>
+
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={handleCancelDelete}
+                className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 disabled:opacity-50"
+                disabled={deleting}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmDelete}
+                className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 disabled:opacity-50 flex items-center gap-2"
+                disabled={deleting}
+              >
+                <Trash2 className="w-4 h-4" />
+                {deleting ? 'Removing...' : 'Remove'}
+              </button>
+            </div>
           </div>
         </div>
       )}

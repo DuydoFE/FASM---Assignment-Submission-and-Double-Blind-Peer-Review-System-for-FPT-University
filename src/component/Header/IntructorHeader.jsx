@@ -67,7 +67,7 @@ const InstructorHeader = () => {
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-20">
           <div className="flex items-center space-x-8">
-            <Link to="/instructordashboard">
+            <Link to="/instructor/dashboard">
               <FasmLogo />
             </Link>
 
@@ -76,19 +76,19 @@ const InstructorHeader = () => {
               
 
               <Link
-                to="/instructordashboard"
+                to="/instructor/dashboard"
                 className="text-gray-600 hover:text-orange-500 transition-colors font-medium"
               >
                 Home
               </Link>
               <Link
-                to="/my-classes"
+                to="/instructor/my-classes"
                 className="text-gray-600 hover:text-orange-500 transition-colors font-medium"
               >
                 My Classes
               </Link>
               <Link
-                to="/regrade-request"
+                to="/instructor/regrade-request"
                 className="text-gray-600 hover:text-orange-500 transition-colors font-medium"
               >
                 Regrade Requests
