@@ -4,8 +4,8 @@ import React, { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { Card, Avatar, Spin, Alert, Descriptions, Typography } from "antd";
 import { UserOutlined } from "@ant-design/icons";
-import { getUserById } from "../../redux/service/userService"; // Import service
-import { selectUser } from "../../redux/features/userSlice"; // Import selector
+import { getUserById } from "../../service/userService"; // Import service
+import { selectUser } from "../../redux/features/userSlice";
 
 const { Title } = Typography;
 

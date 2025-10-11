@@ -47,6 +47,7 @@ import AdminClassDetail from "../pages/Admin/AdminClassDetail";
 import AdminAccountSettings from "../pages/Admin/AdminAccountSettings";
 import AdminClassAssignments from "../pages/Admin/AdminClassAssignments";
 import AdminAssignmentSubmissions from "../pages/Admin/AdminAssignmentSubmissions";
+import ProfilePage from "../pages/HomePage/ProfilePage";
 
 export const router = createBrowserRouter([
   {
@@ -56,6 +57,10 @@ export const router = createBrowserRouter([
       {
         index: true,
         element: <HomePage />,
+      },
+       {
+        path: "profile",
+        element: <ProfilePage />,
       },
       {
         path: "studentdashboard",
