@@ -10,5 +10,5 @@ export const login = async (data) => {
   }
 };
 export const getUserById = (userId) => {
-  return api.get(`/api/Users/${userId}`);
+  return api.get(`/Users/${userId}`);
 };

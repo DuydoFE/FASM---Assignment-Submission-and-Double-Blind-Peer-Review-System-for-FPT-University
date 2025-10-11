@@ -64,18 +64,18 @@ const ProfilePage = () => {
         <div className="flex flex-col items-center text-center">
           <Avatar
             size={128}
-            src={userData?.avatar || `https://ui-avatars.com/api/?name=${userData?.username}&background=random`}
+            src={userData?.avatarUrl || `https://ui-avatars.com/api/?name=${userData?.username}&background=random`}
             icon={<UserOutlined />}
             className="border-4 border-white -mt-16"
           />
-          <Title level={2} className="mt-4">{userData?.fullName || userData?.username}</Title>
-          <p className="text-gray-500">{userData?.roles.join(', ')}</p>
+          <Title level={2} className="mt-4">{userData?.firstName || userData?.username}</Title>
+          <p className="text-gray-500">{userData?.roles}</p>
         </div>
         <Descriptions bordered column={1} className="mt-8">
           <Descriptions.Item label="Username">{userData?.username}</Descriptions.Item>
           <Descriptions.Item label="Email">{userData?.email}</Descriptions.Item>
-          <Descriptions.Item label="Full Name">{userData?.fullName || 'N/A'}</Descriptions.Item>
-          <Descriptions.Item label="Phone Number">{userData?.phoneNumber || 'N/A'}</Descriptions.Item>
+          <Descriptions.Item label="Full Name">{userData?.firstName || 'N/A'}</Descriptions.Item>
+          <Descriptions.Item label="Phone Number">{userData?.studentCode || 'N/A'}</Descriptions.Item>
           <Descriptions.Item label="User ID">{userData?.id}</Descriptions.Item>
         </Descriptions>
       </Card>
