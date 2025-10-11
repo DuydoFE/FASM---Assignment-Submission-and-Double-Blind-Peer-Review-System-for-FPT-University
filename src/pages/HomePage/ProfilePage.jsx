@@ -16,11 +16,11 @@ const ProfilePage = () => {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    if (currentUser && currentUser.id) {
+    if (currentUser && currentUser.userId) {
       const fetchUserData = async () => {
         try {
           setLoading(true);
-          const response = await getUserById(currentUser.id);
+          const response = await getUserById(currentUser.userId);
           setUserData(response.data);
           setError(null);
         } catch (err) {
