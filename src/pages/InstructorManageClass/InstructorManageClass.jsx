@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Search, Users, Trash2, Plus, X } from 'lucide-react';
 import { useParams } from 'react-router-dom';
-import { getStudentsInCourse, removeStudentFromCourse } from '../../service/courseService';
+import { getCurrentAccount } from '../../utils/accountUtils';
+import { getStudentsInCourse, removeStudentFromCourse, addStudentToCourse } from '../../service/courseService';
 import { toast } from 'react-toastify';
 
 const InstructorManageClass = () => {
   const { id: courseInstanceId } = useParams();
+  const currentUser = getCurrentAccount();
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
   const [courseInfo, setCourseInfo] = useState(null);
@@ -89,10 +91,8 @@ const InstructorManageClass = () => {
 
     try {
       setAddingStudent(true);
-      // Gọi API để thêm học sinh
-      // await addStudentToCourse(courseInstanceId, studentCode);
+      await addStudentToCourse(courseInstanceId, studentCode.trim(), currentUser.id); 
 
-      // Sau khi thêm thành công, refresh danh sách
       const response = await getStudentsInCourse(courseInstanceId);
       const mappedStudents = response.map((student, index) => ({
         id: student.studentName
@@ -111,10 +111,10 @@ const InstructorManageClass = () => {
 
       setStudentCode('');
       setIsAddModalOpen(false);
-      alert('Student added successfully!');
+      toast.success('Student added successfully!');
     } catch (error) {
       console.error('Failed to add student:', error);
-      setModalError('Failed to add student. Please try again.');
+      toast.error('Failed to add student. Please try again.');
     } finally {
       setAddingStudent(false);
     }
