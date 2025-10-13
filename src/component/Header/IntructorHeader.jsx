@@ -79,7 +79,7 @@ const InstructorHeader = () => {
                 to="/instructor/dashboard"
                 className="text-gray-600 hover:text-orange-500 transition-colors font-medium"
               >
-                Home
+                Dashboard
               </Link>
               <Link
                 to="/instructor/my-classes"
