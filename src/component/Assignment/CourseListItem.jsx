@@ -1,12 +1,19 @@
-// src/component/Assignment/CourseListItem.jsx
+import React from "react";
 
-import React from 'react';
-
-const CourseListItem = ({ icon: Icon, iconColor, title, code, status, onJoinClick }) => {
+const CourseListItem = ({
+  icon: Icon,
+  iconColor,
+  title,
+  code,
+  status,
+  onJoinClick,
+}) => {
   return (
     <div className="flex items-center justify-between p-4 border-b last:border-b-0">
       <div className="flex items-center">
-        <div className={`flex-shrink-0 w-10 h-10 flex items-center justify-center bg-gray-100 rounded-full mr-4 ${iconColor}`}>
+        <div
+          className={`flex-shrink-0 w-10 h-10 flex items-center justify-center bg-gray-100 rounded-full mr-4 ${iconColor}`}
+        >
           <Icon className="w-5 h-5" />
         </div>
         <div>
@@ -14,17 +21,16 @@ const CourseListItem = ({ icon: Icon, iconColor, title, code, status, onJoinClic
           <p className="text-sm text-gray-500">{code}</p>
         </div>
       </div>
-      
-      {/* 👉 Logic hiển thị nút bấm dựa trên 'status' */}
-      {status === 'Pending' ? (
-        <button 
+
+      {status === "Pending" ? (
+        <button
           onClick={onJoinClick}
           className="px-5 py-2 bg-teal-500 text-white font-semibold rounded-md hover:bg-teal-600 transition-colors text-sm"
         >
           Join
         </button>
       ) : (
-        <button 
+        <button
           className="px-5 py-2 bg-gray-300 text-gray-600 font-semibold rounded-md cursor-not-allowed text-sm"
           disabled
         >
