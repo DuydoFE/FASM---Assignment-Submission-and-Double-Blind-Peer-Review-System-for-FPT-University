@@ -50,6 +50,20 @@ export const removeStudentFromCourse = async (
   }
 };
 
+export const addStudentToCourse = async (courseInstanceId, studentCode, changedByUserId) => {
+  try {
+    const response = await api.post('/CourseStudent', {
+      courseInstanceId: courseInstanceId,
+      studentCode: studentCode,
+      changedByUserId: changedByUserId
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Add Student Failed:', error.response?.data || error.message);
+    throw error;
+  }
+};
+
 const enrollInCourse = async ({ courseInstanceId, studentUserId, enrollKey }) => {
   try {
     const url = `/CourseStudent/${courseInstanceId}/enroll`;
@@ -66,8 +80,11 @@ const enrollInCourse = async ({ courseInstanceId, studentUserId, enrollKey }) =>
     throw error.response?.data || new Error("An unknown error occurred");
   }
 };
+
+
 export const courseService = {
   getEnrolledCoursesByStudentId,
   getStudentCourseRegistrations,
-  enrollInCourse
+  enrollInCourse,
+  addStudentToCourse
 };
