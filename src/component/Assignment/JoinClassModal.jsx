@@ -2,12 +2,12 @@
 
 import React, { useState } from 'react';
 import { useSelector } from 'react-redux';
-import { selectUser } from '../../redux/features/userSlice'; 
-import { X, Lock, Key, Eye, EyeOff, Info } from 'lucide-react';
+import { selectUser } from '../../redux/features/userSlice';
+// 👉 1. Import thêm icon "Users"
+import { X, Lock, Key, Eye, EyeOff, Info, Users } from 'lucide-react';
 
 const JoinClassModal = ({ isOpen, onClose, course }) => {
   const currentUser = useSelector(selectUser);
-
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
 
@@ -33,11 +33,11 @@ const JoinClassModal = ({ isOpen, onClose, course }) => {
         <hr className="mb-6"/>
         
         <div className="text-center mb-6">
-          <div className="mx-auto bg-blue-500 text-white w-14 h-14 rounded-full flex items-center justify-center text-xl font-bold mb-3">
-            {currentUser?.firstName?.charAt(0)}{currentUser?.lastName?.charAt(0)}
+          <div className="mx-auto bg-indigo-100 text-indigo-600 w-14 h-14 rounded-full flex items-center justify-center text-xl font-bold mb-3">
+            <Users className="w-7 h-7" />
           </div>
-          <p className="font-semibold text-gray-800">{currentUser?.firstName} {currentUser?.lastName}</p>
-          <p className="text-sm text-gray-600">{currentUser?.email}</p>
+          <p className="font-semibold text-gray-800">{course.courseInstanceName}</p>
+          <p className="text-sm text-gray-600">{course.courseName}</p>
         </div>
         
         <div className="text-center mb-6">
