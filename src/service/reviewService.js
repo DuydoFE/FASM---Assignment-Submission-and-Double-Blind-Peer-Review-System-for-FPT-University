@@ -20,7 +20,19 @@ const submitPeerReview = async (reviewPayload) => {
   }
 };
 
+const getStudentReviewTracking = async (assignmentId) => {
+  try {
+    // API endpoint như bạn cung cấp, đã bỏ "/api"
+    const response = await api.get(`/StudentReview/assignment/${assignmentId}/tracking`);
+    return response.data;
+  } catch (error) {
+    console.error(`Lỗi khi lấy thông tin tracking review cho assignment ID ${assignmentId}:`, error);
+    throw error;
+  }
+};
+
 export const reviewService = {
   getPeerReviewAssignment,
   submitPeerReview,
+  getStudentReviewTracking,
 };
