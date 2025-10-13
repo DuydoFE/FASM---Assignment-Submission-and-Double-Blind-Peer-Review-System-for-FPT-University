@@ -49,7 +49,25 @@ export const removeStudentFromCourse = async (
     throw error;
   }
 };
+
+const enrollInCourse = async ({ courseInstanceId, studentUserId, enrollKey }) => {
+  try {
+    const url = `/CourseStudent/${courseInstanceId}/enroll`;
+    const params = {
+      studentUserId,
+      enrollKey,
+    };
+    // Dữ liệu POST có thể là null, các tham số được truyền qua query params
+    const response = await api.post(url, null, { params });
+    return response.data;
+  } catch (error) {
+    // Không ném lỗi ra ngoài ngay mà trả về để useMutation có thể xử lý
+    console.error("Lỗi khi ghi danh vào lớp học:", error.response);
+    throw error.response?.data || new Error("An unknown error occurred");
+  }
+};
 export const courseService = {
   getEnrolledCoursesByStudentId,
   getStudentCourseRegistrations,
+  enrollInCourse
 };

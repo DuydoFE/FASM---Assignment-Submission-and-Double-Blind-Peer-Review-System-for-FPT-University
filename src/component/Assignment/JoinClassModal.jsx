@@ -1,9 +1,7 @@
-// src/component/Assignment/JoinClassModal.jsx
 
 import React, { useState } from 'react';
 import { useSelector } from 'react-redux';
 import { selectUser } from '../../redux/features/userSlice';
-// 👉 1. Import thêm icon "Users"
 import { X, Lock, Key, Eye, EyeOff, Info, Users } from 'lucide-react';
 
 const JoinClassModal = ({ isOpen, onClose, course }) => {
