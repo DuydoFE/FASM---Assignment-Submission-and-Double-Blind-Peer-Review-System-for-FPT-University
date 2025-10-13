@@ -3,19 +3,39 @@ import React, { useState } from 'react';
 import { useSelector } from 'react-redux';
 import { selectUser } from '../../redux/features/userSlice';
 import { X, Lock, Key, Eye, EyeOff, Info, Users } from 'lucide-react';
-
-const JoinClassModal = ({ isOpen, onClose, course }) => {
+import { useMutation } from '@tanstack/react-query';
+import { courseService } from '../../service/courseService';
+const JoinClassModal = ({ isOpen, onClose, course, onEnrollSuccess }) => {
   const currentUser = useSelector(selectUser);
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+
+
+  const { mutate: enroll, isLoading: isEnrolling, error: enrollError } = useMutation({
+    mutationFn: courseService.enrollInCourse,
+    onSuccess: () => {
+      // Bây giờ onEnrollSuccess sẽ luôn là một hàm, không bao giờ là undefined
+      onEnrollSuccess(); 
+      onClose();
+    },
+  });
+
+  
+
+  if (!isOpen || !course) {
+    return null;
+  }
 
   if (!isOpen || !course) {
     return null;
   }
 
   const handleJoinClass = () => {
-    console.log(`Joining class ${course.courseInstanceId} with password: ${password}`);
-    onClose();
+    enroll({
+      courseInstanceId: course.courseInstanceId,
+      studentUserId: currentUser.userId,
+      enrollKey: password,
+    });
   };
 
   return (
@@ -63,8 +83,13 @@ const JoinClassModal = ({ isOpen, onClose, course }) => {
               {showPassword ? <EyeOff /> : <Eye />}
             </button>
           </div>
+          
           <p className="text-xs text-gray-500 mt-2 text-left">Mật khẩu được cung cấp bởi giảng viên trong buổi học đầu tiên</p>
+          {enrollError && (
+              <p className="text-sm text-red-500 mt-3 text-center">{enrollError.message}</p>
+          )}
         </div>
+
 
         <div className="bg-blue-50 p-4 rounded-lg mt-6 text-sm text-blue-800">
             <div className="flex">
@@ -80,12 +105,16 @@ const JoinClassModal = ({ isOpen, onClose, course }) => {
             </div>
         </div>
 
-        <div className="flex justify-end space-x-4 mt-8">
-          <button onClick={onClose} className="px-6 py-2 border rounded-md text-gray-700 hover:bg-gray-100 font-semibold">
+       <div className="flex justify-end space-x-4 mt-8">
+          <button onClick={onClose} className="px-6 py-2 border rounded-md text-gray-700 hover:bg-gray-100 font-semibold" disabled={isEnrolling}>
             Hủy bỏ
           </button>
-          <button onClick={handleJoinClass} className="px-6 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 font-semibold flex items-center">
-            Tham gia lớp
+          <button 
+            onClick={handleJoinClass} 
+            className="px-6 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 font-semibold flex items-center disabled:bg-gray-400"
+            disabled={isEnrolling || !password} // Vô hiệu hóa khi đang gửi hoặc chưa nhập pass
+          >
+            {isEnrolling ? 'Đang xử lý...' : 'Tham gia lớp'}
           </button>
         </div>
       </div>

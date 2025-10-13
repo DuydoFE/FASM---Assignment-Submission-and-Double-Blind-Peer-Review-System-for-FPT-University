@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useSelector } from "react-redux"; // 1. Import useSelector
+import { useSelector } from "react-redux";
 import {
   BookOpen,
   Plus,
@@ -13,9 +13,10 @@ import {
 import CourseListItem from "../../component/Assignment/CourseListItem";
 import EnrolledCourseCard from "../../component/Assignment/EnrolledCourseCard";
 import JoinClassModal from "../../component/Assignment/JoinClassModal";
-import { useQuery } from '@tanstack/react-query';
 
-// Import service và selector
+import { useQuery, useQueryClient } from '@tanstack/react-query'; 
+import { toast } from "react-toastify"; 
+
 import { courseService } from "../../service/courseService";
 import { selectUser } from "../../redux/features/userSlice";
 
@@ -34,6 +35,8 @@ const StudentAssignmentPage = () => {
   const studentId = currentUser?.userId;
   console.log("Current User from Redux:", currentUser);
 
+const queryClient = useQueryClient();
+
   const [enrolledCourses, setEnrolledCourses] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -41,7 +44,7 @@ const StudentAssignmentPage = () => {
   const [selectedCourse, setSelectedCourse] = useState(null);
 
   useEffect(() => {
-    if (currentUser && currentUser.userId) {
+     if (currentUser && currentUser.userId) {
       const fetchEnrolledCourses = async () => {
         try {
           setIsLoading(true);
@@ -65,7 +68,7 @@ const StudentAssignmentPage = () => {
     }
   }, [currentUser]);
 
-    const { 
+  const { 
       data: registrationsData, 
       isLoading: isLoadingRegistrations, 
       isError: isErrorRegistrations 
@@ -84,6 +87,13 @@ const StudentAssignmentPage = () => {
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setSelectedCourse(null);
+  };
+
+const handleEnrollSuccess = () => {
+    
+    queryClient.invalidateQueries({ queryKey: ['studentCourseRegistrations', studentId] });
+    
+    toast.success("Ghi danh vào lớp học thành công!");
   };
 
   const renderEnrolledCourses = () => {
@@ -121,6 +131,7 @@ const StudentAssignmentPage = () => {
         studentCount={0}
         schedule="N/A"
         assignmentCount={0}
+        status={course.status} 
       />
     ));
   };
@@ -182,30 +193,40 @@ const StudentAssignmentPage = () => {
             </div>
           </div>
           <div>
-                        <h3 className="text-lg font-bold text-gray-800 mb-2">Search results</h3>
-                        <div className="border rounded-lg">
-                            {isLoadingRegistrations && <p className="p-4 text-center">Loading courses...</p>}
-                            {isErrorRegistrations && <p className="p-4 text-center text-red-500">Could not load courses.</p>}
-                            {!isLoadingRegistrations && !isErrorRegistrations && availableCourses.map(course => {
-                                const Icon = getCourseIcon(course.courseCode).component;
-                                const iconColor = getCourseIcon(course.courseCode).color;
+            <h3 className="text-lg font-bold text-gray-800 mb-2">
+              Search results
+            </h3>
+            <div className="border rounded-lg">
+              {isLoadingRegistrations && (
+                <p className="p-4 text-center">Loading courses...</p>
+              )}
+              {isErrorRegistrations && (
+                <p className="p-4 text-center text-red-500">
+                  Could not load courses.
+                </p>
+              )}
+              {!isLoadingRegistrations &&
+                !isErrorRegistrations &&
+                availableCourses.map((course) => {
+                  const Icon = getCourseIcon(course.courseCode).component;
+                  const iconColor = getCourseIcon(course.courseCode).color;
 
-                                return (
-                                    <CourseListItem 
-                                        key={course.courseInstanceId}
-                                        icon={Icon}
-                                        iconColor={iconColor}
-                                        title={course.courseName}
-                                        code={`Class Code: ${course.courseInstanceName}`}
-                                        // 👉 3. Truyền trạng thái và hàm xử lý vào component con
-                                        status={course.status}
-                                        onJoinClick={() => handleOpenModal(course)}
-                                    />
-                                );
-                            })}
-                        </div>
-                    </div>
-                </div>
+                  return (
+                    <CourseListItem
+                      key={course.courseInstanceId}
+                      icon={Icon}
+                      iconColor={iconColor}
+                      title={course.courseName}
+                      code={`Class Code: ${course.courseInstanceName}`}
+                      // 👉 3. Truyền trạng thái và hàm xử lý vào component con
+                      status={course.status}
+                      onJoinClick={() => handleOpenModal(course)}
+                    />
+                  );
+                })}
+            </div>
+          </div>
+        </div>
 
         {/* Help Link */}
         <div className="text-center mt-8">
@@ -222,6 +243,7 @@ const StudentAssignmentPage = () => {
           isOpen={isModalOpen}
           onClose={handleCloseModal}
           course={selectedCourse}
+           onEnrollSuccess={handleEnrollSuccess} 
         />
       </div>
     </div>
