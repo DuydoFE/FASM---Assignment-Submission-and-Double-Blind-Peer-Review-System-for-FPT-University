@@ -64,6 +64,7 @@ const extendDeadline = async (assignmentId, newDeadline) => {
 
 // Export service
 export const assignmentService = {
+  getAssignmentsByCourseInstanceId,
   getAssignmentDetailsById,
   getAssignmentRubric,
   getStudentAssignments,

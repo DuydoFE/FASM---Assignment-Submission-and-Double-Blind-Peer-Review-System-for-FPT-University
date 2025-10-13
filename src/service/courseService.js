@@ -8,7 +8,16 @@ return api.get(`/CourseStudent/student/${studentId}`);
 export const courseService = {
 getEnrolledCoursesByStudentId,
 };
-
+export const getStudentCourseRegistrations = async (studentId) => {
+  try {
+    const response = await api.get(`/CourseStudent/student/${studentId}`);
+    return response.data;
+  } catch (error)
+  {
+    console.error(`Lỗi khi lấy danh sách đăng ký lớp học của sinh viên ID ${studentId}:`, error);
+    throw error;
+  }
+};
 export const getStudentsInCourse = async (courseInstanceId) => {
   try {
     const response = await api.get(`/CourseStudent/course-instance/${courseInstanceId}`);
