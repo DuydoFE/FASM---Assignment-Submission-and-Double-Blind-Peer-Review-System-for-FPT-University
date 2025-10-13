@@ -1,46 +1,51 @@
+
 import React from 'react';
 
-const CriterionForm = ({ criterion, score, onScoreChange }) => {
-  const progressPercentage = (score / criterion.maxScore) * 100;
+// 👉 1. Thêm prop `hasError` để nhận biết trạng thái lỗi từ component cha
+const CriterionForm = ({ criterion, score, onScoreChange, hasError }) => {
+  const { criteriaName, description, weight, maxScore, criteriaId } = criterion;
 
   const handleInputChange = (e) => {
-    let value = parseInt(e.target.value, 10);
-    if (isNaN(value)) value = 0;
-    if (value > criterion.maxScore) value = criterion.maxScore;
-    if (value < 0) value = 0;
-    onScoreChange(criterion.criteriaId, value);
+    // Chỉ truyền giá trị chuỗi lên component cha để xử lý logic
+    onScoreChange(criteriaId, e.target.value);
   };
 
   return (
-    <div className="py-4 border-b last:border-b-0">
-      <div className="flex justify-between items-center mb-2">
-        <h4 className="font-bold text-gray-800">{criterion.title}</h4>
-        <div className="flex items-center space-x-2">
-          <span className="text-blue-600 font-semibold">{criterion.weight}%</span>
-          <div className="flex items-baseline">
-             <input 
-                type="number"
-                value={score}
-                onChange={handleInputChange}
-                className="w-16 text-right font-bold text-lg border-b-2 focus:outline-none focus:border-blue-500"
-             />
-             <span className="text-gray-500">/{criterion.maxScore}</span>
-          </div>
+    <div className="border-t py-4">
+      <div className="flex justify-between items-start">
+        <div>
+          <h4 className="font-bold text-gray-800">{criteriaName}</h4>
+          <p className="text-sm text-gray-500">{description}</p>
+        </div>
+        <div className="flex items-center space-x-3 flex-shrink-0 ml-4">
+          <span className="font-semibold text-blue-600">{weight}%</span>
+          
+       
+          <input
+            type="number" 
+            min="0"
+            max={maxScore}
+          
+            value={score === null ? '' : score} 
+            onChange={handleInputChange}
+            placeholder="0" 
+            className={`w-20 text-center font-bold text-lg border-b-2 p-1 focus:outline-none focus:border-blue-500
+              ${hasError ? 'border-red-500' : 'border-gray-300'}
+              [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none
+            `}
+          />
+          <span className="text-gray-500">/ {maxScore}</span>
         </div>
       </div>
-      <p className="text-sm text-gray-600 mb-3 whitespace-pre-wrap">{criterion.description}</p>
-      
-      {/* Thanh progress/slider */}
-      <div className="relative h-2 bg-gray-200 rounded-full">
-         <div 
-            className="absolute top-0 left-0 h-2 bg-green-500 rounded-full" 
-            style={{ width: `${progressPercentage}%` }}
-         ></div>
-      </div>
-      <div className="flex justify-between text-xs text-gray-500 mt-1">
-        <span>0</span>
-        <span>{criterion.maxScore}</span>
-      </div>
+      {/* Slider có thể bị ẩn hoặc xóa đi nếu bạn không muốn dùng nó nữa */}
+      <input
+        type="range"
+        min="0"
+        max={maxScore}
+        value={score === null ? 0 : score} // Range input cần một giá trị số
+        onChange={handleInputChange}
+        className="w-full mt-2 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+      />
     </div>
   );
 };
