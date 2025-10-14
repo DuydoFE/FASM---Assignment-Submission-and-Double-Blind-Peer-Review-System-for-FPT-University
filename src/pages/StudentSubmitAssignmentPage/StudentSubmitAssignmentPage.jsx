@@ -65,13 +65,12 @@ const StudentSubmitAssignmentPage = () => {
     return <div className="text-center p-8 text-red-500">Không thể tải thông tin bài tập. Vui lòng thử lại.</div>;
   }
 
-  // Lấy dữ liệu từ API tracking
   const completedReviews = reviewTrackingData?.data?.completedReviewsCount ?? 0;
-  const requiredReviews =
-    reviewTrackingData?.data?.numPeerReviewsRequired ??
-    assignment.numPeerReviewsRequired; // Lấy từ tracking hoặc từ assignment details
-
-  // Logic xác định style dựa trên deadline
+  const requiredReviews = reviewTrackingData?.data?.numPeerReviewsRequired ?? assignment.numPeerReviewsRequired;
+  
+  const reviewDeadline = reviewTrackingData?.data?.reviewDeadline || assignment.reviewDeadline;
+  
+  const isReviewOpen = new Date() > new Date(assignment.deadline);
   const getStatusStyle = (daysLeft) => {
     if (daysLeft <= 5) {
       // Báo đỏ nếu còn 5 ngày hoặc ít hơn
@@ -210,13 +209,15 @@ const StudentSubmitAssignmentPage = () => {
             <SubmissionGuideCard />
             <SubmissionCard hasSubmitted={hasSubmitted} />
             {assignment.peerWeight > 0 && (
-              <>
-                {isLoadingReview ? (
-                  <p className="text-center p-4">Đang tải trạng thái chấm chéo...</p>
-                ) : (
+             <>
+              {isLoadingReview ? (
+                <p className="text-center p-4">Đang tải trạng thái chấm chéo...</p>
+              ) : (
                   <PeerReviewCard 
                     completed={completedReviews} 
                     required={requiredReviews}
+                     reviewDeadline={reviewDeadline}
+                  isReviewOpen={isReviewOpen} 
                   />
                 )}
               </>

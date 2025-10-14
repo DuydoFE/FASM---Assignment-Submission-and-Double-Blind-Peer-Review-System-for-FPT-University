@@ -31,8 +31,19 @@ const getStudentReviewTracking = async (assignmentId) => {
   }
 };
 
+const getAssignmentsWithTracking = async (courseInstanceId) => {
+  try {
+    const response = await api.get(`/StudentReview/course-instance/${courseInstanceId}/assignments-with-tracking`);
+    return response.data;
+  } catch (error) {
+    console.error(`Lỗi khi lấy danh sách bài tập kèm tracking cho lớp ID ${courseInstanceId}:`, error);
+    throw error;
+  }
+};
+
 export const reviewService = {
   getPeerReviewAssignment,
   submitPeerReview,
   getStudentReviewTracking,
+  getAssignmentsWithTracking,
 };

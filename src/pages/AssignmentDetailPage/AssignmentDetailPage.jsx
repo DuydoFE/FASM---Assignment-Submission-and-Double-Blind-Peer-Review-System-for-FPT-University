@@ -4,114 +4,73 @@ import { ChevronRight, Clock, BookCopy, CheckCircle, AlertTriangle, Award, Filte
 import StatCard from '../../component/Assignment/StatCard';
 import AssignmentCard from '../../component/Assignment/AssignmentCard';
 import { assignmentService } from '../../service/assignmentService'; // 1. Import service
+import { useQuery } from '@tanstack/react-query'; 
+import { reviewService } from "../../service/reviewService"; 
 
-// Dữ liệu giả lập
-const courseData = {
-  SE1715: {
-    code: 'SE1741',
-    title: 'PRM391 Mobile Development Lab',
-    subject: 'Programming Mobile Devices',
-    instructor: 'Nguyễn Minh Sang',
-    year: '2025',
-    semester: 'Fall 2025'
-  }
-};
+import PeerReviewInfoCard from '../../component/Assignment/PeerReviewInfoCard';
 
-const assignments = [
-  { 
-    id: 1, 
-    title: 'Assignment 1: Mobile UI/UX Design Fundamentals',
-    description: 'Thiết kế giao diện và trải nghiệm người dùng cho ứng dụng mobile',
-    deadline: '25/12/2024 - 23:59',
-    timeLeft: 'Còn 1 ngày 14 giờ',
-    weight: '20%',
-    status: 'due',
-    details: 'Sinh viên cần thiết kế wireframe cho 5 màn hình chính, tạo prototype tương tác và viết báo cáo phân tích UX tối thiểu 1000 từ. Định dạng nộp bài: PDF + Figma link.'
-  },
-  {
-    id: 2,
-    title: 'Assignment 2: Android Development with Kotlin',
-    description: 'Phát triển ứng dụng Android cơ bản sử dụng ngôn ngữ Kotlin',
-    deadline: '05/10/2025 - 23:59',
-    timeLeft: 'Còn 11 ngày',
-    weight: '20%',
-    status: 'open',
-  },
-];
 
 
 const AssignmentDetailPage = () => {
-  const { courseId } = useParams(); // Lấy courseId từ URL
-  const course = courseData[courseId] || { code: courseId, title: 'Unknown Course' }; 
+  const { courseId } = useParams();
 
-  // 2. Thêm state để quản lý dữ liệu, loading và lỗi
-  const [assignments, setAssignments] = useState([]);
-  const [courseInfo, setCourseInfo] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
+  // 👉 3. Thay thế toàn bộ useEffect và useState bằng một hook useQuery duy nhất
+  const { 
+    data: responseData, // Dữ liệu trả về từ axios
+    isLoading, 
+    isError 
+  } = useQuery({
+    // Key để cache dữ liệu, sẽ tự fetch lại nếu courseId thay đổi
+    queryKey: ['assignmentsWithTracking', courseId], 
+    // Hàm sẽ được gọi để fetch dữ liệu
+    queryFn: () => reviewService.getAssignmentsWithTracking(courseId), 
+    // Chỉ chạy query khi có courseId
+    enabled: !!courseId, 
+  });
 
-  // 3. Sử dụng useEffect để gọi API
-   useEffect(() => {
-    const fetchAssignments = async () => {
-      if (!courseId) return;
+  // Lấy ra mảng assignments một cách an toàn
+  const assignments = responseData?.data || [];
 
-      try {
-        setIsLoading(true);
-        setError(null);
-        const data = await assignmentService.getAssignmentsByCourseInstanceId(courseId);
-        
-        // Luôn set assignments là một mảng để tránh lỗi
-        setAssignments(data || []);
+  // 👉 4. Lấy thông tin lớp học và tính toán các chỉ số trực tiếp từ dữ liệu
+  const courseInfo = assignments.length > 0 ? {
+    code: assignments[0].sectionCode,
+    title: assignments[0].courseName,
+    subject: assignments[0].courseCode,
+    campus: assignments[0].campusName,
+    year: new Date(assignments[0].createdAt).getFullYear().toString(),
+    instructor: "N/A", 
+  } : null;
 
-        if (data && data.length > 0) {
-          const firstAssignment = data[0];
-          setCourseInfo({
-            code: firstAssignment.sectionCode,
-            title: firstAssignment.courseName,
-            subject: firstAssignment.courseCode,
-            campus: firstAssignment.campusName,
-            year: new Date(firstAssignment.createdAt).getFullYear().toString(),
-            instructor: 'N/A', // Cần API riêng để lấy thông tin này
-          });
-        } else {
-            // Xử lý trường hợp không có assignment nào
-            // Bạn có thể cần gọi một API khác để lấy thông tin lớp học ở đây
-            setCourseInfo({ code: courseId, title: `Lớp học ${courseId}` });
-        }
-      } catch (err) {
-        setError("Không thể tải được danh sách bài tập. Vui lòng thử lại.");
-        console.error(err);
-      } finally {
-        setIsLoading(false);
-      }
-    };
+  // Tính toán các chỉ số cho StatCard
+  const stats = {
+    total: assignments.length,
+    submitted: assignments.filter(a => a.submissionStatus === 'Submitted').length, // Giả sử có trường này
+    dueSoon: assignments.filter(a => a.daysUntilDeadline <= 3 && !a.isOverdue).length,
+    warning: assignments.filter(a => a.daysUntilDeadline > 3 && a.daysUntilDeadline <= 7).length,
+  };
 
-    fetchAssignments();
-  }, [courseId]);
-  // 4. Render giao diện dựa trên trạng thái
+  // 👉 5. Xử lý trạng thái loading và error một cách gọn gàng
   if (isLoading) {
-    return <div className="text-center p-8">Đang tải dữ liệu...</div>;
+    return <div className="text-center p-8">Đang tải dữ liệu lớp học...</div>;
   }
 
-  if (error) {
-    return <div className="text-center p-8 text-red-500">{error}</div>;
+  if (isError) {
+    return <div className="text-center p-8 text-red-500">Không thể tải được danh sách bài tập.</div>;
   }
 
 
   return (
     <div className="bg-gray-50 min-h-screen p-8">
       <div className="max-w-7xl mx-auto">
-
+        {/* Breadcrumbs */}
         <div className="mb-6 flex items-center text-sm text-gray-600">
-          <Link to="/dashboard" className="hover:underline">Dashboard</Link>
+          <Link to="/my-assignments" className="hover:underline">My Assignments</Link>
           <ChevronRight className="w-4 h-4 mx-1" />
-          <Link to="/my-assignments" className="hover:underline">My Assignmnent</Link>
-          <ChevronRight className="w-4 h-4 mx-1" />
-          <span className="font-semibold text-gray-800">{course.code}</span>
+          <span className="font-semibold text-gray-800">{courseInfo?.code || courseId}</span>
         </div>
 
- 
-      {courseInfo && (
+        {/* Header */}
+        {courseInfo && (
           <div className="mb-8">
             <div className="flex justify-between items-center">
                 <div>
@@ -136,13 +95,12 @@ const AssignmentDetailPage = () => {
           </div>
         )}
 
-        {/* Stats Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
-            <StatCard icon={BookCopy} value="1" label="All assignments" color="blue" />
-            <StatCard icon={CheckCircle} value="0" label="Submitted" color="green" />
-            <StatCard icon={Clock} value="0" label="About to expire" color="red" />
-            <StatCard icon={AlertTriangle} value="1" label="Note the time" color="yellow" />
-            
+        {/* Stats Grid - Dùng dữ liệu động */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+            <StatCard icon={BookCopy} value={stats.total} label="All assignments" color="blue" />
+            <StatCard icon={CheckCircle} value={stats.submitted} label="Submitted" color="green" />
+            <StatCard icon={Clock} value={stats.dueSoon} label="About to expire" color="red" />
+            <StatCard icon={AlertTriangle} value={stats.warning} label="Note the time" color="yellow" />
         </div>
 
         {/* Filter and Sort */}
@@ -173,11 +131,20 @@ const AssignmentDetailPage = () => {
       <div className="space-y-6">
           {assignments.length > 0 ? (
             assignments.map(assignment => (
-              <AssignmentCard 
-                key={assignment.assignmentId} 
-                assignment={assignment} 
-                courseId={courseId}
-              />
+              <div key={assignment.assignmentId}>
+                <AssignmentCard 
+                  assignment={assignment} 
+                  courseId={courseId}
+                />
+                {assignment.peerWeight > 0 && (
+                  <PeerReviewInfoCard
+                    completed={assignment.completedReviewsCount}
+                    required={assignment.numPeerReviewsRequired}
+                    courseId={courseId}
+                    assignmentId={assignment.assignmentId}
+                  />
+                )}
+              </div>
             ))
           ) : (
             <div className="text-center bg-white p-12 rounded-lg border">
