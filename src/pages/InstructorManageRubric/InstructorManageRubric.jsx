@@ -10,6 +10,8 @@ const InstructorManageRubric = () => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingRubric, setEditingRubric] = useState(null);
   const [editTitle, setEditTitle] = useState('');
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [newRubricTitle, setNewRubricTitle] = useState('');
 
   useEffect(() => {
     const fetchRubrics = async () => {
@@ -93,6 +95,49 @@ const InstructorManageRubric = () => {
     rubric.title.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  const handleCreateClick = () => {
+    setNewRubricTitle('');
+    setIsCreateModalOpen(true);
+  };
+
+  const handleSaveCreate = async () => {
+    const trimmedTitle = newRubricTitle.trim();
+
+    if (!trimmedTitle) {
+      toast.error('Title cannot be empty');
+      return;
+    }
+
+    try {
+      // TODO: Thêm API createRubric vào rubricService
+      // const newRubric = await createRubric({ title: trimmedTitle });
+      
+      toast.success('Rubric created successfully');
+      setIsCreateModalOpen(false);
+      setNewRubricTitle('');
+      
+      // Refresh danh sách rubrics
+      const data = await getAllRubrics();
+      const formattedRubrics = data.map(rubric => ({
+        ...rubric,
+        id: rubric.id, 
+        rubricId: rubric.rubricId || rubric.id, 
+        title: rubric.title,
+        criteriaCount: rubric.criteriaCount || rubric.criteria?.length || 0,
+        createdDate: rubric.createdDate || new Date().toISOString()
+      }));
+      setRubrics(formattedRubrics);
+    } catch (error) {
+      console.error('Failed to create rubric:', error);
+      toast.error('Failed to create rubric');
+    }
+  };
+
+  const handleCancelCreate = () => {
+    setIsCreateModalOpen(false);
+    setNewRubricTitle('');
+  };
+
   const handleEditClick = (rubric) => {
     setEditingRubric(rubric);
     setEditTitle(rubric.title);
@@ -112,7 +157,6 @@ const InstructorManageRubric = () => {
       return;
     }
 
-   
     if (trimmedNewTitle === editingRubric.title.trim()) {
       toast.info('No changes made to the title');
       setIsEditModalOpen(false);
@@ -165,7 +209,10 @@ const InstructorManageRubric = () => {
               className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
             />
           </div>
-          <button className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-lg flex items-center gap-2 font-medium transition-colors">
+          <button 
+            onClick={handleCreateClick}
+            className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-lg flex items-center gap-2 font-medium transition-colors"
+          >
             <Plus className="w-5 h-5" />
             Tạo Rubric
           </button>
@@ -225,7 +272,7 @@ const InstructorManageRubric = () => {
               </div>
             ) : (
               /* Table Rows */
-              filteredRubrics.map((rubric, index) => (
+              filteredRubrics.map((rubric) => (
                 <div key={rubric.rubricId} className="grid grid-cols-12 gap-4 px-6 py-5 border-b border-gray-200 hover:bg-gray-50 transition-colors items-center">
                   <div className="col-span-5">
                     <h3 className="font-semibold text-gray-900 mb-1">
@@ -276,23 +323,64 @@ const InstructorManageRubric = () => {
           </div>
         </div>
 
+        {/* Create Modal */}
+        {isCreateModalOpen && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
+              <div className="p-6">
+                <h3 className="text-xl font-bold text-gray-900 mb-4">Tạo Rubric Mới</h3>
+                
+                <div className="mb-6">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Tên Rubric
+                  </label>
+                  <input
+                    type="text"
+                    value={newRubricTitle}
+                    onChange={(e) => setNewRubricTitle(e.target.value)}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                    placeholder="Nhập tên rubric..."
+                    autoFocus
+                  />
+                </div>
+
+                <div className="flex gap-3 justify-end">
+                  <button
+                    onClick={handleCancelCreate}
+                    className="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors font-medium"
+                  >
+                    Hủy
+                  </button>
+                  <button
+                    onClick={handleSaveCreate}
+                    disabled={!newRubricTitle.trim()}
+                    className="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Tạo Rubric
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Edit Modal */}
         {isEditModalOpen && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
               <div className="p-6">
-                <h3 className="text-xl font-bold text-gray-900 mb-4">Edit Rubric Title</h3>
+                <h3 className="text-xl font-bold text-gray-900 mb-4">Chỉnh sửa Rubric</h3>
                 
                 <div className="mb-6">
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Rubric Title
+                    Tên Rubric
                   </label>
                   <input
                     type="text"
                     value={editTitle}
                     onChange={(e) => setEditTitle(e.target.value)}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
-                    placeholder="Enter rubric title"
+                    placeholder="Nhập tên rubric..."
                     autoFocus
                   />
                 </div>
@@ -302,14 +390,14 @@ const InstructorManageRubric = () => {
                     onClick={handleCancelEdit}
                     className="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors font-medium"
                   >
-                    Cancel
+                    Hủy
                   </button>
                   <button
                     onClick={handleSaveEdit}
                     disabled={!editTitle.trim()}
                     className="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    Save Changes
+                    Lưu thay đổi
                   </button>
                 </div>
               </div>
