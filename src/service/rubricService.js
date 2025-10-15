@@ -34,8 +34,21 @@ export const updateRubric = async (rubricId, updateData) => {
   }
 };
 
+export const createRubric = async (rubricData) => {
+  try {
+    const response = await api.post('/Rubric', {
+      title: rubricData.title
+    });
+    return response.data.data;
+  } catch (error) {
+    console.error('Error creating rubric:', error);
+    throw error;
+  }
+};
+
 export const rubricService = {
   getRubricByAssignmentId,
   getAllRubrics,
   updateRubric,
+  createRubric,
 };
