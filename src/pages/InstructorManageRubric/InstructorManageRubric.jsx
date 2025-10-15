@@ -1,8 +1,42 @@
-import React, { useState } from 'react';
-import { Search, Plus, Eye, Pencil, Trash2 } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Search, Plus, Eye, Pencil, Trash2, Loader } from 'lucide-react';
+import { getAllRubrics, updateRubric } from '../../service/rubricService';
+import { toast } from 'react-toastify';
 
 const InstructorManageRubric = () => {
   const [searchQuery, setSearchQuery] = useState('');
+  const [rubrics, setRubrics] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editingRubric, setEditingRubric] = useState(null);
+  const [editTitle, setEditTitle] = useState('');
+
+  useEffect(() => {
+    const fetchRubrics = async () => {
+      try {
+        setLoading(true);
+        const data = await getAllRubrics();
+        
+        const formattedRubrics = data.map(rubric => ({
+          ...rubric,
+          id: rubric.id, 
+          rubricId: rubric.rubricId || rubric.id, 
+          title: rubric.title,
+          criteriaCount: rubric.criteriaCount || rubric.criteria?.length || 0,
+          createdDate: rubric.createdDate || new Date().toISOString()
+        }));
+        
+        setRubrics(formattedRubrics);
+      } catch (error) {
+        console.error('Failed to fetch rubrics:', error);
+        toast.error('Failed to load rubrics');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchRubrics();
+  }, []);
 
   const templates = [
     {
@@ -55,48 +89,60 @@ const InstructorManageRubric = () => {
     }
   ];
 
-  const rubrics = [
-    {
-      title: 'Web Development Final Project',
-      description: 'Comprehensive assessment rubric',
-      template: 'Academic Standard',
-      templateColor: 'bg-blue-100 text-blue-600',
-      totalCriteria: 8,
-      createdDate: 'Dec 15, 2023'
-    },
-    {
-      title: 'Database Design Assessment',
-      description: 'Focus on database modeling and queries',
-      template: '',
-      templateColor: '',
-      totalCriteria: 5,
-      createdDate: 'Dec 12, 2023'
-    },
-    {
-      title: 'Mobile App UI/UX Evaluation',
-      description: 'User interface and experience assessment',
-      template: 'Design Focused',
-      templateColor: 'bg-blue-100 text-blue-600',
-      totalCriteria: 12,
-      createdDate: 'Dec 10, 2023'
-    },
-    {
-      title: 'Python Programming Quiz',
-      description: 'Basic programming concepts evaluation',
-      template: '',
-      templateColor: '',
-      totalCriteria: 6,
-      createdDate: 'Dec 8, 2023'
-    },
-    {
-      title: 'Team Collaboration Assessment',
-      description: 'Evaluate teamwork and communication skills',
-      template: 'Soft Skills',
-      templateColor: 'bg-purple-100 text-purple-600',
-      totalCriteria: 4,
-      createdDate: 'Dec 5, 2023'
+  const filteredRubrics = rubrics.filter(rubric => 
+    rubric.title.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const handleEditClick = (rubric) => {
+    setEditingRubric(rubric);
+    setEditTitle(rubric.title);
+    setIsEditModalOpen(true);
+  };
+
+  const handleSaveEdit = async () => {
+    const trimmedNewTitle = editTitle.trim();
+
+    if (!trimmedNewTitle) {
+      toast.error('Title cannot be empty');
+      return;
     }
-  ];
+
+    if (!editingRubric?.rubricId) {
+      toast.error('Could not identify rubric');
+      return;
+    }
+
+   
+    if (trimmedNewTitle === editingRubric.title.trim()) {
+      toast.info('No changes made to the title');
+      setIsEditModalOpen(false);
+      setEditingRubric(null);
+      setEditTitle('');
+      return;
+    }
+
+    try {
+      await updateRubric(editingRubric.rubricId, { title: trimmedNewTitle });
+      
+      setRubrics(rubrics.map(r => 
+        r.rubricId === editingRubric.rubricId ? { ...r, title: editTitle.trim() } : r
+      ));
+      
+      toast.success('Rubric updated successfully');
+      setIsEditModalOpen(false);
+      setEditingRubric(null);
+      setEditTitle('');
+    } catch (error) {
+      console.error('Failed to update rubric:', error);
+      toast.error(error.response?.data?.message || 'Failed to update rubric');
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setIsEditModalOpen(false);
+    setEditingRubric(null);
+    setEditTitle('');
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 p-8">
@@ -161,48 +207,115 @@ const InstructorManageRubric = () => {
           <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
             {/* Table Header */}
             <div className="grid grid-cols-12 gap-4 px-6 py-4 bg-gray-50 border-b border-gray-200 font-medium text-gray-700 text-sm">
-              <div className="col-span-4">Title</div>
-              <div className="col-span-2">Criteria Template</div>
+              <div className="col-span-5">Title</div>
               <div className="col-span-2">Total Criteria</div>
-              <div className="col-span-2">Created Date</div>
+              <div className="col-span-3">Created Date</div>
               <div className="col-span-2">Actions</div>
             </div>
 
-            {/* Table Rows */}
-            {rubrics.map((rubric, index) => (
-              <div key={index} className="grid grid-cols-12 gap-4 px-6 py-5 border-b border-gray-200 hover:bg-gray-50 transition-colors items-center">
-                <div className="col-span-4">
-                  <h3 className="font-semibold text-gray-900 mb-1">{rubric.title}</h3>
-                  <p className="text-sm text-gray-500">{rubric.description}</p>
-                </div>
-                <div className="col-span-2">
-                  {rubric.template && (
-                    <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${rubric.templateColor}`}>
-                      {rubric.template}
+            {/* Loading State */}
+            {loading ? (
+              <div className="px-6 py-8 text-center">
+                <Loader className="w-6 h-6 animate-spin mx-auto mb-2 text-orange-500" />
+                <p className="text-gray-500">Loading rubrics...</p>
+              </div>
+            ) : filteredRubrics.length === 0 ? (
+              <div className="px-6 py-8 text-center">
+                <p className="text-gray-500">No rubrics found</p>
+              </div>
+            ) : (
+              /* Table Rows */
+              filteredRubrics.map((rubric, index) => (
+                <div key={rubric.rubricId} className="grid grid-cols-12 gap-4 px-6 py-5 border-b border-gray-200 hover:bg-gray-50 transition-colors items-center">
+                  <div className="col-span-5">
+                    <h3 className="font-semibold text-gray-900 mb-1">
+                      {rubric.title}
+                    </h3>
+                    <div className="text-xs text-gray-500">ID: {rubric.rubricId}</div>
+                  </div>
+                  <div className="col-span-2">
+                    <span className="text-2xl text-base text-gray-900">
+                      {rubric.criteriaCount || 0}
                     </span>
-                  )}
+                  </div>
+                  <div className="col-span-3">
+                    <span className="text-sm text-gray-600">
+                      {new Date(rubric.createdDate).toLocaleDateString('en-US', {
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric'
+                      })}
+                    </span>
+                  </div>
+                  <div className="col-span-2 flex gap-2">
+                    <button 
+                      className="p-2 hover:bg-gray-100 rounded-lg transition-colors" 
+                      title="View"
+                      onClick={() => console.log('View rubric:', rubric.id)}
+                    >
+                      <Eye className="w-5 h-5 text-gray-600" />
+                    </button>
+                    <button 
+                      className="p-2 hover:bg-gray-100 rounded-lg transition-colors" 
+                      title="Edit"
+                      onClick={() => handleEditClick(rubric)}
+                    >
+                      <Pencil className="w-5 h-5 text-gray-600" />
+                    </button>
+                    <button 
+                      className="p-2 hover:bg-red-50 rounded-lg transition-colors" 
+                      title="Delete"
+                      onClick={() => console.log('Delete rubric:', rubric.id)}
+                    >
+                      <Trash2 className="w-5 h-5 text-red-500" />
+                    </button>
+                  </div>
                 </div>
-                <div className="col-span-2">
-                  <span className="text-2xl text-base text-gray-900">{rubric.totalCriteria}</span>
+              ))
+            )}
+          </div>
+        </div>
+
+        {/* Edit Modal */}
+        {isEditModalOpen && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
+              <div className="p-6">
+                <h3 className="text-xl font-bold text-gray-900 mb-4">Edit Rubric Title</h3>
+                
+                <div className="mb-6">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Rubric Title
+                  </label>
+                  <input
+                    type="text"
+                    value={editTitle}
+                    onChange={(e) => setEditTitle(e.target.value)}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                    placeholder="Enter rubric title"
+                    autoFocus
+                  />
                 </div>
-                <div className="col-span-2">
-                  <span className="text-sm text-gray-600">{rubric.createdDate}</span>
-                </div>
-                <div className="col-span-2 flex gap-2">
-                  <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors" title="View">
-                    <Eye className="w-5 h-5 text-gray-600" />
+
+                <div className="flex gap-3 justify-end">
+                  <button
+                    onClick={handleCancelEdit}
+                    className="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors font-medium"
+                  >
+                    Cancel
                   </button>
-                  <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors" title="Edit">
-                    <Pencil className="w-5 h-5 text-gray-600" />
-                  </button>
-                  <button className="p-2 hover:bg-red-50 rounded-lg transition-colors" title="Delete">
-                    <Trash2 className="w-5 h-5 text-red-500" />
+                  <button
+                    onClick={handleSaveEdit}
+                    disabled={!editTitle.trim()}
+                    className="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Save Changes
                   </button>
                 </div>
               </div>
-            ))}
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );

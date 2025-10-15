@@ -11,6 +11,31 @@ const getRubricByAssignmentId = async (assignmentId) => {
   }
 };
 
+export const getAllRubrics = async () => {
+  try {
+    const response = await api.get('/Rubric');
+    return response.data.data;
+  } catch (error) {
+    console.error('Error fetching all rubrics:', error);
+    throw error;
+  }
+};
+
+export const updateRubric = async (rubricId, updateData) => {
+  try {
+    const response = await api.put(`/Rubric`, {
+      rubricId: rubricId,
+      title: updateData.title
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error updating rubric:', error);
+    throw error;
+  }
+};
+
 export const rubricService = {
   getRubricByAssignmentId,
+  getAllRubrics,
+  updateRubric,
 };
