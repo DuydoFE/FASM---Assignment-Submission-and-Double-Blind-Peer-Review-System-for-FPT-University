@@ -46,9 +46,21 @@ export const createRubric = async (rubricData) => {
   }
 };
 
+
+export const deleteRubric = async (rubricId) => {
+  try {
+    const response = await api.delete(`/Rubric/${rubricId}`);
+    return response.data;
+  } catch (error) {
+    console.error('Error deleting rubric:', error);
+    throw error;
+  }
+};
+
 export const rubricService = {
   getRubricByAssignmentId,
   getAllRubrics,
   updateRubric,
   createRubric,
+  deleteRubric,
 };

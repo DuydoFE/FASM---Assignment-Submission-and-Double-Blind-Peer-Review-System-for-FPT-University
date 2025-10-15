@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Search, Plus, Eye, Pencil, Trash2, Loader } from 'lucide-react';
-import { getAllRubrics, createRubric, updateRubric } from '../../service/rubricService';
+import { getAllRubrics, createRubric, updateRubric, deleteRubric } from '../../service/rubricService';
 import { toast } from 'react-toastify';
 
 const InstructorManageRubric = () => {
@@ -12,6 +12,8 @@ const InstructorManageRubric = () => {
     const [editTitle, setEditTitle] = useState('');
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const [newRubricTitle, setNewRubricTitle] = useState('');
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [deletingRubric, setDeletingRubric] = useState(null);
 
     useEffect(() => {
         const fetchRubrics = async () => {
@@ -186,6 +188,39 @@ const InstructorManageRubric = () => {
         setEditTitle('');
     };
 
+    const handleDeleteClick = (e, rubric) => {
+        e.stopPropagation(); // Prevent event bubbling
+        setDeletingRubric(rubric);
+        setIsDeleteModalOpen(true);
+    };
+
+    const handleConfirmDelete = async () => {
+        if (!deletingRubric?.rubricId) {
+            toast.error('Could not identify rubric');
+            return;
+        }
+
+        try {
+            await deleteRubric(deletingRubric.rubricId);
+
+            // Remove from local state
+            setRubrics(rubrics.filter(r => r.rubricId !== deletingRubric.rubricId));
+
+            toast.success('Rubric deleted successfully');
+            setIsDeleteModalOpen(false);
+            setDeletingRubric(null);
+        } catch (error) {
+            console.error('Failed to delete rubric:', error);
+            const errorMessage = error.response?.data?.message || 'Failed to delete rubric';
+            toast.error(errorMessage);
+        }
+    };
+
+    const handleCancelDelete = () => {
+        setIsDeleteModalOpen(false);
+        setDeletingRubric(null);
+    };
+
     return (
         <div className="min-h-screen bg-gray-50 p-8">
             <div className="max-w-7xl mx-auto">
@@ -310,7 +345,7 @@ const InstructorManageRubric = () => {
                                         <button
                                             className="p-2 hover:bg-red-50 rounded-lg transition-colors"
                                             title="Delete"
-                                            onClick={() => console.log('Delete rubric:', rubric.id)}
+                                            onClick={(e) => handleDeleteClick(e, rubric)}
                                         >
                                             <Trash2 className="w-5 h-5 text-red-500" />
                                         </button>
@@ -396,6 +431,54 @@ const InstructorManageRubric = () => {
                                         className="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                                     >
                                         Lưu thay đổi
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Delete Confirmation Modal */}
+                {isDeleteModalOpen && (
+                    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                        <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
+                            <div className="p-6">
+                                <div className="flex items-center gap-3 mb-4">
+                                    <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center">
+                                        <Trash2 className="w-6 h-6 text-red-600" />
+                                    </div>
+                                    <h3 className="text-xl font-bold text-gray-900">Xóa Rubric</h3>
+                                </div>
+
+
+
+                                {deletingRubric && (
+                                    <div className="bg-gray-50 rounded-lg p-3 mb-4">
+                                        <p className="text-gray-600 mb-2">
+                                            Bạn có chắc chắn muốn xóa rubric{' '}
+                                            <span className="font-bold">{deletingRubric.title}</span>?
+                                        </p>
+
+
+                                    </div>
+                                )}
+
+                                <p className="text-sm text-red-600 mb-6">
+                                    <strong>Lưu ý:</strong> Chỉ có thể xóa rubric chưa có criteria.
+                                </p>
+
+                                <div className="flex gap-3 justify-end">
+                                    <button
+                                        onClick={handleCancelDelete}
+                                        className="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors font-medium"
+                                    >
+                                        Hủy
+                                    </button>
+                                    <button
+                                        onClick={handleConfirmDelete}
+                                        className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors font-medium"
+                                    >
+                                        Xóa Rubric
                                     </button>
                                 </div>
                             </div>
