@@ -16,6 +16,7 @@ import InstructorManageClass from "../pages/InstructorManageClass/InstructorMana
 import InstructorManageAssignment from "../pages/InstructorManageAssignment/InstructorManageAssignment";
 import AssignmentDetailPage from "../pages/AssignmentDetailPage/AssignmentDetailPage";
 import StudentSubmitAssignmentPage from "../pages/StudentSubmitAssignmentPage/StudentSubmitAssignmentPage";
+import InstructorManageRubric from "../pages/InstructorManageRubric/InstructorManageRubric";
 import InstructorManageSubmission from "../pages/InstructorManageSubmission/InstructorManageSubmission";
 import InstructorSubmissionDetail from "../pages/InstructorSubmissionDetail/InstructorSubmissionDetail";
 import InstructorManageGrading from "../pages/IntructorManageGrading/IntructorManageGrading";
@@ -156,6 +157,10 @@ export const router = createBrowserRouter([
       {
         path: "manage-assignment/:id",
         element: <InstructorManageAssignment />,
+      },
+      {
+        path: "manage-rubric",
+        element: <InstructorManageRubric />,
       },
       {
         path: "manage-submission",
