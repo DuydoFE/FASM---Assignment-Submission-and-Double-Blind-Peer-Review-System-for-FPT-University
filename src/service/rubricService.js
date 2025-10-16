@@ -21,6 +21,16 @@ export const getAllRubrics = async () => {
   }
 };
 
+export const getPublicRubricTemplates = async () => {
+  try {
+    const response = await api.get('/RubricTemplate/public');
+    return response.data.data;
+  } catch (error) {
+    console.error('Error fetching public rubric templates:', error);
+    throw error;
+  }
+};
+
 export const updateRubric = async (rubricId, updateData) => {
   try {
     const response = await api.put(`/Rubric`, {
@@ -60,6 +70,7 @@ export const deleteRubric = async (rubricId) => {
 export const rubricService = {
   getRubricByAssignmentId,
   getAllRubrics,
+  getPublicRubricTemplates,
   updateRubric,
   createRubric,
   deleteRubric,
