@@ -32,10 +32,10 @@ const InstructorViewClass = () => {
           id: course.id,
           name: course.courseInstanceName,
           code: course.courseCode,
-          classId: course.courseInstanceName,
-          students: course.studentCount,
-          status: course.courseInstanceStatus, // Use the API-provided status
-          statusText: course.courseInstanceStatus, // Use the API-provided status
+          className: course.courseInstanceName,
+          studentCount: course.studentCount,
+          status: course.courseInstanceStatus,
+          statusText: course.courseInstanceStatus, 
           semester: course.semesterName,
           enrollmentKey: course.enrollmentKey || ''
         }));
@@ -227,6 +227,9 @@ const InstructorViewClass = () => {
                       Course
                     </th>
                     <th className="text-left py-4 px-6 font-medium text-gray-700">
+                      Semester
+                    </th>
+                    <th className="text-left py-4 px-6 font-medium text-gray-700">
                       Class
                     </th>
                     <th className="text-left py-4 px-6 font-medium text-gray-700">
@@ -259,10 +262,13 @@ const InstructorViewClass = () => {
                         </div>
                       </td>
                       <td className="py-4 px-6">
-                        <span className="font-mono text-gray-900">{cls.classId}</span>
+                        <span className="font-semibold text-gray-900 mb-1">{cls.semester}</span>
                       </td>
                       <td className="py-4 px-6">
-                        <span className="text-gray-900">{cls.students}</span>
+                        <span className="font-semibold text-gray-900 mb-1">{cls.className}</span>
+                      </td>
+                      <td className="py-4 px-6">
+                        <span className="font-semibold text-gray-900 mb-1">{cls.studentCount}</span>
                       </td>
                       <td className="py-4 px-6">
                         <span className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium ${getStatusStyle(cls.status)}`}>
