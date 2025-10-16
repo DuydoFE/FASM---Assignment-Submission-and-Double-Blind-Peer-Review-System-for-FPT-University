@@ -286,11 +286,10 @@ const InstructorManageRubric = () => {
 
                     <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
                         {/* Table Header */}
-                        <div className="grid grid-cols-12 gap-4 px-6 py-4 bg-gray-50 border-b border-gray-200 font-medium text-gray-700 text-sm">
-                            <div className="col-span-5">Title</div>
-                            <div className="col-span-2">Total Criteria</div>
-                            <div className="col-span-3">Created Date</div>
-                            <div className="col-span-2">Actions</div>
+                        <div className="grid grid-cols-4 gap-4 px-6 py-4 bg-gray-50 border-b border-gray-200 font-medium text-gray-700 text-sm">
+                            <div className="col-span-2">Title</div>
+                            <div className="col-span-1 text-center">Total Criteria</div>
+                            <div className="col-span-1 text-center">Actions</div>
                         </div>
 
                         {/* Loading State */}
@@ -306,28 +305,18 @@ const InstructorManageRubric = () => {
                         ) : (
                             /* Table Rows */
                             filteredRubrics.map((rubric) => (
-                                <div key={rubric.rubricId} className="grid grid-cols-12 gap-4 px-6 py-5 border-b border-gray-200 hover:bg-gray-50 transition-colors items-center">
-                                    <div className="col-span-5">
+                                <div key={rubric.rubricId} className="grid grid-cols-4 gap-4 px-6 py-5 border-b border-gray-200 hover:bg-gray-50 transition-colors items-center">
+                                    <div className="col-span-2">
                                         <h3 className="font-semibold text-gray-900 mb-1">
                                             {rubric.title}
                                         </h3>
-                                        <div className="text-xs text-gray-500">ID: {rubric.rubricId}</div>
                                     </div>
-                                    <div className="col-span-2">
-                                        <span className="text-2xl text-base text-gray-900">
+                                    <div className="col-span-1 text-center">
+                                        <span className="text-base text-gray-900">
                                             {rubric.criteriaCount || 0}
                                         </span>
                                     </div>
-                                    <div className="col-span-3">
-                                        <span className="text-sm text-gray-600">
-                                            {new Date(rubric.createdDate).toLocaleDateString('en-US', {
-                                                year: 'numeric',
-                                                month: 'short',
-                                                day: 'numeric'
-                                            })}
-                                        </span>
-                                    </div>
-                                    <div className="col-span-2 flex gap-2">
+                                    <div className="col-span-1 flex gap-2 justify-center">
                                         <button
                                             className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
                                             title="View"
