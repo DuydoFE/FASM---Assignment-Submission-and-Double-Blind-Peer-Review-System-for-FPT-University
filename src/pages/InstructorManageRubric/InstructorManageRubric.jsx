@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { Search, Plus, Eye, Pencil, Trash2, Loader } from 'lucide-react';
-import { getAllRubrics, createRubric, updateRubric, deleteRubric } from '../../service/rubricService';
+import { getAllRubrics, createRubric, updateRubric, deleteRubric, getPublicRubricTemplates } from '../../service/rubricService';
 import { toast } from 'react-toastify';
 
 const InstructorManageRubric = () => {
     const [searchQuery, setSearchQuery] = useState('');
     const [rubrics, setRubrics] = useState([]);
+    const [templates, setTemplates] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [templatesLoading, setTemplatesLoading] = useState(true);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [editingRubric, setEditingRubric] = useState(null);
     const [editTitle, setEditTitle] = useState('');
@@ -42,56 +44,32 @@ const InstructorManageRubric = () => {
         fetchRubrics();
     }, []);
 
-    const templates = [
-        {
-            title: 'Chuẩn học thuật',
-            subtitle: '8 tiêu chí đánh giá',
-            tag: 'Software Engineer',
-            tagColor: 'bg-blue-100 text-blue-600',
-            criteria: [
-                'Kiến thức chuyên môn',
-                'Kỹ năng thực hành',
-                'Tư duy phân biện',
-                'Giao tiếp và trình bày'
-            ]
-        },
-        {
-            title: 'Thiết kế UI/UX',
-            subtitle: '12 tiêu chí đánh giá',
-            tag: 'Graphic Design',
-            tagColor: 'bg-blue-100 text-blue-600',
-            criteria: [
-                'Nguyên lý thiết kế',
-                'Tính thẩm mỹ',
-                'Trải nghiệm người dùng',
-                'Tính tương tác'
-            ]
-        },
-        {
-            title: 'Lập trình',
-            subtitle: '10 tiêu chí đánh giá',
-            tag: 'Software Engineer',
-            tagColor: 'bg-blue-100 text-blue-600',
-            criteria: [
-                'Logic và thuật toán',
-                'Chất lượng code',
-                'Kiểm thử và debug',
-                'Documentation'
-            ]
-        },
-        {
-            title: 'Kỹ năng mềm',
-            subtitle: '6 tiêu chí đánh giá',
-            tag: 'Soft Skills',
-            tagColor: 'bg-purple-100 text-purple-600',
-            criteria: [
-                'Làm việc nhóm',
-                'Giao tiếp hiệu quả',
-                'Tư duy sáng tạo',
-                'Lãnh đạo'
-            ]
-        }
-    ];
+    useEffect(() => {
+        const fetchTemplates = async () => {
+            try {
+                setTemplatesLoading(true);
+                const data = await getPublicRubricTemplates();
+                
+                const formattedTemplates = data.map(template => ({
+                    templateId: template.templateId,
+                    title: template.title,
+                    major: template.majorName || 'SE',
+                    majorColor: 'bg-blue-100 text-blue-600',
+                    criteriaCount: template.criteriaTemplateCount || 0,
+                    criteriaTemplates: template.criteriaTemplates || []
+                }));
+
+                setTemplates(formattedTemplates);
+            } catch (error) {
+                console.error('Failed to fetch templates:', error);
+                toast.error('Failed to load rubric templates');
+            } finally {
+                setTemplatesLoading(false);
+            }
+        };
+
+        fetchTemplates();
+    }, []);
 
     const filteredRubrics = rubrics.filter(rubric =>
         rubric.title.toLowerCase().includes(searchQuery.toLowerCase())
@@ -189,7 +167,7 @@ const InstructorManageRubric = () => {
     };
 
     const handleDeleteClick = (e, rubric) => {
-        e.stopPropagation(); // Prevent event bubbling
+        e.stopPropagation();
         setDeletingRubric(rubric);
         setIsDeleteModalOpen(true);
     };
@@ -203,7 +181,6 @@ const InstructorManageRubric = () => {
         try {
             await deleteRubric(deletingRubric.rubricId);
 
-            // Remove from local state
             setRubrics(rubrics.filter(r => r.rubricId !== deletingRubric.rubricId));
 
             toast.success('Rubric deleted successfully');
@@ -226,8 +203,8 @@ const InstructorManageRubric = () => {
             <div className="max-w-7xl mx-auto">
                 {/* Header */}
                 <div className="mb-8">
-                    <h1 className="text-4xl font-bold text-gray-900 mb-2">Quản lý Rubric đánh giá</h1>
-                    <p className="text-gray-600">Tạo và quản lý các rubric đánh giá cho môn học</p>
+                    <h1 className="text-4xl font-bold text-gray-900 mb-2">Manage Rubrics</h1>
+                    <p className="text-gray-600">Create and manage rubrics for courses</p>
                 </div>
 
                 {/* Search and Create Button */}
@@ -236,7 +213,7 @@ const InstructorManageRubric = () => {
                         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                         <input
                             type="text"
-                            placeholder="Tìm kiếm rubric..."
+                            placeholder="Search rubrics..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                             className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
@@ -247,42 +224,58 @@ const InstructorManageRubric = () => {
                         className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-lg flex items-center gap-2 font-medium transition-colors"
                     >
                         <Plus className="w-5 h-5" />
-                        Tạo Rubric
+                        Create Rubric
                     </button>
                 </div>
 
                 {/* Template Section */}
                 <div className="mb-12">
-                    <h2 className="text-2xl font-bold text-gray-900 mb-2">Template Rubric có sẵn</h2>
-                    <p className="text-gray-600 mb-6">Chọn template phù hợp để tạo rubric nhanh chóng</p>
+                    <h2 className="text-2xl font-bold text-gray-900 mb-2">Available Rubric Templates</h2>
+                    <p className="text-gray-600 mb-6">Choose a suitable template to create rubrics quickly</p>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                        {templates.map((template, index) => (
-                            <div key={index} className="bg-white rounded-lg border border-gray-200 p-6 hover:shadow-lg transition-shadow cursor-pointer">
-                                <div className="mb-4">
-                                    <h3 className="text-lg font-bold text-gray-900 mb-1">{template.title}</h3>
-                                    <p className="text-sm text-gray-500">{template.subtitle}</p>
+                    {templatesLoading ? (
+                        <div className="py-12 text-center">
+                            <Loader className="w-8 h-8 animate-spin mx-auto mb-3 text-orange-500" />
+                            <p className="text-gray-500">Loading templates...</p>
+                        </div>
+                    ) : templates.length === 0 ? (
+                        <div className="py-12 text-center bg-white rounded-lg border border-gray-200">
+                            <p className="text-gray-500">No public templates available</p>
+                        </div>
+                    ) : (
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                            {templates.map((template) => (
+                                <div key={template.templateId} className="bg-white rounded-lg border border-gray-200 p-6 hover:shadow-lg transition-shadow cursor-pointer">
+                                    <div className="mb-4">
+                                        <h3 className="text-lg font-bold text-gray-900 mb-1">{template.title}</h3>
+                                        <p className="text-sm text-gray-500">{template.criteriaCount} criteria</p>
+                                    </div>
+                                    <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium mb-4 ${template.majorColor}`}>
+                                        {template.major}
+                                    </span>
+                                    <ul className="space-y-2">
+                                        {template.criteriaTemplates.slice(0, 4).map((criteria, idx) => (
+                                            <li key={idx} className="text-sm text-gray-700 flex items-start">
+                                                <span className="text-gray-400 mr-2">•</span>
+                                                {criteria.title}
+                                            </li>
+                                        ))}
+                                        {template.criteriaTemplates.length > 4 && (
+                                            <li className="text-sm text-gray-500 italic">
+                                                +{template.criteriaTemplates.length - 4} more...
+                                            </li>
+                                        )}
+                                    </ul>
                                 </div>
-                                <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium mb-4 ${template.tagColor}`}>
-                                    {template.tag}
-                                </span>
-                                <ul className="space-y-2">
-                                    {template.criteria.map((criterion, idx) => (
-                                        <li key={idx} className="text-sm text-gray-700 flex items-start">
-                                            <span className="text-gray-400 mr-2">•</span>
-                                            {criterion}
-                                        </li>
-                                    ))}
-                                </ul>
-                            </div>
-                        ))}
-                    </div>
+                            ))}
+                        </div>
+                    )}
                 </div>
 
                 {/* My Rubrics Section */}
                 <div>
-                    <h2 className="text-2xl font-bold text-gray-900 mb-2">Rubric của tôi</h2>
-                    <p className="text-gray-600 mb-6">Các rubric đã tạo và đang sử dụng</p>
+                    <h2 className="text-2xl font-bold text-gray-900 mb-2">My Rubrics</h2>
+                    <p className="text-gray-600 mb-6">Rubrics you've created and are currently using</p>
 
                     <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
                         {/* Table Header */}
@@ -350,18 +343,18 @@ const InstructorManageRubric = () => {
                     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
                         <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
                             <div className="p-6">
-                                <h3 className="text-xl font-bold text-gray-900 mb-4">Tạo Rubric Mới</h3>
+                                <h3 className="text-xl font-bold text-gray-900 mb-4">Create New Rubric</h3>
 
                                 <div className="mb-6">
                                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        Tên Rubric
+                                        Rubric Name
                                     </label>
                                     <input
                                         type="text"
                                         value={newRubricTitle}
                                         onChange={(e) => setNewRubricTitle(e.target.value)}
                                         className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
-                                        placeholder="Nhập tên rubric..."
+                                        placeholder="Enter rubric name..."
                                         autoFocus
                                     />
                                 </div>
@@ -371,14 +364,14 @@ const InstructorManageRubric = () => {
                                         onClick={handleCancelCreate}
                                         className="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors font-medium"
                                     >
-                                        Hủy
+                                        Cancel
                                     </button>
                                     <button
                                         onClick={handleSaveCreate}
                                         disabled={!newRubricTitle.trim()}
                                         className="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                                     >
-                                        Tạo Rubric
+                                        Create Rubric
                                     </button>
                                 </div>
                             </div>
@@ -391,18 +384,18 @@ const InstructorManageRubric = () => {
                     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
                         <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
                             <div className="p-6">
-                                <h3 className="text-xl font-bold text-gray-900 mb-4">Chỉnh sửa Rubric</h3>
+                                <h3 className="text-xl font-bold text-gray-900 mb-4">Edit Rubric</h3>
 
                                 <div className="mb-6">
                                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        Tên Rubric
+                                        Rubric Name
                                     </label>
                                     <input
                                         type="text"
                                         value={editTitle}
                                         onChange={(e) => setEditTitle(e.target.value)}
                                         className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
-                                        placeholder="Nhập tên rubric..."
+                                        placeholder="Enter rubric name..."
                                         autoFocus
                                     />
                                 </div>
@@ -412,14 +405,14 @@ const InstructorManageRubric = () => {
                                         onClick={handleCancelEdit}
                                         className="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors font-medium"
                                     >
-                                        Hủy
+                                        Cancel
                                     </button>
                                     <button
                                         onClick={handleSaveEdit}
                                         disabled={!editTitle.trim()}
                                         className="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                                     >
-                                        Lưu thay đổi
+                                        Save Changes
                                     </button>
                                 </div>
                             </div>
@@ -436,24 +429,20 @@ const InstructorManageRubric = () => {
                                     <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center">
                                         <Trash2 className="w-6 h-6 text-red-600" />
                                     </div>
-                                    <h3 className="text-xl font-bold text-gray-900">Xóa Rubric</h3>
+                                    <h3 className="text-xl font-bold text-gray-900">Delete Rubric</h3>
                                 </div>
-
-
 
                                 {deletingRubric && (
                                     <div className="bg-gray-50 rounded-lg p-3 mb-4">
                                         <p className="text-gray-600 mb-2">
-                                            Bạn có chắc chắn muốn xóa rubric{' '}
+                                            Are you sure you want to delete the rubric{' '}
                                             <span className="font-bold">{deletingRubric.title}</span>?
                                         </p>
-
-
                                     </div>
                                 )}
 
                                 <p className="text-sm text-red-600 mb-6">
-                                    <strong>Lưu ý:</strong> Chỉ có thể xóa rubric chưa có criteria.
+                                    <strong>Note:</strong> You can only delete rubrics that have no criteria.
                                 </p>
 
                                 <div className="flex gap-3 justify-end">
@@ -461,13 +450,13 @@ const InstructorManageRubric = () => {
                                         onClick={handleCancelDelete}
                                         className="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors font-medium"
                                     >
-                                        Hủy
+                                        Cancel
                                     </button>
                                     <button
                                         onClick={handleConfirmDelete}
                                         className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors font-medium"
                                     >
-                                        Xóa Rubric
+                                        Delete Rubric
                                     </button>
                                 </div>
                             </div>
