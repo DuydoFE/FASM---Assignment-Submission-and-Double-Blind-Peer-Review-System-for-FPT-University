@@ -207,7 +207,7 @@ const InstructorManageClass = () => {
         </div>
       </div>
 
-      <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+      <div className="bg-white rounded-lg overflow-hidden shadow-sm">
         {loading ? (
           <div className="p-8 text-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-4"></div>
@@ -215,7 +215,7 @@ const InstructorManageClass = () => {
           </div>
         ) : (
           <div>
-            <div className="grid grid-cols-5 gap-4 px-6 py-4 bg-gray-50 border-b border-gray-200 text-sm font-medium text-gray-700">
+            <div className="grid grid-cols-5 gap-4 px-6 py-4 bg-gray-50 text-sm font-medium text-gray-700">
               <div>Image</div>
               <div>Member</div>
               <div>Full Name</div>
@@ -226,7 +226,7 @@ const InstructorManageClass = () => {
             {filteredStudents.map((student) => (
               <div
                 key={student.code}
-                className="grid grid-cols-5 gap-4 px-6 py-4 border-b border-gray-100 hover:bg-gray-50 items-center"
+                className="grid grid-cols-5 gap-4 px-6 py-4 border-t border-gray-100 hover:bg-gray-50 items-center"
               >
                 <div
                   className={`w-10 h-10 ${student.bgColor} rounded-full flex items-center justify-center font-semibold`}
