@@ -1,8 +1,9 @@
 import React, { useState } from "react";
+import * as XLSX from "xlsx"; // 👉 Thêm thư viện này để đọc file Excel/CSV (cài bằng: npm install xlsx)
 
 export default function AdminUserManagement() {
   // Mock data (later will be fetched from API)
-  const [users] = useState([
+  const [users, setUsers] = useState([
     {
       id: 1,
       role: "student",
@@ -65,13 +66,43 @@ export default function AdminUserManagement() {
       })
     : [];
 
+  // 👉 Hàm xử lý import file
+  const handleImportFile = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const data = new Uint8Array(event.target.result);
+      const workbook = XLSX.read(data, { type: "array" });
+      const sheetName = workbook.SheetNames[0];
+      const worksheet = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]);
+
+      // Giả sử file có các cột: name, role, email, campus, status, studentId, major
+      const importedUsers = worksheet.map((row, index) => ({
+        id: Date.now() + index,
+        name: row.name || "",
+        role: row.role?.toLowerCase() || "student",
+        email: row.email || "",
+        campus: row.campus || "",
+        status: row.status?.toLowerCase() || "active",
+        studentId: row.studentId || "",
+        major: row.major || "",
+      }));
+
+      setUsers((prev) => [...prev, ...importedUsers]);
+      alert(`✅ Imported ${importedUsers.length} users successfully`);
+    };
+
+    reader.readAsArrayBuffer(file);
+  };
+
   return (
     <div className="space-y-6">
       <h2 className="text-2xl font-bold text-orange-500">👥 User Management</h2>
 
       {/* Filter bar */}
-      <div className="bg-white p-4 rounded-xl shadow-md flex flex-wrap gap-4">
-        {/* Always show campus first */}
+      <div className="bg-white p-4 rounded-xl shadow-md flex flex-wrap gap-4 items-center">
         <select
           className="border rounded p-2"
           value={filters.campus}
@@ -85,7 +116,6 @@ export default function AdminUserManagement() {
           <option value="Da Nang">Da Nang</option>
         </select>
 
-        {/* Show other filters only when campus is selected */}
         {filters.campus && (
           <>
             <select
@@ -123,6 +153,17 @@ export default function AdminUserManagement() {
             />
           </>
         )}
+
+        {/* ✅ Nút Import file */}
+        <label className="ml-auto px-4 py-2 bg-orange-500 text-white rounded hover:bg-orange-600 cursor-pointer">
+          📁 Import Users
+          <input
+            type="file"
+            accept=".xlsx,.xls,.csv"
+            onChange={handleImportFile}
+            className="hidden"
+          />
+        </label>
       </div>
 
       {/* Table */}
