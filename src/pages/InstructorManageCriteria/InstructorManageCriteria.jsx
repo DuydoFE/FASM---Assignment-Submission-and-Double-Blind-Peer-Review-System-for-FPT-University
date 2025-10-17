@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Pencil, Trash2, Plus, Loader, ArrowLeft } from 'lucide-react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getCriteriaByRubricId } from '../../service/criteriaService';
+import { getCriteriaByRubricId, deleteCriterion } from '../../service/criteriaService';
 import { toast } from 'react-toastify';
 
 function InstructorManageCriteria() {
@@ -10,14 +10,14 @@ function InstructorManageCriteria() {
     const [loading, setLoading] = useState(true);
     const [criteria, setCriteria] = useState([]);
     const [rubricTitle, setRubricTitle] = useState('');
+    const [deleteConfirm, setDeleteConfirm] = useState({ show: false, criterionId: null, criterionTitle: '' });
+    const [deleting, setDeleting] = useState(false);
 
     useEffect(() => {
         const fetchCriteria = async () => {
             try {
                 setLoading(true);
                 const data = await getCriteriaByRubricId(rubricId);
-                console.log('Fetched criteria:', data);
-
                 if (Array.isArray(data) && data.length > 0) {
                     setCriteria(data);
                     setRubricTitle(data[0].rubricTitle || 'Rubric Details');
@@ -45,6 +45,35 @@ function InstructorManageCriteria() {
 
     const handleBack = () => {
         navigate(-1);
+    };
+
+    const handleDeleteClick = (criterionId, criterionTitle) => {
+        setDeleteConfirm({ show: true, criterionId, criterionTitle });
+    };
+
+    const handleDeleteCancel = () => {
+        setDeleteConfirm({ show: false, criterionId: null, criterionTitle: '' });
+    };
+
+    const handleDeleteConfirm = async () => {
+        try {
+            if (!deleteConfirm.criterionId) {
+                toast.error('Invalid criterion ID');
+                return;
+            }
+            setDeleting(true);
+            await deleteCriterion(deleteConfirm.criterionId);
+
+            setCriteria(prev => prev.filter(c => c.criteriaId !== deleteConfirm.criterionId));
+
+            toast.success('Criterion deleted successfully');
+            setDeleteConfirm({ show: false, criterionId: null, criterionTitle: '' });
+        } catch (error) {
+            console.error('Failed to delete criterion:', error);
+            toast.error('Failed to delete criterion');
+        } finally {
+            setDeleting(false);
+        }
     };
 
 
@@ -123,7 +152,7 @@ function InstructorManageCriteria() {
                     {criteria.length > 0 ? (
                         criteria.map((criterion, index) => (
                             <div
-                                key={criterion.id}
+                                key={criterion.criteriaId}
                                 className="bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow p-6"
                             >
                                 <div className="flex justify-between items-start mb-4">
@@ -143,7 +172,13 @@ function InstructorManageCriteria() {
                                         <button className="text-gray-400 hover:text-gray-600 transition-colors p-1">
                                             <Pencil size={18} />
                                         </button>
-                                        <button className="text-gray-400 hover:text-red-600 transition-colors p-1">
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                handleDeleteClick(criterion.criteriaId, criterion.title);
+                                            }}
+                                            className="text-gray-400 hover:text-red-600 transition-colors p-1"
+                                        >
                                             <Trash2 size={18} />
                                         </button>
                                     </div>
@@ -177,6 +212,40 @@ function InstructorManageCriteria() {
                     </div>
                 )}
             </div>
+            {/* Delete Confirmation Modal */}
+            {deleteConfirm.show && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                    <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+                        <h3 className="text-lg font-semibold text-gray-900 mb-2">Delete Criterion</h3>
+                        <p className="text-gray-600 mb-6">
+                            Are you sure you want to delete <span className="font-medium">{deleteConfirm.criterionTitle}</span> criterion ?
+                        </p>
+                        <div className="flex gap-3 justify-end">
+                            <button
+                                onClick={handleDeleteCancel}
+                                disabled={deleting}
+                                className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-50"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleDeleteConfirm}
+                                disabled={deleting}
+                                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 flex items-center gap-2"
+                            >
+                                {deleting ? (
+                                    <>
+                                        <Loader className="w-4 h-4 animate-spin" />
+                                        Deleting...
+                                    </>
+                                ) : (
+                                    'Delete'
+                                )}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
