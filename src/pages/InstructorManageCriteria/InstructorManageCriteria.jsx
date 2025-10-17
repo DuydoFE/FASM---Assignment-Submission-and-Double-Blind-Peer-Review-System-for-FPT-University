@@ -44,9 +44,9 @@ function InstructorManageCriteria() {
     }, [rubricId]);
 
     const handleBack = () => {
-        console.log('Back button clicked');
-        navigate('/instructor/manage-rubric');
+        navigate(-1);
     };
+
 
     const totalWeight = criteria.reduce((sum, c) => sum + (c.weight || 0), 0);
     const remainingWeight = 100 - totalWeight;
