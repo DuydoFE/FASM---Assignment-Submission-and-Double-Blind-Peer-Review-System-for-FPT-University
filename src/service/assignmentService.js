@@ -5,7 +5,7 @@ import api from "../config/axios";
  * @param {number | string} courseInstanceId - ID của lớp học.
  * @returns {Promise<Array<Object>>} - Một promise trả về mảng các assignment.
  */
-export  const getAssignmentsByCourseInstanceId = async (courseInstanceId) => {
+export const getAssignmentsByCourseInstanceId = async (courseInstanceId) => {
   try {
     // SỬA Ở ĐÂY: Đã xóa "/api" ở đầu.
     const response = await api.get(`/Assignment/course-instance/${courseInstanceId}`);
@@ -45,10 +45,28 @@ const getAssignmentRubric = async (assignmentId) => {
   }
 };
 
+const extendDeadline = async (assignmentId, newDeadline) => {
+  try {
+    const response = await api.put(
+      `/Assignment/${assignmentId}/extend-deadline`,
+      `"${newDeadline}"`,
+      {
+        headers: { "Content-Type": "application/json" }
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error(`Lỗi khi gia hạn deadline cho assignment ID ${assignmentId}:`, error);
+    throw error;
+  }
+};
+
+
 // Export service
 export const assignmentService = {
-  
+  getAssignmentsByCourseInstanceId,
   getAssignmentDetailsById,
-   getAssignmentRubric,
-  getStudentAssignments, // Thêm hàm mới vào export
+  getAssignmentRubric,
+  getStudentAssignments,
+  extendDeadline
 };

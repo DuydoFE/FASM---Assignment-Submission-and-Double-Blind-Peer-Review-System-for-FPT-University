@@ -1,105 +1,120 @@
-// src/component/Assignment/JoinClassModal.jsx
-import React, { useState } from 'react';
-import { X, LockKeyhole, KeyRound, Eye, EyeOff, Info, User } from 'lucide-react';
 
-const JoinClassModal = ({ isOpen, onClose, course }) => {
+import React, { useState } from 'react';
+import { useSelector } from 'react-redux';
+import { selectUser } from '../../redux/features/userSlice';
+import { X, Lock, Key, Eye, EyeOff, Info, Users } from 'lucide-react';
+import { useMutation } from '@tanstack/react-query';
+import { courseService } from '../../service/courseService';
+const JoinClassModal = ({ isOpen, onClose, course, onEnrollSuccess }) => {
+  const currentUser = useSelector(selectUser);
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
 
 
-  if (!isOpen || !course) return null;
+  const { mutate: enroll, isLoading: isEnrolling, error: enrollError } = useMutation({
+    mutationFn: courseService.enrollInCourse,
+    onSuccess: () => {
+      // Bây giờ onEnrollSuccess sẽ luôn là một hàm, không bao giờ là undefined
+      onEnrollSuccess(); 
+      onClose();
+    },
+  });
 
-  const handleJoin = () => {
-    
-    alert(`Đang tham gia lớp ${course.title} với mật khẩu: ${password}`);
-    onClose(); 
+  
+
+  if (!isOpen || !course) {
+    return null;
+  }
+
+  if (!isOpen || !course) {
+    return null;
+  }
+
+  const handleJoinClass = () => {
+    enroll({
+      courseInstanceId: course.courseInstanceId,
+      studentUserId: currentUser.userId,
+      enrollKey: password,
+    });
   };
 
   return (
-    // Lớp phủ toàn màn hình
-    <div 
-      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
-      onClick={onClose} 
-    >
-      
-      <div 
-        className="bg-white rounded-lg shadow-xl w-full max-w-md p-6 relative animate-fade-in"
-        onClick={(e) => e.stopPropagation()} 
-      >
-      
-        <div className="text-center border-b pb-4 mb-4">
-          <div className="absolute top-0 left-0 bg-blue-600 text-white font-bold py-1 px-3 rounded-br-lg rounded-tl-lg">
-            {course.code}
-          </div>
-          <button onClick={onClose} className="absolute top-4 right-4 text-gray-400 hover:text-gray-600">
-            <X size={24} />
-          </button>
-          <p className="font-bold text-lg mt-6">{`${course.code} - ${course.subjectCode}`}</p>
-          <p className="text-sm text-gray-500">{course.title}</p>
-        </div>
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+      <div className="bg-white rounded-lg shadow-xl w-full max-w-md p-8 relative">
+        <button onClick={onClose} className="absolute top-4 right-4 text-gray-400 hover:text-gray-600">
+          <X className="w-6 h-6" />
+        </button>
 
-      
-        <div className="flex flex-col items-center my-6">
-          <div className="w-16 h-16 bg-blue-500 rounded-full flex items-center justify-center text-white text-2xl font-bold mb-2">
-            NT
+        <h2 className="text-xl font-bold text-gray-800 text-center mb-2">
+          {course.courseCode} - {course.courseInstanceName}
+        </h2>
+        <hr className="mb-6"/>
+        
+        <div className="text-center mb-6">
+          <div className="mx-auto bg-indigo-100 text-indigo-600 w-14 h-14 rounded-full flex items-center justify-center text-xl font-bold mb-3">
+            <Users className="w-7 h-7" />
           </div>
-          <p className="font-semibold">Nguyễn Minh Sang</p>
-          <p className="text-sm text-gray-500">sangnm18@fe.edu.vn</p>
+          <p className="font-semibold text-gray-800">{course.courseInstanceName}</p>
+          <p className="text-sm text-gray-600">{course.courseName}</p>
         </div>
-
-       
+        
+        <div className="text-center mb-6">
+            <div className="mx-auto bg-red-100 text-red-500 w-14 h-14 rounded-full flex items-center justify-center">
+                <Lock className="w-7 h-7"/>
+            </div>
+        </div>
+        
         <div className="text-center">
-          <div className="inline-block p-3 bg-red-100 rounded-full mb-3">
-            <LockKeyhole className="text-red-500" size={28} />
-          </div>
-          <h2 className="text-xl font-bold">Nhập mật khẩu lớp học</h2>
-          <p className="text-sm text-gray-500 mt-1">Vui lòng nhập mật khẩu do giảng viên cung cấp để tham gia lớp học này.</p>
-        </div>
-
-        {/* Input */}
-        <div className="my-6">
-          <label className="font-semibold text-sm mb-2 block">Mật khẩu lớp học *</label>
+          <h3 className="text-2xl font-bold text-gray-900 mb-2">Nhập mật khẩu lớp học</h3>
+          <p className="text-gray-600 mb-6">Vui lòng nhập mật khẩu để tham gia lớp học <span className="font-semibold">{course.courseName}</span>.</p>
+          
           <div className="relative">
-            <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
-            <input 
+            <label htmlFor="password" className="sr-only">Mật khẩu lớp học</label>
+            <Key className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+            <input
+              id="password"
               type={showPassword ? 'text' : 'password'}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="Nhập mật khẩu..."
-              className="w-full pl-10 pr-10 py-2.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="••••••••••"
+              className="w-full pl-12 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
             />
-            <button 
-              onClick={() => setShowPassword(!showPassword)} 
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
-            >
-              {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+            <button onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500">
+              {showPassword ? <EyeOff /> : <Eye />}
             </button>
           </div>
-          <p className="text-xs text-gray-500 mt-2">Mật khẩu được cung cấp bởi giảng viên trong buổi học đầu tiên</p>
+          
+          <p className="text-xs text-gray-500 mt-2 text-left">Mật khẩu được cung cấp bởi giảng viên trong buổi học đầu tiên</p>
+          {enrollError && (
+              <p className="text-sm text-red-500 mt-3 text-center">{enrollError.message}</p>
+          )}
         </div>
 
-        <div className="bg-blue-50 p-4 rounded-lg text-sm text-blue-800">
-          <div className="flex">
-            <Info className="w-5 h-5 mr-3 flex-shrink-0" />
-            <div>
-              <p className="font-bold mb-2">Lưu ý quan trọng</p>
-              <ul className="list-disc list-inside space-y-1">
-                <li>Mật khẩu phân biệt chữ hoa và chữ thường</li>
-                <li>Liên hệ giảng viên nếu bạn chưa nhận được mật khẩu</li>
-                <li>Mỗi lớp học có mật khẩu riêng để bảo mật</li>
-              </ul>
+
+        <div className="bg-blue-50 p-4 rounded-lg mt-6 text-sm text-blue-800">
+            <div className="flex">
+                <Info className="w-5 h-5 mr-3 flex-shrink-0"/>
+                <div>
+                    <h4 className="font-bold mb-2">Lưu ý quan trọng</h4>
+                    <ul className="list-disc list-inside space-y-1">
+                        <li>Mật khẩu phân biệt chữ hoa và chữ thường</li>
+                        <li>Liên hệ giảng viên nếu bạn chưa nhận được mật khẩu</li>
+                        <li>Mỗi lớp học có mật khẩu riêng để bảo mật</li>
+                    </ul>
+                </div>
             </div>
-          </div>
         </div>
-        
-        
-        <div className="mt-8 flex justify-center space-x-4">
-          <button onClick={onClose} className="px-6 py-2.5 rounded-md border border-gray-300 font-semibold hover:bg-gray-100">
+
+       <div className="flex justify-end space-x-4 mt-8">
+          <button onClick={onClose} className="px-6 py-2 border rounded-md text-gray-700 hover:bg-gray-100 font-semibold" disabled={isEnrolling}>
             Hủy bỏ
           </button>
-          <button onClick={handleJoin} className="flex items-center px-6 py-2.5 rounded-md bg-green-500 text-white font-semibold hover:bg-green-600">
-            <User className="mr-2" size={18} />
-            Tham gia lớp
+          <button 
+            onClick={handleJoinClass} 
+            className="px-6 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 font-semibold flex items-center disabled:bg-gray-400"
+            disabled={isEnrolling || !password} // Vô hiệu hóa khi đang gửi hoặc chưa nhập pass
+          >
+            {isEnrolling ? 'Đang xử lý...' : 'Tham gia lớp'}
           </button>
         </div>
       </div>
@@ -108,4 +123,3 @@ const JoinClassModal = ({ isOpen, onClose, course }) => {
 };
 
 export default JoinClassModal;
-

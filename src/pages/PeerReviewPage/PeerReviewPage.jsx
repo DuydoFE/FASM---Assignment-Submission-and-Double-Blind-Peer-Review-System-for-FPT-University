@@ -15,6 +15,7 @@ import { reviewService } from "../../service/reviewService";
 import CriterionForm from "../../component/Review/CriterionForm";
 import AiAssistantCard from "../../component/Review/AiAssistantCard";
 import { getCurrentAccount } from "../../utils/accountUtils";
+import { toast } from 'react-toastify'; 
 
 const PeerReviewPage = () => {
   const { courseId, assignmentId } = useParams();
@@ -24,9 +25,11 @@ const PeerReviewPage = () => {
   const [scores, setScores] = useState({});
   const [comment, setComment] = useState("");
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState(null); // State cho lỗi fetch data
+  const [validationError, setValidationError] = useState(null); // State cho lỗi form
   const user = getCurrentAccount();
   console.log(user);
+
   useEffect(() => {
     const fetchReviewData = async () => {
       if (!assignmentId) {
@@ -41,16 +44,13 @@ const PeerReviewPage = () => {
           setReviewData(data);
           const initialScores = data.rubric.criteria.reduce(
             (acc, criterion) => {
-              acc[criterion.criteriaId] = 0;
+              acc[criterion.criteriaId] = null; // Khởi tạo là null (trống)
               return acc;
-            },
-            {}
+            }, {}
           );
           setScores(initialScores);
         } else {
-          throw new Error(
-            "Dữ liệu chấm điểm trả về không hợp lệ hoặc không có tiêu chí."
-          );
+          throw new Error("Dữ liệu chấm điểm trả về không hợp lệ.");
         }
       } catch (err) {
         console.error(err);
@@ -62,10 +62,19 @@ const PeerReviewPage = () => {
     fetchReviewData();
   }, [assignmentId]);
 
-  const handleScoreChange = (criteriaId, newScore) => {
-    setScores((prevScores) => ({ ...prevScores, [criteriaId]: newScore }));
-  };
+   const handleScoreChange = (criteriaId, value) => {
 
+    if (value === "") {
+      setScores((prev) => ({ ...prev, [criteriaId]: null }));
+      return;
+    }
+    let newScore = parseInt(value, 10);
+    const maxScore = reviewData.rubric.criteria.find(c => c.criteriaId === criteriaId)?.maxScore;
+    if (!isNaN(newScore) && maxScore !== undefined) {
+      newScore = Math.max(0, Math.min(newScore, maxScore));
+      setScores((prevScores) => ({ ...prevScores, [criteriaId]: newScore }));
+    }
+  };
   const totalScore = useMemo(() => {
     const criteria = reviewData?.rubric?.criteria;
     if (!criteria || Object.keys(scores).length === 0) return 0;
@@ -78,14 +87,23 @@ const PeerReviewPage = () => {
     return Math.round(total * 100);
   }, [scores, reviewData]);
 
-  if (isLoading)
-    return (
-      <div className="p-8 text-center text-xl">Đang tìm bài làm để chấm...</div>
-    );
-  if (error)
-    return <div className="p-8 text-center text-red-500 text-xl">{error}</div>;
+  if (isLoading) return <div className="p-8 text-center text-xl">Đang tìm bài làm để chấm...</div>;
+  if (error) return <div className="p-8 text-center text-red-500 text-xl">{error}</div>;
+
+  
 
   const handleSubmitReview = async () => {
+   
+    const isAllScoresFilled = Object.values(scores).every(score => score !== null);
+
+    if (!isAllScoresFilled) {
+      const errorMessage = "Vui lòng nhập điểm cho tất cả các tiêu chí.";
+      setValidationError(errorMessage); 
+      toast.error(errorMessage);
+      return; 
+    }
+
+    setValidationError(null);
     try {
       if (!reviewData) return;
 
@@ -166,11 +184,8 @@ navigate("/review-success", {
           </div>
         </div>
 
-        {/* Main Layout: 2 Columns */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-          {/* --- CỘT BÊN TRÁI (NỘI DUNG CHÍNH) --- */}
           <div className="lg:col-span-2 space-y-8">
-            {/* Submission Info */}
             <div className="bg-white p-4 rounded-lg border">
               <div className="flex justify-between items-center">
                 <div className="flex items-center">
@@ -207,7 +222,6 @@ navigate("/review-success", {
               </div>
             </div>
 
-            {/* Grading Form */}
             <div className="bg-white p-6 rounded-lg border">
               <div className="flex justify-between items-center mb-4">
                 <h3 className="text-xl font-bold">Form Grading</h3>
@@ -222,18 +236,26 @@ navigate("/review-success", {
                   </button>
                 </div>
               </div>
+               {validationError && (
+                <div className="bg-red-50 text-red-700 p-3 rounded-md text-center mb-4 font-semibold">
+                  {validationError}
+                </div>
+              )}
+
+              {/* Lặp qua các tiêu chí */}
               {reviewData?.rubric?.criteria?.map((criterion) => (
                 <CriterionForm
                   key={criterion.criteriaId}
                   criterion={criterion}
-                  score={scores[criterion.criteriaId] || 0}
+                  score={scores[criterion.criteriaId]}
                   onScoreChange={handleScoreChange}
+                  // Truyền trạng thái lỗi cho từng ô input
+                  hasError={validationError && scores[criterion.criteriaId] === null}
                 />
               ))}
             </div>
 
-            {/* === PHẦN BỊ THIẾU ĐÃ ĐƯỢC ĐIỀN ĐẦY ĐỦ === */}
-            {/* Total Score & Comments */}
+         
             <div className="bg-white p-6 rounded-lg border">
               <div className="flex justify-between items-center bg-blue-50 p-4 rounded-lg">
                 <span className="text-xl font-bold text-blue-800">
@@ -266,7 +288,7 @@ navigate("/review-success", {
               </button>
             </div>
           </div>
-
+          
           <div className="lg:col-span-1">
             <AiAssistantCard />
           </div>

@@ -67,43 +67,28 @@ const InstructorHeader = () => {
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-20">
           <div className="flex items-center space-x-8">
-            <Link to="/instructordashboard">
+            <Link to="/instructor/dashboard">
               <FasmLogo />
             </Link>
 
             <nav className="flex items-center space-x-6">
-              <div className="flex items-center space-x-2">
-                <Calendar className="w-4 h-4 text-blue-600" />
-                <span className="text-gray-700 text-sm font-medium">Academic Year:</span>
-                <select className="border border-gray-200 rounded-lg px-3 py-1 text-sm shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
-                  <option>2025</option>
-                  <option>2026</option>
-                </select>
-              </div>
-
-              <div className="flex items-center space-x-2">
-                <Book className="w-4 h-4 text-green-600" />
-                <span className="text-gray-700 text-sm font-medium">Semester:</span>
-                <select className="border border-gray-200 rounded-lg px-3 py-1 text-sm shadow-sm focus:ring-2 focus:ring-green-500 focus:border-green-500 transition">
-                  <option>FALL 2025</option>
-                  <option>SPRING 2026</option>
-                </select>
-              </div>
+              
+              
 
               <Link
-                to="/instructordashboard"
+                to="/instructor/dashboard"
                 className="text-gray-600 hover:text-orange-500 transition-colors font-medium"
               >
-                Home
+                Dashboard
               </Link>
               <Link
-                to="/my-classes"
+                to="/instructor/my-classes"
                 className="text-gray-600 hover:text-orange-500 transition-colors font-medium"
               >
                 My Classes
               </Link>
               <Link
-                to="/regrade-request"
+                to="/instructor/regrade-request"
                 className="text-gray-600 hover:text-orange-500 transition-colors font-medium"
               >
                 Regrade Requests

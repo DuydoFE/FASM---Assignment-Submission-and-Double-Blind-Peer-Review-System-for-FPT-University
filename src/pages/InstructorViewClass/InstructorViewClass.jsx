@@ -2,7 +2,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { Search, BookOpen, Play, CheckCircle, Clock, ChevronDown, Key, X, Eye, EyeOff } from 'lucide-react';
 import { getCurrentAccount } from '../../utils/accountUtils';
 import { useNavigate } from 'react-router-dom';
-import { getInstructorCourses } from '../../service/courseInstructor';
+import { getInstructorCourses } from '../../service/courseInstructorService';
 import { updateEnrollKey } from '../../service/courseInstanceService';
 import { toast } from 'react-toastify';
 
@@ -34,8 +34,9 @@ const InstructorViewClass = () => {
           code: course.courseCode,
           classId: course.courseInstanceName,
           students: course.studentCount,
-          status: course.courseInstanceStatus,
-          statusText: course.courseInstanceStatus,
+          status: course.courseInstanceStatus, // Use the API-provided status
+          statusText: course.courseInstanceStatus, // Use the API-provided status
+          semester: course.semesterName,
           enrollmentKey: course.enrollmentKey || ''
         }));
 
@@ -61,7 +62,6 @@ const InstructorViewClass = () => {
     try {
       await updateEnrollKey(selectedClass.id, password, currentUser.id);
       toast.success("Updated enroll key successfully!");
-      
       // Update local state
       setClasses(prevClasses =>
         prevClasses.map(cls =>
@@ -80,8 +80,9 @@ const InstructorViewClass = () => {
   };
 
   const handleStatusClick = () => {
-    if (statusFilter === 'All') setStatusFilter('active');
-    else if (statusFilter === 'active') setStatusFilter('completed');
+    if (statusFilter === 'All') setStatusFilter('Ongoing');
+    else if (statusFilter === 'Ongoing') setStatusFilter('Completed');
+    else if (statusFilter === 'Completed') setStatusFilter('Upcoming');
     else setStatusFilter('All');
   };
 
@@ -101,17 +102,17 @@ const InstructorViewClass = () => {
   }, [classes, searchTerm, statusFilter]);
 
   const totalClasses = classes.length;
-  const activeClasses = classes.filter(cls => cls.status === 'active').length;
-  const completedClasses = classes.filter(cls => cls.status === 'completed').length;
-  const upcomingClasses = classes.filter(cls => cls.status === 'upcoming').length;
+  const ongoingClasses = classes.filter(cls => cls.status === 'Ongoing').length;
+  const completedClasses = classes.filter(cls => cls.status === 'Completed').length;
+  const upcomingClasses = classes.filter(cls => cls.status === 'Upcoming').length;
 
   const getStatusStyle = (status) => {
     switch (status) {
-      case 'active':
+      case 'Ongoing':
         return 'bg-green-100 text-green-700 border border-green-200';
-      case 'completed':
+      case 'Completed':
         return 'bg-orange-100 text-orange-700 border border-orange-200';
-      case 'upcoming':
+      case 'Upcoming':
         return 'bg-purple-100 text-purple-700 border border-purple-200';
       default:
         return 'bg-gray-100 text-gray-700 border border-gray-200';
@@ -120,11 +121,11 @@ const InstructorViewClass = () => {
 
   const getStatusIcon = (status) => {
     switch (status) {
-      case 'active':
+      case 'Ongoing':
         return <div className="w-2 h-2 bg-green-500 rounded-full"></div>;
-      case 'completed':
+      case 'Completed':
         return <div className="w-2 h-2 bg-orange-500 rounded-full"></div>;
-      case 'upcoming':
+      case 'Upcoming':
         return <div className="w-2 h-2 bg-purple-500 rounded-full"></div>;
       default:
         return <div className="w-2 h-2 bg-gray-500 rounded-full"></div>;
@@ -137,7 +138,7 @@ const InstructorViewClass = () => {
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            All Classes - FALL2025
+            All Classes 
           </h1>
           <p className="text-gray-600">
             Manage and track your teaching progress
@@ -176,7 +177,7 @@ const InstructorViewClass = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-green-600 font-medium mb-1">Ongoing</p>
-                <p className="text-3xl font-bold text-green-700">{activeClasses} courses</p>
+                <p className="text-3xl font-bold text-green-700">{ongoingClasses} courses</p>
               </div>
               <div className="bg-green-500 rounded-lg p-3">
                 <Play className="text-white" size={24} />
@@ -222,7 +223,7 @@ const InstructorViewClass = () => {
                 <thead className="bg-gray-50 border-b border-gray-200">
                   <tr>
                     <th className="text-left py-4 px-6 font-medium text-gray-700">
-                      Course Information
+                      Course
                     </th>
                     <th className="text-left py-4 px-6 font-medium text-gray-700">
                       Class
@@ -252,11 +253,8 @@ const InstructorViewClass = () => {
                       <td className="py-4 px-6">
                         <div>
                           <h3 className="font-semibold text-gray-900 mb-1">
-                            {cls.name}
+                            {cls.code}
                           </h3>
-                          <div className="flex items-center gap-4 text-sm text-gray-500">
-                            <span>{cls.code}</span>
-                          </div>
                         </div>
                       </td>
                       <td className="py-4 px-6">
@@ -309,11 +307,10 @@ const InstructorViewClass = () => {
             {/* Left Side - Class Info */}
             <div className="w-2/5 bg-gradient-to-br from-blue-50 to-blue-100 p-8 flex flex-col">
               <div className="mb-6">
-                <div className="text-blue-600 text-sm font-semibold mb-2">UI/UX Design</div>
+                <div className="text-blue-600 text-sm font-semibold mb-2">{selectedClass?.code}</div>
                 <h2 className="text-2xl font-bold text-gray-900 mb-2">
                   Class {selectedClass?.name}
                 </h2>
-                <div className="text-gray-600">{selectedClass?.code}</div>
               </div>
 
               <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-5 mt-auto">
@@ -359,7 +356,7 @@ const InstructorViewClass = () => {
                     type={showPassword ? "text" : "password"}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
                     placeholder="Enter password..."
                   />
                   <button
@@ -442,7 +439,7 @@ const InstructorViewClass = () => {
                   onClick={handleEditPassword}
                   disabled={!isPasswordValid}
                   className={`flex-1 px-6 py-3 rounded-lg font-medium transition-colors ${isPasswordValid
-                    ? 'bg-orange-500 text-white hover:bg-gray-500'
+                    ? 'bg-orange-500 text-white hover:bg-orange-500'
                     : 'bg-gray-200 text-gray-400 cursor-not-allowed'
                     }`}
                 >

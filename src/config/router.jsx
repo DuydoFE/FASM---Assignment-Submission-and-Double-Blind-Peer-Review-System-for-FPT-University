@@ -11,12 +11,12 @@ import StudentAssignmentPage from "../pages/StudentAssignmentPage/StudentAssignm
 import InstructorLayout from "../layout/InstructorLayout";
 import InstructorDashboard from "../pages/InstructorDashBoard/InstructorDashBoard";
 import InstructorViewClass from "../pages/InstructorViewClass/InstructorViewClass";
-import InstructorEnrollKey from "../pages/InstructorEnrollKey/InstructorEnrollKey";
 import InstructorClassLayout from "../layout/InstructorClassLayout";
 import InstructorManageClass from "../pages/InstructorManageClass/InstructorManageClass";
 import InstructorManageAssignment from "../pages/InstructorManageAssignment/InstructorManageAssignment";
 import AssignmentDetailPage from "../pages/AssignmentDetailPage/AssignmentDetailPage";
 import StudentSubmitAssignmentPage from "../pages/StudentSubmitAssignmentPage/StudentSubmitAssignmentPage";
+import InstructorManageRubric from "../pages/InstructorManageRubric/InstructorManageRubric";
 import InstructorManageSubmission from "../pages/InstructorManageSubmission/InstructorManageSubmission";
 import InstructorSubmissionDetail from "../pages/InstructorSubmissionDetail/InstructorSubmissionDetail";
 import InstructorManageGrading from "../pages/IntructorManageGrading/IntructorManageGrading";
@@ -48,6 +48,7 @@ import AdminClassDetail from "../pages/Admin/AdminClassDetail";
 import AdminAccountSettings from "../pages/Admin/AdminAccountSettings";
 import AdminClassAssignments from "../pages/Admin/AdminClassAssignments";
 import AdminAssignmentSubmissions from "../pages/Admin/AdminAssignmentSubmissions";
+import ProfilePage from "../pages/HomePage/ProfilePage";
 
 export const router = createBrowserRouter([
   {
@@ -57,6 +58,10 @@ export const router = createBrowserRouter([
       {
         index: true,
         element: <HomePage />,
+      },
+       {
+        path: "profile",
+        element: <ProfilePage />,
       },
       {
         path: "studentdashboard",
@@ -102,20 +107,16 @@ export const router = createBrowserRouter([
     element: <UseReactQuerry />,
   },
   {
-    path: "",
+    path: "/instructor",
     element: <InstructorLayout />,
     children: [
       {
-        path: "instructordashboard",
+        path: "dashboard",
         element: <ProtectedRoute role={ROLE.INSTRUCTOR}><InstructorDashboard /></ProtectedRoute>,
       },
       {
         path: "my-classes",
         element: <InstructorViewClass />,
-      },
-      {
-        path: "enroll-key",
-        element: <InstructorEnrollKey />,
       },
       {
         path: "regrade-request",
@@ -134,10 +135,6 @@ export const router = createBrowserRouter([
       {
         path: "my-classes",
         element: <InstructorViewClass />,
-      },
-      {
-        path: "enroll-key",
-        element: <InstructorEnrollKey />,
       },
       {
         path: "regrade-request",
@@ -160,6 +157,10 @@ export const router = createBrowserRouter([
       {
         path: "manage-assignment/:id",
         element: <InstructorManageAssignment />,
+      },
+      {
+        path: "manage-rubric",
+        element: <InstructorManageRubric />,
       },
       {
         path: "manage-submission",

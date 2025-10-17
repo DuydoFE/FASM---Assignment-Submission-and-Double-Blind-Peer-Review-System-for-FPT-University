@@ -68,7 +68,7 @@ const RubricCard = ({ assignmentId }) => {
                 {`${index + 1}. ${criterion.title}`}
               </h3>
               <span className="text-blue-600 font-bold text-lg whitespace-nowrap">
-                {`${criterion.weight * 100}%`}
+                {`${criterion.weight}%`}
               </span>
             </div>
             

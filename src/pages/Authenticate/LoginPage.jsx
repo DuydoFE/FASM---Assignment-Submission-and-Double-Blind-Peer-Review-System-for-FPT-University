@@ -92,7 +92,7 @@ const LoginPage = () => {
           localStorage.setItem("refreshToken", refreshToken);
           dispatch(loginRedux(res.data.data));
           toast.success("Google Login successful!");
-          navigate("/instructordashboard");
+          navigate("/instructor/dashboard");
         } catch (err) {
           console.error("Failed to fetch user after Google callback:", err);
           toast.error("Google Login failed.");

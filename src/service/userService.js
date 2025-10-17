@@ -9,3 +9,6 @@ export const login = async (data) => {
     throw error;
   }
 };
+export const getUserById = (userId) => {
+  return api.get(`/Users/${userId}`);
+};
