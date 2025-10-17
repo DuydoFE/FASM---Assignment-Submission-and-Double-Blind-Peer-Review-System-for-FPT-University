@@ -315,7 +315,11 @@ const InstructorManageRubric = () => {
                                         <button
                                             className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
                                             title="View"
-                                            onClick={() => navigate(`/instructor/manage-criteria/${rubric.rubricId}`)}                                        >
+                                            onClick={() => navigate(
+                                                `/instructor/manage-criteria/${rubric.rubricId}`,
+                                                { state: { from: '/instructor/manage-rubric' } }
+                                            )}
+                                        >
                                             <Eye className="w-5 h-5 text-gray-600" />
                                         </button>
                                         <button
