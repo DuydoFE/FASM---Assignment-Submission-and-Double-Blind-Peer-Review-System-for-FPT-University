@@ -1,37 +1,23 @@
+import api from "../config/axios";
 
-import api from "../config/axios"; 
-
-/**
- * Gửi bài tập lên server.
- * @param {object} submissionData - Dữ liệu bài nộp.
- * @param {number} submissionData.assignmentId - ID của bài tập.
- * @param {number} submissionData.userId - ID của người dùng.
- * @param {File} submissionData.file - Tệp bài nộp.
- * @param {string} [submissionData.keywords] - (Tùy chọn) Các từ khóa.
- * @param {boolean} [submissionData.isPublic] - (Tùy chọn) Trạng thái công khai.
- * @returns {Promise<object>} 
- */
 const submitAssignment = async (submissionData) => {
   const formData = new FormData();
 
   formData.append("AssignmentId", submissionData.assignmentId);
   formData.append("UserId", submissionData.userId);
   formData.append("File", submissionData.file);
-
-  if (submissionData.keywords) {
-    formData.append("Keywords", submissionData.keywords);
-  }
-  
   formData.append("IsPublic", submissionData.isPublic ?? true);
+
+  // SỬA Ở ĐÂY: Luôn gửi trường Keywords, kể cả khi giá trị là chuỗi rỗng
+  // Thay vì `if (submissionData.keywords)`, hãy dùng cách này:
+  formData.append("Keywords", submissionData.keywords || "");
+
   try {
     const response = await api.post(
-      "/submission/submit", 
+      "/submission/submit",
       formData,
       {
-        headers: {
-       
-          "Content-Type": "multipart/form-data",
-        },
+        headers: { "Content-Type": "multipart/form-data" },
       }
     );
     return response.data;
