@@ -6,7 +6,7 @@ import {
   Loader2,
   FileText,
   Type,
-} from "lucide-react"; // Thêm icon Type
+} from "lucide-react";
 import { submissionService } from "../../service/submissionService";
 import { toast } from "react-toastify";
 
@@ -18,7 +18,7 @@ const SubmissionCard = ({
 }) => {
   const [selectedFile, setSelectedFile] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [keywords, setKeywords] = useState(""); // <-- 1. Thêm state cho keywords
+  const [keywords, setKeywords] = useState("");
   const fileInputRef = useRef(null);
 
   const handleFileChange = (event) => {
@@ -44,12 +44,14 @@ const SubmissionCard = ({
         assignmentId: assignmentId,
         userId: userId,
         file: selectedFile,
-        keywords: keywords, // <-- 2. Thêm keywords vào dữ liệu gửi đi
+        keywords: keywords,
       };
 
       const result = await submissionService.submitAssignment(submissionData);
 
-      if (result.statusCode === 200 || result.statusCode === 100) {
+      // FIX: Thêm mã 201 (Created) vào điều kiện kiểm tra thành công.
+      // API thường trả về 201 khi tạo mới một tài nguyên.
+      if (result.statusCode === 200 || result.statusCode === 100 || result.statusCode === 201) {
         toast.success(result.message || "Nộp bài thành công!");
         onSubmissionSuccess();
       } else {
@@ -78,7 +80,7 @@ const SubmissionCard = ({
         <h3 className="text-lg font-bold text-gray-800">Submit</h3>
       </div>
       <p className="text-sm text-gray-600 mb-4">
-        Tải lên bài làm của bạn. Hỗ trợ PDF, DOC, ZIP (tối đa 50MB).
+        Upload your file. Supports PDF, DOC, ZIP (up to 50MB).
       </p>
 
       {/* Khu vực chọn file */}
@@ -102,13 +104,13 @@ const SubmissionCard = ({
         )}
       </div>
 
-      {/* 3. Thêm ô nhập liệu cho Keywords */}
+      {/* Ô nhập liệu cho Keywords */}
       <div className="mt-4">
         <label
           htmlFor="keywords"
           className="block text-sm font-medium text-gray-700 mb-1"
         >
-          Tittle
+          Keywords {/* Sửa lỗi chính tả từ "Tittle" */}
         </label>
         <div className="relative">
           <Type className="w-5 h-5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
@@ -118,7 +120,7 @@ const SubmissionCard = ({
             value={keywords}
             onChange={(e) => setKeywords(e.target.value)}
             className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-            placeholder="Ví dụ: react, redux, api,..."
+            placeholder="example: react, redux, api,..."
           />
         </div>
       </div>
