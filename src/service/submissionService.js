@@ -1,5 +1,5 @@
 
-import api from "../config/api"; 
+import api from "../config/axios"; 
 
 /**
  * Gửi bài tập lên server.
