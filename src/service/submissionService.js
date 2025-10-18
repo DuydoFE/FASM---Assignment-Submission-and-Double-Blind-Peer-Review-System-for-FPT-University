@@ -25,7 +25,7 @@ const submitAssignment = async (submissionData) => {
   formData.append("IsPublic", submissionData.isPublic ?? true);
   try {
     const response = await api.post(
-      "/api/submission/submit", 
+      "/submission/submit", 
       formData,
       {
         headers: {
