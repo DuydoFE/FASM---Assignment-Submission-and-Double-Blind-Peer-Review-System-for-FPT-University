@@ -5,9 +5,11 @@ import {
   RefreshCw,
   Loader2,
   FileText,
-} from "lucide-react";
-import { submissionService } from "../../service/submissionService"; // Import service mới
+  Type,
+} from "lucide-react"; // Thêm icon Type
+import { submissionService } from "../../service/submissionService";
 import { toast } from "react-toastify";
+
 const SubmissionCard = ({
   hasSubmitted,
   assignmentId,
@@ -16,7 +18,8 @@ const SubmissionCard = ({
 }) => {
   const [selectedFile, setSelectedFile] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const fileInputRef = useRef(null); // Ref để trigger input file ẩn
+  const [keywords, setKeywords] = useState(""); // <-- 1. Thêm state cho keywords
+  const fileInputRef = useRef(null);
 
   const handleFileChange = (event) => {
     const file = event.target.files[0];
@@ -41,77 +44,32 @@ const SubmissionCard = ({
         assignmentId: assignmentId,
         userId: userId,
         file: selectedFile,
+        keywords: keywords, // <-- 2. Thêm keywords vào dữ liệu gửi đi
       };
 
       const result = await submissionService.submitAssignment(submissionData);
 
       if (result.statusCode === 200 || result.statusCode === 100) {
-        // Kiểm tra statusCode thành công
         toast.success(result.message || "Nộp bài thành công!");
-        onSubmissionSuccess(); // Gọi callback để trang cha có thể làm mới dữ liệu
+        onSubmissionSuccess();
       } else {
-        toast.error(result.message || "Đã xảy ra lỗi khi nộp bài.");
+        // Xử lý lỗi validation từ server
+        if (result.errors) {
+          const errorMessages = Object.values(result.errors).flat();
+          toast.error(errorMessages.join("\n"));
+        } else {
+          toast.error(result.message || "Đã xảy ra lỗi khi nộp bài.");
+        }
       }
     } catch (error) {
-      toast.error("Không thể kết nối tới máy chủ. Vui lòng thử lại.");
+      const errorMessage =
+        error.title || error.message || "Không thể kết nối tới máy chủ.";
+      toast.error(errorMessage);
       console.error(error);
     } finally {
       setIsSubmitting(false);
     }
   };
-  if (hasSubmitted && !selectedFile) {
-    return (
-      <div className="bg-green-50 p-6 rounded-lg border border-green-200">
-        <div className="flex items-center mb-3">
-          <Upload className="w-6 h-6 mr-3 text-green-700" />
-          <h3 className="text-lg font-bold text-green-800">Submit</h3>
-        </div>
-        <p className="text-sm text-gray-600 mb-4">
-          Bạn đã nộp bài. Bạn có thể nộp lại để cập nhật bài làm của mình.
-        </p>
-        <div className="bg-white p-3 rounded-md flex items-center text-sm mb-4">
-          <CheckCircle className="w-5 h-5 mr-2 text-green-600" />
-          <div>
-            <p className="font-semibold text-green-700">
-              Đã nộp bài thành công
-            </p>
-            <p className="text-gray-500">Chọn tệp mới để nộp lại.</p>
-          </div>
-        </div>
-        <div
-          className="mt-4 border-2 border-dashed border-gray-300 rounded-lg p-6 text-center cursor-pointer hover:border-blue-500"
-          onClick={handleSelectFileClick}
-        >
-          <input
-            type="file"
-            ref={fileInputRef}
-            onChange={handleFileChange}
-            className="hidden" // Ẩn input mặc định
-          />
-          {selectedFile ? (
-            <div className="flex items-center justify-center text-gray-700">
-              <FileText className="w-5 h-5 mr-2" />
-              <span>{selectedFile.name}</span>
-            </div>
-          ) : (
-            <p className="text-gray-500">Kéo thả hoặc nhấn để chọn tệp mới</p>
-          )}
-        </div>
-        <button
-          onClick={handleSubmit}
-          disabled={isSubmitting || !selectedFile}
-          className="w-full mt-4 flex items-center justify-center px-4 py-2 bg-green-600 text-white font-semibold rounded-md hover:bg-green-700 disabled:bg-gray-400"
-        >
-          {isSubmitting ? (
-            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-          ) : (
-            <RefreshCw className="w-4 h-4 mr-2" />
-          )}
-          {isSubmitting ? "Đang nộp..." : "Nộp lại"}
-        </button>
-      </div>
-    );
-  }
 
   return (
     <div className="bg-white p-6 rounded-lg border border-gray-200">
@@ -120,10 +78,10 @@ const SubmissionCard = ({
         <h3 className="text-lg font-bold text-gray-800">Submit</h3>
       </div>
       <p className="text-sm text-gray-600 mb-4">
-        Tải lên bài làm của bạn. Hỗ trợ PDF, DOC, ZIP (tối đa 50MB). Có thể nộp
-        nhiều lần.
+        Tải lên bài làm của bạn. Hỗ trợ PDF, DOC, ZIP (tối đa 50MB).
       </p>
-      {/* Khu vực kéo thả và chọn file */}
+
+      {/* Khu vực chọn file */}
       <div
         className="mt-4 border-2 border-dashed border-gray-300 rounded-lg p-8 text-center cursor-pointer hover:border-blue-500"
         onClick={handleSelectFileClick}
@@ -132,7 +90,7 @@ const SubmissionCard = ({
           type="file"
           ref={fileInputRef}
           onChange={handleFileChange}
-          className="hidden" // Ẩn input mặc định
+          className="hidden"
         />
         {selectedFile ? (
           <div className="flex items-center justify-center text-gray-700">
@@ -143,6 +101,28 @@ const SubmissionCard = ({
           <p className="text-gray-500">Kéo thả hoặc nhấn để chọn tệp</p>
         )}
       </div>
+
+      {/* 3. Thêm ô nhập liệu cho Keywords */}
+      <div className="mt-4">
+        <label
+          htmlFor="keywords"
+          className="block text-sm font-medium text-gray-700 mb-1"
+        >
+          Tittle
+        </label>
+        <div className="relative">
+          <Type className="w-5 h-5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
+          <input
+            type="text"
+            id="keywords"
+            value={keywords}
+            onChange={(e) => setKeywords(e.target.value)}
+            className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+            placeholder="Ví dụ: react, redux, api,..."
+          />
+        </div>
+      </div>
+
       <button
         onClick={handleSubmit}
         disabled={isSubmitting || !selectedFile}
