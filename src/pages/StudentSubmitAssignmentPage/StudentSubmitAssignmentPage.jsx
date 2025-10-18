@@ -19,6 +19,9 @@ import SubmissionCard from "../../component/Submission/SubmissionCard";
 import PeerReviewCard from "../../component/Submission/PeerReviewCard";
 import RubricCard from "../../component/Submission/RubricCard";
 import { useQuery } from "@tanstack/react-query";
+import { useSelector } from "react-redux"; // Import đã có sẵn
+import { useQueryClient } from "@tanstack/react-query";
+
 // Hàm helper để định dạng ngày tháng
 const formatDate = (dateString) => {
   if (!dateString) return "N/A";
@@ -34,8 +37,24 @@ const formatDate = (dateString) => {
 
 const StudentSubmitAssignmentPage = () => {
   const { courseId, assignmentId } = useParams();
+  const queryClient = useQueryClient();
 
-  // 👉 3. Sử dụng useQuery để lấy chi tiết bài tập (thay thế useEffect cũ)
+  // 👉 FIX: Thêm 2 dòng này để lấy thông tin người dùng từ Redux
+  const currentUser = useSelector((state) => state.user);
+  const userId = currentUser?.userId; // Dùng optional chaining (?) để tránh lỗi nếu user chưa đăng nhập
+
+  // Hàm callback để làm mới dữ liệu sau khi nộp bài thành công
+  const handleSubmissionSuccess = () => {
+    queryClient.invalidateQueries({
+      queryKey: ["assignmentDetails", assignmentId],
+    });
+    // Bạn cũng có thể muốn invalidate query tracking review nếu có
+    queryClient.invalidateQueries({
+      queryKey: ["reviewTracking", assignmentId],
+    });
+    setHasSubmitted(true);
+  };
+
   const {
     data: assignment,
     isLoading,
@@ -43,14 +62,12 @@ const StudentSubmitAssignmentPage = () => {
   } = useQuery({
     queryKey: ["assignmentDetails", assignmentId],
     queryFn: () => assignmentService.getAssignmentDetailsById(assignmentId),
-    enabled: !!assignmentId, // Chỉ chạy khi có assignmentId
+    enabled: !!assignmentId,
   });
 
-  // 👉 4. Sử dụng useQuery để lấy thông tin tracking review
   const { data: reviewTrackingData, isLoading: isLoadingReview } = useQuery({
     queryKey: ["reviewTracking", assignmentId],
     queryFn: () => reviewService.getStudentReviewTracking(assignmentId),
-    // Chỉ chạy query này khi có assignmentId VÀ bài tập này yêu cầu chấm chéo
     enabled: !!assignmentId && !!assignment && assignment.peerWeight > 0,
   });
 
@@ -62,18 +79,25 @@ const StudentSubmitAssignmentPage = () => {
   }
 
   if (isAssignmentError || !assignment) {
-    return <div className="text-center p-8 text-red-500">Không thể tải thông tin bài tập. Vui lòng thử lại.</div>;
+    return (
+      <div className="text-center p-8 text-red-500">
+        Không thể tải thông tin bài tập. Vui lòng thử lại.
+      </div>
+    );
   }
 
   const completedReviews = reviewTrackingData?.data?.completedReviewsCount ?? 0;
-  const requiredReviews = reviewTrackingData?.data?.numPeerReviewsRequired ?? assignment.numPeerReviewsRequired;
-  
-  const reviewDeadline = reviewTrackingData?.data?.reviewDeadline || assignment.reviewDeadline;
-  
+  const requiredReviews =
+    reviewTrackingData?.data?.numPeerReviewsRequired ??
+    assignment.numPeerReviewsRequired;
+
+  const reviewDeadline =
+    reviewTrackingData?.data?.reviewDeadline || assignment.reviewDeadline;
+
   const isReviewOpen = new Date() > new Date(assignment.deadline);
+  
   const getStatusStyle = (daysLeft) => {
     if (daysLeft <= 5) {
-      // Báo đỏ nếu còn 5 ngày hoặc ít hơn
       return {
         card: "bg-red-50 border-red-200",
         badge: "bg-red-100 text-red-700",
@@ -82,7 +106,6 @@ const StudentSubmitAssignmentPage = () => {
       };
     }
     if (daysLeft > 7) {
-      // Báo vàng nếu còn trên 1 tuần
       return {
         card: "bg-yellow-50 border-yellow-200",
         badge: "bg-yellow-100 text-yellow-700",
@@ -90,7 +113,6 @@ const StudentSubmitAssignmentPage = () => {
         icon: <Clock className="w-6 h-6 text-yellow-500" />,
       };
     }
-    // Mặc định cho các trường hợp còn lại (6-7 ngày)
     return {
       card: "bg-blue-50 border-blue-200",
       badge: "bg-blue-100 text-blue-700",
@@ -98,8 +120,6 @@ const StudentSubmitAssignmentPage = () => {
       icon: <Info className="w-6 h-6 text-blue-500" />,
     };
   };
-
- 
 
   const statusStyle = getStatusStyle(assignment.daysUntilDeadline);
 
@@ -207,23 +227,33 @@ const StudentSubmitAssignmentPage = () => {
               Submit and Grading
             </h2>
             <SubmissionGuideCard />
-            <SubmissionCard hasSubmitted={hasSubmitted} />
+
+            {/* Truyền các props mới vào SubmissionCard */}
+            {userId && ( // Chỉ render khi đã có userId
+              <SubmissionCard
+                hasSubmitted={hasSubmitted}
+                assignmentId={assignmentId}
+                userId={userId}
+                onSubmissionSuccess={handleSubmissionSuccess}
+              />
+            )}
             {assignment.peerWeight > 0 && (
-             <>
-              {isLoadingReview ? (
-                <p className="text-center p-4">Đang tải trạng thái chấm chéo...</p>
-              ) : (
-                  <PeerReviewCard 
-                    completed={completedReviews} 
+              <>
+                {isLoadingReview ? (
+                  <p className="text-center p-4">
+                    Đang tải trạng thái chấm chéo...
+                  </p>
+                ) : (
+                  <PeerReviewCard
+                    completed={completedReviews}
                     required={requiredReviews}
-                     reviewDeadline={reviewDeadline}
-                  isReviewOpen={isReviewOpen} 
+                    reviewDeadline={reviewDeadline}
+                    isReviewOpen={isReviewOpen}
                   />
                 )}
               </>
             )}
           </div>
-
         </div>
       </div>
     </div>
