@@ -1,39 +1,10 @@
 import React, { useState } from "react";
-import * as XLSX from "xlsx"; // 👉 Thêm thư viện này để đọc file Excel/CSV (cài bằng: npm install xlsx)
+import * as XLSX from "xlsx";
+import { getUsersByCampus } from "../../service/adminService";
 
 export default function AdminUserManagement() {
-  // Mock data (later will be fetched from API)
-  const [users, setUsers] = useState([
-    {
-      id: 1,
-      role: "student",
-      name: "Nguyen Van A",
-      studentId: "SE12345",
-      major: "Software Engineering",
-      campus: "Hanoi",
-      status: "active",
-      email: "a@student.fpt.edu.vn",
-    },
-    {
-      id: 2,
-      role: "instructor",
-      name: "Tran Thi B",
-      campus: "HCM",
-      status: "active",
-      email: "b@fpt.edu.vn",
-    },
-    {
-      id: 3,
-      role: "student",
-      name: "Le Van C",
-      studentId: "AI67890",
-      major: "AI",
-      campus: "Da Nang",
-      status: "deactive",
-      email: "c@student.fpt.edu.vn",
-    },
-  ]);
-
+  // ✅ Không còn mock data nữa
+  const [users, setUsers] = useState([]);
   const [filters, setFilters] = useState({
     role: "",
     campus: "",
@@ -46,54 +17,116 @@ export default function AdminUserManagement() {
   const isFiltering =
     filters.role || filters.campus || filters.status || filters.search;
 
-  // Apply filters
+  // ✅ Khi chọn Campus → gọi API thật
+  const handleCampusChange = async (e) => {
+    const campusId = e.target.value;
+    setFilters({ ...filters, campus: campusId });
+
+    if (!campusId) {
+      setUsers([]);
+      return;
+    }
+
+    try {
+      const res = await getUsersByCampus(campusId);
+
+      if (!res?.data) {
+        setUsers([]);
+        return;
+      }
+
+      const formattedUsers = res.data.map((u) => ({
+        id: u.id,
+        fullName:
+          u.fullName || `${u.firstName || ""} ${u.lastName || ""}`.trim(),
+        email: u.email || "-",
+
+        // ✅ Nếu roles là mảng [{roleName: ...}] hoặc ["Admin"]
+        roleName: Array.isArray(u.roles)
+          ? u.roles
+            .map((r) =>
+              typeof r === "object"
+                ? r.roleName || r.name || "-"
+                : r.toString()
+            )
+            .join(", ")
+          : u.roleName || u.role || "-",
+
+        // ✅ Nếu campus chỉ là id → map tay thành tên
+        campusName:
+          u.campus?.campusName ||
+          (u.campusId === 1
+            ? "Hồ Chí Minh"
+            : u.campusId === 2
+              ? "Hà Nội"
+              : `Campus ${u.campusId || "-"}`),
+
+        isActive:
+          typeof u.isActive === "boolean"
+            ? u.isActive
+            : u.status?.toLowerCase() === "active",
+      }));
+
+      console.log("✅ Formatted users:", formattedUsers);
+      console.log("📋 Raw users from API:", res.data);
+
+      setUsers(formattedUsers);
+    } catch (error) {
+      console.error("❌ Failed to fetch users:", error);
+      setUsers([]);
+    }
+  };
+
+
+  // ✅ Áp dụng filter như cũ
   const filteredUsers = isFiltering
     ? users.filter((u) => {
-        return (
-          (filters.role ? u.role === filters.role : true) &&
-          (filters.campus ? u.campus === filters.campus : true) &&
-          (filters.status ? u.status === filters.status : true) &&
-          (filters.search
-            ? u.name.toLowerCase().includes(filters.search.toLowerCase()) ||
-              (u.email &&
-                u.email.toLowerCase().includes(filters.search.toLowerCase())) ||
-              (u.studentId &&
-                u.studentId
-                  .toLowerCase()
-                  .includes(filters.search.toLowerCase()))
-            : true)
-        );
-      })
-    : [];
+      return (
+        (filters.role
+          ? u.roleName?.toLowerCase().includes(filters.role.toLowerCase())
+          : true) &&
+        (filters.status
+          ? u.isActive === (filters.status === "active")
+          : true) &&
+        (filters.search
+          ? (u.fullName &&
+            u.fullName
+              .toLowerCase()
+              .includes(filters.search.toLowerCase())) ||
+          (u.email &&
+            u.email.toLowerCase().includes(filters.search.toLowerCase())) ||
+          (u.studentId &&
+            u.studentId
+              .toLowerCase()
+              .includes(filters.search.toLowerCase()))
+          : true)
+      );
+    })
+    : users;
 
-  // 👉 Hàm xử lý import file
+  // 👉 Hàm xử lý import file (giữ nguyên)
   const handleImportFile = (e) => {
     const file = e.target.files[0];
     if (!file) return;
-
     const reader = new FileReader();
     reader.onload = (event) => {
       const data = new Uint8Array(event.target.result);
       const workbook = XLSX.read(data, { type: "array" });
       const sheetName = workbook.SheetNames[0];
       const worksheet = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]);
-
-      // Giả sử file có các cột: name, role, email, campus, status, studentId, major
       const importedUsers = worksheet.map((row, index) => ({
         id: Date.now() + index,
         name: row.name || "",
-        role: row.role?.toLowerCase() || "student",
+        roleName: row.role?.toLowerCase() || "student",
         email: row.email || "",
-        campus: row.campus || "",
-        status: row.status?.toLowerCase() || "active",
+        campusName: row.campus || "",
+        isActive: row.status?.toLowerCase() === "active",
         studentId: row.studentId || "",
         major: row.major || "",
       }));
-
       setUsers((prev) => [...prev, ...importedUsers]);
       alert(`✅ Imported ${importedUsers.length} users successfully`);
     };
-
     reader.readAsArrayBuffer(file);
   };
 
@@ -106,14 +139,11 @@ export default function AdminUserManagement() {
         <select
           className="border rounded p-2"
           value={filters.campus}
-          onChange={(e) =>
-            setFilters({ ...filters, campus: e.target.value })
-          }
+          onChange={handleCampusChange}
         >
           <option value="">Select Campus</option>
-          <option value="Hanoi">Hanoi</option>
-          <option value="HCM">HCM</option>
-          <option value="Da Nang">Da Nang</option>
+          <option value="1">Hồ Chí Minh</option>
+          <option value="2">Hà Nội</option>
         </select>
 
         {filters.campus && (
@@ -168,14 +198,12 @@ export default function AdminUserManagement() {
 
       {/* Table */}
       <div className="bg-white rounded-xl shadow-md overflow-x-auto">
-        {isFiltering ? (
+        {users.length > 0 ? (
           <table className="w-full text-sm">
             <thead className="bg-orange-500 text-white">
               <tr>
                 <th className="p-2 text-left">Name</th>
                 <th className="p-2 text-left">Role</th>
-                <th className="p-2 text-left">Student ID</th>
-                <th className="p-2 text-left">Major</th>
                 <th className="p-2 text-left">Email</th>
                 <th className="p-2 text-left">Campus</th>
                 <th className="p-2 text-left">Status</th>
@@ -192,25 +220,20 @@ export default function AdminUserManagement() {
               ) : (
                 filteredUsers.map((u) => (
                   <tr key={u.id} className="border-b hover:bg-gray-50">
-                    <td className="p-2">{u.name}</td>
-                    <td className="p-2 capitalize">{u.role}</td>
                     <td className="p-2">
-                      {u.role === "student" ? u.studentId : "-"}
+                      {u.fullName || `${u.firstName} ${u.lastName}`}
                     </td>
-                    <td className="p-2">
-                      {u.role === "student" ? u.major : "-"}
-                    </td>
+                    <td className="p-2 capitalize">{u.roleName}</td>
                     <td className="p-2">{u.email}</td>
-                    <td className="p-2">{u.campus}</td>
+                    <td className="p-2">{u.campusName}</td>
                     <td className="p-2">
                       <span
-                        className={`px-2 py-1 rounded text-xs ${
-                          u.status === "active"
-                            ? "bg-green-100 text-green-700"
-                            : "bg-red-100 text-red-700"
-                        }`}
+                        className={`px-2 py-1 rounded text-xs ${u.isActive
+                          ? "bg-green-100 text-green-700"
+                          : "bg-red-100 text-red-700"
+                          }`}
                       >
-                        {u.status}
+                        {u.isActive ? "active" : "deactive"}
                       </span>
                     </td>
                     <td className="p-2">
@@ -228,12 +251,12 @@ export default function AdminUserManagement() {
           </table>
         ) : (
           <p className="p-4 text-gray-500 text-center">
-            Please apply filter or search to display users
+            Please select a campus to view users
           </p>
         )}
       </div>
 
-      {/* Modal Edit */}
+      {/* Modal Edit giữ nguyên */}
       {selectedUser && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-30">
           <div className="bg-white p-6 rounded-xl w-96 space-y-4 shadow-lg">
@@ -241,42 +264,19 @@ export default function AdminUserManagement() {
             <input
               type="text"
               className="border rounded w-full p-2"
-              value={selectedUser.name}
+              value={selectedUser.fullName}
               onChange={(e) =>
-                setSelectedUser({ ...selectedUser, name: e.target.value })
+                setSelectedUser({ ...selectedUser, fullName: e.target.value })
               }
             />
-            {selectedUser.role === "student" && (
-              <>
-                <input
-                  type="text"
-                  className="border rounded w-full p-2"
-                  value={selectedUser.studentId}
-                  onChange={(e) =>
-                    setSelectedUser({
-                      ...selectedUser,
-                      studentId: e.target.value,
-                    })
-                  }
-                />
-                <input
-                  type="text"
-                  className="border rounded w-full p-2"
-                  value={selectedUser.major}
-                  onChange={(e) =>
-                    setSelectedUser({
-                      ...selectedUser,
-                      major: e.target.value,
-                    })
-                  }
-                />
-              </>
-            )}
             <select
               className="border rounded w-full p-2"
-              value={selectedUser.status}
+              value={selectedUser.isActive ? "active" : "deactive"}
               onChange={(e) =>
-                setSelectedUser({ ...selectedUser, status: e.target.value })
+                setSelectedUser({
+                  ...selectedUser,
+                  isActive: e.target.value === "active",
+                })
               }
             >
               <option value="active">Active</option>
