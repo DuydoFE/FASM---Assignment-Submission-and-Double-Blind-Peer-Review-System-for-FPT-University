@@ -56,7 +56,7 @@ const ResubmitModal = ({ isOpen, onClose, onSubmit, initialKeywords, isSubmittin
               <span>{newFile.name}</span>
             </div>
           ) : (
-            <p className="text-gray-500">Kéo thả hoặc nhấn để chọn tệp mới</p>
+            <p className="text-gray-500">Drag and drop or click to select files</p>
           )}
         </div>
 

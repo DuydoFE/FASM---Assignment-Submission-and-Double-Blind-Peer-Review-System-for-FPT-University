@@ -6,41 +6,19 @@ const getSubmissionByUserAndAssignment = async ({ assignmentId, userId }) => {
     const response = await api.get(
       `/StudentReview/assignment/${assignmentId}/user/${userId}`
     );
+    // API trả về thành công (200), nghĩa là có bài nộp. Trả về phần data.
     return response.data.data;
   } catch (error) {
+    // API trả về lỗi, kiểm tra xem có phải lỗi 404 (Không tìm thấy) không.
     if (error.response && error.response.status === 404) {
+      // Đây là trường hợp mong đợi khi user chưa nộp bài.
       return null;
     }
+    // Ném các lỗi khác (500, lỗi mạng,...) để useQuery xử lý.
     throw error;
   }
 };
-const updateSubmission = async (submissionId, updateData) => {
-  const formData = new FormData();
 
-  formData.append("SubmissionId", submissionId);
-
-  if (updateData.file) {
-    formData.append("File", updateData.file);
-  }
-  if (updateData.keywords) {
-    formData.append("Keywords", updateData.keywords);
-  }
-
-
-  try {
-    const response = await api.put("/Submission", formData, {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
-    });
-    return response.data;
-  } catch (error) {
-    console.error("Lỗi khi cập nhật bài nộp:", error.response?.data || error.message);
-    throw error.response?.data || new Error("Lỗi mạng hoặc server không phản hồi");
-  }
-};
-
-export const submissionService = {
-  submitAssignment, 
-  updateSubmission, 
+export const studentReviewService = {
+  getSubmissionByUserAndAssignment,
 };
