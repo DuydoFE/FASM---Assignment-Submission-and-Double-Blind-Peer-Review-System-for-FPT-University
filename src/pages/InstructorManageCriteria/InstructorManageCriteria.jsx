@@ -180,12 +180,12 @@ function InstructorManageCriteria() {
                             <div className="text-sm text-gray-600 mb-1">Total Criteria</div>
                             <div className="text-3xl font-bold text-gray-900">{criteria.length || 0}</div>
                         </div>
-                        <div>
+                        {/* <div>
                             <div className="text-sm text-gray-600 mb-1">Scoring Methods</div>
                             <div className="inline-block mt-2 px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm font-medium">
                                 {criteria.length > 0 && criteria[0].scoringMethod ? criteria[0].scoringMethod : 'Not set'}
                             </div>
-                        </div>
+                        </div> */}
                     </div>
                 </div>
 
@@ -226,6 +226,7 @@ function InstructorManageCriteria() {
                                     </div>
                                     <div className="flex items-center gap-4">
                                         <span className="text-blue-600 font-semibold text-base">Weight: {criterion.weight}%</span>
+                                        <span className="text-blue-600 font-semibold text-base">Max Score: {criterion.maxScore}</span>
                                         <button
                                             onClick={() => handleEditClick(criterion)}
                                             className="text-gray-400 hover:text-gray-600 transition-colors p-1"
