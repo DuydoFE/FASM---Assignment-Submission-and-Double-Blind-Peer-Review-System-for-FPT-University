@@ -5,12 +5,12 @@ import {
   Clock,
   BarChart2,
   Download,
-  CheckCircle, 
-  XCircle, 
-  FilePenLine, 
-  Slash, 
-  Info, 
-  Eye, 
+  CheckCircle,
+  XCircle,
+  FilePenLine,
+  Slash,
+  Info,
+  Eye,
 } from "lucide-react";
 
 import { assignmentService } from "../../service/assignmentService";
@@ -25,7 +25,6 @@ import RubricCard from "../../component/Submission/RubricCard";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSelector } from "react-redux";
 
-
 const formatDate = (dateString) => {
   if (!dateString) return "N/A";
   const options = {
@@ -37,7 +36,6 @@ const formatDate = (dateString) => {
   };
   return new Date(dateString).toLocaleDateString("vi-VN", options);
 };
-
 
 const getAssignmentStyles = (status) => {
   switch (status) {
@@ -104,7 +102,6 @@ const StudentSubmitAssignmentPage = () => {
     });
   };
 
-  
   const {
     data: assignment,
     isLoading: isLoadingAssignment,
@@ -151,7 +148,8 @@ const StudentSubmitAssignmentPage = () => {
     assignment.numPeerReviewsRequired;
   const reviewDeadline =
     reviewTrackingData?.data?.reviewDeadline || assignment.reviewDeadline;
-  const isReviewOpen = new Date() > new Date(assignment.deadline);
+  
+  const isReviewOpen = reviewTrackingData?.data?.status === 'InReview';
 
   return (
     <div className="bg-gray-100 min-h-screen p-8">
