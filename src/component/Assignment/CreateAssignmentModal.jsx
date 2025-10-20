@@ -107,22 +107,36 @@ const CreateAssignmentModal = ({ isOpen, onClose, onSubmit, courseInstanceId }) 
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     
     if (!validateForm()) {
       return;
     }
 
-    const submitData = {
-      ...formData,
-      startDate: formData.startDate ? new Date(formData.startDate).toISOString() : null,
-      deadline: new Date(formData.deadline).toISOString(),
-      reviewDeadline: new Date(formData.reviewDeadline).toISOString(),
-      finalDeadline: new Date(formData.finalDeadline).toISOString()
-    };
+    try {
+      const submitData = {
+        ...formData,
+        courseInstanceId: parseInt(courseInstanceId),
+        rubricId: parseInt(formData.rubricId),
+        numPeerReviewsRequired: parseInt(formData.numPeerReviewsRequired),
+        weight: parseInt(formData.weight),
+        instructorWeight: parseInt(formData.instructorWeight),
+        peerWeight: parseInt(formData.peerWeight),
+        startDate: formData.startDate ? new Date(formData.startDate).toISOString() : null,
+        deadline: new Date(formData.deadline).toISOString(),
+        reviewDeadline: new Date(formData.reviewDeadline).toISOString(),
+        finalDeadline: new Date(formData.finalDeadline).toISOString()
+      };
 
-    onSubmit(submitData);
+      await onSubmit(submitData);
+      toast.success('Assignment created successfully');
+      onClose();
+    } catch (error) {
+      console.error('Error creating assignment:', error);
+      toast.error('Failed to create assignment. Please try again.');
+    }
+      onClose();
   };
 
   if (!isOpen) return null;

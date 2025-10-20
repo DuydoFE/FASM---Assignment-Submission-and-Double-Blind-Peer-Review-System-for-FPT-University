@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Plus, FileText, Clock, Lock, Calendar, X, Trash2, ChevronDown } from 'lucide-react';
 import { toast } from "react-toastify";
 import { useParams } from 'react-router-dom';
-import { getAssignmentsByCourseInstanceId, assignmentService } from '../../service/assignmentService';
+import { getAssignmentsByCourseInstanceId, createAssignment } from '../../service/assignmentService';
 import CreateAssignmentModal from '../../component/Assignment/CreateAssignmentModal';
 const InstructorManageAssignment = () => {
   const { id: courseInstanceId } = useParams();
@@ -15,41 +15,41 @@ const InstructorManageAssignment = () => {
   const [newTime, setNewTime] = useState('');
   const [showModal, setShowModal] = useState(false);
 
+  const fetchAssignments = async () => {
+    try {
+      setLoading(true);
+      const response = await getAssignmentsByCourseInstanceId(courseInstanceId);
+
+      // Map the API response to match our UI structure
+      const mappedAssignments = response.map(assignment => ({
+        id: assignment.assignmentId,
+        title: assignment.title,
+        description: assignment.description,
+        guidelines: assignment.guidelines,
+        deadline: new Date(assignment.deadline).toLocaleDateString(),
+        time: new Date(assignment.deadline).toLocaleTimeString(),
+        weight: assignment.weight || 0,
+        submitted: assignment.reviewCount,
+        total: assignment.submissionCount,
+        courseCode: assignment.courseCode,
+        sectionCode: assignment.sectionCode,
+        status: new Date(assignment.deadline) > new Date() ? "Open" : "Closed",
+        statusColor: new Date(assignment.deadline) > new Date()
+          ? "bg-green-100 text-green-800"
+          : "bg-red-100 text-red-800"
+      }));
+
+      setAssignments(mappedAssignments);
+    } catch (error) {
+      console.error("Failed to fetch assignments:", error);
+      toast.error('Failed to load assignments');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Fetch assignments when component mounts
   useEffect(() => {
-    const fetchAssignments = async () => {
-      try {
-        setLoading(true);
-        const response = await getAssignmentsByCourseInstanceId(courseInstanceId);
-
-        // Map the API response to match our UI structure
-        const mappedAssignments = response.map(assignment => ({
-          id: assignment.assignmentId,
-          title: assignment.title,
-          description: assignment.description,
-          guidelines: assignment.guidelines,
-          deadline: new Date(assignment.deadline).toLocaleDateString(),
-          time: new Date(assignment.deadline).toLocaleTimeString(),
-          weight: assignment.weight || 0,
-          submitted: assignment.reviewCount,
-          total: assignment.submissionCount,
-          courseCode: assignment.courseCode,
-          sectionCode: assignment.sectionCode,
-          status: new Date(assignment.deadline) > new Date() ? "Open" : "Closed",
-          statusColor: new Date(assignment.deadline) > new Date()
-            ? "bg-green-100 text-green-800"
-            : "bg-red-100 text-red-800"
-        }));
-
-        setAssignments(mappedAssignments);
-      } catch (error) {
-        console.error("Failed to fetch assignments:", error);
-        // You might want to show an error message to the user
-      } finally {
-        setLoading(false);
-      }
-    };
-
     if (courseInstanceId) {
       fetchAssignments();
     }
@@ -124,11 +124,22 @@ const InstructorManageAssignment = () => {
     setNewTime('');
   };
 
-  const handleCreateAssignment = (assignmentData) => {
-    console.log('Creating assignment with data:', assignmentData);
-    // Here you would call your API service to create the assignment
-    // await assignmentService.createAssignment(assignmentData);
-    setShowModal(false);
+  const handleCreateAssignment = async (assignmentData) => {
+    try {
+      // Call API to create assignment
+      const response = await createAssignment(assignmentData);
+      if (response?.data) {
+        toast.success('Assignment created successfully!');
+        setShowModal(false);
+        // Refresh assignments list
+        await fetchAssignments();
+      } else {
+        throw new Error('Failed to create assignment');
+      }
+    } catch (error) {
+      console.error('Failed to create assignment:', error);
+      toast.error(error.response?.data?.message || 'Failed to create assignment. Please try again.');
+    }
   };
 
   const filteredAssignments = statusFilter === 'All'
