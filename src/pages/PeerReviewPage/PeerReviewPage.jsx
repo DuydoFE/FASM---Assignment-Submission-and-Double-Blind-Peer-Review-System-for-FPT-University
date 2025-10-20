@@ -15,7 +15,7 @@ import { reviewService } from "../../service/reviewService";
 import CriterionForm from "../../component/Review/CriterionForm";
 import AiAssistantCard from "../../component/Review/AiAssistantCard";
 import { getCurrentAccount } from "../../utils/accountUtils";
-import { toast } from 'react-toastify';
+import { toast } from "react-toastify";
 
 const PeerReviewPage = () => {
   const { courseId, assignmentId } = useParams();
@@ -45,7 +45,8 @@ const PeerReviewPage = () => {
             (acc, criterion) => {
               acc[criterion.criteriaId] = null;
               return acc;
-            }, {}
+            },
+            {}
           );
           setScores(initialScores);
         } else {
@@ -67,7 +68,9 @@ const PeerReviewPage = () => {
       return;
     }
     let newScore = parseInt(value, 10);
-    const maxScore = reviewData.rubric.criteria.find(c => c.criteriaId === criteriaId)?.maxScore;
+    const maxScore = reviewData.rubric.criteria.find(
+      (c) => c.criteriaId === criteriaId
+    )?.maxScore;
     if (!isNaN(newScore) && maxScore !== undefined) {
       newScore = Math.max(0, Math.min(newScore, maxScore));
       setScores((prevScores) => ({ ...prevScores, [criteriaId]: newScore }));
@@ -79,14 +82,17 @@ const PeerReviewPage = () => {
     if (!criteria || Object.keys(scores).length === 0) return 0;
     const total = criteria.reduce((acc, criterion) => {
       const score = scores[criterion.criteriaId] || 0;
-      const weightedScore = (score / criterion.maxScore) * (criterion.weight / 100);
+      const weightedScore =
+        (score / criterion.maxScore) * (criterion.weight / 100);
       return acc + weightedScore;
     }, 0);
     return Math.round(total * 100);
   }, [scores, reviewData]);
 
   const handleSubmitReview = async () => {
-    const isAllScoresFilled = Object.values(scores).every(score => score !== null);
+    const isAllScoresFilled = Object.values(scores).every(
+      (score) => score !== null
+    );
     if (!isAllScoresFilled) {
       const errorMessage = "Vui lòng nhập điểm cho tất cả các tiêu chí.";
       setValidationError(errorMessage);
@@ -100,11 +106,11 @@ const PeerReviewPage = () => {
         reviewAssignmentId: reviewData.reviewAssignmentId,
         reviewerUserId: user?.userId,
         generalFeedback: comment,
-        criteriaFeedbacks: reviewData.rubric.criteria.map(c => ({
+        criteriaFeedbacks: reviewData.rubric.criteria.map((c) => ({
           criteriaId: c.criteriaId,
           score: scores[c.criteriaId] || 0,
-          feedback: ""
-        }))
+          feedback: "",
+        })),
       };
       await reviewService.submitPeerReview(payload);
       const totalScoreValue = reviewData.rubric.criteria.reduce((acc, c) => {
@@ -130,8 +136,12 @@ const PeerReviewPage = () => {
     }
   };
 
-  if (isLoading) return <div className="p-8 text-center text-xl">Đang tìm bài làm để chấm...</div>;
-  if (error) return <div className="p-8 text-center text-red-500 text-xl">{error}</div>;
+  if (isLoading)
+    return (
+      <div className="p-8 text-center text-xl">Đang tìm bài làm để chấm...</div>
+    );
+  if (error)
+    return <div className="p-8 text-center text-red-500 text-xl">{error}</div>;
 
   return (
     <div className="bg-gray-50 min-h-screen p-8">
@@ -139,7 +149,10 @@ const PeerReviewPage = () => {
         {/* Header */}
         <div className="mb-6">
           <div className="flex items-center text-sm text-gray-600 mb-4">
-            <Link to={`/assignment/${courseId}/${assignmentId}`} className="hover:underline">
+            <Link
+              to={`/assignment/${courseId}/${assignmentId}`}
+              className="hover:underline"
+            >
               Dashboard
             </Link>
             <ChevronRight className="w-4 h-4 mx-1" />
@@ -179,7 +192,8 @@ const PeerReviewPage = () => {
                   </div>
                   <div>
                     <p className="font-semibold">
-                      Assigment - {reviewData.studentName ?? "Sinh viên không xác định"}
+                      Assigment -{" "}
+                      {reviewData.studentName ?? "Sinh viên không xác định"}
                     </p>
                     <p className="text-sm text-gray-500">
                       Subimitted: (4h) • ID bài làm: {reviewData.submissionId}
@@ -195,7 +209,9 @@ const PeerReviewPage = () => {
                   <p className="font-semibold mr-4 truncate">
                     {reviewData.fileName ?? "submission.pdf"}
                   </p>
-                  <span className="text-gray-500 flex-shrink-0">2.3 MB • 4 trang</span>
+                  <span className="text-gray-500 flex-shrink-0">
+                    2.3 MB • 4 trang
+                  </span>
                   <div className="ml-auto flex space-x-2">
                     <a
                       href={reviewData.fileUrl}
@@ -244,7 +260,9 @@ const PeerReviewPage = () => {
                   criterion={criterion}
                   score={scores[criterion.criteriaId]}
                   onScoreChange={handleScoreChange}
-                  hasError={validationError && scores[criterion.criteriaId] === null}
+                  hasError={
+                    validationError && scores[criterion.criteriaId] === null
+                  }
                 />
               ))}
             </div>
@@ -282,8 +300,8 @@ const PeerReviewPage = () => {
             </div>
           </div>
 
-          <div className="lg:col-span-1">
-            <AiAssistantCard />
+         <div className="lg:col-span-1">
+            <AiAssistantCard submissionId={reviewData?.submissionId} />
           </div>
         </div>
       </div>
