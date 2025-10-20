@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, FileText, Clock, Lock, Calendar, X, Trash2, ChevronDown } from 'lucide-react';
 import { toast } from "react-toastify";
-
 import { useParams } from 'react-router-dom';
 import { getAssignmentsByCourseInstanceId, assignmentService } from '../../service/assignmentService';
+import CreateAssignmentModal from '../../component/Assignment/CreateAssignmentModal';
 const InstructorManageAssignment = () => {
   const { id: courseInstanceId } = useParams();
   const [statusFilter, setStatusFilter] = useState('All');
@@ -13,6 +13,7 @@ const InstructorManageAssignment = () => {
   const [selectedAssignment, setSelectedAssignment] = useState(null);
   const [newDeadline, setNewDeadline] = useState('');
   const [newTime, setNewTime] = useState('');
+  const [showModal, setShowModal] = useState(false);
 
   // Fetch assignments when component mounts
   useEffect(() => {
@@ -123,6 +124,13 @@ const InstructorManageAssignment = () => {
     setNewTime('');
   };
 
+  const handleCreateAssignment = (assignmentData) => {
+    console.log('Creating assignment with data:', assignmentData);
+    // Here you would call your API service to create the assignment
+    // await assignmentService.createAssignment(assignmentData);
+    setShowModal(false);
+  };
+
   const filteredAssignments = statusFilter === 'All'
     ? assignments
     : assignments.filter(a => a.status === statusFilter);
@@ -163,6 +171,7 @@ const InstructorManageAssignment = () => {
           </div>
         </div>
         <button
+          onClick={() => setShowModal(true)}
           className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-lg flex items-center space-x-2 font-medium transition-colors"
         >
           <Plus className="w-5 h-5" />
@@ -356,6 +365,12 @@ const InstructorManageAssignment = () => {
           </div>
         </div>
       )}
+      <CreateAssignmentModal
+        isOpen={showModal}
+        onClose={() => setShowModal(false)}
+        onSubmit={handleCreateAssignment}
+        courseInstanceId={1}
+      />
     </div>
   );
 };
