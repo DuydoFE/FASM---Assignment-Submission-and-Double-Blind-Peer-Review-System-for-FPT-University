@@ -4,6 +4,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { getCriteriaByRubricId, deleteCriterion, createCriterion, updateCriterion } from '../../service/criteriaService';
 import AddCriterionModal from '../../component/Criteria/AddCriterionModal';
 import EditCriterionModal from '../../component/Criteria/EditCriterionModal';
+import DeleteCriterionModal from '../../component/Criteria/DeleteCriterionModal';
 import { toast } from 'react-toastify';
 
 function InstructorManageCriteria() {
@@ -274,40 +275,7 @@ function InstructorManageCriteria() {
                 )}
             </div>
 
-            {/* Delete Confirmation Modal */}
-            {deleteConfirm.show && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                    <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-                        <h3 className="text-lg font-semibold text-gray-900 mb-2">Delete Criterion</h3>
-                        <p className="text-gray-600 mb-6">
-                            Are you sure you want to delete <span className="font-medium">{deleteConfirm.criterionTitle}</span> criterion?
-                        </p>
-                        <div className="flex gap-3 justify-end">
-                            <button
-                                onClick={handleDeleteCancel}
-                                disabled={deleting}
-                                className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-50"
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                onClick={handleDeleteConfirm}
-                                disabled={deleting}
-                                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 flex items-center gap-2"
-                            >
-                                {deleting ? (
-                                    <>
-                                        <Loader className="w-4 h-4 animate-spin" />
-                                        Deleting...
-                                    </>
-                                ) : (
-                                    'Delete'
-                                )}
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
+
 
             {/* Add Criterion Modal */}
             <AddCriterionModal
@@ -326,6 +294,13 @@ function InstructorManageCriteria() {
                 onSubmit={handleUpdateCriterion}
                 criterion={editingCriterion}
                 isSubmitting={submitting}
+            />
+            <DeleteCriterionModal
+                isOpen={deleteConfirm.show}
+                onClose={handleDeleteCancel}
+                onConfirm={handleDeleteConfirm}
+                criterionTitle={deleteConfirm.criterionTitle}
+                isDeleting={deleting}
             />
         </div>
     );
