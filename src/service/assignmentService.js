@@ -61,6 +61,26 @@ const extendDeadline = async (assignmentId, newDeadline) => {
   }
 };
 
+export const createAssignment = async (assignmentData) => {
+  try {
+    const response = await api.post('/Assignment', assignmentData);
+    return response.data;
+  } catch (error) {
+    console.error('Lỗi khi tạo assignment mới:', error);
+    throw error;
+  }
+};
+
+
+export const deleteAssignment = async (assignmentId) => {
+  try {
+    const response = await api.delete(`/Assignment/${assignmentId}`);
+    return response.data;
+  } catch (error) {
+    console.error(`Lỗi khi xóa assignment ID ${assignmentId}:`, error);
+    throw error;
+  }
+};
 
 // Export service
 export const assignmentService = {
@@ -68,5 +88,7 @@ export const assignmentService = {
   getAssignmentDetailsById,
   getAssignmentRubric,
   getStudentAssignments,
-  extendDeadline
+  extendDeadline,
+  createAssignment,
+  deleteAssignment
 };
