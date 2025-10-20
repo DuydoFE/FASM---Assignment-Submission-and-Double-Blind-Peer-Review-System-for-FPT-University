@@ -33,7 +33,7 @@ const SubmissionCard = ({
   // Hàm xử lý nộp bài LẦN ĐẦU (POST)
   const handleCreate = async () => {
     if (!selectedFile) {
-      toast.warn("Vui lòng chọn một tệp để nộp.");
+      toast.warn("Please select a file to submit.");
       return;
     }
     setIsSubmitting(true);
@@ -46,13 +46,13 @@ const SubmissionCard = ({
       };
       const result = await submissionService.submitAssignment(submissionData);
       if (result.statusCode === 201 || result.statusCode === 200) {
-        toast.success(result.message || "Nộp bài thành công!");
+        toast.success(result.message || "Submission successful!");
         onSubmissionSuccess();
       } else {
-        toast.error(result.message || "Có lỗi xảy ra.");
+        toast.error(result.message || "An error occurred.");
       }
     } catch (error) {
-      toast.error(error.message || "Không thể kết nối tới máy chủ.");
+      toast.error(error.message || "Unable to connect to server.");
     } finally {
       setIsSubmitting(false);
     }
@@ -67,14 +67,14 @@ const SubmissionCard = ({
         updateData
       );
       if (result.statusCode === 200) {
-        toast.success(result.message || "Cập nhật bài nộp thành công!");
+        toast.success(result.message || "Update submission successful!");
         setModalOpen(false); // Đóng modal
         onSubmissionSuccess(); // Làm mới dữ liệu
       } else {
-        toast.error(result.message || "Cập nhật thất bại.");
+        toast.error(result.message || "Update failed.");
       }
     } catch (error) {
-      toast.error(error.message || "Không thể kết nối tới máy chủ.");
+      toast.error(error.message || "Unable to connect to server.");
     } finally {
       setIsSubmitting(false);
     }
@@ -90,7 +90,7 @@ const SubmissionCard = ({
             <h3 className="text-lg font-bold text-green-800">Submitted</h3>
           </div>
           <p className="text-sm text-gray-600 mb-4">
-            Bạn đã nộp bài. Bạn có thể nộp lại để cập nhật.
+            You have submitted your work. You can resubmit to update it.
           </p>
 
           <div className="bg-white p-4 rounded-md space-y-3 border">
@@ -163,7 +163,7 @@ const SubmissionCard = ({
         <h3 className="text-lg font-bold text-gray-800">Submit</h3>
       </div>
       <p className="text-sm text-gray-600 mb-4">
-        Tải lên bài làm của bạn. Hỗ trợ PDF, DOC, ZIP (tối đa 50MB).
+        Upload your work. Supports PDF, DOC, ZIP (up to 25MB).
       </p>
 
       <div

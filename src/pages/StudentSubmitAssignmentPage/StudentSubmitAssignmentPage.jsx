@@ -5,21 +5,18 @@ import {
   Clock,
   BarChart2,
   Download,
-  // Thêm các icon mới để đồng bộ với AssignmentCard
-  CheckCircle, // Xanh lá
-  XCircle, // Đỏ
-  FilePenLine, // Không màu (Draft)
-  Slash, // Không màu (Cancelled)
-  Info, // Xanh dương (Upcoming)
-  Eye, // Vàng (InReview)
+  CheckCircle, 
+  XCircle, 
+  FilePenLine, 
+  Slash, 
+  Info, 
+  Eye, 
 } from "lucide-react";
 
-// Import service
 import { assignmentService } from "../../service/assignmentService";
 import { reviewService } from "../../service/reviewService";
 import { studentReviewService } from "../../service/studentReviewService";
 
-// Import các component con
 import SubmissionGuideCard from "../../component/Submission/SubmissionGuideCard";
 import SubmissionCard from "../../component/Submission/SubmissionCard";
 import PeerReviewCard from "../../component/Submission/PeerReviewCard";
@@ -28,7 +25,7 @@ import RubricCard from "../../component/Submission/RubricCard";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSelector } from "react-redux";
 
-// Hàm helper để định dạng ngày tháng (giữ nguyên)
+
 const formatDate = (dateString) => {
   if (!dateString) return "N/A";
   const options = {
@@ -41,8 +38,7 @@ const formatDate = (dateString) => {
   return new Date(dateString).toLocaleDateString("vi-VN", options);
 };
 
-// --- HÀM HELPER MỚI ---
-// Quyết định style dựa trên chuỗi `status` từ API (đồng bộ với AssignmentCard)
+
 const getAssignmentStyles = (status) => {
   switch (status) {
     case "Active":
@@ -108,7 +104,7 @@ const StudentSubmitAssignmentPage = () => {
     });
   };
 
-  // Sử dụng `getAssignmentDetailsById` để lấy thông tin chi tiết, bao gồm cả 'status'
+  
   const {
     data: assignment,
     isLoading: isLoadingAssignment,
@@ -136,18 +132,17 @@ const StudentSubmitAssignmentPage = () => {
   });
 
   if (isLoadingAssignment || isLoadingSubmission) {
-    return <div className="text-center p-8">Đang tải dữ liệu...</div>;
+    return <div className="text-center p-8">Loading data...</div>;
   }
 
   if (isAssignmentError || !assignment) {
     return (
       <div className="text-center p-8 text-red-500">
-        Không thể tải thông tin bài tập. Vui lòng thử lại.
+        The assignment information could not be loaded. Please try again.
       </div>
     );
   }
 
-  // Lấy style dựa trên status từ API
   const statusStyle = getAssignmentStyles(assignment.status);
 
   const completedReviews = reviewTrackingData?.data?.completedReviewsCount ?? 0;

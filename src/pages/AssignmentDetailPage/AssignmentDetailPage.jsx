@@ -59,13 +59,13 @@ const AssignmentDetailPage = () => {
   };
 
   if (isLoading) {
-    return <div className="text-center p-8">Đang tải dữ liệu lớp học...</div>;
+    return <div className="text-center p-8">Loading class data...</div>;
   }
 
   if (isError) {
     return (
       <div className="text-center p-8 text-red-500">
-        Không thể tải được danh sách bài tập.
+        The exercise list could not be loaded.
       </div>
     );
   }
@@ -99,17 +99,17 @@ const AssignmentDetailPage = () => {
                 <div className="flex items-center text-gray-500 mt-2 space-x-2">
                   <span>{courseInfo.subject}</span>
                   <span>•</span>
-                  <span>Giảng viên: {courseInfo.instructor}</span>
+                  <span>Intructor: {courseInfo.instructor}</span>
                   <span>•</span>
                   <div className="flex items-center">
                     <Clock size={14} className="mr-1" />
-                    <span>Năm học: {courseInfo.year}</span>
+                    <span>Years: {courseInfo.year}</span>
                   </div>
                 </div>
               </div>
               <div className="flex items-center px-3 py-1 text-sm font-semibold bg-green-100 text-green-700 rounded-full">
                 <CheckCircle size={14} className="mr-1.5" />
-                Đã tham gia
+                Participated
               </div>
             </div>
           </div>
@@ -151,13 +151,13 @@ const AssignmentDetailPage = () => {
                 htmlFor="status-filter"
                 className="text-sm font-medium text-gray-700 mr-2"
               >
-                Trạng thái:
+                Status:
               </label>
               <select
                 id="status-filter"
                 className="p-2 border border-gray-300 rounded-md"
               >
-                <option>Tất cả</option>
+                <option>All</option>
                 <option>Đang mở</option>
                 <option>Sắp hết hạn</option>
               </select>
