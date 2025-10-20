@@ -19,7 +19,7 @@ import PeerReviewCard from "../../component/Submission/PeerReviewCard";
 import RubricCard from "../../component/Submission/RubricCard";
 import { studentReviewService } from "../../service/studentReviewService";
 import { useQuery } from "@tanstack/react-query";
-import { useSelector } from "react-redux"; 
+import { useSelector } from "react-redux";
 import { useQueryClient } from "@tanstack/react-query";
 
 // Hàm helper để định dạng ngày tháng
@@ -40,27 +40,28 @@ const StudentSubmitAssignmentPage = () => {
   const queryClient = useQueryClient();
   const currentUser = useSelector((state) => state.user);
   const userId = currentUser?.userId;
+
+  const [hasSubmitted, setHasSubmitted] = useState(true); // Tạm thời
+
   const handleSubmissionSuccess = () => {
-    queryClient.invalidateQueries({
-      queryKey: ["assignmentDetails", assignmentId],
-    });
-  
-    queryClient.invalidateQueries({
-      queryKey: ["reviewTracking", assignmentId],
-    });
+    // Invalidate tất cả các query liên quan để làm mới dữ liệu
+    queryClient.invalidateQueries({ queryKey: ["assignmentDetails", assignmentId] });
+    queryClient.invalidateQueries({ queryKey: ["submissionStatus", assignmentId, userId] });
+    queryClient.invalidateQueries({ queryKey: ["reviewTracking", assignmentId] });
     setHasSubmitted(true);
   };
 
   const {
     data: assignment,
-    isLoading: isLoadingAssignment, 
+    isLoading: isLoadingAssignment,
+    isError: isAssignmentError, // <-- FIX 1: Thêm isError và đổi tên nó thành isAssignmentError
   } = useQuery({
     queryKey: ["assignmentDetails", assignmentId],
     queryFn: () => assignmentService.getAssignmentDetailsById(assignmentId),
     enabled: !!assignmentId,
   });
 
-   const { data: submission, isLoading: isLoadingSubmission } = useQuery({
+  const { data: submission, isLoading: isLoadingSubmission } = useQuery({
     queryKey: ["submissionStatus", assignmentId, userId],
     queryFn: () =>
       studentReviewService.getSubmissionByUserAndAssignment({
@@ -70,8 +71,13 @@ const StudentSubmitAssignmentPage = () => {
     enabled: !!assignmentId && !!userId,
   });
 
-  // Trạng thái nộp bài vẫn tạm thời giả lập
-  const [hasSubmitted, setHasSubmitted] = useState(true);
+  // <-- FIX 2: Thêm lại query bị thiếu cho reviewTrackingData
+  const { data: reviewTrackingData, isLoading: isLoadingReview } = useQuery({
+    queryKey: ["reviewTracking", assignmentId],
+    queryFn: () => reviewService.getStudentReviewTracking(assignmentId),
+    enabled: !!assignmentId && !!assignment && assignment.peerWeight > 0,
+  });
+
 
   if (isLoadingAssignment || isLoadingSubmission) {
     return <div className="text-center p-8">Đang tải dữ liệu...</div>;
@@ -94,6 +100,7 @@ const StudentSubmitAssignmentPage = () => {
     reviewTrackingData?.data?.reviewDeadline || assignment.reviewDeadline;
 
   const isReviewOpen = new Date() > new Date(assignment.deadline);
+
   
   const getStatusStyle = (daysLeft) => {
     if (daysLeft <= 5) {
