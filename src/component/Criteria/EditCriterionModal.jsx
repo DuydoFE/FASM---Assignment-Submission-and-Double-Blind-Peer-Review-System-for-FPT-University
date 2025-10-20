@@ -1,17 +1,28 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X, Loader } from 'lucide-react';
 
-const AddCriterionModal = ({ isOpen, onClose, onSubmit, rubricId, isSubmitting }) => {
+const EditCriterionModal = ({ isOpen, onClose, onSubmit, criterion, isSubmitting }) => {
     const [formData, setFormData] = useState({
         title: '',
         description: '',
         weight: '',
-        maxScore: '',
-        scoringType: 'Scale',
-        scoreLabel: '0-10'
+        maxScore: ''
     });
 
     const [errors, setErrors] = useState({});
+
+    // Load criterion data when modal opens
+    useEffect(() => {
+        if (isOpen && criterion) {
+            setFormData({
+                title: criterion.title || '',
+                description: criterion.description || '',
+                weight: criterion.weight || '',
+                maxScore: criterion.maxScore || ''
+            });
+            setErrors({});
+        }
+    }, [isOpen, criterion]);
 
     const validateForm = () => {
         const newErrors = {};
@@ -32,34 +43,25 @@ const AddCriterionModal = ({ isOpen, onClose, onSubmit, rubricId, isSubmitting }
         return Object.keys(newErrors).length === 0;
     };
 
-    const resetForm = () => {
-        setFormData({
-            title: '',
-            description: '',
-            weight: '',
-            maxScore: '',
-            scoringType: 'Scale',
-            scoreLabel: '0-10'
-        });
-        setErrors({});
-    };
-
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (!validateForm()) return;
 
         const criterionData = {
-            ...formData,
-            rubricId: parseInt(rubricId),
+            criteriaId: criterion.criteriaId,
+            rubricId: criterion.rubricId,
+            title: formData.title,
+            description: formData.description,
             weight: parseInt(formData.weight),
-            maxScore: parseInt(formData.maxScore)
+            maxScore: parseInt(formData.maxScore),
+            scoringType: 'Scale',
+            scoreLabel: '0-10'
         };
 
         try {
             await onSubmit(criterionData);
-            resetForm();
         } catch (error) {
-            console.error('Error submitting criterion:', error);
+            console.error('Error updating criterion:', error);
         }
     };
 
@@ -69,16 +71,21 @@ const AddCriterionModal = ({ isOpen, onClose, onSubmit, rubricId, isSubmitting }
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
             <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full mx-4 overflow-hidden">
                 {/* Header */}
-                <div className="bg-white px-6 py-5">
+                <div className="bg-orange-500 px-6 py-5">
                     <div className="flex justify-between items-center">
-                        <h2 className="text-2xl font-bold text-black">Add New Criterion</h2>
-                        
+                        <h2 className="text-2xl font-bold text-white">Edit Criterion</h2>
+                        <button
+                            onClick={onClose}
+                            className="text-white/80 hover:text-white hover:bg-white/20 transition-all rounded-lg p-1.5"
+                            disabled={isSubmitting}
+                        >
+                            <X size={22} />
+                        </button>
                     </div>
                 </div>
 
-
                 {/* Form */}
-                <form onSubmit={handleSubmit} className="p-6">
+                <div className="p-6">
                     <div className="space-y-5">
                         {/* Title */}
                         <div>
@@ -89,10 +96,11 @@ const AddCriterionModal = ({ isOpen, onClose, onSubmit, rubricId, isSubmitting }
                                 type="text"
                                 value={formData.title}
                                 onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                                className={`w-full px-4 py-2.5 border-2 ${errors.title
-                                        ? 'border-red-400 bg-red-50'
+                                className={`w-full px-4 py-2.5 border-2 ${
+                                    errors.title 
+                                        ? 'border-red-400 bg-red-50' 
                                         : 'border-gray-200 hover:border-gray-300'
-                                    } rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all`}
+                                } rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all`}
                                 placeholder="e.g., Code Quality"
                                 disabled={isSubmitting}
                             />
@@ -130,10 +138,11 @@ const AddCriterionModal = ({ isOpen, onClose, onSubmit, rubricId, isSubmitting }
                                     type="number"
                                     value={formData.weight}
                                     onChange={(e) => setFormData({ ...formData, weight: e.target.value })}
-                                    className={`w-full px-4 py-2.5 border-2 ${errors.weight
-                                            ? 'border-red-400 bg-red-50'
+                                    className={`w-full px-4 py-2.5 border-2 ${
+                                        errors.weight 
+                                            ? 'border-red-400 bg-red-50' 
                                             : 'border-gray-200 hover:border-gray-300'
-                                        } rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all`}
+                                    } rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all`}
                                     placeholder="0-100"
                                     min="0"
                                     max="100"
@@ -156,10 +165,11 @@ const AddCriterionModal = ({ isOpen, onClose, onSubmit, rubricId, isSubmitting }
                                     type="number"
                                     value={formData.maxScore}
                                     onChange={(e) => setFormData({ ...formData, maxScore: e.target.value })}
-                                    className={`w-full px-4 py-2.5 border-2 ${errors.maxScore
-                                            ? 'border-red-400 bg-red-50'
+                                    className={`w-full px-4 py-2.5 border-2 ${
+                                        errors.maxScore 
+                                            ? 'border-red-400 bg-red-50' 
                                             : 'border-gray-200 hover:border-gray-300'
-                                        } rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all`}
+                                    } rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all`}
                                     placeholder="Points"
                                     min="0"
                                     disabled={isSubmitting}
@@ -185,24 +195,25 @@ const AddCriterionModal = ({ isOpen, onClose, onSubmit, rubricId, isSubmitting }
                             Cancel
                         </button>
                         <button
-                            type="submit"
+                            type="button"
+                            onClick={handleSubmit}
                             disabled={isSubmitting}
                             className="px-5 py-2.5 text-sm font-semibold text-white bg-orange-500 hover:bg-orange-600 rounded-lg transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 flex items-center gap-2 shadow-lg hover:shadow-xl disabled:opacity-60 disabled:cursor-not-allowed"
                         >
                             {isSubmitting ? (
                                 <>
                                     <Loader className="w-4 h-4 animate-spin" />
-                                    Creating...
+                                    Updating...
                                 </>
                             ) : (
-                                'Create Criterion'
+                                'Update Criterion'
                             )}
                         </button>
                     </div>
-                </form>
+                </div>
             </div>
         </div>
     );
 };
 
-export default AddCriterionModal;
+export default EditCriterionModal;

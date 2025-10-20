@@ -38,8 +38,28 @@ export const createCriterion = async (criterionData) => {
     }
 };
 
+export const updateCriterion = async (criteriaId, criterionData) => {
+    try {
+        const response = await api.put(`/Criteria`, {
+            criteriaId: criteriaId,
+            rubricId: criterionData.rubricId,
+            title: criterionData.title,
+            description: criterionData.description,
+            weight: criterionData.weight,
+            maxScore: criterionData.maxScore,
+            scoringType: criterionData.scoringType,
+            scoreLabel: criterionData.scoreLabel
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error updating criterion:', error);
+        throw error;
+    }
+};
+
 export const criteriaService = {
     getCriteriaByRubricId,
     deleteCriterion,
-    createCriterion
+    createCriterion,
+    updateCriterion
 };

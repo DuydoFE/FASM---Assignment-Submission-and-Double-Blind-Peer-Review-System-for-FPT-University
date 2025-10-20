@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Pencil, Trash2, Plus, Loader, ArrowLeft } from 'lucide-react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getCriteriaByRubricId, deleteCriterion, createCriterion } from '../../service/criteriaService';
+import { getCriteriaByRubricId, deleteCriterion, createCriterion, updateCriterion } from '../../service/criteriaService';
 import AddCriterionModal from '../../component/Criteria/AddCriterionModal';
+import EditCriterionModal from '../../component/Criteria/EditCriterionModal';
 import { toast } from 'react-toastify';
 
 function InstructorManageCriteria() {
@@ -15,6 +16,8 @@ function InstructorManageCriteria() {
     const [deleting, setDeleting] = useState(false);
     const [showAddModal, setShowAddModal] = useState(false);
     const [submitting, setSubmitting] = useState(false);
+    const [showEditModal, setShowEditModal] = useState(false);
+    const [editingCriterion, setEditingCriterion] = useState(null);
 
     useEffect(() => {
         const fetchCriteria = async () => {
@@ -82,10 +85,8 @@ function InstructorManageCriteria() {
     const handleAddCriterion = async (criterionData) => {
         try {
             setSubmitting(true);
-            // Gọi API để tạo criterion mới
             await createCriterion(criterionData);
-            
-            // Sau khi thành công, refresh danh sách criteria
+
             const data = await getCriteriaByRubricId(rubricId);
             if (Array.isArray(data) && data.length > 0) {
                 setCriteria(data);
@@ -93,12 +94,40 @@ function InstructorManageCriteria() {
             } else {
                 setCriteria([]);
             }
-            
+
             toast.success('Criterion added successfully');
             setShowAddModal(false);
         } catch (error) {
             console.error('Failed to add criterion:', error);
             toast.error(error.response?.data?.message || 'Failed to add criterion');
+        } finally {
+            setSubmitting(false);
+        }
+    };
+
+    const handleEditClick = (criterion) => {
+        setEditingCriterion(criterion);
+        setShowEditModal(true);
+    };
+
+    const handleUpdateCriterion = async (criterionData) => {
+        try {
+            setSubmitting(true);
+            await updateCriterion(criterionData.criteriaId, criterionData);
+
+            // Refresh danh sách
+            const data = await getCriteriaByRubricId(rubricId);
+            if (Array.isArray(data) && data.length > 0) {
+                setCriteria(data);
+                setRubricTitle(data[0].rubricTitle || 'Rubric Details');
+            }
+
+            toast.success('Criterion updated successfully');
+            setShowEditModal(false);
+            setEditingCriterion(null);
+        } catch (error) {
+            console.error('Failed to update criterion:', error);
+            toast.error(error.response?.data?.message || 'Failed to update criterion');
         } finally {
             setSubmitting(false);
         }
@@ -197,7 +226,10 @@ function InstructorManageCriteria() {
                                     </div>
                                     <div className="flex items-center gap-4">
                                         <span className="text-blue-600 font-semibold text-base">Weight: {criterion.weight}%</span>
-                                        <button className="text-gray-400 hover:text-gray-600 transition-colors p-1">
+                                        <button
+                                            onClick={() => handleEditClick(criterion)}
+                                            className="text-gray-400 hover:text-gray-600 transition-colors p-1"
+                                        >
                                             <Pencil size={18} />
                                         </button>
                                         <button
@@ -240,7 +272,7 @@ function InstructorManageCriteria() {
                     </div>
                 )}
             </div>
-            
+
             {/* Delete Confirmation Modal */}
             {deleteConfirm.show && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -275,13 +307,23 @@ function InstructorManageCriteria() {
                     </div>
                 </div>
             )}
-            
+
             {/* Add Criterion Modal */}
             <AddCriterionModal
                 isOpen={showAddModal}
                 onClose={() => setShowAddModal(false)}
                 onSubmit={handleAddCriterion}
                 rubricId={rubricId}
+                isSubmitting={submitting}
+            />
+            <EditCriterionModal
+                isOpen={showEditModal}
+                onClose={() => {
+                    setShowEditModal(false);
+                    setEditingCriterion(null);
+                }}
+                onSubmit={handleUpdateCriterion}
+                criterion={editingCriterion}
                 isSubmitting={submitting}
             />
         </div>
