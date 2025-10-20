@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, FileText, Clock, Lock, Calendar, X, Trash2, ChevronDown } from 'lucide-react';
+import { Plus, FileText, Clock, Lock, Calendar, X, Trash2, ChevronDown, Pencil, Edit  } from 'lucide-react';
 import { toast } from "react-toastify";
 import { useParams } from 'react-router-dom';
-import { getAssignmentsByCourseInstanceId, createAssignment, deleteAssignment } from '../../service/assignmentService';
+import { getAssignmentsByCourseInstanceId, createAssignment, assignmentService } from '../../service/assignmentService';
 import CreateAssignmentModal from '../../component/Assignment/CreateAssignmentModal';
+import EditAssignmentModal from '../../component/Assignment/EditAssignmentModal';
 import DeleteAssignmentModal from '../../component/Assignment/DeleteAssignmentModal';
 
 const InstructorManageAssignment = () => {
@@ -17,6 +18,8 @@ const InstructorManageAssignment = () => {
   const [newDeadline, setNewDeadline] = useState('');
   const [newTime, setNewTime] = useState('');
   const [showModal, setShowModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingAssignment, setEditingAssignment] = useState(null);
 
   const fetchAssignments = async () => {
     try {
@@ -144,6 +147,36 @@ const InstructorManageAssignment = () => {
   const handleCloseDeleteModal = () => {
     setShowDeleteModal(false);
     setSelectedAssignment(null);
+  };
+
+  const handleEditClick = async (assignment) => {
+    try {
+      const response = await assignmentService.getAssignmentDetailsById(assignment.id);
+      if (response) {
+        setEditingAssignment(response);
+        setShowEditModal(true);
+      }
+    } catch (error) {
+      console.error('Failed to fetch assignment details:', error);
+      toast.error('Failed to load assignment details');
+    }
+  };
+
+  const handleUpdateAssignment = async (updatedData) => {
+    try {
+      const response = await assignmentService.updateAssignment(updatedData);
+      if (response?.data) {
+        toast.success('Assignment updated successfully!');
+        setShowEditModal(false);
+        setEditingAssignment(null);
+        await fetchAssignments();
+      } else {
+        throw new Error('Failed to update assignment');
+      }
+    } catch (error) {
+      console.error('Failed to update assignment:', error);
+      toast.error(error.response?.data?.message || 'Failed to update assignment. Please try again.');
+    }
   };
 
   const handleCreateAssignment = async (assignmentData) => {
@@ -313,8 +346,15 @@ const InstructorManageAssignment = () => {
                 <Calendar className="w-5 h-5" />
               </button>
               <button
+                onClick={() => handleEditClick(assignment)}
                 className="text-green-600 hover:text-green-800 p-1.5 hover:bg-green-50 rounded-lg transition-colors"
-                title="View Details"
+                title="Edit Assignment"
+              >
+                <Edit className="w-5 h-5" />
+              </button>
+              <button
+                className="text-gray-600 hover:text-gray-800 p-1.5 hover:bg-gray-50 rounded-lg transition-colors"
+                title="View Submissions"
               >
                 <FileText className="w-5 h-5" />
               </button>
@@ -413,7 +453,17 @@ const InstructorManageAssignment = () => {
         isOpen={showModal}
         onClose={() => setShowModal(false)}
         onSubmit={handleCreateAssignment}
-        courseInstanceId={1}
+        courseInstanceId={courseInstanceId}
+      />
+
+      <EditAssignmentModal
+        isOpen={showEditModal}
+        onClose={() => {
+          setShowEditModal(false);
+          setEditingAssignment(null);
+        }}
+        onSubmit={handleUpdateAssignment}
+        assignment={editingAssignment}
       />
     </div>
   );
