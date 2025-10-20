@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Search, Plus, Eye, Pencil, Trash2, Loader } from 'lucide-react';
 import { getAllRubrics, createRubric, updateRubric, deleteRubric, getPublicRubricTemplates } from '../../service/rubricService';
 import { toast } from 'react-toastify';
 
 const InstructorManageRubric = () => {
+    const navigate = useNavigate();
     const [searchQuery, setSearchQuery] = useState('');
     const [rubrics, setRubrics] = useState([]);
     const [templates, setTemplates] = useState([]);
@@ -49,7 +51,7 @@ const InstructorManageRubric = () => {
             try {
                 setTemplatesLoading(true);
                 const data = await getPublicRubricTemplates();
-                
+
                 const formattedTemplates = data.map(template => ({
                     templateId: template.templateId,
                     title: template.title,
@@ -199,7 +201,7 @@ const InstructorManageRubric = () => {
     };
 
     return (
-        <div className="min-h-screen bg-gray-50 p-8">
+        <div className="p-8">
             <div className="max-w-7xl mx-auto">
                 {/* Header */}
                 <div className="mb-8">
@@ -313,7 +315,10 @@ const InstructorManageRubric = () => {
                                         <button
                                             className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
                                             title="View"
-                                            onClick={() => console.log('View rubric:', rubric.id)}
+                                            onClick={() => navigate(
+                                                `/instructor/manage-criteria/${rubric.rubricId}`,
+                                                { state: { from: '/instructor/manage-rubric' } }
+                                            )}
                                         >
                                             <Eye className="w-5 h-5 text-gray-600" />
                                         </button>
