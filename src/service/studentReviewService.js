@@ -14,7 +14,33 @@ const getSubmissionByUserAndAssignment = async ({ assignmentId, userId }) => {
     throw error;
   }
 };
+const updateSubmission = async (submissionId, updateData) => {
+  const formData = new FormData();
 
-export const studentReviewService = {
-  getSubmissionByUserAndAssignment,
+  formData.append("SubmissionId", submissionId);
+
+  if (updateData.file) {
+    formData.append("File", updateData.file);
+  }
+  if (updateData.keywords) {
+    formData.append("Keywords", updateData.keywords);
+  }
+
+
+  try {
+    const response = await api.put("/Submission", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Lỗi khi cập nhật bài nộp:", error.response?.data || error.message);
+    throw error.response?.data || new Error("Lỗi mạng hoặc server không phản hồi");
+  }
+};
+
+export const submissionService = {
+  submitAssignment, 
+  updateSubmission, 
 };
