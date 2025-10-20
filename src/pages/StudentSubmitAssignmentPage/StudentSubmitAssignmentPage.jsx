@@ -13,13 +13,13 @@ import {
 // Import service
 import { assignmentService } from "../../service/assignmentService";
 import { reviewService } from "../../service/reviewService";
-// Import các component con mới
 import SubmissionGuideCard from "../../component/Submission/SubmissionGuideCard";
 import SubmissionCard from "../../component/Submission/SubmissionCard";
 import PeerReviewCard from "../../component/Submission/PeerReviewCard";
 import RubricCard from "../../component/Submission/RubricCard";
+import { studentReviewService } from "../../service/studentReviewService";
 import { useQuery } from "@tanstack/react-query";
-import { useSelector } from "react-redux"; // Import đã có sẵn
+import { useSelector } from "react-redux"; 
 import { useQueryClient } from "@tanstack/react-query";
 
 // Hàm helper để định dạng ngày tháng
@@ -38,17 +38,13 @@ const formatDate = (dateString) => {
 const StudentSubmitAssignmentPage = () => {
   const { courseId, assignmentId } = useParams();
   const queryClient = useQueryClient();
-
-  // 👉 FIX: Thêm 2 dòng này để lấy thông tin người dùng từ Redux
   const currentUser = useSelector((state) => state.user);
-  const userId = currentUser?.userId; // Dùng optional chaining (?) để tránh lỗi nếu user chưa đăng nhập
-
-  // Hàm callback để làm mới dữ liệu sau khi nộp bài thành công
+  const userId = currentUser?.userId;
   const handleSubmissionSuccess = () => {
     queryClient.invalidateQueries({
       queryKey: ["assignmentDetails", assignmentId],
     });
-    // Bạn cũng có thể muốn invalidate query tracking review nếu có
+  
     queryClient.invalidateQueries({
       queryKey: ["reviewTracking", assignmentId],
     });
@@ -57,25 +53,28 @@ const StudentSubmitAssignmentPage = () => {
 
   const {
     data: assignment,
-    isLoading,
-    isError: isAssignmentError,
+    isLoading: isLoadingAssignment, 
   } = useQuery({
     queryKey: ["assignmentDetails", assignmentId],
     queryFn: () => assignmentService.getAssignmentDetailsById(assignmentId),
     enabled: !!assignmentId,
   });
 
-  const { data: reviewTrackingData, isLoading: isLoadingReview } = useQuery({
-    queryKey: ["reviewTracking", assignmentId],
-    queryFn: () => reviewService.getStudentReviewTracking(assignmentId),
-    enabled: !!assignmentId && !!assignment && assignment.peerWeight > 0,
+   const { data: submission, isLoading: isLoadingSubmission } = useQuery({
+    queryKey: ["submissionStatus", assignmentId, userId],
+    queryFn: () =>
+      studentReviewService.getSubmissionByUserAndAssignment({
+        assignmentId,
+        userId,
+      }),
+    enabled: !!assignmentId && !!userId,
   });
 
   // Trạng thái nộp bài vẫn tạm thời giả lập
   const [hasSubmitted, setHasSubmitted] = useState(true);
 
-  if (isLoading) {
-    return <div className="text-center p-8">Đang tải chi tiết bài tập...</div>;
+  if (isLoadingAssignment || isLoadingSubmission) {
+    return <div className="text-center p-8">Đang tải dữ liệu...</div>;
   }
 
   if (isAssignmentError || !assignment) {
@@ -222,16 +221,16 @@ const StudentSubmitAssignmentPage = () => {
           </div>
 
           {/* Right Column: Submission Status */}
-          <div className="space-y-6">
+           <div className="space-y-6">
             <h2 className="text-xl font-bold text-gray-800">
               Submit and Grading
             </h2>
             <SubmissionGuideCard />
 
             {/* Truyền các props mới vào SubmissionCard */}
-            {userId && ( // Chỉ render khi đã có userId
+            {userId && (
               <SubmissionCard
-                hasSubmitted={hasSubmitted}
+                initialSubmission={submission} // Prop mới chứa thông tin bài nộp
                 assignmentId={assignmentId}
                 userId={userId}
                 onSubmissionSuccess={handleSubmissionSuccess}
