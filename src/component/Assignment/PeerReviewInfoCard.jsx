@@ -9,13 +9,12 @@ const PeerReviewInfoCard = ({ completed, required, courseId, assignmentId }) => 
   const progressPercentage = required > 0 ? (completed / required) * 100 : 0;
 
   const handleStartReview = () => {
-    // Điều hướng đến trang chấm chéo
     navigate(`/assignment/${courseId}/${assignmentId}/review`);
   };
 
   return (
     <div className="bg-yellow-50 border border-yellow-300 p-6 rounded-lg mt-[-1px] rounded-t-none">
-      {/* Thêm `mt-[-1px] rounded-t-none` để dính liền vào card trên */}
+     
       <div className="flex justify-between items-start mb-3">
         <div className="flex items-center">
           <Users className="w-6 h-6 mr-3 text-yellow-700" />
