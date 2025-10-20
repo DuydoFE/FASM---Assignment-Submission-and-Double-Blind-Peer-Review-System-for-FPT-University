@@ -72,6 +72,16 @@ export const createAssignment = async (assignmentData) => {
 };
 
 
+export const deleteAssignment = async (assignmentId) => {
+  try {
+    const response = await api.delete(`/Assignment/${assignmentId}`);
+    return response.data;
+  } catch (error) {
+    console.error(`Lỗi khi xóa assignment ID ${assignmentId}:`, error);
+    throw error;
+  }
+};
+
 // Export service
 export const assignmentService = {
   getAssignmentsByCourseInstanceId,
@@ -79,5 +89,6 @@ export const assignmentService = {
   getAssignmentRubric,
   getStudentAssignments,
   extendDeadline,
-  createAssignment
+  createAssignment,
+  deleteAssignment
 };

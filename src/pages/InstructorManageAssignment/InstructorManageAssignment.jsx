@@ -2,14 +2,17 @@ import React, { useState, useEffect } from 'react';
 import { Plus, FileText, Clock, Lock, Calendar, X, Trash2, ChevronDown } from 'lucide-react';
 import { toast } from "react-toastify";
 import { useParams } from 'react-router-dom';
-import { getAssignmentsByCourseInstanceId, createAssignment } from '../../service/assignmentService';
+import { getAssignmentsByCourseInstanceId, createAssignment, deleteAssignment } from '../../service/assignmentService';
 import CreateAssignmentModal from '../../component/Assignment/CreateAssignmentModal';
+import DeleteAssignmentModal from '../../component/Assignment/DeleteAssignmentModal';
+
 const InstructorManageAssignment = () => {
   const { id: courseInstanceId } = useParams();
   const [statusFilter, setStatusFilter] = useState('All');
   const [assignments, setAssignments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showUpdateDeadlineModal, setShowUpdateDeadlineModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedAssignment, setSelectedAssignment] = useState(null);
   const [newDeadline, setNewDeadline] = useState('');
   const [newTime, setNewTime] = useState('');
@@ -20,7 +23,6 @@ const InstructorManageAssignment = () => {
       setLoading(true);
       const response = await getAssignmentsByCourseInstanceId(courseInstanceId);
 
-      // Map the API response to match our UI structure
       const mappedAssignments = response.map(assignment => ({
         id: assignment.assignmentId,
         title: assignment.title,
@@ -48,7 +50,6 @@ const InstructorManageAssignment = () => {
     }
   };
 
-  // Fetch assignments when component mounts
   useEffect(() => {
     if (courseInstanceId) {
       fetchAssignments();
@@ -82,15 +83,12 @@ const InstructorManageAssignment = () => {
     }
 
     try {
-      // Combine date and time into a single ISO string
       const [year, month, day] = newDeadline.split('-');
       const [hours, minutes] = newTime.split(':');
       const deadlineDate = new Date(year, month - 1, day, hours, minutes);
 
-      // Call API to update deadline
       await assignmentService.extendDeadline(selectedAssignment.id, deadlineDate.toISOString());
 
-      // Update the UI
       setAssignments(prev =>
         prev.map(a =>
           a.id === selectedAssignment.id
@@ -124,14 +122,36 @@ const InstructorManageAssignment = () => {
     setNewTime('');
   };
 
+  const handleDeleteClick = (assignment) => {
+    setSelectedAssignment(assignment);
+    setShowDeleteModal(true);
+  };
+
+  const handleDeleteConfirm = async (assignmentId) => {
+    try {
+      await deleteAssignment(assignmentId);
+      toast.success('Assignment deleted successfully!');
+      setShowDeleteModal(false);
+      setSelectedAssignment(null);
+      // Refresh assignments list
+      await fetchAssignments();
+    } catch (error) {
+      console.error('Failed to delete assignment:', error);
+      toast.error(error.response?.data?.message || 'Failed to delete assignment. Please try again.');
+    }
+  };
+
+  const handleCloseDeleteModal = () => {
+    setShowDeleteModal(false);
+    setSelectedAssignment(null);
+  };
+
   const handleCreateAssignment = async (assignmentData) => {
     try {
-      // Call API to create assignment
       const response = await createAssignment(assignmentData);
       if (response?.data) {
         toast.success('Assignment created successfully!');
         setShowModal(false);
-        // Refresh assignments list
         await fetchAssignments();
       } else {
         throw new Error('Failed to create assignment');
@@ -196,7 +216,7 @@ const InstructorManageAssignment = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-gray-600 text-sm font-medium">Total Assignments</p>
-              <p className="text-3xl font-bold text-gray-900 mt-1">4</p>
+              <p className="text-3xl font-bold text-gray-900 mt-1">{assignments.length}</p>
             </div>
             <div className="bg-blue-100 p-3 rounded-lg">
               <FileText className="w-6 h-6 text-blue-600" />
@@ -208,7 +228,9 @@ const InstructorManageAssignment = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-gray-600 text-sm font-medium">Open</p>
-              <p className="text-3xl font-bold text-green-600 mt-1">3</p>
+              <p className="text-3xl font-bold text-green-600 mt-1">
+                {assignments.filter(a => a.status === 'Open').length}
+              </p>
             </div>
             <div className="bg-green-100 p-3 rounded-lg">
               <Clock className="w-6 h-6 text-green-600" />
@@ -220,7 +242,9 @@ const InstructorManageAssignment = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-gray-600 text-sm font-medium">Closed</p>
-              <p className="text-3xl font-bold text-red-600 mt-1">1</p>
+              <p className="text-3xl font-bold text-red-600 mt-1">
+                {assignments.filter(a => a.status === 'Closed').length}
+              </p>
             </div>
             <div className="bg-red-100 p-3 rounded-lg">
               <Lock className="w-6 h-6 text-red-600" />
@@ -250,7 +274,6 @@ const InstructorManageAssignment = () => {
           >
             <div className="col-span-3 space-y-1">
               <h3 className="font-semibold text-gray-900 text-base truncate">{assignment.title}</h3>
-              {/* <p className="text-sm text-gray-600 line-clamp-2">{assignment.description}</p> */}
             </div>
             <div className="col-span-2 text-center">
               <span className="font-medium text-gray-900">{assignment.weight}%</span>
@@ -296,6 +319,7 @@ const InstructorManageAssignment = () => {
                 <FileText className="w-5 h-5" />
               </button>
               <button
+                onClick={() => handleDeleteClick(assignment)}
                 className="text-red-600 hover:text-red-800 p-1.5 hover:bg-red-50 rounded-lg transition-colors"
                 title="Delete Assignment"
               >
@@ -376,6 +400,15 @@ const InstructorManageAssignment = () => {
           </div>
         </div>
       )}
+
+      {/* Delete Assignment Modal */}
+      <DeleteAssignmentModal
+        isOpen={showDeleteModal}
+        onClose={handleCloseDeleteModal}
+        onConfirm={handleDeleteConfirm}
+        assignment={selectedAssignment}
+      />
+
       <CreateAssignmentModal
         isOpen={showModal}
         onClose={() => setShowModal(false)}
