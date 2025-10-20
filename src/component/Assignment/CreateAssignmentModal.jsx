@@ -1,5 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X, Plus, FileText, AlertCircle } from 'lucide-react';
+import { getAllRubrics } from '../../service/rubricService';
+import { toast } from 'react-toastify';
 
 const CreateAssignmentModal = ({ isOpen, onClose, onSubmit, courseInstanceId }) => {
   const [formData, setFormData] = useState({
@@ -12,7 +14,7 @@ const CreateAssignmentModal = ({ isOpen, onClose, onSubmit, courseInstanceId }) 
     deadline: '',
     reviewDeadline: '',
     finalDeadline: '',
-    numPeerReviewsRequired: '',
+    numPeerReviewsRequired: 0,
     allowCrossClass: false,
     isBlindReview: false,
     instructorWeight: 0,
@@ -23,6 +25,33 @@ const CreateAssignmentModal = ({ isOpen, onClose, onSubmit, courseInstanceId }) 
   });
 
   const [errors, setErrors] = useState({});
+  const [rubrics, setRubrics] = useState([]);
+  const [loadingRubrics, setLoadingRubrics] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      fetchRubrics();
+    }
+  }, [isOpen]);
+
+  const fetchRubrics = async () => {
+    setLoadingRubrics(true);
+    try {
+      const data = await getAllRubrics();
+      if (data && data.length > 0) {
+        setRubrics(data);
+      } else {
+        setRubrics([]);
+        toast.warning('No rubrics available. Please create a rubric first.');
+      }
+    } catch (error) {
+      console.error('Error fetching rubrics:', error);
+      setRubrics([]);
+      toast.error('Failed to load rubrics. Please try again.');
+    } finally {
+      setLoadingRubrics(false);
+    }
+  };
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -45,7 +74,7 @@ const CreateAssignmentModal = ({ isOpen, onClose, onSubmit, courseInstanceId }) 
     }
 
     if (!formData.rubricId || formData.rubricId === 0) {
-      newErrors.rubricId = 'Rubric ID is required';
+      newErrors.rubricId = 'Please select a rubric';
     }
 
     if (!formData.deadline) {
@@ -173,19 +202,26 @@ const CreateAssignmentModal = ({ isOpen, onClose, onSubmit, courseInstanceId }) 
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Rubric ID <span className="text-red-500">*</span>
+                  Rubric <span className="text-red-500">*</span>
                 </label>
-                <input
-                  type="number"
+                <select
                   name="rubricId"
                   value={formData.rubricId}
                   onChange={handleChange}
-                  min="1"
+                  disabled={loadingRubrics}
                   className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none ${
                     errors.rubricId ? 'border-red-500' : 'border-gray-300'
-                  }`}
-                  placeholder="Enter rubric ID"
-                />
+                  } ${loadingRubrics ? 'bg-gray-100 cursor-wait' : ''}`}
+                >
+                  <option value="0">
+                    {loadingRubrics ? 'Loading rubrics...' : 'Select a rubric'}
+                  </option>
+                  {rubrics.map((rubric) => (
+                    <option key={rubric.rubricId} value={rubric.rubricId}>
+                      {rubric.title || `Rubric #${rubric.rubricId}`}
+                    </option>
+                  ))}
+                </select>
                 {errors.rubricId && (
                   <div className="flex items-center gap-1 mt-1 text-red-500 text-sm">
                     <AlertCircle className="w-4 h-4" />
