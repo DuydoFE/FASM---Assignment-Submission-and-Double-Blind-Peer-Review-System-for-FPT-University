@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Pencil, Trash2, Plus, Loader, ArrowLeft } from 'lucide-react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getCriteriaByRubricId, deleteCriterion } from '../../service/criteriaService';
+import { getCriteriaByRubricId, deleteCriterion, createCriterion } from '../../service/criteriaService';
+import AddCriterionModal from '../../component/Criteria/AddCriterionModal';
 import { toast } from 'react-toastify';
 
 function InstructorManageCriteria() {
@@ -12,6 +13,8 @@ function InstructorManageCriteria() {
     const [rubricTitle, setRubricTitle] = useState('');
     const [deleteConfirm, setDeleteConfirm] = useState({ show: false, criterionId: null, criterionTitle: '' });
     const [deleting, setDeleting] = useState(false);
+    const [showAddModal, setShowAddModal] = useState(false);
+    const [submitting, setSubmitting] = useState(false);
 
     useEffect(() => {
         const fetchCriteria = async () => {
@@ -76,6 +79,30 @@ function InstructorManageCriteria() {
         }
     };
 
+    const handleAddCriterion = async (criterionData) => {
+        try {
+            setSubmitting(true);
+            // Gọi API để tạo criterion mới
+            await createCriterion(criterionData);
+            
+            // Sau khi thành công, refresh danh sách criteria
+            const data = await getCriteriaByRubricId(rubricId);
+            if (Array.isArray(data) && data.length > 0) {
+                setCriteria(data);
+                setRubricTitle(data[0].rubricTitle || 'Rubric Details');
+            } else {
+                setCriteria([]);
+            }
+            
+            toast.success('Criterion added successfully');
+            setShowAddModal(false);
+        } catch (error) {
+            console.error('Failed to add criterion:', error);
+            toast.error(error.response?.data?.message || 'Failed to add criterion');
+        } finally {
+            setSubmitting(false);
+        }
+    };
 
     const totalWeight = criteria.reduce((sum, c) => sum + (c.weight || 0), 0);
     const remainingWeight = 100 - totalWeight;
@@ -96,14 +123,12 @@ function InstructorManageCriteria() {
             <div className="max-w-6xl mx-auto">
                 {/* Back Button */}
                 <div className="flex items-center justify-between mb-4">
-                    {/* Breadcrumb bên trái */}
                     <div className="flex items-center gap-2 text-sm text-gray-600">
                         <span>Rubrics</span>
                         <span>&gt;</span>
                         <span className="font-semibold text-gray-900">{rubricTitle}</span>
                     </div>
 
-                    {/* Nút Back bên phải */}
                     <button
                         onClick={handleBack}
                         className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors font-medium"
@@ -141,7 +166,10 @@ function InstructorManageCriteria() {
                         <h2 className="text-xl font-semibold text-gray-900">Evaluation Criteria</h2>
                         <p className="text-sm text-gray-600">Manage and configure assessment criteria</p>
                     </div>
-                    <button className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors">
+                    <button
+                        onClick={() => setShowAddModal(true)}
+                        className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors"
+                    >
                         <Plus size={20} />
                         Add Criteria
                     </button>
@@ -212,13 +240,14 @@ function InstructorManageCriteria() {
                     </div>
                 )}
             </div>
+            
             {/* Delete Confirmation Modal */}
             {deleteConfirm.show && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
                     <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
                         <h3 className="text-lg font-semibold text-gray-900 mb-2">Delete Criterion</h3>
                         <p className="text-gray-600 mb-6">
-                            Are you sure you want to delete <span className="font-medium">{deleteConfirm.criterionTitle}</span> criterion ?
+                            Are you sure you want to delete <span className="font-medium">{deleteConfirm.criterionTitle}</span> criterion?
                         </p>
                         <div className="flex gap-3 justify-end">
                             <button
@@ -246,6 +275,15 @@ function InstructorManageCriteria() {
                     </div>
                 </div>
             )}
+            
+            {/* Add Criterion Modal */}
+            <AddCriterionModal
+                isOpen={showAddModal}
+                onClose={() => setShowAddModal(false)}
+                onSubmit={handleAddCriterion}
+                rubricId={rubricId}
+                isSubmitting={submitting}
+            />
         </div>
     );
 }

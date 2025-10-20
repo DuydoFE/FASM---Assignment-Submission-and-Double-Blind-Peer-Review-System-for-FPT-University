@@ -20,7 +20,26 @@ export const deleteCriterion = async (criterionId) => {
     }
 };
 
+export const createCriterion = async (criterionData) => {
+    try {
+        const response = await api.post('/Criteria', {
+            rubricId: criterionData.rubricId,
+            title: criterionData.title,
+            description: criterionData.description,
+            weight: criterionData.weight,
+            maxScore: criterionData.maxScore,
+            scoringType: criterionData.scoringType,
+            scoreLabel: criterionData.scoreLabel
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error creating criterion:', error);
+        throw error;
+    }
+};
+
 export const criteriaService = {
     getCriteriaByRubricId,
     deleteCriterion,
+    createCriterion
 };
