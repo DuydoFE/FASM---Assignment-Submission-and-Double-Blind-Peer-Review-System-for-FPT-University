@@ -15,7 +15,7 @@ import { reviewService } from "../../service/reviewService";
 import CriterionForm from "../../component/Review/CriterionForm";
 import AiAssistantCard from "../../component/Review/AiAssistantCard";
 import { getCurrentAccount } from "../../utils/accountUtils";
-import { toast } from 'react-toastify'; 
+import { toast } from 'react-toastify';
 
 const PeerReviewPage = () => {
   const { courseId, assignmentId } = useParams();
@@ -25,10 +25,9 @@ const PeerReviewPage = () => {
   const [scores, setScores] = useState({});
   const [comment, setComment] = useState("");
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null); // State cho lỗi fetch data
-  const [validationError, setValidationError] = useState(null); // State cho lỗi form
+  const [error, setError] = useState(null);
+  const [validationError, setValidationError] = useState(null);
   const user = getCurrentAccount();
-  console.log(user);
 
   useEffect(() => {
     const fetchReviewData = async () => {
@@ -44,7 +43,7 @@ const PeerReviewPage = () => {
           setReviewData(data);
           const initialScores = data.rubric.criteria.reduce(
             (acc, criterion) => {
-              acc[criterion.criteriaId] = null; // Khởi tạo là null (trống)
+              acc[criterion.criteriaId] = null;
               return acc;
             }, {}
           );
@@ -62,8 +61,7 @@ const PeerReviewPage = () => {
     fetchReviewData();
   }, [assignmentId]);
 
-   const handleScoreChange = (criteriaId, value) => {
-
+  const handleScoreChange = (criteriaId, value) => {
     if (value === "") {
       setScores((prev) => ({ ...prev, [criteriaId]: null }));
       return;
@@ -75,38 +73,29 @@ const PeerReviewPage = () => {
       setScores((prevScores) => ({ ...prevScores, [criteriaId]: newScore }));
     }
   };
+
   const totalScore = useMemo(() => {
     const criteria = reviewData?.rubric?.criteria;
     if (!criteria || Object.keys(scores).length === 0) return 0;
     const total = criteria.reduce((acc, criterion) => {
       const score = scores[criterion.criteriaId] || 0;
-      const weightedScore =
-        (score / criterion.maxScore) * (criterion.weight / 100);
+      const weightedScore = (score / criterion.maxScore) * (criterion.weight / 100);
       return acc + weightedScore;
     }, 0);
     return Math.round(total * 100);
   }, [scores, reviewData]);
 
-  if (isLoading) return <div className="p-8 text-center text-xl">Đang tìm bài làm để chấm...</div>;
-  if (error) return <div className="p-8 text-center text-red-500 text-xl">{error}</div>;
-
-  
-
   const handleSubmitReview = async () => {
-   
     const isAllScoresFilled = Object.values(scores).every(score => score !== null);
-
     if (!isAllScoresFilled) {
       const errorMessage = "Vui lòng nhập điểm cho tất cả các tiêu chí.";
-      setValidationError(errorMessage); 
+      setValidationError(errorMessage);
       toast.error(errorMessage);
-      return; 
+      return;
     }
-
     setValidationError(null);
     try {
       if (!reviewData) return;
-
       const payload = {
         reviewAssignmentId: reviewData.reviewAssignmentId,
         reviewerUserId: user?.userId,
@@ -114,51 +103,47 @@ const PeerReviewPage = () => {
         criteriaFeedbacks: reviewData.rubric.criteria.map(c => ({
           criteriaId: c.criteriaId,
           score: scores[c.criteriaId] || 0,
-          feedback: "" // sẽ bổ sung nếu bạn có input feedback từng tiêu chí
+          feedback: ""
         }))
       };
-
       await reviewService.submitPeerReview(payload);
-
-const totalScore = reviewData.rubric.criteria.reduce((acc, c) => {
-  const score = scores[c.criteriaId] || 0;
-  return acc + (score / c.maxScore) * (c.weight / 100);
-}, 0);
-
-navigate("/review-success", {
-  state: {
-    assignmentTitle: reviewData.assignmentTitle,
-    studentName: reviewData.studentName,
-    criteriaFeedbacks: reviewData.rubric.criteria.map((c) => ({
-      criteriaId: c.criteriaId,
-      criteriaName: c.criteriaName,
-      score: scores[c.criteriaId] || 0,
-      maxScore: c.maxScore,
-    })),
-    totalScore: Math.round(totalScore * 100),
-    generalFeedback: comment,
-  },
-});
+      const totalScoreValue = reviewData.rubric.criteria.reduce((acc, c) => {
+        const score = scores[c.criteriaId] || 0;
+        return acc + (score / c.maxScore) * (c.weight / 100);
+      }, 0);
+      navigate("/review-success", {
+        state: {
+          assignmentTitle: reviewData.assignmentTitle,
+          studentName: reviewData.studentName,
+          criteriaFeedbacks: reviewData.rubric.criteria.map((c) => ({
+            criteriaId: c.criteriaId,
+            criteriaName: c.criteriaName,
+            score: scores[c.criteriaId] || 0,
+            maxScore: c.maxScore,
+          })),
+          totalScore: Math.round(totalScoreValue * 100),
+          generalFeedback: comment,
+        },
+      });
     } catch (err) {
       alert("Có lỗi khi gửi điểm, vui lòng thử lại!");
     }
   };
+
+  if (isLoading) return <div className="p-8 text-center text-xl">Đang tìm bài làm để chấm...</div>;
+  if (error) return <div className="p-8 text-center text-red-500 text-xl">{error}</div>;
+
   return (
     <div className="bg-gray-50 min-h-screen p-8">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-6">
           <div className="flex items-center text-sm text-gray-600 mb-4">
-            <Link
-              to={`/assignment/${courseId}/${assignmentId}`}
-              className="hover:underline"
-            >
+            <Link to={`/assignment/${courseId}/${assignmentId}`} className="hover:underline">
               Dashboard
             </Link>
             <ChevronRight className="w-4 h-4 mx-1" />
-            <span className="font-semibold text-gray-800">
-             Peer Review
-            </span>
+            <span className="font-semibold text-gray-800">Peer Review</span>
           </div>
           <div className="flex justify-between items-center">
             <div>
@@ -194,8 +179,7 @@ navigate("/review-success", {
                   </div>
                   <div>
                     <p className="font-semibold">
-                      Assigment -{" "}
-                      {reviewData.studentName ?? "Sinh viên không xác định"}
+                      Assigment - {reviewData.studentName ?? "Sinh viên không xác định"}
                     </p>
                     <p className="text-sm text-gray-500">
                       Subimitted: (4h) • ID bài làm: {reviewData.submissionId}
@@ -206,20 +190,33 @@ navigate("/review-success", {
                   Not Reviewed
                 </div>
               </div>
-              <div className="mt-4 pt-4 border-t flex items-center text-sm">
-                <p className="font-semibold mr-4">
-                  {reviewData.fileName ?? "submission.pdf"}
-                </p>
-                <span className="text-gray-500">2.3 MB • 4 trang</span>
-                <div className="ml-auto flex space-x-2">
-                  <button className="p-2 hover:bg-gray-100 rounded-full">
-                    <Eye size={18} />
-                  </button>
-                  <button className="p-2 hover:bg-gray-100 rounded-full">
-                    <Download size={18} />
-                  </button>
+              {reviewData.fileUrl && (
+                <div className="mt-4 pt-4 border-t flex items-center text-sm">
+                  <p className="font-semibold mr-4 truncate">
+                    {reviewData.fileName ?? "submission.pdf"}
+                  </p>
+                  <span className="text-gray-500 flex-shrink-0">2.3 MB • 4 trang</span>
+                  <div className="ml-auto flex space-x-2">
+                    <a
+                      href={reviewData.fileUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      title="Xem trước file"
+                      className="p-2 hover:bg-gray-100 rounded-full"
+                    >
+                      <Eye size={18} />
+                    </a>
+                    <a
+                      href={reviewData.fileUrl}
+                      download={reviewData.fileName}
+                      title="Tải file"
+                      className="p-2 hover:bg-gray-100 rounded-full"
+                    >
+                      <Download size={18} />
+                    </a>
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
 
             <div className="bg-white p-6 rounded-lg border">
@@ -236,26 +233,22 @@ navigate("/review-success", {
                   </button>
                 </div>
               </div>
-               {validationError && (
+              {validationError && (
                 <div className="bg-red-50 text-red-700 p-3 rounded-md text-center mb-4 font-semibold">
                   {validationError}
                 </div>
               )}
-
-              {/* Lặp qua các tiêu chí */}
               {reviewData?.rubric?.criteria?.map((criterion) => (
                 <CriterionForm
                   key={criterion.criteriaId}
                   criterion={criterion}
                   score={scores[criterion.criteriaId]}
                   onScoreChange={handleScoreChange}
-                  // Truyền trạng thái lỗi cho từng ô input
                   hasError={validationError && scores[criterion.criteriaId] === null}
                 />
               ))}
             </div>
 
-         
             <div className="bg-white p-6 rounded-lg border">
               <div className="flex justify-between items-center bg-blue-50 p-4 rounded-lg">
                 <span className="text-xl font-bold text-blue-800">
@@ -288,7 +281,7 @@ navigate("/review-success", {
               </button>
             </div>
           </div>
-          
+
           <div className="lg:col-span-1">
             <AiAssistantCard />
           </div>
