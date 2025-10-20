@@ -71,12 +71,12 @@ const EditCriterionModal = ({ isOpen, onClose, onSubmit, criterion, isSubmitting
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
             <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full mx-4 overflow-hidden">
                 {/* Header */}
-                <div className="bg-orange-500 px-6 py-5">
+                <div className="bg-white px-6 py-5">
                     <div className="flex justify-between items-center">
-                        <h2 className="text-2xl font-bold text-white">Edit Criterion</h2>
+                        <h2 className="text-2xl font-bold text-gray-900">Edit Criterion</h2>
                         <button
                             onClick={onClose}
-                            className="text-white/80 hover:text-white hover:bg-white/20 transition-all rounded-lg p-1.5"
+                            className="text-gray-900/80 hover:text-gray-900 hover:bg-gray-900/20 transition-all rounded-lg p-1.5"
                             disabled={isSubmitting}
                         >
                             <X size={22} />
