@@ -62,7 +62,7 @@ const InstructorViewClass = () => {
     try {
       await updateEnrollKey(selectedClass.id, password, currentUser.id);
       toast.success("Updated enroll key successfully!");
-
+      
       // Update local state
       setClasses(prevClasses =>
         prevClasses.map(cls =>
