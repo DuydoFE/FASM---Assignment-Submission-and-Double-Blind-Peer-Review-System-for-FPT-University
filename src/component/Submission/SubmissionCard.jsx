@@ -7,6 +7,7 @@ import {
   FileText,
   Type,
   Download,
+  Lock
 } from "lucide-react";
 import { submissionService } from "../../service/submissionService";
 import { toast } from "react-toastify";
@@ -16,6 +17,7 @@ const SubmissionCard = ({
   initialSubmission,
   assignmentId,
   userId,
+  assignmentStatus,
   onSubmissionSuccess,
 }) => {
   // State cho form nộp bài LẦN ĐẦU
@@ -26,10 +28,12 @@ const SubmissionCard = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isModalOpen, setModalOpen] = useState(false);
 
+
+  const isSubmissionActive = assignmentStatus === 'Active';
   // Hàm xử lý nộp bài LẦN ĐẦU (POST)
   const handleCreate = async () => {
     if (!selectedFile) {
-      toast.warn("Vui lòng chọn một tệp để nộp.");
+      toast.warn("Please select a file to submit.");
       return;
     }
     setIsSubmitting(true);
@@ -42,13 +46,13 @@ const SubmissionCard = ({
       };
       const result = await submissionService.submitAssignment(submissionData);
       if (result.statusCode === 201 || result.statusCode === 200) {
-        toast.success(result.message || "Nộp bài thành công!");
+        toast.success(result.message || "Submission successful!");
         onSubmissionSuccess();
       } else {
-        toast.error(result.message || "Có lỗi xảy ra.");
+        toast.error(result.message || "An error occurred.");
       }
     } catch (error) {
-      toast.error(error.message || "Không thể kết nối tới máy chủ.");
+      toast.error(error.message || "Unable to connect to server.");
     } finally {
       setIsSubmitting(false);
     }
@@ -63,14 +67,14 @@ const SubmissionCard = ({
         updateData
       );
       if (result.statusCode === 200) {
-        toast.success(result.message || "Cập nhật bài nộp thành công!");
+        toast.success(result.message || "Update submission successful!");
         setModalOpen(false); // Đóng modal
         onSubmissionSuccess(); // Làm mới dữ liệu
       } else {
-        toast.error(result.message || "Cập nhật thất bại.");
+        toast.error(result.message || "Update failed.");
       }
     } catch (error) {
-      toast.error(error.message || "Không thể kết nối tới máy chủ.");
+      toast.error(error.message || "Unable to connect to server.");
     } finally {
       setIsSubmitting(false);
     }
@@ -86,7 +90,7 @@ const SubmissionCard = ({
             <h3 className="text-lg font-bold text-green-800">Submitted</h3>
           </div>
           <p className="text-sm text-gray-600 mb-4">
-            Bạn đã nộp bài. Bạn có thể nộp lại để cập nhật.
+            You have submitted your work. You can resubmit to update it.
           </p>
 
           <div className="bg-white p-4 rounded-md space-y-3 border">
@@ -120,11 +124,21 @@ const SubmissionCard = ({
               <Download className="w-4 h-4 mr-2" />
               Download
             </a>
+             {/* 3. Vô hiệu hóa nút Resubmit nếu trạng thái không phải là Active */}
             <button
               onClick={() => setModalOpen(true)}
-              className="flex-1 flex items-center justify-center px-4 py-2 bg-green-600 text-white font-semibold rounded-md hover:bg-green-700"
+              disabled={!isSubmissionActive} // <-- THÊM ĐIỀU KIỆN
+              className={`flex-1 flex items-center justify-center px-4 py-2 text-white font-semibold rounded-md ${
+                isSubmissionActive
+                  ? 'bg-green-600 hover:bg-green-700'
+                  : 'bg-gray-400 cursor-not-allowed'
+              }`}
             >
-              <RefreshCw className="w-4 h-4 mr-2" />
+              {isSubmissionActive ? (
+                <RefreshCw className="w-4 h-4 mr-2" />
+              ) : (
+                <Lock className="w-4 h-4 mr-2" />
+              )}
               Resubmit
             </button>
           </div>
@@ -149,18 +163,21 @@ const SubmissionCard = ({
         <h3 className="text-lg font-bold text-gray-800">Submit</h3>
       </div>
       <p className="text-sm text-gray-600 mb-4">
-        Tải lên bài làm của bạn. Hỗ trợ PDF, DOC, ZIP (tối đa 50MB).
+        Upload your work. Supports PDF, DOC, ZIP (up to 25MB).
       </p>
 
       <div
-        className="mt-4 border-2 border-dashed border-gray-300 rounded-lg p-8 text-center cursor-pointer hover:border-blue-500"
-        onClick={() => fileInputRef.current.click()}
+        className={`mt-4 border-2 border-dashed rounded-lg p-8 text-center ${
+            isSubmissionActive ? 'border-gray-300 cursor-pointer hover:border-blue-500' : 'border-gray-200 bg-gray-50'
+        }`}
+        onClick={isSubmissionActive ? () => fileInputRef.current.click() : undefined}
       >
         <input
           type="file"
           ref={fileInputRef}
           onChange={(e) => setSelectedFile(e.target.files[0])}
           className="hidden"
+          disabled={!isSubmissionActive}
         />
         {selectedFile ? (
           <div className="flex items-center justify-center text-gray-700">
@@ -168,15 +185,12 @@ const SubmissionCard = ({
             <span>{selectedFile.name}</span>
           </div>
         ) : (
-          <p className="text-gray-500">Drag and drop or click to select files</p>
+          <p className="text-gray-500">{isSubmissionActive ? 'Kéo thả hoặc nhấn để chọn tệp' : 'Submission is not active'}</p>
         )}
       </div>
 
       <div className="mt-4">
-        <label
-          htmlFor="keywords"
-          className="block text-sm font-medium text-gray-700 mb-1"
-        >
+        <label htmlFor="keywords" className="block text-sm font-medium text-gray-700 mb-1">
           Keywords
         </label>
         <div className="relative">
@@ -186,23 +200,26 @@ const SubmissionCard = ({
             id="keywords"
             value={keywords}
             onChange={(e) => setKeywords(e.target.value)}
-            className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-            placeholder="example: react, redux, api,..."
+            className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50"
+            placeholder="Ví dụ: react, redux, api,..."
+            disabled={!isSubmissionActive}
           />
         </div>
       </div>
 
       <button
         onClick={handleCreate}
-        disabled={isSubmitting || !selectedFile}
-        className="w-full mt-4 flex items-center justify-center px-4 py-2 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700 disabled:bg-gray-400"
+        disabled={!isSubmissionActive || isSubmitting || !selectedFile} // <-- 4. Vô hiệu hóa nút Submit
+        className={`w-full mt-4 flex items-center justify-center px-4 py-2 text-white font-semibold rounded-md ${
+            isSubmissionActive ? 'bg-blue-600 hover:bg-blue-700' : 'bg-gray-400 cursor-not-allowed'
+        }`}
       >
         {isSubmitting ? (
           <Loader2 className="w-4 h-4 mr-2 animate-spin" />
         ) : (
-          <Upload className="w-4 h-4 mr-2" />
+            isSubmissionActive ? <Upload className="w-4 h-4 mr-2" /> : <Lock className="w-4 h-4 mr-2" />
         )}
-        {isSubmitting ? "Submitting..." : "Submit"}
+        {isSubmitting ? "Đang nộp..." : "Submit"}
       </button>
     </div>
   );
