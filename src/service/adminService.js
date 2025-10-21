@@ -35,3 +35,10 @@ export const createUser = async (data) => {
   const res = await api.post("/Users", data);
   return res.data;
 };
+
+// ✅ Lấy tất cả lớp học
+export const getAllClasses = async () => {
+  const res = await api.get("/CourseInstance");
+  return res.data;
+};
+

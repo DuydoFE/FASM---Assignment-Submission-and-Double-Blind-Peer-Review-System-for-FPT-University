@@ -1,9 +1,8 @@
 import React, { useState } from "react";
 import * as XLSX from "xlsx";
-import { getUsersByCampus } from "../../service/adminService";
+import { getUsersByCampus, updateUser } from "../../service/adminService";
 
 export default function AdminUserManagement() {
-  // ✅ Không còn mock data nữa
   const [users, setUsers] = useState([]);
   const [filters, setFilters] = useState({
     role: "",
@@ -11,8 +10,8 @@ export default function AdminUserManagement() {
     status: "",
     search: "",
   });
-
   const [selectedUser, setSelectedUser] = useState(null);
+  const [isUpdating, setIsUpdating] = useState(false);
 
   const isFiltering =
     filters.role || filters.campus || filters.status || filters.search;
@@ -40,8 +39,6 @@ export default function AdminUserManagement() {
         fullName:
           u.fullName || `${u.firstName || ""} ${u.lastName || ""}`.trim(),
         email: u.email || "-",
-
-        // ✅ Nếu roles là mảng [{roleName: ...}] hoặc ["Admin"]
         roleName: Array.isArray(u.roles)
           ? u.roles
             .map((r) =>
@@ -51,8 +48,6 @@ export default function AdminUserManagement() {
             )
             .join(", ")
           : u.roleName || u.role || "-",
-
-        // ✅ Nếu campus chỉ là id → map tay thành tên
         campusName:
           u.campus?.campusName ||
           (u.campusId === 1
@@ -60,15 +55,12 @@ export default function AdminUserManagement() {
             : u.campusId === 2
               ? "Hà Nội"
               : `Campus ${u.campusId || "-"}`),
-
+        campusId: u.campusId || u.campus?.id || null,
         isActive:
           typeof u.isActive === "boolean"
             ? u.isActive
             : u.status?.toLowerCase() === "active",
       }));
-
-      console.log("✅ Formatted users:", formattedUsers);
-      console.log("📋 Raw users from API:", res.data);
 
       setUsers(formattedUsers);
     } catch (error) {
@@ -77,8 +69,7 @@ export default function AdminUserManagement() {
     }
   };
 
-
-  // ✅ Áp dụng filter như cũ
+  // ✅ Filter users
   const filteredUsers = isFiltering
     ? users.filter((u) => {
       return (
@@ -128,6 +119,49 @@ export default function AdminUserManagement() {
       alert(`✅ Imported ${importedUsers.length} users successfully`);
     };
     reader.readAsArrayBuffer(file);
+  };
+
+  // ✅ Hàm lưu thay đổi người dùng
+  const handleSaveUser = async () => {
+    try {
+      const payload = {
+        userId: selectedUser.id, // ✅ đúng field BE yêu cầu
+        campusId:
+          selectedUser.campusId ||
+          (selectedUser.campusName === "Hồ Chí Minh"
+            ? 1
+            : selectedUser.campusName === "Hà Nội"
+              ? 2
+              : 0),
+        username: selectedUser.username || selectedUser.email?.split("@")[0] || "unknown",
+        email: selectedUser.email,
+        firstName: selectedUser.fullName?.split(" ")[0] || "",
+        lastName:
+          selectedUser.fullName?.split(" ").slice(1).join(" ") || "",
+        studentCode: selectedUser.studentCode || "",
+        avatarUrl: selectedUser.avatarUrl || "",
+        isActive: selectedUser.isActive,
+      };
+
+      console.log("🚀 Sending update payload:", payload);
+
+      const res = await updateUser(selectedUser.id, payload);
+      console.log("✅ Update success:", res);
+
+      // Cập nhật lại list users
+      setUsers((prev) =>
+        prev.map((u) => (u.id === selectedUser.id ? { ...u, ...selectedUser } : u))
+      );
+
+      alert("✅ User updated successfully!");
+      setSelectedUser(null);
+    } catch (err) {
+      console.error("❌ Failed to update user:", err);
+      alert(
+        `❌ Update failed: ${err.response?.data?.message || "Check console for details."
+        }`
+      );
+    }
   };
 
   return (
@@ -184,7 +218,6 @@ export default function AdminUserManagement() {
           </>
         )}
 
-        {/* ✅ Nút Import file */}
         <label className="ml-auto px-4 py-2 bg-orange-500 text-white rounded hover:bg-orange-600 cursor-pointer">
           📁 Import Users
           <input
@@ -229,8 +262,8 @@ export default function AdminUserManagement() {
                     <td className="p-2">
                       <span
                         className={`px-2 py-1 rounded text-xs ${u.isActive
-                          ? "bg-green-100 text-green-700"
-                          : "bg-red-100 text-red-700"
+                            ? "bg-green-100 text-green-700"
+                            : "bg-red-100 text-red-700"
                           }`}
                       >
                         {u.isActive ? "active" : "deactive"}
@@ -256,19 +289,48 @@ export default function AdminUserManagement() {
         )}
       </div>
 
-      {/* Modal Edit giữ nguyên */}
+      {/* Modal Edit */}
       {selectedUser && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-30">
           <div className="bg-white p-6 rounded-xl w-96 space-y-4 shadow-lg">
             <h3 className="text-lg font-semibold">Edit User</h3>
+
+            {/* Name */}
             <input
               type="text"
               className="border rounded w-full p-2"
               value={selectedUser.fullName}
               onChange={(e) =>
-                setSelectedUser({ ...selectedUser, fullName: e.target.value })
+                setSelectedUser({
+                  ...selectedUser,
+                  fullName: e.target.value,
+                })
               }
             />
+
+            {/* Campus */}
+            <select
+              className="border rounded w-full p-2"
+              value={selectedUser.campusId || ""}
+              onChange={(e) =>
+                setSelectedUser({
+                  ...selectedUser,
+                  campusId: Number(e.target.value),
+                  campusName:
+                    e.target.value === "1"
+                      ? "Hồ Chí Minh"
+                      : e.target.value === "2"
+                        ? "Hà Nội"
+                        : "-",
+                })
+              }
+            >
+              <option value="">Select Campus</option>
+              <option value="1">Hồ Chí Minh</option>
+              <option value="2">Hà Nội</option>
+            </select>
+
+            {/* Status */}
             <select
               className="border rounded w-full p-2"
               value={selectedUser.isActive ? "active" : "deactive"}
@@ -282,21 +344,21 @@ export default function AdminUserManagement() {
               <option value="active">Active</option>
               <option value="deactive">Deactive</option>
             </select>
+
             <div className="flex justify-end space-x-2">
               <button
                 onClick={() => setSelectedUser(null)}
                 className="px-4 py-2 rounded bg-gray-200 hover:bg-gray-300"
+                disabled={isUpdating}
               >
                 Cancel
               </button>
               <button
-                onClick={() => {
-                  console.log("Update user:", selectedUser);
-                  setSelectedUser(null);
-                }}
+                onClick={handleSaveUser}
                 className="px-4 py-2 rounded bg-orange-500 text-white hover:bg-orange-600"
+                disabled={isUpdating}
               >
-                Save
+                {isUpdating ? "Saving..." : "Save"}
               </button>
             </div>
           </div>
