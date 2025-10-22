@@ -6,7 +6,6 @@ import { toast } from 'react-toastify';
 const EditAssignmentModal = ({ isOpen, onClose, onSubmit, assignment }) => {
   const [formData, setFormData] = useState({
     assignmentId: 0,
-    courseInstanceId: 0,
     rubricId: 0,
     title: '',
     description: '',
@@ -34,7 +33,6 @@ const EditAssignmentModal = ({ isOpen, onClose, onSubmit, assignment }) => {
       // Populate form with existing assignment data
       setFormData({
         assignmentId: assignment.assignmentId || 0,
-        courseInstanceId: assignment.courseInstanceId || 0,
         rubricId: assignment.rubricId || 0,
         title: assignment.title || '',
         description: assignment.description || '',
@@ -149,7 +147,6 @@ const EditAssignmentModal = ({ isOpen, onClose, onSubmit, assignment }) => {
     try {
       const submitData = {
         assignmentId: formData.assignmentId,
-        courseInstanceId: formData.courseInstanceId,
         rubricId: parseInt(formData.rubricId),
         title: formData.title,
         description: formData.description,

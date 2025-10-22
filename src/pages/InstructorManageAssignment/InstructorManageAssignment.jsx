@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, FileText, Clock, Lock, Calendar, X, Trash2, ChevronDown, Pencil, Edit  } from 'lucide-react';
+import { Plus, FileText, Clock, Lock, Calendar, X, Trash2, ChevronDown, Pencil, Edit } from 'lucide-react';
 import { toast } from "react-toastify";
 import { useParams } from 'react-router-dom';
-import { getAssignmentsByCourseInstanceId, createAssignment, assignmentService } from '../../service/assignmentService';
+import { getAssignmentsByCourseInstanceId, createAssignment, deleteAssignment, updateAssignment, assignmentService } from '../../service/assignmentService';
 import CreateAssignmentModal from '../../component/Assignment/CreateAssignmentModal';
 import EditAssignmentModal from '../../component/Assignment/EditAssignmentModal';
 import DeleteAssignmentModal from '../../component/Assignment/DeleteAssignmentModal';
@@ -28,6 +28,7 @@ const InstructorManageAssignment = () => {
 
       const mappedAssignments = response.map(assignment => ({
         id: assignment.assignmentId,
+        assignmentId: assignment.assignmentId,
         title: assignment.title,
         description: assignment.description,
         guidelines: assignment.guidelines,
@@ -41,7 +42,9 @@ const InstructorManageAssignment = () => {
         status: new Date(assignment.deadline) > new Date() ? "Open" : "Closed",
         statusColor: new Date(assignment.deadline) > new Date()
           ? "bg-green-100 text-green-800"
-          : "bg-red-100 text-red-800"
+          : "bg-red-100 text-red-800",
+        // Store original data for editing
+        originalData: assignment
       }));
 
       setAssignments(mappedAssignments);
@@ -136,7 +139,6 @@ const InstructorManageAssignment = () => {
       toast.success('Assignment deleted successfully!');
       setShowDeleteModal(false);
       setSelectedAssignment(null);
-      // Refresh assignments list
       await fetchAssignments();
     } catch (error) {
       console.error('Failed to delete assignment:', error);
@@ -151,21 +153,19 @@ const InstructorManageAssignment = () => {
 
   const handleEditClick = async (assignment) => {
     try {
-      const response = await assignmentService.getAssignmentDetailsById(assignment.id);
-      if (response) {
-        setEditingAssignment(response);
-        setShowEditModal(true);
-      }
+      const fullDetails = await assignmentService.getAssignmentDetailsById(assignment.assignmentId);
+      setEditingAssignment(fullDetails);
+      setShowEditModal(true);
     } catch (error) {
       console.error('Failed to fetch assignment details:', error);
-      toast.error('Failed to load assignment details');
+      toast.error('Failed to load assignment details. Please try again.');
     }
   };
 
   const handleUpdateAssignment = async (updatedData) => {
     try {
-      const response = await assignmentService.updateAssignment(updatedData);
-      if (response?.data) {
+      const response = await updateAssignment(updatedData);
+      if (response) { 
         toast.success('Assignment updated successfully!');
         setShowEditModal(false);
         setEditingAssignment(null);
