@@ -22,7 +22,6 @@ const submitPeerReview = async (reviewPayload) => {
 
 const getStudentReviewTracking = async (assignmentId) => {
   try {
-    // API endpoint như bạn cung cấp, đã bỏ "/api"
     const response = await api.get(`/StudentReview/assignment/${assignmentId}/tracking`);
     return response.data;
   } catch (error) {
@@ -41,9 +40,26 @@ const getAssignmentsWithTracking = async (courseInstanceId) => {
   }
 };
 
+const generateAiReview = async (submissionId) => {
+  try {
+    const response = await api.post(
+      `/StudentReview/submission/${submissionId}/generate-review`
+    );
+    
+    return response.data; 
+  } catch (error) {
+    console.error(
+      `Lỗi khi tạo AI review cho submission ID ${submissionId}:`,
+      error
+    );
+    throw error;
+  }
+};
+
 export const reviewService = {
   getPeerReviewAssignment,
   submitPeerReview,
   getStudentReviewTracking,
   getAssignmentsWithTracking,
+  generateAiReview, 
 };
