@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, Plus, Eye, Pencil, Trash2, Loader, Edit2 } from 'lucide-react';
-import { getAllRubrics, createRubric, updateRubric, deleteRubric, getRubricTemplatesByUserId } from '../../service/rubricService';
+import { getAllRubrics, createRubric, updateRubric, deleteRubric, getRubricTemplatesByUserId, createRubricTemplate, deleteRubricTemplate } from '../../service/rubricService';
 import { toast } from 'react-toastify';
 import { getCurrentAccount } from '../../utils/accountUtils';
+import DeleteRubricTemplateModal from '../../component/Rubric/DeleteRubricTemplateModal';
 
 
 const InstructorManageRubric = () => {
@@ -21,8 +22,43 @@ const InstructorManageRubric = () => {
     const [newRubricTitle, setNewRubricTitle] = useState('');
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [deletingRubric, setDeletingRubric] = useState(null);
+    const [isDeleteTemplateModalOpen, setIsDeleteTemplateModalOpen] = useState(false);
+    const [deletingTemplate, setDeletingTemplate] = useState(null);
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 5;
+
+    useEffect(() => {
+        const fetchTemplates = async () => {
+            try {
+                setTemplatesLoading(true);
+                if (!currentUser?.id) {
+                    console.error('No user ID found');
+                    return;
+                }
+                const response = await getRubricTemplatesByUserId(currentUser.id);
+
+                const formattedTemplates = response.map(template => ({
+                    templateId: template.templateId,
+                    title: template.title,
+                    courseName: template.assignmentsUsingTemplate?.[0]?.courseName || '— Not assigned',
+                    className: template.assignmentsUsingTemplate?.[0]?.className || '— Not assigned',
+                    assignments: template.assignmentsUsingTemplate || [],
+                    criteriaCount: template.criteriaTemplateCount || 0,
+                    criteriaTemplates: template.criteriaTemplates || []
+                }));
+
+                setTemplates(formattedTemplates);
+            } catch (error) {
+                console.error('Failed to fetch templates:', error);
+                toast.error('Failed to load rubric templates');
+            } finally {
+                setTemplatesLoading(false);
+            }
+        };
+
+        fetchTemplates();
+    }, []);
+
 
     useEffect(() => {
         const fetchRubrics = async () => {
@@ -51,37 +87,6 @@ const InstructorManageRubric = () => {
         fetchRubrics();
     }, []);
 
-    useEffect(() => {
-        const fetchTemplates = async () => {
-          try {
-            setTemplatesLoading(true);
-            if (!currentUser?.id) {
-              console.error('No user ID found');
-              return;
-            }
-            const response = await getRubricTemplatesByUserId(currentUser.id);
-
-                const formattedTemplates = response.map(template => ({
-                    templateId: template.templateId,
-                    title: template.title,
-                    courseName: template.assignmentsUsingTemplate?.[0]?.courseName || '— Not assigned',
-                    className: template.assignmentsUsingTemplate?.[0]?.className || '— Not assigned',
-                    assignments: template.assignmentsUsingTemplate || [],
-                    criteriaCount: template.criteriaTemplateCount || 0,
-                    criteriaTemplates: template.criteriaTemplates || []
-                }));
-
-                setTemplates(formattedTemplates);
-            } catch (error) {
-                console.error('Failed to fetch templates:', error);
-                toast.error('Failed to load rubric templates');
-            } finally {
-                setTemplatesLoading(false);
-            }
-        };
-
-        fetchTemplates();
-    }, []);
 
     const filteredRubrics = rubrics.filter(rubric =>
         rubric.title.toLowerCase().includes(searchQuery.toLowerCase())
@@ -101,7 +106,7 @@ const InstructorManageRubric = () => {
         }
 
         try {
-            const newRubric = await createRubric({ title: trimmedTitle });
+            const newRubric = await createRubricTemplate({ title: trimmedTitle, createdByUserId: currentUser.id });
 
             toast.success('Rubric created successfully');
             setIsCreateModalOpen(false);
@@ -208,6 +213,36 @@ const InstructorManageRubric = () => {
     const handleCancelDelete = () => {
         setIsDeleteModalOpen(false);
         setDeletingRubric(null);
+    };
+
+    const handleDeleteTemplateClick = (e, template) => {
+        e.stopPropagation();
+        setDeletingTemplate(template);
+        setIsDeleteTemplateModalOpen(true);
+    };
+
+    const handleConfirmDeleteTemplate = async () => {
+        if (!deletingTemplate?.templateId) {
+            toast.error('Could not identify template');
+            return;
+        }
+
+        try {
+            await deleteRubricTemplate(deletingTemplate.templateId);
+
+            toast.success('Rubric template deleted successfully');
+            setIsDeleteTemplateModalOpen(false);
+            setDeletingTemplate(null);
+
+        } catch (error) {
+            const errorMessage = error.response?.data?.message || 'Failed to delete rubric template';
+            toast.error(errorMessage);
+        }
+    };
+
+    const handleCancelDeleteTemplate = () => {
+        setIsDeleteTemplateModalOpen(false);
+        setDeletingTemplate(null);
     };
 
     const indexOfLastItem = currentPage * itemsPerPage;
@@ -342,7 +377,11 @@ const InstructorManageRubric = () => {
                                                         <button className="p-2 text-yellow-600 rounded-lg hover:bg-yellow-50 transition border border-yellow-200">
                                                             <Edit2 className="w-5 h-5" />
                                                         </button>
-                                                        <button className="p-2 text-red-600 rounded-lg hover:bg-red-50 transition border border-red-200">
+                                                        <button
+                                                            className="p-2 text-red-600 rounded-lg hover:bg-red-50 transition border border-red-200"
+                                                            title="Delete Template"
+                                                            onClick={(e) => handleDeleteTemplateClick(e, template)}
+                                                        >
                                                             <Trash2 className="w-5 h-5" />
                                                         </button>
                                                     </div>
@@ -585,6 +624,13 @@ const InstructorManageRubric = () => {
                         </div>
                     </div>
                 )}
+                {/* Delete Template Modal */}
+                <DeleteRubricTemplateModal
+                    isOpen={isDeleteTemplateModalOpen}
+                    template={deletingTemplate}
+                    onConfirm={handleConfirmDeleteTemplate}
+                    onCancel={handleCancelDeleteTemplate}
+                />
             </div>
         </div>
     );

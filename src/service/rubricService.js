@@ -90,6 +90,16 @@ export const createRubricTemplate = async (templateData) => {
   }
 };
 
+export const deleteRubricTemplate = async (templateId) => {
+  try {
+    const response = await api.delete(`/RubricTemplate/${templateId}`);
+    return response.data;
+  } catch (error) {
+    console.error('Error deleting rubric template:', error);
+    throw error;
+  }
+};
+
 export const rubricService = {
   getRubricByAssignmentId,
   getAllRubrics,
@@ -99,4 +109,5 @@ export const rubricService = {
   deleteRubric,
   getRubricTemplatesByUserId,
   createRubricTemplate,
+  deleteRubricTemplate,
 };
