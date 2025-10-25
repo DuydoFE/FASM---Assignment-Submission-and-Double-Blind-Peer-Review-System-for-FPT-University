@@ -67,6 +67,52 @@ export const deleteRubric = async (rubricId) => {
   }
 };
 
+export const getRubricTemplatesByUserId = async (userId) => {
+  try {
+    const response = await api.get(`/RubricTemplate/user/${userId}`);
+    return response.data.data;
+  } catch (error) {
+    console.error('Error fetching rubric templates by user:', error);
+    throw error;
+  }
+};
+
+export const createRubricTemplate = async (templateData) => {
+  try {
+    const response = await api.post('/RubricTemplate', {
+      title: templateData.title,
+      createdByUserId: templateData.createdByUserId
+    });
+    return response.data.data;
+  } catch (error) {
+    console.error('Error creating rubric template:', error);
+    throw error;
+  }
+};
+
+export const deleteRubricTemplate = async (templateId) => {
+  try {
+    const response = await api.delete(`/RubricTemplate/${templateId}`);
+    return response.data;
+  } catch (error) {
+    console.error('Error deleting rubric template:', error);
+    throw error;
+  }
+};
+
+export const updateRubricTemplate = async (templateId, updateData) => {
+  try {
+    const response = await api.put(`/RubricTemplate`, {
+      templateId: templateId,
+      title: updateData.title
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error updating rubric template:', error);
+    throw error;
+  }
+};
+
 export const rubricService = {
   getRubricByAssignmentId,
   getAllRubrics,
@@ -74,4 +120,8 @@ export const rubricService = {
   updateRubric,
   createRubric,
   deleteRubric,
+  getRubricTemplatesByUserId,
+  createRubricTemplate,
+  deleteRubricTemplate,
+  updateRubricTemplate,
 };
