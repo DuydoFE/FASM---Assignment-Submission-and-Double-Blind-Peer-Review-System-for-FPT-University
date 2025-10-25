@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, Plus, Eye, Pencil, Trash2, Loader, Edit2 } from 'lucide-react';
-import { getAllRubrics, createRubric, updateRubric, deleteRubric, getRubricTemplatesByUserId, createRubricTemplate, deleteRubricTemplate } from '../../service/rubricService';
+import { getAllRubrics, updateRubric, deleteRubric, getRubricTemplatesByUserId, createRubricTemplate, deleteRubricTemplate } from '../../service/rubricService';
 import { toast } from 'react-toastify';
 import { getCurrentAccount } from '../../utils/accountUtils';
 import DeleteRubricTemplateModal from '../../component/Rubric/DeleteRubricTemplateModal';
+import CreateRubricTemplateModal from '../../component/Rubric/CreateRubricTemplateModal';
 
 
 const InstructorManageRubric = () => {
@@ -22,43 +23,44 @@ const InstructorManageRubric = () => {
     const [newRubricTitle, setNewRubricTitle] = useState('');
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [deletingRubric, setDeletingRubric] = useState(null);
+    const [isCreateTemplateModalOpen, setIsCreateTemplateModalOpen] = useState(false);
     const [isDeleteTemplateModalOpen, setIsDeleteTemplateModalOpen] = useState(false);
     const [deletingTemplate, setDeletingTemplate] = useState(null);
     const [currentPage, setCurrentPage] = useState(1);
+    const [refreshTemplates, setRefreshTemplates] = useState(0);
     const itemsPerPage = 5;
 
-    useEffect(() => {
-        const fetchTemplates = async () => {
-            try {
-                setTemplatesLoading(true);
-                if (!currentUser?.id) {
-                    console.error('No user ID found');
-                    return;
-                }
-                const response = await getRubricTemplatesByUserId(currentUser.id);
-
-                const formattedTemplates = response.map(template => ({
-                    templateId: template.templateId,
-                    title: template.title,
-                    courseName: template.assignmentsUsingTemplate?.[0]?.courseName || '— Not assigned',
-                    className: template.assignmentsUsingTemplate?.[0]?.className || '— Not assigned',
-                    assignments: template.assignmentsUsingTemplate || [],
-                    criteriaCount: template.criteriaTemplateCount || 0,
-                    criteriaTemplates: template.criteriaTemplates || []
-                }));
-
-                setTemplates(formattedTemplates);
-            } catch (error) {
-                console.error('Failed to fetch templates:', error);
-                toast.error('Failed to load rubric templates');
-            } finally {
-                setTemplatesLoading(false);
+    const fetchTemplates = async () => {
+        try {
+            setTemplatesLoading(true);
+            if (!currentUser?.id) {
+                console.error('No user ID found');
+                return;
             }
-        };
+            const response = await getRubricTemplatesByUserId(currentUser.id);
 
+            const formattedTemplates = response.map(template => ({
+                templateId: template.templateId,
+                title: template.title,
+                courseName: template.assignmentsUsingTemplate?.[0]?.courseName || '— Not assigned',
+                className: template.assignmentsUsingTemplate?.[0]?.className || '— Not assigned',
+                assignments: template.assignmentsUsingTemplate || [],
+                criteriaCount: template.criteriaTemplateCount || 0,
+                criteriaTemplates: template.criteriaTemplates || []
+            }));
+
+            setTemplates(formattedTemplates);
+        } catch (error) {
+            console.error('Failed to fetch templates:', error);
+            toast.error('Failed to load rubric templates');
+        } finally {
+            setTemplatesLoading(false);
+        }
+    };
+
+    useEffect(() => {
         fetchTemplates();
-    }, []);
-
+    }, [refreshTemplates]);
 
     useEffect(() => {
         const fetchRubrics = async () => {
@@ -86,7 +88,6 @@ const InstructorManageRubric = () => {
 
         fetchRubrics();
     }, []);
-
 
     const filteredRubrics = rubrics.filter(rubric =>
         rubric.title.toLowerCase().includes(searchQuery.toLowerCase())
@@ -234,7 +235,10 @@ const InstructorManageRubric = () => {
             setIsDeleteTemplateModalOpen(false);
             setDeletingTemplate(null);
 
+            // Trigger refresh
+            setRefreshTemplates(prev => prev + 1);
         } catch (error) {
+            console.error('Failed to delete rubric template:', error);
             const errorMessage = error.response?.data?.message || 'Failed to delete rubric template';
             toast.error(errorMessage);
         }
@@ -244,6 +248,39 @@ const InstructorManageRubric = () => {
         setIsDeleteTemplateModalOpen(false);
         setDeletingTemplate(null);
     };
+
+    const handleCreateTemplateClick = () => {
+        setIsCreateTemplateModalOpen(true);
+    };
+
+    const handleConfirmCreateTemplate = async (title) => {
+        const trimmedTitle = title.trim();
+
+        if (!trimmedTitle) {
+            toast.error('Title cannot be empty');
+            return;
+        }
+
+        try {
+            await createRubricTemplate({ 
+                title: trimmedTitle, 
+                createdByUserId: currentUser.id 
+            });
+
+            toast.success('Rubric template created successfully');
+            setIsCreateTemplateModalOpen(false);
+
+            setRefreshTemplates(prev => prev + 1);
+        } catch (error) {
+            console.error('Failed to create rubric template:', error);
+            toast.error('Failed to create rubric template');
+        }
+    };
+
+    const handleCancelCreateTemplate = () => {
+        setIsCreateTemplateModalOpen(false);
+    };
+
 
     const indexOfLastItem = currentPage * itemsPerPage;
     const indexOfFirstItem = indexOfLastItem - itemsPerPage;
@@ -371,10 +408,16 @@ const InstructorManageRubric = () => {
                                                 </td>
                                                 <td className="px-6 py-5">
                                                     <div className="flex items-center justify-center gap-2">
-                                                        <button className="p-2 text-blue-600 rounded-lg hover:bg-blue-50 transition border border-blue-200">
+                                                        <button
+                                                            className="p-2 text-blue-600 rounded-lg hover:bg-blue-50 transition border border-blue-200"
+                                                            title="View Template"
+                                                        >
                                                             <Eye className="w-5 h-5" />
                                                         </button>
-                                                        <button className="p-2 text-yellow-600 rounded-lg hover:bg-yellow-50 transition border border-yellow-200">
+                                                        <button
+                                                            className="p-2 text-yellow-600 rounded-lg hover:bg-yellow-50 transition border border-yellow-200"
+                                                            title="Edit Template"
+                                                        >
                                                             <Edit2 className="w-5 h-5" />
                                                         </button>
                                                         <button
@@ -581,7 +624,7 @@ const InstructorManageRubric = () => {
                     </div>
                 )}
 
-                {/* Delete Confirmation Modal */}
+                {/* Delete Rubric Confirmation Modal */}
                 {isDeleteModalOpen && (
                     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
                         <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
@@ -624,6 +667,7 @@ const InstructorManageRubric = () => {
                         </div>
                     </div>
                 )}
+
                 {/* Delete Template Modal */}
                 <DeleteRubricTemplateModal
                     isOpen={isDeleteTemplateModalOpen}
@@ -631,6 +675,20 @@ const InstructorManageRubric = () => {
                     onConfirm={handleConfirmDeleteTemplate}
                     onCancel={handleCancelDeleteTemplate}
                 />
+                {/* Create Template Modal */}
+                <CreateRubricTemplateModal
+                    isOpen={isCreateTemplateModalOpen}
+                    onConfirm={handleConfirmCreateTemplate}
+                    onCancel={handleCancelCreateTemplate}
+                />
+
+                {/* Edit Template Modal */}
+                {/* <EditRubricTemplateModal
+                    isOpen={isEditTemplateModalOpen}
+                    template={editingTemplate}
+                    onConfirm={handleConfirmEditTemplate}
+                    onCancel={handleCancelEditTemplate}
+                /> */}
             </div>
         </div>
     );
