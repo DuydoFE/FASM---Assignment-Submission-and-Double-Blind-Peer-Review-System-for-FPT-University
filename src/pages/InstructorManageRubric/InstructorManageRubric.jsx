@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Plus, Eye, Pencil, Trash2, Loader } from 'lucide-react';
-import { getAllRubrics, createRubric, updateRubric, deleteRubric, getPublicRubricTemplates } from '../../service/rubricService';
+import { Search, Plus, Eye, Pencil, Trash2, Loader, Edit2 } from 'lucide-react';
+import { getAllRubrics, createRubric, updateRubric, deleteRubric, getRubricTemplatesByUserId } from '../../service/rubricService';
 import { toast } from 'react-toastify';
+import { getCurrentAccount } from '../../utils/accountUtils';
+
 
 const InstructorManageRubric = () => {
+    const currentUser = getCurrentAccount();
     const navigate = useNavigate();
     const [searchQuery, setSearchQuery] = useState('');
     const [rubrics, setRubrics] = useState([]);
@@ -18,6 +21,8 @@ const InstructorManageRubric = () => {
     const [newRubricTitle, setNewRubricTitle] = useState('');
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [deletingRubric, setDeletingRubric] = useState(null);
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 5;
 
     useEffect(() => {
         const fetchRubrics = async () => {
@@ -48,15 +53,20 @@ const InstructorManageRubric = () => {
 
     useEffect(() => {
         const fetchTemplates = async () => {
-            try {
-                setTemplatesLoading(true);
-                const data = await getPublicRubricTemplates();
+          try {
+            setTemplatesLoading(true);
+            if (!currentUser?.id) {
+              console.error('No user ID found');
+              return;
+            }
+            const response = await getRubricTemplatesByUserId(currentUser.id);
 
-                const formattedTemplates = data.map(template => ({
+                const formattedTemplates = response.map(template => ({
                     templateId: template.templateId,
                     title: template.title,
-                    major: template.majorName || 'SE',
-                    majorColor: 'bg-blue-100 text-blue-600',
+                    courseName: template.assignmentsUsingTemplate?.[0]?.courseName || '— Not assigned',
+                    className: template.assignmentsUsingTemplate?.[0]?.className || '— Not assigned',
+                    assignments: template.assignmentsUsingTemplate || [],
                     criteriaCount: template.criteriaTemplateCount || 0,
                     criteriaTemplates: template.criteriaTemplates || []
                 }));
@@ -200,6 +210,11 @@ const InstructorManageRubric = () => {
         setDeletingRubric(null);
     };
 
+    const indexOfLastItem = currentPage * itemsPerPage;
+    const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+    const currentTemplates = templates.slice(indexOfFirstItem, indexOfLastItem);
+    const totalPages = Math.ceil(templates.length / itemsPerPage);
+
     return (
         <div className="p-8">
             <div className="max-w-7xl mx-auto">
@@ -236,41 +251,143 @@ const InstructorManageRubric = () => {
                     <p className="text-gray-600 mb-6">Choose a suitable template to create rubrics quickly</p>
 
                     {templatesLoading ? (
-                        <div className="py-12 text-center">
+                        <div className="bg-white rounded-lg shadow-sm p-12 text-center">
                             <Loader className="w-8 h-8 animate-spin mx-auto mb-3 text-orange-500" />
                             <p className="text-gray-500">Loading templates...</p>
                         </div>
                     ) : templates.length === 0 ? (
-                        <div className="py-12 text-center bg-white rounded-lg border border-gray-200">
-                            <p className="text-gray-500">No public templates available</p>
+                        <div className="bg-white rounded-lg shadow-sm p-12 text-center">
+                            <p className="text-gray-500">No templates available</p>
                         </div>
                     ) : (
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                            {templates.map((template) => (
-                                <div key={template.templateId} className="bg-white rounded-lg border border-gray-200 p-6 hover:shadow-lg transition-shadow cursor-pointer">
-                                    <div className="mb-4">
-                                        <h3 className="text-lg font-bold text-gray-900 mb-1">{template.title}</h3>
-                                        <p className="text-sm text-gray-500">{template.criteriaCount} criteria</p>
-                                    </div>
-                                    <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium mb-4 ${template.majorColor}`}>
-                                        {template.major}
-                                    </span>
-                                    <ul className="space-y-2">
-                                        {template.criteriaTemplates.slice(0, 4).map((criteria, idx) => (
-                                            <li key={idx} className="text-sm text-gray-700 flex items-start">
-                                                <span className="text-gray-400 mr-2">•</span>
-                                                {criteria.title}
-                                            </li>
+                        <>
+                            {/* Table */}
+                            <div className="bg-white rounded-lg shadow-sm overflow-hidden">
+                                <table className="w-full">
+                                    <thead className="bg-gray-50 border-b border-gray-200">
+                                        <tr>
+                                            <th className="text-left px-6 py-4 text-sm font-semibold text-gray-700">Rubric Name</th>
+                                            <th className="text-left px-6 py-4 text-sm font-semibold text-gray-700">Course</th>
+                                            <th className="text-left px-6 py-4 text-sm font-semibold text-gray-700">Class</th>
+                                            <th className="text-left px-6 py-4 text-sm font-semibold text-gray-700">Used in Assignments</th>
+                                            <th className="text-center px-6 py-4 text-sm font-semibold text-gray-700">Total Criteria</th>
+                                            <th className="text-center px-6 py-4 text-sm font-semibold text-gray-700">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-gray-200">
+                                        {currentTemplates.map((template) => (
+                                            <tr key={template.templateId} className="hover:bg-gray-50 transition">
+                                                <td className="px-6 py-5">
+                                                    <div className="font-semibold text-gray-900">{template.title}</div>
+                                                </td>
+                                                <td className="px-6 py-5">
+                                                    <div className="text-sm text-gray-900">
+                                                        {template.assignments.length > 0 && template.assignments[0].courseName ? (
+                                                            <>
+                                                                <div>{template.assignments[0].courseName.split(' - ')[0] || template.courseName}</div>
+                                                                <div className="text-xs text-gray-500 mt-0.5">
+                                                                    {template.assignments[0].courseName.split(' - ')[1] || ''}
+                                                                </div>
+                                                            </>
+                                                        ) : (
+                                                            <span className="text-gray-500">{template.courseName}</span>
+                                                        )}
+                                                    </div>
+                                                </td>
+                                                <td className="px-6 py-5">
+                                                    <div className="text-sm text-gray-900">
+                                                        {template.assignments.length > 0 && template.assignments[0].className ? (
+                                                            <>
+                                                                <div>{template.assignments[0].className.split(' - ')[0] || template.className}</div>
+                                                                <div className="text-xs text-gray-500 mt-0.5">
+                                                                    {template.assignments[0].className.split(' - ')[1] || ''}
+                                                                </div>
+                                                            </>
+                                                        ) : (
+                                                            <div className="text-gray-500">{template.className}</div>
+                                                        )}
+                                                    </div>
+                                                </td>
+                                                <td className="px-6 py-5">
+                                                    {template.assignments.length === 0 ? (
+                                                        <span className="text-sm text-gray-500">— No assignments</span>
+                                                    ) : (
+                                                        <div className="flex flex-wrap gap-2">
+                                                            {template.assignments.slice(0, 2).map((assignment, idx) => (
+                                                                <span
+                                                                    key={idx}
+                                                                    className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-teal-100 text-teal-700 border border-teal-200"
+                                                                >
+                                                                    {assignment.title}
+                                                                </span>
+                                                            ))}
+                                                            {template.assignments.length > 2 && (
+                                                                <span className="text-xs text-gray-600 self-center">
+                                                                    +{template.assignments.length - 2} more
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                    )}
+                                                </td>
+                                                <td className="px-6 py-5">
+                                                    <div className="flex items-center justify-center gap-2 text-blue-600">
+                                                        <span className="font-semibold">{template.criteriaCount}</span>
+                                                    </div>
+                                                </td>
+                                                <td className="px-6 py-5">
+                                                    <div className="flex items-center justify-center gap-2">
+                                                        <button className="p-2 text-blue-600 rounded-lg hover:bg-blue-50 transition border border-blue-200">
+                                                            <Eye className="w-5 h-5" />
+                                                        </button>
+                                                        <button className="p-2 text-yellow-600 rounded-lg hover:bg-yellow-50 transition border border-yellow-200">
+                                                            <Edit2 className="w-5 h-5" />
+                                                        </button>
+                                                        <button className="p-2 text-red-600 rounded-lg hover:bg-red-50 transition border border-red-200">
+                                                            <Trash2 className="w-5 h-5" />
+                                                        </button>
+                                                    </div>
+                                                </td>
+                                            </tr>
                                         ))}
-                                        {template.criteriaTemplates.length > 4 && (
-                                            <li className="text-sm text-gray-500 italic">
-                                                +{template.criteriaTemplates.length - 4} more...
-                                            </li>
-                                        )}
-                                    </ul>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            {/* Footer with Pagination */}
+                            <div className="mt-6 flex items-center justify-between">
+                                <div className="text-sm text-gray-600">
+                                    Showing {indexOfFirstItem + 1}-{Math.min(indexOfLastItem, templates.length)} of {templates.length} templates
                                 </div>
-                            ))}
-                        </div>
+                                <div className="flex items-center gap-2">
+                                    <button
+                                        onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                                        disabled={currentPage === 1}
+                                        className="px-4 py-2 text-gray-600 hover:text-gray-900 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                        Previous
+                                    </button>
+                                    {[...Array(totalPages)].map((_, idx) => (
+                                        <button
+                                            key={idx + 1}
+                                            onClick={() => setCurrentPage(idx + 1)}
+                                            className={`px-4 py-2 rounded-lg transition ${currentPage === idx + 1
+                                                ? 'bg-blue-600 text-white'
+                                                : 'text-gray-600 hover:bg-gray-100'
+                                                }`}
+                                        >
+                                            {idx + 1}
+                                        </button>
+                                    ))}
+                                    <button
+                                        onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                                        disabled={currentPage === totalPages}
+                                        className="px-4 py-2 text-gray-600 hover:text-gray-900 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                        Next
+                                    </button>
+                                </div>
+                            </div>
+                        </>
                     )}
                 </div>
 

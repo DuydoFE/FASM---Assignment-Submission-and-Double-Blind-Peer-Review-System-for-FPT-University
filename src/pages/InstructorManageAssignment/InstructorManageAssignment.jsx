@@ -183,7 +183,6 @@ const InstructorManageAssignment = () => {
     try {
       const response = await createAssignment(assignmentData);
       if (response?.data) {
-        toast.success('Assignment created successfully!');
         setShowModal(false);
         await fetchAssignments();
       } else {
