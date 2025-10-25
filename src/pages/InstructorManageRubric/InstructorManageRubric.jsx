@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, Plus, Eye, Pencil, Trash2, Loader, Edit2 } from 'lucide-react';
-import { getAllRubrics, updateRubric, deleteRubric, getRubricTemplatesByUserId, createRubricTemplate, deleteRubricTemplate } from '../../service/rubricService';
+import { getAllRubrics, updateRubric, deleteRubric, getRubricTemplatesByUserId, createRubricTemplate, deleteRubricTemplate, updateRubricTemplate } from '../../service/rubricService';
 import { toast } from 'react-toastify';
 import { getCurrentAccount } from '../../utils/accountUtils';
 import DeleteRubricTemplateModal from '../../component/Rubric/DeleteRubricTemplateModal';
 import CreateRubricTemplateModal from '../../component/Rubric/CreateRubricTemplateModal';
+import EditRubricTemplateModal from '../../component/Rubric/EditRubricTemplateModal';
 
 
 const InstructorManageRubric = () => {
@@ -24,6 +25,8 @@ const InstructorManageRubric = () => {
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [deletingRubric, setDeletingRubric] = useState(null);
     const [isCreateTemplateModalOpen, setIsCreateTemplateModalOpen] = useState(false);
+    const [isEditTemplateModalOpen, setIsEditTemplateModalOpen] = useState(false);
+    const [editingTemplate, setEditingTemplate] = useState(null);
     const [isDeleteTemplateModalOpen, setIsDeleteTemplateModalOpen] = useState(false);
     const [deletingTemplate, setDeletingTemplate] = useState(null);
     const [currentPage, setCurrentPage] = useState(1);
@@ -262,9 +265,9 @@ const InstructorManageRubric = () => {
         }
 
         try {
-            await createRubricTemplate({ 
-                title: trimmedTitle, 
-                createdByUserId: currentUser.id 
+            await createRubricTemplate({
+                title: trimmedTitle,
+                createdByUserId: currentUser.id
             });
 
             toast.success('Rubric template created successfully');
@@ -272,13 +275,57 @@ const InstructorManageRubric = () => {
 
             setRefreshTemplates(prev => prev + 1);
         } catch (error) {
-            console.error('Failed to create rubric template:', error);
             toast.error('Failed to create rubric template');
         }
     };
 
     const handleCancelCreateTemplate = () => {
         setIsCreateTemplateModalOpen(false);
+    };
+
+    const handleEditTemplateClick = (e, template) => {
+        e.stopPropagation();
+        setEditingTemplate(template);
+        setIsEditTemplateModalOpen(true);
+    };
+
+    const handleConfirmEditTemplate = async (newTitle) => {
+        const trimmedTitle = newTitle.trim();
+
+        if (!trimmedTitle) {
+            toast.error('Title cannot be empty');
+            return;
+        }
+
+        if (!editingTemplate?.templateId) {
+            toast.error('Could not identify template');
+            return;
+        }
+
+        if (trimmedTitle === editingTemplate.title.trim()) {
+            toast.info('No changes made to the title');
+            setIsEditTemplateModalOpen(false);
+            setEditingTemplate(null);
+            return;
+        }
+
+        try {
+            await updateRubricTemplate(editingTemplate.templateId, { title: trimmedTitle });
+
+            toast.success('Rubric template updated successfully');
+            setIsEditTemplateModalOpen(false);
+            setEditingTemplate(null);
+
+            setRefreshTemplates(prev => prev + 1);
+        } catch (error) {
+            console.error('Failed to update rubric template:', error);
+            toast.error(error.response?.data?.message || 'Failed to update rubric template');
+        }
+    };
+
+    const handleCancelEditTemplate = () => {
+        setIsEditTemplateModalOpen(false);
+        setEditingTemplate(null);
     };
 
 
@@ -417,6 +464,7 @@ const InstructorManageRubric = () => {
                                                         <button
                                                             className="p-2 text-yellow-600 rounded-lg hover:bg-yellow-50 transition border border-yellow-200"
                                                             title="Edit Template"
+                                                            onClick={(e) => handleEditTemplateClick(e, template)}
                                                         >
                                                             <Edit2 className="w-5 h-5" />
                                                         </button>
@@ -683,12 +731,12 @@ const InstructorManageRubric = () => {
                 />
 
                 {/* Edit Template Modal */}
-                {/* <EditRubricTemplateModal
+                <EditRubricTemplateModal
                     isOpen={isEditTemplateModalOpen}
                     template={editingTemplate}
                     onConfirm={handleConfirmEditTemplate}
                     onCancel={handleCancelEditTemplate}
-                /> */}
+                />
             </div>
         </div>
     );

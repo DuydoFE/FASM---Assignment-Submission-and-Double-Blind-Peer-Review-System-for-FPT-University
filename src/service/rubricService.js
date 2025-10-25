@@ -100,6 +100,19 @@ export const deleteRubricTemplate = async (templateId) => {
   }
 };
 
+export const updateRubricTemplate = async (templateId, updateData) => {
+  try {
+    const response = await api.put(`/RubricTemplate`, {
+      templateId: templateId,
+      title: updateData.title
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error updating rubric template:', error);
+    throw error;
+  }
+};
+
 export const rubricService = {
   getRubricByAssignmentId,
   getAllRubrics,
@@ -110,4 +123,5 @@ export const rubricService = {
   getRubricTemplatesByUserId,
   createRubricTemplate,
   deleteRubricTemplate,
+  updateRubricTemplate,
 };
