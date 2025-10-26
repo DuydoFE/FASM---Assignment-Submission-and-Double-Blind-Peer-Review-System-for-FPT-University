@@ -49,6 +49,7 @@ import AdminClassDetailsManagement from "../pages/Admin/AdminClassDetailsManagem
 import AdminClassAssignments from "../pages/Admin/AdminClassAssignments";
 import AdminAssignmentSubmissions from "../pages/Admin/AdminAssignmentSubmissions";
 import AdminAccountSettings from "../pages/Admin/AdminAccountSettings";
+import AdminSystemSetting from "../pages/Admin/AdminSystemSetting";
 
 import ProfilePage from "../pages/HomePage/ProfilePage";
 
@@ -202,6 +203,7 @@ export const router = createBrowserRouter([
       { path: "classes/:id/assignments", element: <AdminClassAssignments /> },
       { path: "classes/:id/assignments/:assignmentId", element: <AdminAssignmentSubmissions /> },
       { path: "settings", element: <AdminAccountSettings /> },
+      { path: "systemSetting", element: <AdminSystemSetting /> },
     ],
   }
 

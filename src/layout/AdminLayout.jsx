@@ -1,12 +1,5 @@
 import { Outlet, NavLink, useNavigate } from "react-router-dom";
-import {
-  Settings,
-  User,
-  Users,
-  ClipboardList,
-  BarChart3,
-  Cpu,
-} from "lucide-react";
+import { Settings, User, Users, ClipboardList, BarChart3 } from "lucide-react";
 import React from "react";
 
 export default function AdminLayout() {
@@ -32,19 +25,6 @@ export default function AdminLayout() {
           >
             <BarChart3 size={18} />
             Dashboard
-          </NavLink>
-
-          {/* Edit Profile */}
-          <NavLink
-            to="/admin/account-settings"
-            className={({ isActive }) =>
-              `flex items-center gap-2 px-4 py-2 rounded-lg ${
-                isActive ? "bg-orange-500 text-white" : "hover:bg-gray-200"
-              }`
-            }
-          >
-            <User size={18} />
-            Profile Management
           </NavLink>
 
           {/* User Management */}
@@ -73,61 +53,9 @@ export default function AdminLayout() {
             Class Management
           </NavLink>
 
-          {/* Class Details Management */}
+          {/* System Setting */}
           <NavLink
-            to="/admin/class/users"
-            className={({ isActive }) =>
-              `flex items-center gap-2 px-4 py-2 rounded-lg ${
-                isActive ? "bg-orange-500 text-white" : "hover:bg-gray-200"
-              }`
-            }
-          >
-            <Users size={18} />
-            Class Details Management
-          </NavLink>
-
-          {/* Class Assignments */}
-          <NavLink
-            to="/admin/class/assignments"
-            className={({ isActive }) =>
-              `flex items-center gap-2 px-4 py-2 rounded-lg ${
-                isActive ? "bg-orange-500 text-white" : "hover:bg-gray-200"
-              }`
-            }
-          >
-            <ClipboardList size={18} />
-            Class Assignments
-          </NavLink>
-
-          {/* Assignment Details */}
-          <NavLink
-            to="/admin/class/assignment-details"
-            className={({ isActive }) =>
-              `flex items-center gap-2 px-4 py-2 rounded-lg ${
-                isActive ? "bg-orange-500 text-white" : "hover:bg-gray-200"
-              }`
-            }
-          >
-            <ClipboardList size={18} />
-            Assignment Details
-          </NavLink>
-
-          {/* LLM Integration */}
-          <NavLink
-            to="/admin/llm"
-            className={({ isActive }) =>
-              `flex items-center gap-2 px-4 py-2 rounded-lg ${
-                isActive ? "bg-orange-500 text-white" : "hover:bg-gray-200"
-              }`
-            }
-          >
-            <Cpu size={18} />
-            LLM Integration
-          </NavLink>
-
-          {/* System Configuration */}
-          <NavLink
-            to="/admin/system"
+            to="/admin/systemSetting"
             className={({ isActive }) =>
               `flex items-center gap-2 px-4 py-2 rounded-lg ${
                 isActive ? "bg-orange-500 text-white" : "hover:bg-gray-200"
@@ -135,7 +63,7 @@ export default function AdminLayout() {
             }
           >
             <Settings size={18} />
-            System Configuration
+            System Setting
           </NavLink>
         </nav>
       </aside>
@@ -147,7 +75,7 @@ export default function AdminLayout() {
           <h1 className="text-lg font-semibold">Administrator Dashboard</h1>
           <div className="flex items-center space-x-4">
             <button
-              onClick={() => navigate("/admin/account-settings")}
+              onClick={() => navigate("/admin/settings")}
               className="flex items-center space-x-2 hover:text-orange-600"
             >
               <User size={18} />
@@ -155,7 +83,7 @@ export default function AdminLayout() {
             </button>
 
             <button
-              onClick={() => navigate("/admin/system")}
+              onClick={() => navigate("/admin/systemSetting")}
               className="hover:text-orange-600"
             >
               <Settings size={20} />
