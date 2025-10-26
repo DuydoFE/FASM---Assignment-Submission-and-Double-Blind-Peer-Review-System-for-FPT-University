@@ -91,7 +91,7 @@ const InstructorManageClass = () => {
 
     try {
       setAddingStudent(true);
-      await addStudentToCourse(courseInstanceId, studentCode.trim(), currentUser.id); 
+      await addStudentToCourse(courseInstanceId, studentCode.trim(), currentUser.id);
 
       const response = await getStudentsInCourse(courseInstanceId);
       const mappedStudents = response.map((student, index) => ({
@@ -171,10 +171,10 @@ const InstructorManageClass = () => {
             {courseInfo && (
               <>
                 <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium">
-                  {courseInfo.courseCode}
+                  Course: {courseInfo.courseCode}
                 </span>
                 <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium">
-                  {courseInfo.className}
+                  Class: {courseInfo.className}
                 </span>
               </>
             )}
@@ -269,8 +269,8 @@ const InstructorManageClass = () => {
       {isAddModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-xl font-bold text-gray-900">Add Student</h2>
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-bold text-gray-900">Add Student into Course: {courseInfo.courseCode} - Class: {courseInfo.className}</h2>
               <button
                 onClick={handleCloseModal}
                 className="text-gray-400 hover:text-gray-600"
@@ -278,6 +278,7 @@ const InstructorManageClass = () => {
                 <X className="w-5 h-5" />
               </button>
             </div>
+
 
             <form onSubmit={handleAddStudent}>
               <div className="mb-4">
@@ -328,7 +329,7 @@ const InstructorManageClass = () => {
       {confirmDeleteModal && studentToDelete && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
-            <div className="flex justify-between items-center mb-6">
+            <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-bold text-gray-900">Remove Student</h2>
               <button
                 onClick={handleCancelDelete}
@@ -340,7 +341,7 @@ const InstructorManageClass = () => {
 
             <div className="mb-6">
               <p className="text-gray-700 mb-4">
-                Are you sure you want to remove <span className="font-semibold">{studentToDelete.name}</span> from this class?
+                Are you sure you want to remove <span className="font-semibold">{studentToDelete.name}</span> from Course {courseInfo.courseCode} - Class {courseInfo.className}?
               </p>
             </div>
 
