@@ -33,8 +33,9 @@ const InstructorManageAssignment = () => {
         description: assignment.description,
         guidelines: assignment.guidelines,
         deadline: new Date(assignment.deadline).toLocaleDateString(),
+        reviewDeadline: new Date(assignment.reviewDeadline).toLocaleDateString(),
+        finalDeadline: new Date(assignment.finalDeadline).toLocaleDateString(),
         time: new Date(assignment.deadline).toLocaleTimeString(),
-        weight: assignment.weight || 0,
         submitted: assignment.reviewCount,
         total: assignment.submissionCount,
         courseCode: assignment.courseCode,
@@ -43,7 +44,6 @@ const InstructorManageAssignment = () => {
         statusColor: new Date(assignment.deadline) > new Date()
           ? "bg-green-100 text-green-800"
           : "bg-red-100 text-red-800",
-        // Store original data for editing
         originalData: assignment
       }));
 
@@ -165,7 +165,7 @@ const InstructorManageAssignment = () => {
   const handleUpdateAssignment = async (updatedData) => {
     try {
       const response = await updateAssignment(updatedData);
-      if (response) { 
+      if (response) {
         toast.success('Assignment updated successfully!');
         setShowEditModal(false);
         setEditingAssignment(null);
@@ -179,18 +179,15 @@ const InstructorManageAssignment = () => {
     }
   };
 
-  const handleCreateAssignment = async (assignmentData) => {
+  const handleCreateAssignment = async (assignmentData, file) => {
     try {
-      const response = await createAssignment(assignmentData);
-      if (response?.data) {
-        setShowModal(false);
-        await fetchAssignments();
-      } else {
-        throw new Error('Failed to create assignment');
-      }
+      await createAssignment(assignmentData, file);
+      await fetchAssignments();
+      setShowModal(false);
+      toast.success('Assignment created successfully!');
     } catch (error) {
-      console.error('Failed to create assignment:', error);
-      toast.error(error.response?.data?.message || 'Failed to create assignment. Please try again.');
+      console.error('Error creating assignment:', error);
+      toast.error('Failed to create assignment');
     }
   };
 
@@ -226,10 +223,10 @@ const InstructorManageAssignment = () => {
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Assignment Management</h1>
           <div className="flex items-center space-x-4">
             <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium">
-              {assignments.length > 0 ? assignments[0].courseCode : 'N/A'}
+              Course: {assignments.length > 0 ? assignments[0].courseCode : 'N/A'}
             </span>
             <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium">
-              {assignments.length > 0 ? assignments[0].sectionCode : 'N/A'}
+              Class: {assignments.length > 0 ? assignments[0].sectionCode : 'N/A'}
             </span>
           </div>
         </div>
@@ -289,8 +286,8 @@ const InstructorManageAssignment = () => {
       <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
         <div className="grid grid-cols-12 gap-4 px-6 py-4 bg-gray-50 border-b border-gray-200 text-sm font-medium text-gray-700">
           <div className="col-span-3">Assignment Name</div>
-          <div className="col-span-2 text-center">Weight</div>
           <div className="col-span-2 text-center">Deadline</div>
+          <div className="col-span-2 text-center">Review Deadline</div>
           <div className="col-span-2 text-center">Submissions</div>
           <div className="col-span-1 text-center cursor-pointer select-none hover:text-orange-600 transition flex items-center justify-center gap-1">
             Status
@@ -307,12 +304,15 @@ const InstructorManageAssignment = () => {
             <div className="col-span-3 space-y-1">
               <h3 className="font-semibold text-gray-900 text-base truncate">{assignment.title}</h3>
             </div>
-            <div className="col-span-2 text-center">
-              <span className="font-medium text-gray-900">{assignment.weight}%</span>
-            </div>
             <div className="col-span-2 text-center space-y-1">
               <div className={`font-medium text-base ${getDeadlineColor(assignment.deadline)}`}>
                 {assignment.deadline}
+              </div>
+              <div className="text-sm text-gray-500">{assignment.time}</div>
+            </div>
+            <div className="col-span-2 text-center space-y-1">
+              <div className={`font-medium text-base ${getDeadlineColor(assignment.reviewDeadline)}`}>
+                {assignment.reviewDeadline}
               </div>
               <div className="text-sm text-gray-500">{assignment.time}</div>
             </div>
@@ -448,13 +448,15 @@ const InstructorManageAssignment = () => {
         assignment={selectedAssignment}
       />
 
+      {/* Create Assignment Modal - SỬA ĐÂY */}
       <CreateAssignmentModal
         isOpen={showModal}
         onClose={() => setShowModal(false)}
-        onSubmit={handleCreateAssignment}
+        onSubmit={handleCreateAssignment}  
         courseInstanceId={courseInstanceId}
       />
 
+      {/* Edit Assignment Modal */}
       <EditAssignmentModal
         isOpen={showEditModal}
         onClose={() => {

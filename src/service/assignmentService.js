@@ -61,9 +61,22 @@ const extendDeadline = async (assignmentId, newDeadline) => {
   }
 };
 
-export const createAssignment = async (assignmentData) => {
+export const createAssignment = async (assignmentData, file = null) => {
   try {
-    const response = await api.post('/Assignment', assignmentData);
+    const formData = new FormData();
+    
+    formData.append('assignment', JSON.stringify(assignmentData));
+    
+    if (file) {
+      formData.append('file', file);
+    }
+
+    const response = await api.post('/Assignment', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    });
+    
     return response.data;
   } catch (error) {
     console.error('Lỗi khi tạo assignment mới:', error);

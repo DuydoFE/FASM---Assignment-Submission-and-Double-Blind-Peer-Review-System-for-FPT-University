@@ -1,32 +1,55 @@
 import React, { useState, useEffect } from 'react';
-import { X, Plus, FileText, AlertCircle } from 'lucide-react';
-import { getAllRubrics } from '../../service/rubricService';
+import { X, Plus, FileText, AlertCircle, Upload, File } from 'lucide-react';
+import { getRubricsTemplate } from '../../service/rubricService';
 import { toast } from 'react-toastify';
 
 const CreateAssignmentModal = ({ isOpen, onClose, onSubmit, courseInstanceId }) => {
   const [formData, setFormData] = useState({
     courseInstanceId: courseInstanceId || 0,
-    rubricId: 0,
+    rubricTemplateId: '',
     title: '',
     description: '',
     guidelines: '',
+    files: null,
     startDate: '',
     deadline: '',
     reviewDeadline: '',
     finalDeadline: '',
-    numPeerReviewsRequired: 0,
+    numPeerReviewsRequired: '',
+    missingReviewPenalty: 0,
     allowCrossClass: false,
     isBlindReview: false,
-    instructorWeight: 0,
-    peerWeight: 0,
+    instructorWeight: '',
+    peerWeight: '',
     gradingScale: 'Scale10',
-    weight: 0,
+    passThreshold: '',
     includeAIScore: false
   });
 
   const [errors, setErrors] = useState({});
   const [rubrics, setRubrics] = useState([]);
   const [loadingRubrics, setLoadingRubrics] = useState(false);
+  const [selectedFile, setSelectedFile] = useState(null);
+
+  const fetchRubrics = async () => {
+    setLoadingRubrics(true);
+    try {
+      const data = await getRubricsTemplate();
+      console.log('Fetched rubrics:', data); // Debug
+      console.log('First rubric structure:', data && data[0]); // Debug - xem cấu trúc
+      if (data && data.length > 0) {
+        setRubrics(data);
+      } else {
+        setRubrics([]);
+      }
+    } catch (error) {
+      console.error('Error fetching rubrics:', error);
+      setRubrics([]);
+      toast.error('Failed to load rubrics');
+    } finally {
+      setLoadingRubrics(false);
+    }
+  };
 
   useEffect(() => {
     if (isOpen) {
@@ -34,36 +57,50 @@ const CreateAssignmentModal = ({ isOpen, onClose, onSubmit, courseInstanceId }) 
     }
   }, [isOpen]);
 
-  const fetchRubrics = async () => {
-    setLoadingRubrics(true);
-    try {
-      const data = await getAllRubrics();
-      if (data && data.length > 0) {
-        setRubrics(data);
-      } else {
-        setRubrics([]);
-        toast.warning('No rubrics available. Please create a rubric first.');
-      }
-    } catch (error) {
-      console.error('Error fetching rubrics:', error);
-      setRubrics([]);
-      toast.error('Failed to load rubrics. Please try again.');
-    } finally {
-      setLoadingRubrics(false);
-    }
-  };
-
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: type === 'checkbox' ? checked : type === 'number' ? Number(value) : value
-    }));
-    
-    // Clear error when user starts typing
+
+    console.log('handleChange triggered:', { name, value, type, rawValue: e.target.value }); // Debug
+
+    let newValue = value;
+
+    if (type === 'checkbox') {
+      newValue = checked;
+    } else if (type === 'number') {
+      newValue = value === '' ? '' : Number(value);
+    } else if (name === 'rubricTemplateId') {
+      // Giữ nguyên giá trị string từ select, sẽ convert khi submit
+      newValue = value;
+      console.log('Rubric selected:', { value, newValue, type: typeof newValue }); // Debug
+    } else if (name === 'passThreshold') {
+      newValue = value;
+    }
+
+    setFormData(prev => {
+      const updated = {
+        ...prev,
+        [name]: newValue
+      };
+      console.log('Updated formData:', updated); // Debug
+      return updated;
+    });
+
     if (errors[name]) {
       setErrors(prev => ({ ...prev, [name]: '' }));
     }
+  };
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setSelectedFile(file);
+      setFormData(prev => ({ ...prev, files: file }));
+    }
+  };
+
+  const removeFile = () => {
+    setSelectedFile(null);
+    setFormData(prev => ({ ...prev, files: null }));
   };
 
   const validateForm = () => {
@@ -73,8 +110,9 @@ const CreateAssignmentModal = ({ isOpen, onClose, onSubmit, courseInstanceId }) 
       newErrors.title = 'Title is required';
     }
 
-    if (!formData.rubricId || formData.rubricId === 0) {
-      newErrors.rubricId = 'Please select a rubric';
+    if (!formData.rubricTemplateId || formData.rubricTemplateId === '' || formData.rubricTemplateId === 'null') {
+      newErrors.rubricTemplateId = 'Please select a rubric';
+      console.error('Rubric validation failed:', formData.rubricTemplateId);
     }
 
     if (!formData.deadline) {
@@ -93,15 +131,20 @@ const CreateAssignmentModal = ({ isOpen, onClose, onSubmit, courseInstanceId }) 
       newErrors.numPeerReviewsRequired = 'Number of peer reviews is required';
     }
 
-    if (formData.weight === '' || formData.weight < 0 || formData.weight > 100) {
-      newErrors.weight = 'Weight must be between 0 and 100';
+    if (formData.gradingScale === 'PassFail') {
+      if (formData.passThreshold === '' || !formData.passThreshold) {
+        newErrors.passThreshold = 'Please select a pass threshold';
+      }
     }
 
-    const totalWeight = Number(formData.instructorWeight) + Number(formData.peerWeight);
+    const totalWeight = Number(formData.instructorWeight || 0) + Number(formData.peerWeight || 0);
     if (totalWeight !== 100) {
       newErrors.instructorWeight = 'Instructor and Peer weights must add up to 100%';
       newErrors.peerWeight = 'Instructor and Peer weights must add up to 100%';
     }
+
+    console.log('Validation errors:', newErrors);
+    console.log('Current formData:', formData);
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -109,34 +152,53 @@ const CreateAssignmentModal = ({ isOpen, onClose, onSubmit, courseInstanceId }) 
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
       return;
     }
 
     try {
+      const rubricId = parseInt(formData.rubricTemplateId);
+
+      if (!rubricId || isNaN(rubricId)) {
+        toast.error('Please select a valid rubric');
+        return;
+      }
+
       const submitData = {
-        ...formData,
         courseInstanceId: parseInt(courseInstanceId),
-        rubricId: parseInt(formData.rubricId),
-        numPeerReviewsRequired: parseInt(formData.numPeerReviewsRequired),
-        weight: parseInt(formData.weight),
-        instructorWeight: parseInt(formData.instructorWeight),
-        peerWeight: parseInt(formData.peerWeight),
+        rubricTemplateId: rubricId,
+        title: formData.title,
+        description: formData.description || null,
+        guidelines: formData.guidelines || null,
         startDate: formData.startDate ? new Date(formData.startDate).toISOString() : null,
         deadline: new Date(formData.deadline).toISOString(),
         reviewDeadline: new Date(formData.reviewDeadline).toISOString(),
-        finalDeadline: new Date(formData.finalDeadline).toISOString()
+        finalDeadline: new Date(formData.finalDeadline).toISOString(),
+        numPeerReviewsRequired: parseInt(formData.numPeerReviewsRequired),
+        missingReviewPenalty: parseInt(formData.missingReviewPenalty) || 0,
+        allowCrossClass: formData.allowCrossClass,
+        isBlindReview: formData.isBlindReview,
+        instructorWeight: parseInt(formData.instructorWeight),
+        peerWeight: parseInt(formData.peerWeight),
+        gradingScale: formData.gradingScale,
+        includeAIScore: formData.includeAIScore
       };
 
-      await onSubmit(submitData);
+      // Thêm passThreshold nếu là Pass/Fail
+      if (formData.gradingScale === 'PassFail') {
+        submitData.passThreshold = parseInt(formData.passThreshold);
+      }
+
+      console.log('Submitting data:', submitData); // Debug
+
+      await onSubmit(submitData, selectedFile);
       toast.success('Assignment created successfully');
       onClose();
     } catch (error) {
       console.error('Error creating assignment:', error);
       toast.error('Failed to create assignment. Please try again.');
     }
-      onClose();
   };
 
   if (!isOpen) return null;
@@ -163,7 +225,7 @@ const CreateAssignmentModal = ({ isOpen, onClose, onSubmit, courseInstanceId }) 
                 <div className="w-1 h-5 bg-orange-500 rounded"></div>
                 Basic Information
               </h3>
-              
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Title <span className="text-red-500">*</span>
@@ -173,9 +235,8 @@ const CreateAssignmentModal = ({ isOpen, onClose, onSubmit, courseInstanceId }) 
                   name="title"
                   value={formData.title}
                   onChange={handleChange}
-                  className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none ${
-                    errors.title ? 'border-red-500' : 'border-gray-300'
-                  }`}
+                  className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none ${errors.title ? 'border-red-500' : 'border-gray-300'
+                    }`}
                   placeholder="Enter assignment title"
                 />
                 {errors.title && (
@@ -218,28 +279,68 @@ const CreateAssignmentModal = ({ isOpen, onClose, onSubmit, courseInstanceId }) 
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Rubric <span className="text-red-500">*</span>
                 </label>
-                <select
-                  name="rubricId"
-                  value={formData.rubricId}
-                  onChange={handleChange}
-                  disabled={loadingRubrics}
-                  className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none ${
-                    errors.rubricId ? 'border-red-500' : 'border-gray-300'
-                  } ${loadingRubrics ? 'bg-gray-100 cursor-wait' : ''}`}
-                >
-                  <option value="0">
-                    {loadingRubrics ? 'Loading rubrics...' : 'Select a rubric'}
-                  </option>
-                  {rubrics.map((rubric) => (
-                    <option key={rubric.rubricId} value={rubric.rubricId}>
-                      {rubric.title || `Rubric #${rubric.rubricId}`}
-                    </option>
-                  ))}
-                </select>
-                {errors.rubricId && (
+                {loadingRubrics ? (
+                  <div className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50">
+                    Loading rubrics...
+                  </div>
+                ) : (
+                  <select
+                    name="rubricTemplateId"
+                    value={formData.rubricTemplateId}
+                    onChange={handleChange}
+                    className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none ${errors.rubricTemplateId ? 'border-red-500' : 'border-gray-300'
+                      }`}
+                  >
+                    <option value="">Select a rubric</option>
+                    {rubrics.map((rubric) => (
+                      <option key={rubric.templateId} value={String(rubric.templateId)}>
+                        {rubric.title || `Rubric #${rubric.templateId}`}
+                      </option>
+                    ))}
+                  </select>
+                )}
+                {errors.rubricTemplateId && (
                   <div className="flex items-center gap-1 mt-1 text-red-500 text-sm">
                     <AlertCircle className="w-4 h-4" />
-                    <span>{errors.rubricId}</span>
+                    <span>{errors.rubricTemplateId}</span>
+                  </div>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Attach File <span className="text-gray-400">(Optional)</span>
+                </label>
+                {!selectedFile ? (
+                  <label className="flex items-center justify-center w-full px-4 py-6 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-orange-500 hover:bg-orange-50 transition-colors">
+                    <div className="flex flex-col items-center gap-2">
+                      <Upload className="w-8 h-8 text-gray-400" />
+                      <span className="text-sm text-gray-600">Click to upload file</span>
+                      <span className="text-xs text-gray-400">PDF, DOC, DOCX, PPT, PPTX</span>
+                    </div>
+                    <input
+                      type="file"
+                      onChange={handleFileChange}
+                      className="hidden"
+                      accept=".pdf,.doc,.docx,.ppt,.pptx"
+                    />
+                  </label>
+                ) : (
+                  <div className="flex items-center justify-between p-4 bg-orange-50 border border-orange-200 rounded-lg">
+                    <div className="flex items-center gap-3">
+                      <File className="w-5 h-5 text-orange-600" />
+                      <div>
+                        <p className="text-sm font-medium text-gray-900">{selectedFile.name}</p>
+                        <p className="text-xs text-gray-500">{(selectedFile.size / 1024).toFixed(2)} KB</p>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={removeFile}
+                      className="text-red-500 hover:text-red-700 transition-colors"
+                    >
+                      <X className="w-5 h-5" />
+                    </button>
                   </div>
                 )}
               </div>
@@ -274,9 +375,8 @@ const CreateAssignmentModal = ({ isOpen, onClose, onSubmit, courseInstanceId }) 
                     name="deadline"
                     value={formData.deadline}
                     onChange={handleChange}
-                    className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none ${
-                      errors.deadline ? 'border-red-500' : 'border-gray-300'
-                    }`}
+                    className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none ${errors.deadline ? 'border-red-500' : 'border-gray-300'
+                      }`}
                   />
                   {errors.deadline && (
                     <div className="flex items-center gap-1 mt-1 text-red-500 text-sm">
@@ -295,9 +395,8 @@ const CreateAssignmentModal = ({ isOpen, onClose, onSubmit, courseInstanceId }) 
                     name="reviewDeadline"
                     value={formData.reviewDeadline}
                     onChange={handleChange}
-                    className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none ${
-                      errors.reviewDeadline ? 'border-red-500' : 'border-gray-300'
-                    }`}
+                    className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none ${errors.reviewDeadline ? 'border-red-500' : 'border-gray-300'
+                      }`}
                   />
                   {errors.reviewDeadline && (
                     <div className="flex items-center gap-1 mt-1 text-red-500 text-sm">
@@ -316,9 +415,8 @@ const CreateAssignmentModal = ({ isOpen, onClose, onSubmit, courseInstanceId }) 
                     name="finalDeadline"
                     value={formData.finalDeadline}
                     onChange={handleChange}
-                    className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none ${
-                      errors.finalDeadline ? 'border-red-500' : 'border-gray-300'
-                    }`}
+                    className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none ${errors.finalDeadline ? 'border-red-500' : 'border-gray-300'
+                      }`}
                   />
                   {errors.finalDeadline && (
                     <div className="flex items-center gap-1 mt-1 text-red-500 text-sm">
@@ -352,28 +450,31 @@ const CreateAssignmentModal = ({ isOpen, onClose, onSubmit, courseInstanceId }) 
                   </select>
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Weight (%) <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="number"
-                    name="weight"
-                    value={formData.weight}
-                    onChange={handleChange}
-                    min="0"
-                    max="100"
-                    className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none ${
-                      errors.weight ? 'border-red-500' : 'border-gray-300'
-                    }`}
-                  />
-                  {errors.weight && (
-                    <div className="flex items-center gap-1 mt-1 text-red-500 text-sm">
-                      <AlertCircle className="w-4 h-4" />
-                      <span>{errors.weight}</span>
-                    </div>
-                  )}
-                </div>
+                {formData.gradingScale === 'PassFail' && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Pass Threshold <span className="text-red-500">*</span>
+                    </label>
+                    <select
+                      name="passThreshold"
+                      value={formData.passThreshold}
+                      onChange={handleChange}
+                      className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none ${errors.passThreshold ? 'border-red-500' : 'border-gray-300'
+                        }`}
+                    >
+                      <option value="">Select pass threshold</option>
+                      <option value="0">≥ 0</option>
+                      <option value="40">≥ 4.0</option>
+                      <option value="50">≥ 5.0</option>
+                    </select>
+                    {errors.passThreshold && (
+                      <div className="flex items-center gap-1 mt-1 text-red-500 text-sm">
+                        <AlertCircle className="w-4 h-4" />
+                        <span>{errors.passThreshold}</span>
+                      </div>
+                    )}
+                  </div>
+                )}
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -386,9 +487,8 @@ const CreateAssignmentModal = ({ isOpen, onClose, onSubmit, courseInstanceId }) 
                     onChange={handleChange}
                     min="0"
                     max="100"
-                    className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none ${
-                      errors.instructorWeight ? 'border-red-500' : 'border-gray-300'
-                    }`}
+                    className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none ${errors.instructorWeight ? 'border-red-500' : 'border-gray-300'
+                      }`}
                   />
                   {errors.instructorWeight && (
                     <div className="flex items-center gap-1 mt-1 text-red-500 text-sm">
@@ -409,9 +509,8 @@ const CreateAssignmentModal = ({ isOpen, onClose, onSubmit, courseInstanceId }) 
                     onChange={handleChange}
                     min="0"
                     max="100"
-                    className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none ${
-                      errors.peerWeight ? 'border-red-500' : 'border-gray-300'
-                    }`}
+                    className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none ${errors.peerWeight ? 'border-red-500' : 'border-gray-300'
+                      }`}
                   />
                   {errors.peerWeight && (
                     <div className="flex items-center gap-1 mt-1 text-red-500 text-sm">
@@ -429,26 +528,41 @@ const CreateAssignmentModal = ({ isOpen, onClose, onSubmit, courseInstanceId }) 
                 Review Settings
               </h3>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Number of Peer Reviews Required <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="number"
-                  name="numPeerReviewsRequired"
-                  value={formData.numPeerReviewsRequired}
-                  onChange={handleChange}
-                  min="1"
-                  className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none ${
-                    errors.numPeerReviewsRequired ? 'border-red-500' : 'border-gray-300'
-                  }`}
-                />
-                {errors.numPeerReviewsRequired && (
-                  <div className="flex items-center gap-1 mt-1 text-red-500 text-sm">
-                    <AlertCircle className="w-4 h-4" />
-                    <span>{errors.numPeerReviewsRequired}</span>
-                  </div>
-                )}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Number of Peer Reviews Required <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="number"
+                    name="numPeerReviewsRequired"
+                    value={formData.numPeerReviewsRequired}
+                    onChange={handleChange}
+                    min="1"
+                    className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none ${errors.numPeerReviewsRequired ? 'border-red-500' : 'border-gray-300'
+                      }`}
+                  />
+                  {errors.numPeerReviewsRequired && (
+                    <div className="flex items-center gap-1 mt-1 text-red-500 text-sm">
+                      <AlertCircle className="w-4 h-4" />
+                      <span>{errors.numPeerReviewsRequired}</span>
+                    </div>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Missing Review Penalty <span className="text-gray-400">(Optional)</span>
+                  </label>
+                  <input
+                    type="number"
+                    name="missingReviewPenalty"
+                    value={formData.missingReviewPenalty}
+                    onChange={handleChange}
+                    min="0"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none"
+                  />
+                </div>
               </div>
 
               <div className="space-y-3">
