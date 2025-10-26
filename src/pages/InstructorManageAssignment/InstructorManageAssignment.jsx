@@ -43,7 +43,6 @@ const InstructorManageAssignment = () => {
         statusColor: new Date(assignment.deadline) > new Date()
           ? "bg-green-100 text-green-800"
           : "bg-red-100 text-red-800",
-        // Store original data for editing
         originalData: assignment
       }));
 
@@ -165,7 +164,7 @@ const InstructorManageAssignment = () => {
   const handleUpdateAssignment = async (updatedData) => {
     try {
       const response = await updateAssignment(updatedData);
-      if (response) { 
+      if (response) {
         toast.success('Assignment updated successfully!');
         setShowEditModal(false);
         setEditingAssignment(null);
@@ -179,18 +178,15 @@ const InstructorManageAssignment = () => {
     }
   };
 
-  const handleCreateAssignment = async (assignmentData) => {
+  const handleCreateAssignment = async (assignmentData, file) => {
     try {
-      const response = await createAssignment(assignmentData);
-      if (response?.data) {
-        setShowModal(false);
-        await fetchAssignments();
-      } else {
-        throw new Error('Failed to create assignment');
-      }
+      await createAssignment(assignmentData, file);
+      await fetchAssignments();
+      setShowModal(false);
+      toast.success('Assignment created successfully!');
     } catch (error) {
-      console.error('Failed to create assignment:', error);
-      toast.error(error.response?.data?.message || 'Failed to create assignment. Please try again.');
+      console.error('Error creating assignment:', error);
+      toast.error('Failed to create assignment');
     }
   };
 
@@ -448,13 +444,15 @@ const InstructorManageAssignment = () => {
         assignment={selectedAssignment}
       />
 
+      {/* Create Assignment Modal - SỬA ĐÂY */}
       <CreateAssignmentModal
         isOpen={showModal}
         onClose={() => setShowModal(false)}
-        onSubmit={handleCreateAssignment}
+        onSubmit={handleCreateAssignment}  
         courseInstanceId={courseInstanceId}
       />
 
+      {/* Edit Assignment Modal */}
       <EditAssignmentModal
         isOpen={showEditModal}
         onClose={() => {
