@@ -221,7 +221,7 @@ const StudentSubmitAssignmentPage = () => {
                   <BarChart2 className="w-4 h-4 mr-1.5" />
                   Weight:{" "}
                   <span className="font-semibold ml-1">{`${
-                    (assignment.instructorWeight + assignment.peerWeight) * 100
+                    (assignment.instructorWeight + assignment.peerWeight)
                   }%`}</span>
                 </div>
               </div>
