@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, Plus, Eye, Pencil, Trash2, Loader, Edit2 } from 'lucide-react';
-import { getAllRubrics, updateRubric, deleteRubric, getRubricTemplatesByUserId, createRubricTemplate, deleteRubricTemplate, updateRubricTemplate } from '../../service/rubricService';
+import { getAllRubrics, updateRubric, deleteRubric, getRubricTemplatesByUserId, createRubricTemplate, deleteRubricTemplate, updateRubricTemplate, getRubricByUserId} from '../../service/rubricService';
 import { toast } from 'react-toastify';
 import { getCurrentAccount } from '../../utils/accountUtils';
 import DeleteRubricTemplateModal from '../../component/Rubric/DeleteRubricTemplateModal';
@@ -69,7 +69,7 @@ const InstructorManageRubric = () => {
         const fetchRubrics = async () => {
             try {
                 setLoading(true);
-                const data = await getAllRubrics();
+                const data = await getRubricByUserId(currentUser.id);
 
                 const formattedRubrics = data.map(rubric => ({
                     ...rubric,
@@ -533,51 +533,62 @@ const InstructorManageRubric = () => {
                     <h2 className="text-2xl font-bold text-gray-900 mb-2">My Rubrics</h2>
                     <p className="text-gray-600 mb-6">Rubrics you've created and are currently using</p>
 
-                    <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                    <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
                         {/* Table Header */}
-                        <div className="grid grid-cols-4 gap-4 px-6 py-4 bg-gray-50 border-b border-gray-200 font-medium text-gray-700 text-sm">
-                            <div className="col-span-2">Title</div>
-                            <div className="col-span-1 text-center">Total Criteria</div>
+                        <div className="grid grid-cols-6 px-6 py-3 bg-gray-100 border-b border-gray-200 text-sm font-semibold text-gray-700">
+                            <div className="col-span-2">Rubric Title</div>
+                            <div className="col-span-2">Assignment</div>
+                            <div className="col-span-1 text-center">Criteria</div>
                             <div className="col-span-1 text-center">Actions</div>
                         </div>
 
                         {/* Loading State */}
                         {loading ? (
-                            <div className="px-6 py-8 text-center">
+                            <div className="px-6 py-10 text-center text-gray-500">
                                 <Loader className="w-6 h-6 animate-spin mx-auto mb-2 text-orange-500" />
-                                <p className="text-gray-500">Loading rubrics...</p>
+                                Loading rubrics...
                             </div>
                         ) : filteredRubrics.length === 0 ? (
-                            <div className="px-6 py-8 text-center">
-                                <p className="text-gray-500">No rubrics found</p>
+                            <div className="px-6 py-10 text-center text-gray-500">
+                                No rubrics found
                             </div>
                         ) : (
-                            /* Table Rows */
-                            filteredRubrics.map((rubric) => (
-                                <div key={rubric.rubricId} className="grid grid-cols-4 gap-4 px-6 py-5 border-b border-gray-200 hover:bg-gray-50 transition-colors items-center">
-                                    <div className="col-span-2">
-                                        <h3 className="font-semibold text-gray-900 mb-1">
-                                            {rubric.title}
-                                        </h3>
+                            filteredRubrics.map((rubric, index) => (
+                                <div
+                                    key={rubric.rubricId}
+                                    className={`grid grid-cols-6 px-6 py-4 text-sm items-center transition-colors ${index % 2 === 0 ? "bg-white" : "bg-gray-50"
+                                        } hover:bg-orange-50/40 border-b border-gray-100`}
+                                >
+                                    {/* Title */}
+                                    <div className="col-span-2 font-medium text-gray-900 truncate">
+                                        {rubric.title}
                                     </div>
-                                    <div className="col-span-1 text-center">
-                                        <span className="text-base text-gray-900">
-                                            {rubric.criteriaCount || 0}
-                                        </span>
+
+                                    {/* Assignment */}
+                                    <div className="col-span-2 font-medium text-gray-900 truncate">
+                                        {rubric.assignmentTitle}
                                     </div>
-                                    <div className="col-span-1 flex gap-2 justify-center">
+
+                                    {/* Criteria Count */}
+                                    <div className="col-span-1 text-center font-semibold text-gray-800">
+                                        {rubric.criteriaCount || 0}
+                                    </div>
+
+                                    {/* Actions */}
+                                    <div className="col-span-1 flex justify-center gap-2">
                                         <button
-                                            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                                            className="p-2 hover:bg-gray-100 rounded-lg transition"
                                             title="View"
-                                            onClick={() => navigate(
-                                                `/instructor/manage-criteria/${rubric.rubricId}`,
-                                                { state: { from: '/instructor/manage-rubric' } }
-                                            )}
+                                            onClick={() =>
+                                                navigate(`/instructor/manage-criteria/${rubric.rubricId}`, {
+                                                    state: { from: "/instructor/manage-rubric" },
+                                                })
+                                            }
                                         >
                                             <Eye className="w-5 h-5 text-gray-600" />
                                         </button>
                                         <button
-                                            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                                            className="p-2 hover:bg-gray-100 rounded-lg transition"
                                             title="Edit"
                                             onClick={() => handleEditClick(rubric)}
                                         >
@@ -595,6 +606,7 @@ const InstructorManageRubric = () => {
                             ))
                         )}
                     </div>
+
                 </div>
 
                 {/* Create Modal */}
