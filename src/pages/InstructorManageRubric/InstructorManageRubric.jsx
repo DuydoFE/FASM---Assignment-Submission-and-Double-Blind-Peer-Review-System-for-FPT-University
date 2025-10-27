@@ -328,6 +328,12 @@ const InstructorManageRubric = () => {
         setEditingTemplate(null);
     };
 
+    const handleViewCriteriaTemplateClick = (e, template) => {
+    e.stopPropagation();
+    navigate(`/instructor/manage-criteria-template/${template.templateId}`);
+};
+
+
 
     const indexOfLastItem = currentPage * itemsPerPage;
     const indexOfFirstItem = indexOfLastItem - itemsPerPage;
@@ -366,8 +372,8 @@ const InstructorManageRubric = () => {
 
                 {/* Template Section */}
                 <div className="mb-12">
-                    <h2 className="text-2xl font-bold text-gray-900 mb-2">Available Rubric Templates</h2>
-                    <p className="text-gray-600 mb-6">Choose a suitable template to create rubrics quickly</p>
+                    <h2 className="text-2xl font-bold text-gray-900 mb-2">Rubric Templates</h2>
+                    <p className="text-gray-600 mb-6">Choose a suitable template to create rubrics</p>
 
                     {templatesLoading ? (
                         <div className="bg-white rounded-lg shadow-sm p-12 text-center">
@@ -458,6 +464,7 @@ const InstructorManageRubric = () => {
                                                         <button
                                                             className="p-2 text-blue-600 rounded-lg hover:bg-blue-50 transition border border-blue-200"
                                                             title="View Template"
+                                                            onClick={(e) => handleViewCriteriaTemplateClick(e, template)}
                                                         >
                                                             <Eye className="w-5 h-5" />
                                                         </button>
@@ -576,13 +583,13 @@ const InstructorManageRubric = () => {
                                         >
                                             <Pencil className="w-5 h-5 text-gray-600" />
                                         </button>
-                                        <button
+                                        {/* <button
                                             className="p-2 hover:bg-red-50 rounded-lg transition-colors"
                                             title="Delete"
                                             onClick={(e) => handleDeleteClick(e, rubric)}
                                         >
                                             <Trash2 className="w-5 h-5 text-red-500" />
-                                        </button>
+                                        </button> */}
                                     </div>
                                 </div>
                             ))
@@ -591,7 +598,7 @@ const InstructorManageRubric = () => {
                 </div>
 
                 {/* Create Modal */}
-                {isCreateModalOpen && (
+                {/* {isCreateModalOpen && (
                     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
                         <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
                             <div className="p-6">
@@ -629,7 +636,7 @@ const InstructorManageRubric = () => {
                             </div>
                         </div>
                     </div>
-                )}
+                )} */}
 
                 {/* Edit Modal */}
                 {isEditModalOpen && (
@@ -673,7 +680,7 @@ const InstructorManageRubric = () => {
                 )}
 
                 {/* Delete Rubric Confirmation Modal */}
-                {isDeleteModalOpen && (
+                {/* {isDeleteModalOpen && (
                     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
                         <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
                             <div className="p-6">
@@ -714,7 +721,7 @@ const InstructorManageRubric = () => {
                             </div>
                         </div>
                     </div>
-                )}
+                )} */}
 
                 {/* Delete Template Modal */}
                 <DeleteRubricTemplateModal

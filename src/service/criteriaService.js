@@ -57,9 +57,70 @@ export const updateCriterion = async (criteriaId, criterionData) => {
     }
 };
 
+export const getCriteriaByTemplateId = async (templateId) => {
+    try {
+        const response = await api.get(`/criteriaTemplate/template/${templateId}`);
+        return response.data.data;
+    } catch (error) {
+        console.error(`Error fetching criteria templates for template ${templateId}:`, error);
+        throw error;
+    }
+};
+
+export const deleteCriteriaTemplate = async (criteriaTemplateId) => {
+    try {
+        const response = await api.delete(`/api/criteriaTemplate/${criteriaTemplateId}`);
+        return response.data;
+    } catch (error) {
+        console.error(`Error deleting criteria template ${criteriaTemplateId}:`, error);
+        throw error;
+    }
+};
+
+export const createCriteriaTemplate = async (criteriaData) => {
+    try {
+        const response = await api.post('/api/criteriaTemplate', {
+            templateId: criteriaData.templateId,
+            title: criteriaData.title,
+            description: criteriaData.description,
+            weight: criteriaData.weight,
+            maxScore: criteriaData.maxScore,
+            scoringType: criteriaData.scoringType,
+            scoreLabel: criteriaData.scoreLabel
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error creating criteria template:', error);
+        throw error;
+    }
+};
+
+export const updateCriteriaTemplate = async (criteriaTemplateId, criteriaData) => {
+    try {
+        const response = await api.put(`/api/criteriaTemplate`, {
+            criteriaTemplateId: criteriaTemplateId,
+            templateId: criteriaData.templateId,
+            title: criteriaData.title,
+            description: criteriaData.description,
+            weight: criteriaData.weight,
+            maxScore: criteriaData.maxScore,
+            scoringType: criteriaData.scoringType,
+            scoreLabel: criteriaData.scoreLabel
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error updating criteria template:', error);
+        throw error;
+    }
+};
+
 export const criteriaService = {
     getCriteriaByRubricId,
     deleteCriterion,
     createCriterion,
-    updateCriterion
+    updateCriterion,
+    getCriteriaByTemplateId,
+    deleteCriteriaTemplate,
+    createCriteriaTemplate,
+    updateCriteriaTemplate
 };

@@ -18,6 +18,7 @@ import AssignmentDetailPage from "../pages/AssignmentDetailPage/AssignmentDetail
 import StudentSubmitAssignmentPage from "../pages/StudentSubmitAssignmentPage/StudentSubmitAssignmentPage";
 import InstructorManageRubric from "../pages/InstructorManageRubric/InstructorManageRubric";
 import InstructorManageCriteria from "../pages/InstructorManageCriteria/InstructorManageCriteria";
+import InstructorManageCriteriaTemplate from "../pages/InstructorManageCriteriaTemplate/InstructorManageCriteriaTemplate";
 import InstructorManageSubmission from "../pages/InstructorManageSubmission/InstructorManageSubmission";
 import InstructorSubmissionDetail from "../pages/InstructorSubmissionDetail/InstructorSubmissionDetail";
 import InstructorManageGrading from "../pages/IntructorManageGrading/IntructorManageGrading";
@@ -166,6 +167,10 @@ export const router = createBrowserRouter([
       {
         path: "manage-criteria/:rubricId?", 
         element: <InstructorManageCriteria />,
+      },
+      {
+        path: "manage-criteria-template/:templateId?", 
+        element: <InstructorManageCriteriaTemplate />,
       },
       {
         path: "manage-submission",
