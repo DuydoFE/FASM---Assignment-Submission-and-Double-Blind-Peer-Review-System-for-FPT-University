@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Users, Trash2, Plus, X } from 'lucide-react';
+import { Search, Users, Trash2, Plus } from 'lucide-react';
 import { useParams } from 'react-router-dom';
 import { getCurrentAccount } from '../../utils/accountUtils';
 import { getStudentsInCourse, removeStudentFromCourse, addStudentToCourse } from '../../service/courseService';
 import { toast } from 'react-toastify';
+import AddStudentModal from '../../component/Student/AddStudentModal.jsx';
+import DeleteStudentModal from '../../component/Student/DeleteStudentModal.jsx';
 
 const InstructorManageClass = () => {
   const { id: courseInstanceId } = useParams();
@@ -91,7 +93,7 @@ const InstructorManageClass = () => {
 
     try {
       setAddingStudent(true);
-      await addStudentToCourse(courseInstanceId, studentCode.trim(), currentUser.id); 
+      await addStudentToCourse(courseInstanceId, studentCode.trim(), currentUser.id);
 
       const response = await getStudentsInCourse(courseInstanceId);
       const mappedStudents = response.map((student, index) => ({
@@ -118,12 +120,6 @@ const InstructorManageClass = () => {
     } finally {
       setAddingStudent(false);
     }
-  };
-
-  const handleCloseModal = () => {
-    setStudentCode('');
-    setModalError('');
-    setIsAddModalOpen(false);
   };
 
   const handleDeleteClick = (student) => {
@@ -171,10 +167,10 @@ const InstructorManageClass = () => {
             {courseInfo && (
               <>
                 <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium">
-                  {courseInfo.courseCode}
+                  Course: {courseInfo.courseCode}
                 </span>
                 <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium">
-                  {courseInfo.className}
+                  Class: {courseInfo.className}
                 </span>
               </>
             )}
@@ -265,105 +261,26 @@ const InstructorManageClass = () => {
         )}
       </div>
 
-      {/* Add Student Modal */}
-      {isAddModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-xl font-bold text-gray-900">Add Student</h2>
-              <button
-                onClick={handleCloseModal}
-                className="text-gray-400 hover:text-gray-600"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
+      <AddStudentModal
+        isOpen={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
+        onSubmit={handleAddStudent}
+        studentCode={studentCode}
+        setStudentCode={setStudentCode}
+        modalError={modalError}
+        setModalError={setModalError}
+        addingStudent={addingStudent}
+        courseInfo={courseInfo}
+      />
 
-            <form onSubmit={handleAddStudent}>
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Student Code
-                </label>
-                <input
-                  type="text"
-                  value={studentCode}
-                  onChange={(e) => {
-                    setStudentCode(e.target.value);
-                    setModalError('');
-                  }}
-                  placeholder="Enter student code (e.g., SE123456)"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none"
-                  disabled={addingStudent}
-                  autoFocus
-                />
-                {modalError && (
-                  <p className="text-red-500 text-sm mt-2">{modalError}</p>
-                )}
-              </div>
-
-              <div className="flex gap-3 justify-end">
-                <button
-                  type="button"
-                  onClick={handleCloseModal}
-                  className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 disabled:opacity-50"
-                  disabled={addingStudent}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 disabled:opacity-50 flex items-center gap-2"
-                  disabled={addingStudent}
-                >
-                  <Plus className="w-4 h-4" />
-                  {addingStudent ? 'Adding...' : 'Add'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* Confirm Delete Modal */}
-      {confirmDeleteModal && studentToDelete && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-xl font-bold text-gray-900">Remove Student</h2>
-              <button
-                onClick={handleCancelDelete}
-                className="text-gray-400 hover:text-gray-600"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <div className="mb-6">
-              <p className="text-gray-700 mb-4">
-                Are you sure you want to remove <span className="font-semibold">{studentToDelete.name}</span> from this class?
-              </p>
-            </div>
-
-            <div className="flex gap-3 justify-end">
-              <button
-                onClick={handleCancelDelete}
-                className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 disabled:opacity-50"
-                disabled={deleting}
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleConfirmDelete}
-                className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 disabled:opacity-50 flex items-center gap-2"
-                disabled={deleting}
-              >
-                <Trash2 className="w-4 h-4" />
-                {deleting ? 'Removing...' : 'Remove'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <DeleteStudentModal
+        isOpen={confirmDeleteModal}
+        onClose={handleCancelDelete}
+        onConfirm={handleConfirmDelete}
+        student={studentToDelete}
+        deleting={deleting}
+        courseInfo={courseInfo}
+      />
     </div>
   );
 };
