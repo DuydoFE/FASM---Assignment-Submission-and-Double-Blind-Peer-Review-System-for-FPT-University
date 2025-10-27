@@ -26,23 +26,19 @@ const InstructorSideBar = () => {
       id: 'rubric',
       label: 'Rubric',
       icon: FileText,
-      path: '/instructor/manage-rubric', // API không cần id
+      path: '/instructor/manage-rubric',
     },
     {
       id: 'grading',
       label: 'Grading',
       icon: BarChart3,
-      path: courseInstanceId
-        ? `/instructor/manage-grading/${courseInstanceId}`
-        : '/instructor/manage-grading',
+      path: '/instructor/manage-grading',
     },
     {
       id: 'publish',
       label: 'Publish Mark',
       icon: Upload,
-      path: courseInstanceId
-        ? `/instructor/publish-mark/${courseInstanceId}`
-        : '/instructor/publish-mark',
+      path: '/instructor/publish-mark',
     },
   ];
 

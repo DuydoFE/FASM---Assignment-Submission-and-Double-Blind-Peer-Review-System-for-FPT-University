@@ -59,7 +59,7 @@ export const updateCriterion = async (criteriaId, criterionData) => {
 
 export const getCriteriaByTemplateId = async (templateId) => {
     try {
-        const response = await api.get(`/criteriaTemplate/template/${templateId}`);
+        const response = await api.get(`/CriteriaTemplate/template/${templateId}`);
         return response.data.data;
     } catch (error) {
         console.error(`Error fetching criteria templates for template ${templateId}:`, error);
@@ -69,7 +69,7 @@ export const getCriteriaByTemplateId = async (templateId) => {
 
 export const deleteCriteriaTemplate = async (criteriaTemplateId) => {
     try {
-        const response = await api.delete(`/criteriaTemplate/${criteriaTemplateId}`);
+        const response = await api.delete(`/CriteriaTemplate/${criteriaTemplateId}`);
         return response.data;
     } catch (error) {
         console.error(`Error deleting criteria template ${criteriaTemplateId}:`, error);
@@ -79,7 +79,7 @@ export const deleteCriteriaTemplate = async (criteriaTemplateId) => {
 
 export const createCriteriaTemplate = async (criteriaData) => {
     try {
-        const response = await api.post('/criteriaTemplate', {
+        const response = await api.post('/CriteriaTemplate', {
             templateId: criteriaData.templateId,
             title: criteriaData.title,
             description: criteriaData.description,
@@ -97,7 +97,7 @@ export const createCriteriaTemplate = async (criteriaData) => {
 
 export const updateCriteriaTemplate = async (criteriaTemplateId, criteriaData) => {
     try {
-        const response = await api.put(`/criteriaTemplate`, {
+        const response = await api.put(`/CriteriaTemplate`, {
             criteriaTemplateId: criteriaTemplateId,
             templateId: criteriaData.templateId,
             title: criteriaData.title,
