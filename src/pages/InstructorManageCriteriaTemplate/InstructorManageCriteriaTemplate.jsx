@@ -103,7 +103,7 @@ function InstructorManageCriteriaTemplate() {
                 rubricId: undefined // Remove rubricId if it exists
             };
             delete templateData.rubricId;
-            
+
             await createCriteriaTemplate(templateData);
 
             // Refresh the list
@@ -142,9 +142,14 @@ function InstructorManageCriteriaTemplate() {
     const handleUpdateCriterion = async (criterionData) => {
         try {
             setSubmitting(true);
-            await updateCriteriaTemplate(criterionData.criteriaId, criterionData);
 
-            // Refresh list
+            const templateUpdateData = {
+                ...criterionData,
+                templateId: templateId,
+                criteriaTemplateId: criterionData.criteriaId
+            };
+
+            await updateCriteriaTemplate(criterionData.criteriaId, templateUpdateData);
             const data = await getCriteriaByTemplateId(templateId);
             if (Array.isArray(data) && data.length > 0) {
                 const mappedCriteria = data.map(item => ({
@@ -153,8 +158,6 @@ function InstructorManageCriteriaTemplate() {
                     description: item.description,
                     weight: item.weight,
                     maxScore: item.maxScore,
-                    scoringMethod: item.scoringType,
-                    items: item.scoreLabels ? item.scoreLabels.split(',').map(s => s.trim()) : []
                 }));
                 setCriteria(mappedCriteria);
                 setTemplateTitle(data[0].templateTitle || 'Template Details');

@@ -98,14 +98,12 @@ export const createCriteriaTemplate = async (criteriaData) => {
 export const updateCriteriaTemplate = async (criteriaTemplateId, criteriaData) => {
     try {
         const response = await api.put(`/CriteriaTemplate`, {
-            criteriaTemplateId: criteriaTemplateId,
-            templateId: criteriaData.templateId,
+            criteriaTemplateId: criteriaTemplateId, 
+            templateId: criteriaData.templateId, 
             title: criteriaData.title,
             description: criteriaData.description,
             weight: criteriaData.weight,
-            maxScore: criteriaData.maxScore,
-            scoringType: criteriaData.scoringType,
-            scoreLabel: criteriaData.scoreLabel
+            maxScore: criteriaData.maxScore
         });
         return response.data;
     } catch (error) {
