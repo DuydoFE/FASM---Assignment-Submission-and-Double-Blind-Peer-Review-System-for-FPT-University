@@ -69,7 +69,7 @@ export const getCriteriaByTemplateId = async (templateId) => {
 
 export const deleteCriteriaTemplate = async (criteriaTemplateId) => {
     try {
-        const response = await api.delete(`/api/criteriaTemplate/${criteriaTemplateId}`);
+        const response = await api.delete(`/criteriaTemplate/${criteriaTemplateId}`);
         return response.data;
     } catch (error) {
         console.error(`Error deleting criteria template ${criteriaTemplateId}:`, error);
@@ -79,7 +79,7 @@ export const deleteCriteriaTemplate = async (criteriaTemplateId) => {
 
 export const createCriteriaTemplate = async (criteriaData) => {
     try {
-        const response = await api.post('/api/criteriaTemplate', {
+        const response = await api.post('/criteriaTemplate', {
             templateId: criteriaData.templateId,
             title: criteriaData.title,
             description: criteriaData.description,
@@ -97,7 +97,7 @@ export const createCriteriaTemplate = async (criteriaData) => {
 
 export const updateCriteriaTemplate = async (criteriaTemplateId, criteriaData) => {
     try {
-        const response = await api.put(`/api/criteriaTemplate`, {
+        const response = await api.put(`/criteriaTemplate`, {
             criteriaTemplateId: criteriaTemplateId,
             templateId: criteriaData.templateId,
             title: criteriaData.title,

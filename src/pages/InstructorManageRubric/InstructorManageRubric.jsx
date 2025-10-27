@@ -329,9 +329,9 @@ const InstructorManageRubric = () => {
     };
 
     const handleViewCriteriaTemplateClick = (e, template) => {
-    e.stopPropagation();
-    navigate(`/instructor/manage-criteria-template/${template.templateId}`);
-};
+        e.stopPropagation();
+        navigate(`/instructor/manage-criteria-template/${template.templateId}`);
+    };
 
 
 
@@ -362,7 +362,7 @@ const InstructorManageRubric = () => {
                         />
                     </div>
                     <button
-                        onClick={handleCreateClick}
+                        onClick={handleCreateTemplateClick}
                         className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-lg flex items-center gap-2 font-medium transition-colors"
                     >
                         <Plus className="w-5 h-5" />
