@@ -41,15 +41,17 @@ const ProtectedRoute = ({ children, role }) => {
   return children;
 };
 
-// 👉 Import layout + page cho Admin
+// 👉 Import layout + pages cho Admin
 import AdminLayout from "../layout/AdminLayout";
 import AdminDashboard from "../pages/Admin/AdminDashboard";
 import AdminUserManagement from "../pages/Admin/AdminUserManagement";
 import AdminClassManagement from "../pages/Admin/AdminClassManagement";
-import AdminClassDetail from "../pages/Admin/AdminClassDetail";
-import AdminAccountSettings from "../pages/Admin/AdminAccountSettings";
+import AdminClassDetailsManagement from "../pages/Admin/AdminClassDetailsManagement";
 import AdminClassAssignments from "../pages/Admin/AdminClassAssignments";
 import AdminAssignmentSubmissions from "../pages/Admin/AdminAssignmentSubmissions";
+import AdminAccountSettings from "../pages/Admin/AdminAccountSettings";
+import AdminSystemSetting from "../pages/Admin/AdminSystemSetting";
+
 import ProfilePage from "../pages/HomePage/ProfilePage";
 
 export const router = createBrowserRouter([
@@ -61,7 +63,7 @@ export const router = createBrowserRouter([
         index: true,
         element: <HomePage />,
       },
-       {
+      {
         path: "profile",
         element: <ProfilePage />,
       },
@@ -165,7 +167,7 @@ export const router = createBrowserRouter([
         element: <InstructorManageRubric />,
       },
       {
-        path: "manage-criteria/:rubricId?", 
+        path: "manage-criteria/:rubricId?",
         element: <InstructorManageCriteria />,
       },
       {
@@ -202,10 +204,11 @@ export const router = createBrowserRouter([
       { path: "dashboard", element: <AdminDashboard /> },
       { path: "users", element: <AdminUserManagement /> },
       { path: "classes", element: <AdminClassManagement /> },
-      { path: "classes/:id", element: <AdminClassDetail /> },
-      { path: "classes/:id/assignments", element: <AdminClassAssignments /> }, // ✅
-      { path: "classes/:id/assignments/:assignmentId", element: <AdminAssignmentSubmissions /> }, // ✅
+      { path: "classes/:id", element: <AdminClassDetailsManagement /> },
+      { path: "classes/:id/assignments", element: <AdminClassAssignments /> },
+      { path: "classes/:id/assignments/:assignmentId", element: <AdminAssignmentSubmissions /> },
       { path: "settings", element: <AdminAccountSettings /> },
+      { path: "systemSetting", element: <AdminSystemSetting /> },
     ],
   }
 
