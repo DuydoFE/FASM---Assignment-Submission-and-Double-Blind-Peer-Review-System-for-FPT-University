@@ -65,10 +65,50 @@ export const createAssignment = async (assignmentData, file = null) => {
   try {
     const formData = new FormData();
     
-    formData.append('assignment', JSON.stringify(assignmentData));
+    // Append từng field riêng lẻ thay vì JSON string
+    formData.append('CourseInstanceId', assignmentData.courseInstanceId);
+    formData.append('RubricTemplateId', assignmentData.rubricTemplateId);
+    formData.append('Title', assignmentData.title);
     
+    // Optional fields - chỉ append nếu có giá trị
+    if (assignmentData.description) {
+      formData.append('Description', assignmentData.description);
+    }
+    if (assignmentData.guidelines) {
+      formData.append('Guidelines', assignmentData.guidelines);
+    }
+    if (assignmentData.startDate) {
+      formData.append('StartDate', assignmentData.startDate);
+    }
+    
+    // Required date fields
+    formData.append('Deadline', assignmentData.deadline);
+    formData.append('ReviewDeadline', assignmentData.reviewDeadline);
+    formData.append('FinalDeadline', assignmentData.finalDeadline);
+    
+    // Number fields
+    formData.append('NumPeerReviewsRequired', assignmentData.numPeerReviewsRequired);
+    formData.append('MissingReviewPenalty', assignmentData.missingReviewPenalty);
+    formData.append('InstructorWeight', assignmentData.instructorWeight);
+    formData.append('PeerWeight', assignmentData.peerWeight);
+    formData.append('PassThreshold', assignmentData.passThreshold);
+    
+    // Boolean fields
+    formData.append('AllowCrossClass', assignmentData.allowCrossClass);
+    formData.append('IsBlindReview', assignmentData.isBlindReview);
+    formData.append('IncludeAIScore', assignmentData.includeAIScore);
+    
+    // String fields
+    formData.append('GradingScale', assignmentData.gradingScale);
+    
+    // File (if exists)
     if (file) {
-      formData.append('file', file);
+      formData.append('File', file);
+    }
+
+    console.log('FormData contents:');
+    for (let pair of formData.entries()) {
+      console.log(pair[0] + ': ' + pair[1]);
     }
 
     const response = await api.post('/Assignment', formData, {
@@ -80,6 +120,7 @@ export const createAssignment = async (assignmentData, file = null) => {
     return response.data;
   } catch (error) {
     console.error('Lỗi khi tạo assignment mới:', error);
+    console.error('Error response:', error.response?.data);
     throw error;
   }
 };

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, Plus, Eye, Pencil, Trash2, Loader, Edit2 } from 'lucide-react';
-import { getAllRubrics, updateRubric, deleteRubric, getRubricTemplatesByUserId, createRubricTemplate, deleteRubricTemplate, updateRubricTemplate } from '../../service/rubricService';
+import { getAllRubrics, updateRubric, deleteRubric, getRubricTemplatesByUserId, createRubricTemplate, deleteRubricTemplate, updateRubricTemplate, getRubricByUserId } from '../../service/rubricService';
 import { toast } from 'react-toastify';
 import { getCurrentAccount } from '../../utils/accountUtils';
 import DeleteRubricTemplateModal from '../../component/Rubric/DeleteRubricTemplateModal';
@@ -69,7 +69,7 @@ const InstructorManageRubric = () => {
         const fetchRubrics = async () => {
             try {
                 setLoading(true);
-                const data = await getAllRubrics();
+                const data = await getRubricByUserId(currentUser.id);
 
                 const formattedRubrics = data.map(rubric => ({
                     ...rubric,
@@ -328,6 +328,12 @@ const InstructorManageRubric = () => {
         setEditingTemplate(null);
     };
 
+    const handleViewCriteriaTemplateClick = (e, template) => {
+        e.stopPropagation();
+        navigate(`/instructor/manage-criteria-template/${template.templateId}`);
+    };
+
+
 
     const indexOfLastItem = currentPage * itemsPerPage;
     const indexOfFirstItem = indexOfLastItem - itemsPerPage;
@@ -356,7 +362,7 @@ const InstructorManageRubric = () => {
                         />
                     </div>
                     <button
-                        onClick={handleCreateClick}
+                        onClick={handleCreateTemplateClick}
                         className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-lg flex items-center gap-2 font-medium transition-colors"
                     >
                         <Plus className="w-5 h-5" />
@@ -366,8 +372,8 @@ const InstructorManageRubric = () => {
 
                 {/* Template Section */}
                 <div className="mb-12">
-                    <h2 className="text-2xl font-bold text-gray-900 mb-2">Available Rubric Templates</h2>
-                    <p className="text-gray-600 mb-6">Choose a suitable template to create rubrics quickly</p>
+                    <h2 className="text-2xl font-bold text-gray-900 mb-2">Rubric Templates</h2>
+                    <p className="text-gray-600 mb-6">Choose a suitable template to create rubrics</p>
 
                     {templatesLoading ? (
                         <div className="bg-white rounded-lg shadow-sm p-12 text-center">
@@ -458,6 +464,7 @@ const InstructorManageRubric = () => {
                                                         <button
                                                             className="p-2 text-blue-600 rounded-lg hover:bg-blue-50 transition border border-blue-200"
                                                             title="View Template"
+                                                            onClick={(e) => handleViewCriteriaTemplateClick(e, template)}
                                                         >
                                                             <Eye className="w-5 h-5" />
                                                         </button>
@@ -526,72 +533,93 @@ const InstructorManageRubric = () => {
                     <h2 className="text-2xl font-bold text-gray-900 mb-2">My Rubrics</h2>
                     <p className="text-gray-600 mb-6">Rubrics you've created and are currently using</p>
 
-                    <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                    <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
                         {/* Table Header */}
-                        <div className="grid grid-cols-4 gap-4 px-6 py-4 bg-gray-50 border-b border-gray-200 font-medium text-gray-700 text-sm">
-                            <div className="col-span-2">Title</div>
-                            <div className="col-span-1 text-center">Total Criteria</div>
+                        <div className="grid grid-cols-10 px-6 py-3 bg-gray-100 border-b border-gray-200 text-sm font-semibold text-gray-700">
+                            <div className="col-span-3">Rubric Title</div>
+                            <div className="col-span-3">Course - Class</div>
+                            <div className="col-span-2">Assignment</div>
+                            <div className="col-span-1 text-center">Total</div>
                             <div className="col-span-1 text-center">Actions</div>
                         </div>
 
-                        {/* Loading State */}
+                        {/* Loading / Empty / Data */}
                         {loading ? (
-                            <div className="px-6 py-8 text-center">
+                            <div className="px-6 py-10 text-center text-gray-500">
                                 <Loader className="w-6 h-6 animate-spin mx-auto mb-2 text-orange-500" />
-                                <p className="text-gray-500">Loading rubrics...</p>
+                                Loading rubrics...
                             </div>
                         ) : filteredRubrics.length === 0 ? (
-                            <div className="px-6 py-8 text-center">
-                                <p className="text-gray-500">No rubrics found</p>
-                            </div>
+                            <div className="px-6 py-10 text-center text-gray-500">No rubrics found</div>
                         ) : (
-                            /* Table Rows */
-                            filteredRubrics.map((rubric) => (
-                                <div key={rubric.rubricId} className="grid grid-cols-4 gap-4 px-6 py-5 border-b border-gray-200 hover:bg-gray-50 transition-colors items-center">
-                                    <div className="col-span-2">
-                                        <h3 className="font-semibold text-gray-900 mb-1">
-                                            {rubric.title}
-                                        </h3>
+                            filteredRubrics.map((rubric, index) => (
+                                <div
+                                    key={rubric.rubricId}
+                                    className={`grid grid-cols-10 px-6 py-4 text-sm items-center border-b border-gray-100 transition-colors ${index % 2 === 0 ? "bg-white" : "bg-gray-50"
+                                        } hover:bg-orange-50/40`}
+                                >
+                                    {/* Rubric Title */}
+                                    <div className="col-span-3 font-semibold text-gray-900 truncate">
+                                        {rubric.title}
                                     </div>
-                                    <div className="col-span-1 text-center">
-                                        <span className="text-base text-gray-900">
-                                            {rubric.criteriaCount || 0}
-                                        </span>
+
+                                    {/* Course - Class */}
+                                    <div className="col-span-3 font-semibold text-gray-700 truncate">
+                                        {rubric.assignmentsUsingTemplate?.[0]
+                                            ? rubric.assignmentsUsingTemplate[0].className
+                                            : "—"}
                                     </div>
-                                    <div className="col-span-1 flex gap-2 justify-center">
+
+                                    {/* Assignment */}
+                                    <div className="col-span-2 font-medium text-gray-800 truncate">
+                                        {rubric.assignmentTitle}
+                                    </div>
+
+                                    {/* Criteria Count */}
+                                    <div className="col-span-1 text-center font-semibold text-gray-800">
+                                        {rubric.criteriaCount || 0}
+                                    </div>
+
+                                    {/* Actions */}
+                                    <div className="col-span-1 flex justify-center gap-2">
                                         <button
-                                            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                                            className="p-2 rounded-lg hover:bg-gray-100 text-gray-600 transition"
                                             title="View"
-                                            onClick={() => navigate(
-                                                `/instructor/manage-criteria/${rubric.rubricId}`,
-                                                { state: { from: '/instructor/manage-rubric' } }
-                                            )}
+                                            onClick={() =>
+                                                navigate(`/instructor/manage-criteria/${rubric.rubricId}`, {
+                                                    state: { from: "/instructor/manage-rubric" },
+                                                })
+                                            }
                                         >
-                                            <Eye className="w-5 h-5 text-gray-600" />
+                                            <Eye className="w-5 h-5" />
                                         </button>
                                         <button
-                                            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                                            className="p-2 rounded-lg hover:bg-gray-100 text-gray-600 transition"
                                             title="Edit"
                                             onClick={() => handleEditClick(rubric)}
                                         >
-                                            <Pencil className="w-5 h-5 text-gray-600" />
+                                            <Pencil className="w-5 h-5" />
                                         </button>
-                                        <button
-                                            className="p-2 hover:bg-red-50 rounded-lg transition-colors"
+                                        {/* <button
+                                            className="p-2 rounded-lg hover:bg-red-50 text-red-500 transition"
                                             title="Delete"
                                             onClick={(e) => handleDeleteClick(e, rubric)}
                                         >
-                                            <Trash2 className="w-5 h-5 text-red-500" />
-                                        </button>
+                                            <Trash2 className="w-5 h-5" />
+                                        </button> */}
                                     </div>
                                 </div>
                             ))
                         )}
                     </div>
+
+
+
+
                 </div>
 
                 {/* Create Modal */}
-                {isCreateModalOpen && (
+                {/* {isCreateModalOpen && (
                     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
                         <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
                             <div className="p-6">
@@ -629,7 +657,7 @@ const InstructorManageRubric = () => {
                             </div>
                         </div>
                     </div>
-                )}
+                )} */}
 
                 {/* Edit Modal */}
                 {isEditModalOpen && (
@@ -673,7 +701,7 @@ const InstructorManageRubric = () => {
                 )}
 
                 {/* Delete Rubric Confirmation Modal */}
-                {isDeleteModalOpen && (
+                {/* {isDeleteModalOpen && (
                     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
                         <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
                             <div className="p-6">
@@ -714,7 +742,7 @@ const InstructorManageRubric = () => {
                             </div>
                         </div>
                     </div>
-                )}
+                )} */}
 
                 {/* Delete Template Modal */}
                 <DeleteRubricTemplateModal

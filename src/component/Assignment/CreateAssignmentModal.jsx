@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { X, Plus, FileText, AlertCircle, Upload, File } from 'lucide-react';
-import { getRubricsTemplate } from '../../service/rubricService';
+import { getRubricTemplatesByUserId } from '../../service/rubricService';
 import { toast } from 'react-toastify';
+import { getCurrentAccount } from '../../utils/accountUtils';
 
 const CreateAssignmentModal = ({ isOpen, onClose, onSubmit, courseInstanceId }) => {
   const [formData, setFormData] = useState({
@@ -30,26 +31,26 @@ const CreateAssignmentModal = ({ isOpen, onClose, onSubmit, courseInstanceId }) 
   const [rubrics, setRubrics] = useState([]);
   const [loadingRubrics, setLoadingRubrics] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
+  const currentUser = getCurrentAccount();
+  
 
   const fetchRubrics = async () => {
-    setLoadingRubrics(true);
-    try {
-      const data = await getRubricsTemplate();
-      console.log('Fetched rubrics:', data); // Debug
-      console.log('First rubric structure:', data && data[0]); // Debug - xem cấu trúc
-      if (data && data.length > 0) {
-        setRubrics(data);
-      } else {
-        setRubrics([]);
-      }
-    } catch (error) {
-      console.error('Error fetching rubrics:', error);
+  setLoadingRubrics(true);
+  try {
+    const data = await getRubricTemplatesByUserId(currentUser.id);
+    if (data && data.length > 0) {
+      setRubrics(data);
+    } else {
       setRubrics([]);
-      toast.error('Failed to load rubrics');
-    } finally {
-      setLoadingRubrics(false);
     }
-  };
+  } catch (error) {
+    console.error('Error fetching rubrics:', error);
+    setRubrics([]);
+    toast.error('Failed to load rubrics');
+  } finally {
+    setLoadingRubrics(false);
+  }
+};
 
   useEffect(() => {
     if (isOpen) {
@@ -60,8 +61,6 @@ const CreateAssignmentModal = ({ isOpen, onClose, onSubmit, courseInstanceId }) 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
 
-    console.log('handleChange triggered:', { name, value, type, rawValue: e.target.value }); // Debug
-
     let newValue = value;
 
     if (type === 'checkbox') {
@@ -69,21 +68,26 @@ const CreateAssignmentModal = ({ isOpen, onClose, onSubmit, courseInstanceId }) 
     } else if (type === 'number') {
       newValue = value === '' ? '' : Number(value);
     } else if (name === 'rubricTemplateId') {
-      // Giữ nguyên giá trị string từ select, sẽ convert khi submit
       newValue = value;
-      console.log('Rubric selected:', { value, newValue, type: typeof newValue }); // Debug
     } else if (name === 'passThreshold') {
       newValue = value;
+    } else if (name === 'gradingScale') {
+      // Reset passThreshold when changing grading scale
+      setFormData(prev => ({
+        ...prev,
+        gradingScale: value,
+        passThreshold: '' // Clear passThreshold when switching
+      }));
+      if (errors.passThreshold) {
+        setErrors(prev => ({ ...prev, passThreshold: '' }));
+      }
+      return;
     }
 
-    setFormData(prev => {
-      const updated = {
-        ...prev,
-        [name]: newValue
-      };
-      console.log('Updated formData:', updated); // Debug
-      return updated;
-    });
+    setFormData(prev => ({
+      ...prev,
+      [name]: newValue
+    }));
 
     if (errors[name]) {
       setErrors(prev => ({ ...prev, [name]: '' }));
@@ -112,7 +116,6 @@ const CreateAssignmentModal = ({ isOpen, onClose, onSubmit, courseInstanceId }) 
 
     if (!formData.rubricTemplateId || formData.rubricTemplateId === '' || formData.rubricTemplateId === 'null') {
       newErrors.rubricTemplateId = 'Please select a rubric';
-      console.error('Rubric validation failed:', formData.rubricTemplateId);
     }
 
     if (!formData.deadline) {
@@ -131,6 +134,7 @@ const CreateAssignmentModal = ({ isOpen, onClose, onSubmit, courseInstanceId }) 
       newErrors.numPeerReviewsRequired = 'Number of peer reviews is required';
     }
 
+    // Only validate passThreshold if gradingScale is PassFail
     if (formData.gradingScale === 'PassFail') {
       if (formData.passThreshold === '' || !formData.passThreshold) {
         newErrors.passThreshold = 'Please select a pass threshold';
@@ -142,9 +146,6 @@ const CreateAssignmentModal = ({ isOpen, onClose, onSubmit, courseInstanceId }) 
       newErrors.instructorWeight = 'Instructor and Peer weights must add up to 100%';
       newErrors.peerWeight = 'Instructor and Peer weights must add up to 100%';
     }
-
-    console.log('Validation errors:', newErrors);
-    console.log('Current formData:', formData);
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -185,15 +186,43 @@ const CreateAssignmentModal = ({ isOpen, onClose, onSubmit, courseInstanceId }) 
         includeAIScore: formData.includeAIScore
       };
 
-      // Thêm passThreshold nếu là Pass/Fail
+      // Always include passThreshold
       if (formData.gradingScale === 'PassFail') {
-        submitData.passThreshold = parseInt(formData.passThreshold);
+        submitData.passThreshold = parseFloat(formData.passThreshold); // Use parseFloat for double
+      } else {
+        submitData.passThreshold = 0; // Send 0 for Scale10 instead of null
       }
 
-      console.log('Submitting data:', submitData); // Debug
+      console.log('Submitting data:', submitData);
 
       await onSubmit(submitData, selectedFile);
       toast.success('Assignment created successfully');
+      
+      // Reset form
+      setFormData({
+        courseInstanceId: courseInstanceId || 0,
+        rubricTemplateId: '',
+        title: '',
+        description: '',
+        guidelines: '',
+        files: null,
+        startDate: '',
+        deadline: '',
+        reviewDeadline: '',
+        finalDeadline: '',
+        numPeerReviewsRequired: '',
+        missingReviewPenalty: 0,
+        allowCrossClass: false,
+        isBlindReview: false,
+        instructorWeight: '',
+        peerWeight: '',
+        gradingScale: 'Scale10',
+        passThreshold: '',
+        includeAIScore: false
+      });
+      setSelectedFile(null);
+      setErrors({});
+      
       onClose();
     } catch (error) {
       console.error('Error creating assignment:', error);
@@ -463,7 +492,7 @@ const CreateAssignmentModal = ({ isOpen, onClose, onSubmit, courseInstanceId }) 
                         }`}
                     >
                       <option value="">Select pass threshold</option>
-                      <option value="0">≥ 0</option>
+                      <option value="0">≥ 0.0</option>
                       <option value="40">≥ 4.0</option>
                       <option value="50">≥ 5.0</option>
                     </select>

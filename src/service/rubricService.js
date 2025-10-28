@@ -123,6 +123,16 @@ export const updateRubricTemplate = async (templateId, updateData) => {
   }
 };
 
+export const getRubricByUserId = async (userId) => {
+  try {
+    const response = await api.get(`/Rubric/user/${userId}`);
+    return response.data.data;
+  } catch (error) {
+    console.error('Error fetching rubrics by user:', error);
+    throw error;
+  }
+};
+
 export const rubricService = {
   getRubricByAssignmentId,
   getAllRubrics,
@@ -135,4 +145,5 @@ export const rubricService = {
   createRubricTemplate,
   deleteRubricTemplate,
   updateRubricTemplate,
+  getRubricByUserId,
 };
