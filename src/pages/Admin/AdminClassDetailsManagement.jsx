@@ -1,62 +1,24 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import {
+  getCourseInstanceById,
+  getCourseStudentsByCourseInstance,
+  createCourseStudent,
+  deleteCourseStudent,
+  importStudentsFromExcel,
+} from "../../services/adminService";
 
 export default function AdminClassDetailsManagement() {
   const { id } = useParams();
   const navigate = useNavigate();
 
-  // Fake data cho demo (sau này thay bằng API thật)
-  const fakeClasses = [
-    {
-      id: 1,
-      name: "SE101 - Group A",
-      course: "Software Engineering Fundamentals",
-      major: "Software Engineering",
-      semester: "Fall 2025",
-    },
-    {
-      id: 2,
-      name: "AI202 - Group B",
-      course: "Introduction to Artificial Intelligence",
-      major: "Artificial Intelligence",
-      semester: "Spring 2025",
-    },
-  ];
-
   const [classInfo, setClassInfo] = useState(null);
-
-  const [users, setUsers] = useState([
-    {
-      id: 1,
-      name: "Nguyen Van A",
-      studentId: "SE12345",
-      email: "a@student.fpt.edu.vn",
-      role: "Student",
-      major: "Software Engineering",
-      status: "Active",
-    },
-    {
-      id: 2,
-      name: "Tran Thi B",
-      studentId: "SE00001",
-      email: "b@fpt.edu.vn",
-      role: "Instructor",
-      major: "Software Engineering",
-      status: "Active",
-    },
-    {
-      id: 3,
-      name: "Le Van C",
-      studentId: "SE12346",
-      email: "c@student.fpt.edu.vn",
-      role: "Student",
-      major: "Software Engineering",
-      status: "Deactive",
-    },
-  ]);
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(false);
 
   const [showAddUser, setShowAddUser] = useState(false);
   const [newUser, setNewUser] = useState({
+    userId: "",
     name: "",
     studentId: "",
     email: "",
@@ -65,15 +27,99 @@ export default function AdminClassDetailsManagement() {
     status: "Active",
   });
 
-  // Load thông tin lớp học khi id thay đổi
+  const [file, setFile] = useState(null);
+  const changedByUserId = 1; // ✅ tạm hardcode userId admin
+
+  // 📌 Load thông tin lớp & danh sách user khi vào trang
   useEffect(() => {
-    const found = fakeClasses.find((c) => c.id.toString() === id);
-    if (found) setClassInfo(found);
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+
+        // Lấy thông tin lớp học
+        const classData = await getCourseInstanceById(id);
+        setClassInfo(classData);
+
+        // Lấy danh sách sinh viên trong lớp
+        const studentData = await getCourseStudentsByCourseInstance(id);
+        setUsers(studentData);
+      } catch (err) {
+        console.error("Error loading class details:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (id) fetchData();
   }, [id]);
 
-  if (!classInfo) {
-    return <p className="p-6 text-gray-500">Class not found</p>;
-  }
+  // 📌 Thêm user vào lớp
+  const handleAddUser = async () => {
+    try {
+      setLoading(true);
+      const payload = {
+        userId: newUser.userId, // hoặc backend sẽ tự nhận userId theo email
+        courseInstanceId: id,
+        changedByUserId,
+      };
+
+      await createCourseStudent(payload);
+      const updated = await getCourseStudentsByCourseInstance(id);
+      setUsers(updated);
+
+      // Reset form
+      setNewUser({
+        userId: "",
+        name: "",
+        studentId: "",
+        email: "",
+        role: "Student",
+        major: "",
+        status: "Active",
+      });
+      setShowAddUser(false);
+    } catch (err) {
+      console.error("Error adding user:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 📌 Xoá user khỏi lớp
+  const handleRemoveUser = async (u) => {
+    if (!window.confirm(`Remove ${u.name} from class?`)) return;
+    try {
+      setLoading(true);
+      await deleteCourseStudent(u.userId, id, u.courseStudentId);
+      const updated = await getCourseStudentsByCourseInstance(id);
+      setUsers(updated);
+    } catch (err) {
+      console.error("Error removing user:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 📌 Import file Excel
+  const handleImportFile = async () => {
+    if (!file) return alert("Please choose a file first!");
+    try {
+      setLoading(true);
+      await importStudentsFromExcel(id, file, changedByUserId);
+      const updated = await getCourseStudentsByCourseInstance(id);
+      setUsers(updated);
+      setFile(null);
+      alert("✅ Import successful!");
+    } catch (err) {
+      console.error("Error importing file:", err);
+      alert("❌ Import failed!");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) return <p className="p-6 text-gray-500">Loading...</p>;
+  if (!classInfo) return <p className="p-6 text-gray-500">Class not found</p>;
 
   return (
     <div className="space-y-6">
@@ -81,18 +127,10 @@ export default function AdminClassDetailsManagement() {
 
       {/* Thông tin lớp học */}
       <div className="bg-white p-4 rounded-xl shadow-md space-y-2">
-        <p>
-          <span className="font-semibold">Class Name:</span> {classInfo.name}
-        </p>
-        <p>
-          <span className="font-semibold">Course:</span> {classInfo.course}
-        </p>
-        <p>
-          <span className="font-semibold">Major:</span> {classInfo.major}
-        </p>
-        <p>
-          <span className="font-semibold">Semester:</span> {classInfo.semester}
-        </p>
+        <p><span className="font-semibold">Class Name:</span> {classInfo.className}</p>
+        <p><span className="font-semibold">Course:</span> {classInfo.courseName}</p>
+        <p><span className="font-semibold">Major:</span> {classInfo.majorName}</p>
+        <p><span className="font-semibold">Semester:</span> {classInfo.semesterName}</p>
       </div>
 
       {/* Danh sách User */}
@@ -100,7 +138,15 @@ export default function AdminClassDetailsManagement() {
         <div className="flex justify-between items-center">
           <h3 className="text-lg font-semibold">👥 Class Members</h3>
           <div className="space-x-2">
-            <button className="px-4 py-2 bg-orange-500 text-white rounded hover:bg-orange-600">
+            <input
+              type="file"
+              accept=".xlsx,.xls"
+              onChange={(e) => setFile(e.target.files[0])}
+            />
+            <button
+              onClick={handleImportFile}
+              className="px-4 py-2 bg-orange-500 text-white rounded hover:bg-orange-600"
+            >
               Import from File
             </button>
             <button
@@ -133,12 +179,12 @@ export default function AdminClassDetailsManagement() {
               </tr>
             ) : (
               users.map((u) => (
-                <tr key={u.id} className="border-b hover:bg-gray-50">
-                  <td className="p-2">{u.name}</td>
+                <tr key={u.userId} className="border-b hover:bg-gray-50">
+                  <td className="p-2">{u.fullName}</td>
                   <td className="p-2">{u.studentId}</td>
                   <td className="p-2">{u.email}</td>
-                  <td className="p-2">{u.role}</td>
-                  <td className="p-2">{u.major}</td>
+                  <td className="p-2">{u.roleName}</td>
+                  <td className="p-2">{u.majorName}</td>
                   <td
                     className={`p-2 font-medium ${
                       u.status === "Active" ? "text-green-600" : "text-red-500"
@@ -148,7 +194,7 @@ export default function AdminClassDetailsManagement() {
                   </td>
                   <td className="p-2">
                     <button
-                      onClick={() => setUsers(users.filter((usr) => usr.id !== u.id))}
+                      onClick={() => handleRemoveUser(u)}
                       className="text-red-500 hover:underline"
                     >
                       Remove
@@ -179,6 +225,13 @@ export default function AdminClassDetailsManagement() {
 
             <input
               type="text"
+              placeholder="User ID"
+              className="border rounded w-full p-2"
+              value={newUser.userId}
+              onChange={(e) => setNewUser({ ...newUser, userId: e.target.value })}
+            />
+            <input
+              type="text"
               placeholder="Full Name"
               className="border rounded w-full p-2"
               value={newUser.name}
@@ -198,29 +251,6 @@ export default function AdminClassDetailsManagement() {
               value={newUser.email}
               onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
             />
-            <select
-              className="border rounded w-full p-2"
-              value={newUser.role}
-              onChange={(e) => setNewUser({ ...newUser, role: e.target.value })}
-            >
-              <option>Student</option>
-              <option>Instructor</option>
-            </select>
-            <input
-              type="text"
-              placeholder="Major"
-              className="border rounded w-full p-2"
-              value={newUser.major}
-              onChange={(e) => setNewUser({ ...newUser, major: e.target.value })}
-            />
-            <select
-              className="border rounded w-full p-2"
-              value={newUser.status}
-              onChange={(e) => setNewUser({ ...newUser, status: e.target.value })}
-            >
-              <option>Active</option>
-              <option>Deactive</option>
-            </select>
 
             <div className="flex justify-end space-x-2">
               <button
@@ -230,18 +260,7 @@ export default function AdminClassDetailsManagement() {
                 Cancel
               </button>
               <button
-                onClick={() => {
-                  setUsers([...users, { id: Date.now(), ...newUser }]);
-                  setNewUser({
-                    name: "",
-                    studentId: "",
-                    email: "",
-                    role: "Student",
-                    major: "",
-                    status: "Active",
-                  });
-                  setShowAddUser(false);
-                }}
+                onClick={handleAddUser}
                 className="px-4 py-2 bg-orange-500 text-white rounded hover:bg-orange-600"
               >
                 Save

@@ -1,6 +1,12 @@
 import React, { useState, useEffect } from "react";
 import * as XLSX from "xlsx";
-import { getUsersByCampus, updateUser } from "../../service/adminService";
+import {
+  getUsersByCampus,
+  updateUser,
+  createUser,
+  activateUser,
+  deactivateUser,
+} from "../../service/adminService";
 
 export default function AdminUserManagement() {
   const [users, setUsers] = useState([]);
@@ -13,8 +19,9 @@ export default function AdminUserManagement() {
   const [majors, setMajors] = useState([]);
   const [selectedUser, setSelectedUser] = useState(null);
   const [isUpdating, setIsUpdating] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
-  // ✅ Khi chọn campus → load user và danh sách major
+  // ✅ Load users theo campus
   const handleCampusChange = async (e) => {
     const campusId = e.target.value;
     setFilters({ campus: campusId, major: "", search: "" });
@@ -26,8 +33,9 @@ export default function AdminUserManagement() {
     }
 
     try {
-      const res = await getUsersByCampus(campusId);
-      const formattedUsers = res.data.map((u) => ({
+      setIsLoading(true);
+      const data = await getUsersByCampus(campusId);
+      const formattedUsers = data.map((u) => ({
         id: u.id,
         studentCode: u.studentCode || "-",
         fullName:
@@ -50,19 +58,21 @@ export default function AdminUserManagement() {
 
       setUsers(formattedUsers);
 
-      // Lấy danh sách chuyên ngành
       const majorsSet = [
         ...new Set(formattedUsers.map((u) => u.majorName).filter(Boolean)),
       ];
       setMajors(majorsSet);
     } catch (error) {
       console.error("❌ Fetch users failed:", error);
+      alert("❌ Không thể tải danh sách user.");
       setUsers([]);
       setMajors([]);
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  // ✅ Lọc user theo major và search
+  // ✅ Lọc theo major + search
   useEffect(() => {
     let result = users;
     if (filters.major) {
@@ -87,7 +97,7 @@ export default function AdminUserManagement() {
     const file = e.target.files[0];
     if (!file) return;
     const reader = new FileReader();
-    reader.onload = (event) => {
+    reader.onload = async (event) => {
       const data = new Uint8Array(event.target.result);
       const workbook = XLSX.read(data, { type: "array" });
       const sheet = workbook.SheetNames[0];
@@ -111,31 +121,52 @@ export default function AdminUserManagement() {
   };
 
   // ✅ Thêm user thủ công
-  const handleAddUser = () => {
+  const handleAddUser = async () => {
+    if (!filters.campus) {
+      alert("⚠️ Vui lòng chọn campus trước khi thêm user.");
+      return;
+    }
+
     const newUser = {
-      id: Date.now(),
-      studentCode: "MSSV" + Math.floor(Math.random() * 99999),
       fullName: "New User",
       email: "newuser@example.com",
+      studentCode: "MSSV" + Math.floor(Math.random() * 99999),
       roleName: "student",
-      campusName:
-        filters.campus === "1"
-          ? "Hồ Chí Minh"
-          : filters.campus === "2"
-          ? "Hà Nội"
-          : "Unknown",
+      campusId: Number(filters.campus),
       majorName: filters.major || "Chưa có chuyên ngành",
       isActive: true,
     };
-    setUsers((prev) => [...prev, newUser]);
+
+    try {
+      const res = await createUser(newUser);
+      alert("✅ User created successfully!");
+      // Reload lại danh sách
+      handleCampusChange({ target: { value: filters.campus } });
+    } catch (error) {
+      console.error("❌ Create user failed:", error);
+      alert("❌ Không thể tạo user mới.");
+    }
   };
 
-  // ✅ Lưu user sau khi chỉnh sửa
+  // ✅ Bật/tắt tài khoản
+  const toggleUserStatus = async (user) => {
+    try {
+      if (user.isActive) await deactivateUser(user.id);
+      else await activateUser(user.id);
+      alert(`🔁 ${user.isActive ? "Deactivated" : "Activated"} successfully`);
+      // Cập nhật lại danh sách
+      handleCampusChange({ target: { value: filters.campus } });
+    } catch (err) {
+      console.error("❌ Update status failed:", err);
+      alert("❌ Không thể thay đổi trạng thái user.");
+    }
+  };
+
+  // ✅ Cập nhật thông tin user
   const handleSaveUser = async () => {
     try {
       setIsUpdating(true);
       const payload = {
-        userId: selectedUser.id,
         email: selectedUser.email,
         fullName: selectedUser.fullName,
         studentCode: selectedUser.studentCode,
@@ -145,15 +176,12 @@ export default function AdminUserManagement() {
         isActive: selectedUser.isActive,
       };
       await updateUser(selectedUser.id, payload);
-
-      setUsers((prev) =>
-        prev.map((u) => (u.id === selectedUser.id ? { ...u, ...selectedUser } : u))
-      );
       alert("✅ User updated successfully!");
       setSelectedUser(null);
+      handleCampusChange({ target: { value: filters.campus } });
     } catch (err) {
       console.error("❌ Update failed:", err);
-      alert("❌ Update failed, check console for details.");
+      alert("❌ Update failed.");
     } finally {
       setIsUpdating(false);
     }
@@ -165,7 +193,6 @@ export default function AdminUserManagement() {
 
       {/* Filter bar */}
       <div className="bg-white p-4 rounded-xl shadow-md flex flex-wrap gap-4 items-center">
-        {/* Campus filter */}
         <select
           className="border rounded p-2"
           value={filters.campus}
@@ -176,14 +203,11 @@ export default function AdminUserManagement() {
           <option value="2">Hà Nội</option>
         </select>
 
-        {/* Major filter */}
         {filters.campus && majors.length > 0 && (
           <select
             className="border rounded p-2"
             value={filters.major}
-            onChange={(e) =>
-              setFilters({ ...filters, major: e.target.value })
-            }
+            onChange={(e) => setFilters({ ...filters, major: e.target.value })}
           >
             <option value="">All Majors</option>
             {majors.map((m, i) => (
@@ -194,7 +218,6 @@ export default function AdminUserManagement() {
           </select>
         )}
 
-        {/* Search */}
         {filters.campus && (
           <input
             type="text"
@@ -207,7 +230,6 @@ export default function AdminUserManagement() {
           />
         )}
 
-        {/* Actions */}
         {filters.campus && (
           <div className="ml-auto flex gap-2">
             <label className="px-4 py-2 bg-orange-500 text-white rounded hover:bg-orange-600 cursor-pointer">
@@ -231,7 +253,9 @@ export default function AdminUserManagement() {
 
       {/* Table */}
       <div className="bg-white rounded-xl shadow-md overflow-x-auto">
-        {filters.campus ? (
+        {isLoading ? (
+          <p className="p-4 text-center text-gray-500">Loading...</p>
+        ) : filters.campus ? (
           filteredUsers.length > 0 ? (
             <table className="w-full text-sm">
               <thead className="bg-orange-500 text-white">
@@ -266,12 +290,18 @@ export default function AdminUserManagement() {
                         {u.isActive ? "active" : "deactive"}
                       </span>
                     </td>
-                    <td className="p-2">
+                    <td className="p-2 flex gap-2">
                       <button
                         onClick={() => setSelectedUser(u)}
                         className="text-orange-500 hover:underline"
                       >
                         Edit
+                      </button>
+                      <button
+                        onClick={() => toggleUserStatus(u)}
+                        className="text-blue-500 hover:underline"
+                      >
+                        {u.isActive ? "Deactivate" : "Activate"}
                       </button>
                     </td>
                   </tr>

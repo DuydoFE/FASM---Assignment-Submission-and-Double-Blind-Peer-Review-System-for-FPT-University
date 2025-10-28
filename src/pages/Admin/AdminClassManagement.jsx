@@ -1,5 +1,11 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import {
+  getCourseInstancesByCampusId,
+  createCourseInstance,
+  importStudentsFromMultipleSheets,
+} from "../../service/adminService";
+import toast from "react-hot-toast";
 
 export default function AdminClassManagement() {
   const navigate = useNavigate();
@@ -10,48 +16,99 @@ export default function AdminClassManagement() {
   // cascading filters state
   const [filters, setFilters] = useState({
     campus: "",
-    year: "",
-    term: "",
-    major: "",
-    course: "",
     search: "",
   });
-
-  // options for filters
-  const [years, setYears] = useState([]);
-  const [termsForYear, setTermsForYear] = useState([]);
-  const [majors, setMajors] = useState([]);
-  const [coursesByMajor, setCoursesByMajor] = useState([]);
 
   // UI states
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
+  const [importFile, setImportFile] = useState(null);
 
   // create form
   const [newClass, setNewClass] = useState({
-    campus: "",
-    year: "",
-    term: "",
-    major: "",
-    course: "",
+    courseId: "",
+    semesterId: "",
+    campusId: "",
     name: "",
     startDate: "",
     endDate: "",
   });
 
+  // load danh sách lớp theo campus
+  useEffect(() => {
+    if (!filters.campus) {
+      setClasses([]);
+      return;
+    }
+
+    const fetchData = async () => {
+      try {
+        const res = await getCourseInstancesByCampusId(filters.campus);
+        setClasses(res);
+      } catch (err) {
+        console.error(err);
+        toast.error("Failed to load classes");
+      }
+    };
+    fetchData();
+  }, [filters.campus]);
+
+  // handlers
   const handleCampusChange = (e) => {
-    setFilters({ campus: e.target.value, year: "", term: "", major: "", course: "", search: "" });
+    setFilters({ campus: e.target.value, search: "" });
   };
 
-  const handleYearChange = (e) => setFilters({ ...filters, year: e.target.value });
-  const handleTermChange = (e) => setFilters({ ...filters, term: e.target.value });
-  const handleMajorChange = (e) => setFilters({ ...filters, major: e.target.value });
-  const handleCourseChange = (e) => setFilters({ ...filters, course: e.target.value });
   const handleSearchChange = (e) => setFilters({ ...filters, search: e.target.value });
 
   const handleViewDetail = (id) => {
     navigate(`/admin/classes/${id}/users`);
   };
+
+  const handleCreateClass = async (e) => {
+    e.preventDefault();
+    try {
+      await createCourseInstance(newClass);
+      toast.success("Class created successfully!");
+      setShowCreateModal(false);
+      setNewClass({
+        courseId: "",
+        semesterId: "",
+        campusId: "",
+        name: "",
+        startDate: "",
+        endDate: "",
+      });
+
+      if (filters.campus) {
+        const res = await getCourseInstancesByCampusId(filters.campus);
+        setClasses(res);
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to create class");
+    }
+  };
+
+  const handleImportClasses = async () => {
+    if (!filters.campus) return toast.error("Please select a campus first");
+    if (!importFile) return toast.error("Please select a file first");
+
+    try {
+      await importStudentsFromMultipleSheets(filters.campus, importFile, 1); // 1 là userId tạm
+      toast.success("Import successfully!");
+      setShowImportModal(false);
+      const res = await getCourseInstancesByCampusId(filters.campus);
+      setClasses(res);
+    } catch (err) {
+      console.error(err);
+      toast.error("Import failed");
+    }
+  };
+
+  // filtered classes by search
+  const filteredClasses = classes.filter((c) =>
+    c.name?.toLowerCase().includes(filters.search.toLowerCase())
+  );
 
   return (
     <div className="space-y-6">
@@ -65,50 +122,6 @@ export default function AdminClassManagement() {
           <option value="2">Hà Nội</option>
         </select>
 
-        {filters.campus && (
-          <>
-            <select className="border rounded p-2" value={filters.year} onChange={handleYearChange}>
-              <option value="">Year</option>
-              {years.map((y) => (
-                <option key={y} value={y}>
-                  {y}
-                </option>
-              ))}
-            </select>
-
-            {filters.year && (
-              <select className="border rounded p-2" value={filters.term} onChange={handleTermChange}>
-                <option value="">Term</option>
-                {termsForYear.map((t) => (
-                  <option key={t} value={t}>
-                    {t}
-                  </option>
-                ))}
-              </select>
-            )}
-
-            <select className="border rounded p-2" value={filters.major} onChange={handleMajorChange}>
-              <option value="">Major</option>
-              {majors.map((m) => (
-                <option key={m} value={m}>
-                  {m}
-                </option>
-              ))}
-            </select>
-
-            {filters.major && (
-              <select className="border rounded p-2" value={filters.course} onChange={handleCourseChange}>
-                <option value="">Course</option>
-                {coursesByMajor.map((c) => (
-                  <option key={c} value={c}>
-                    {c}
-                  </option>
-                ))}
-              </select>
-            )}
-          </>
-        )}
-
         <input
           type="text"
           placeholder="Search by class name"
@@ -118,11 +131,17 @@ export default function AdminClassManagement() {
         />
 
         <div className="ml-auto flex flex-wrap gap-2">
-          <button onClick={() => setShowImportModal(true)} className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 font-medium">
+          <button
+            onClick={() => setShowImportModal(true)}
+            className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 font-medium"
+          >
             📂 Import Class List
           </button>
 
-          <button onClick={() => setShowCreateModal(true)} className="px-4 py-2 border border-gray-400 text-gray-700 rounded hover:bg-gray-100">
+          <button
+            onClick={() => setShowCreateModal(true)}
+            className="px-4 py-2 border border-gray-400 text-gray-700 rounded hover:bg-gray-100"
+          >
             + Add Class
           </button>
         </div>
@@ -130,32 +149,31 @@ export default function AdminClassManagement() {
 
       {/* Table */}
       <div className="bg-white rounded-xl shadow-md overflow-x-auto">
-        {classes.length > 0 ? (
+        {filteredClasses.length > 0 ? (
           <table className="w-full text-sm">
             <thead className="bg-orange-500 text-white">
               <tr>
                 <th className="p-2 text-left">Class Name</th>
-                <th className="p-2 text-left">Campus</th>
-                <th className="p-2 text-left">Year</th>
-                <th className="p-2 text-left">Term</th>
-                <th className="p-2 text-left">Major</th>
                 <th className="p-2 text-left">Course</th>
+                <th className="p-2 text-left">Semester</th>
+                <th className="p-2 text-left">Campus</th>
                 <th className="p-2 text-left">Status</th>
                 <th className="p-2 text-left">Actions</th>
               </tr>
             </thead>
             <tbody>
-              {classes.map((c) => (
+              {filteredClasses.map((c) => (
                 <tr key={c.id} className="border-b hover:bg-gray-50">
                   <td className="p-2">{c.name}</td>
-                  <td className="p-2">{c.campus}</td>
-                  <td className="p-2">{c.year}</td>
-                  <td className="p-2">{c.term}</td>
-                  <td className="p-2">{c.major}</td>
                   <td className="p-2">{c.courseName}</td>
+                  <td className="p-2">{c.semesterName}</td>
+                  <td className="p-2">{c.campusName}</td>
                   <td className="p-2">{c.status}</td>
                   <td className="p-2 space-x-2">
-                    <button className="text-orange-500 hover:underline" onClick={() => handleViewDetail(c.id)}>
+                    <button
+                      className="text-orange-500 hover:underline"
+                      onClick={() => handleViewDetail(c.id)}
+                    >
                       View Detail
                     </button>
                   </td>
@@ -175,10 +193,16 @@ export default function AdminClassManagement() {
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center">
           <div className="bg-white rounded-xl p-6 w-full max-w-md">
             <h3 className="text-lg font-semibold mb-4">Import Class List (Excel)</h3>
-            <input type="file" accept=".xlsx,.xls" />
+            <input type="file" accept=".xlsx,.xls" onChange={(e) => setImportFile(e.target.files[0])} />
             <div className="mt-4 flex justify-end gap-2">
               <button onClick={() => setShowImportModal(false)} className="px-4 py-2 border rounded">
                 Cancel
+              </button>
+              <button
+                onClick={handleImportClasses}
+                className="px-4 py-2 bg-green-600 text-white rounded"
+              >
+                Upload
               </button>
             </div>
           </div>
@@ -190,59 +214,68 @@ export default function AdminClassManagement() {
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center">
           <div className="bg-white rounded-xl p-6 w-full max-w-lg">
             <h3 className="text-lg font-semibold mb-4">Create New Class</h3>
-            <form className="space-y-3">
+            <form className="space-y-3" onSubmit={handleCreateClass}>
               <div className="grid grid-cols-2 gap-3">
-                <select required value={newClass.campus} onChange={(e) => setNewClass({ ...newClass, campus: e.target.value })} className="border rounded p-2">
+                <select
+                  required
+                  value={newClass.campusId}
+                  onChange={(e) => setNewClass({ ...newClass, campusId: e.target.value })}
+                  className="border rounded p-2"
+                >
                   <option value="">Select Campus</option>
                   <option value="1">Hồ Chí Minh</option>
                   <option value="2">Hà Nội</option>
                 </select>
 
-                <select required value={newClass.year} onChange={(e) => setNewClass({ ...newClass, year: e.target.value })} className="border rounded p-2">
-                  <option value="">Year</option>
-                  {years.map((y) => (
-                    <option key={y} value={y}>
-                      {y}
-                    </option>
-                  ))}
-                </select>
+                <input
+                  required
+                  value={newClass.name}
+                  onChange={(e) => setNewClass({ ...newClass, name: e.target.value })}
+                  placeholder="Class name"
+                  className="border rounded p-2"
+                />
 
-                <select required value={newClass.term} onChange={(e) => setNewClass({ ...newClass, term: e.target.value })} className="border rounded p-2">
-                  <option value="">Term</option>
-                  {termsForYear.map((t) => (
-                    <option key={t} value={t}>
-                      {t}
-                    </option>
-                  ))}
-                </select>
+                <input
+                  type="text"
+                  required
+                  value={newClass.courseId}
+                  onChange={(e) => setNewClass({ ...newClass, courseId: e.target.value })}
+                  placeholder="Course ID"
+                  className="border rounded p-2"
+                />
 
-                <select required value={newClass.major} onChange={(e) => setNewClass({ ...newClass, major: e.target.value })} className="border rounded p-2">
-                  <option value="">Major</option>
-                  {majors.map((m) => (
-                    <option key={m} value={m}>
-                      {m}
-                    </option>
-                  ))}
-                </select>
+                <input
+                  type="text"
+                  required
+                  value={newClass.semesterId}
+                  onChange={(e) => setNewClass({ ...newClass, semesterId: e.target.value })}
+                  placeholder="Semester ID"
+                  className="border rounded p-2"
+                />
 
-                <select required value={newClass.course} onChange={(e) => setNewClass({ ...newClass, course: e.target.value })} className="border rounded p-2">
-                  <option value="">Course</option>
-                  {coursesByMajor.map((c) => (
-                    <option key={c} value={c}>
-                      {c}
-                    </option>
-                  ))}
-                </select>
+                <input
+                  type="date"
+                  required
+                  value={newClass.startDate}
+                  onChange={(e) => setNewClass({ ...newClass, startDate: e.target.value })}
+                  className="border rounded p-2"
+                />
 
-                <input required value={newClass.name} onChange={(e) => setNewClass({ ...newClass, name: e.target.value })} placeholder="Class name" className="border rounded p-2" />
-
-                <input type="date" required value={newClass.startDate} onChange={(e) => setNewClass({ ...newClass, startDate: e.target.value })} className="border rounded p-2" />
-
-                <input type="date" required value={newClass.endDate} onChange={(e) => setNewClass({ ...newClass, endDate: e.target.value })} className="border rounded p-2" />
+                <input
+                  type="date"
+                  required
+                  value={newClass.endDate}
+                  onChange={(e) => setNewClass({ ...newClass, endDate: e.target.value })}
+                  className="border rounded p-2"
+                />
               </div>
 
               <div className="flex justify-end gap-2">
-                <button type="button" onClick={() => setShowCreateModal(false)} className="px-4 py-2 border rounded">
+                <button
+                  type="button"
+                  onClick={() => setShowCreateModal(false)}
+                  className="px-4 py-2 border rounded"
+                >
                   Cancel
                 </button>
                 <button type="submit" className="px-4 py-2 bg-orange-500 text-white rounded">
