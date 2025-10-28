@@ -35,7 +35,7 @@ export default function AdminUserManagement() {
     try {
       setIsLoading(true);
       const data = await getUsersByCampus(campusId);
-      const formattedUsers = data.map((u) => ({
+      const formattedUsers = data.data.map((u) => ({
         id: u.id,
         studentCode: u.studentCode || "-",
         fullName:

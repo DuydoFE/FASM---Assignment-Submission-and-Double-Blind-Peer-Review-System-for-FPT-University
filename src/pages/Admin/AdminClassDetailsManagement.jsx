@@ -6,7 +6,7 @@ import {
   createCourseStudent,
   deleteCourseStudent,
   importStudentsFromExcel,
-} from "../../services/adminService";
+} from "../../service/adminService";
 
 export default function AdminClassDetailsManagement() {
   const { id } = useParams();

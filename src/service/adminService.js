@@ -9,6 +9,7 @@ export const getAllUsers = async () => {
 // ✅ Lấy user theo campus
 export const getUsersByCampus = async (campusId) => {
   const res = await api.get(`/Users/campus/${campusId}`);
+  console.log("getUsersByCampus API response:", res.data);
   return res.data;
 };
 
