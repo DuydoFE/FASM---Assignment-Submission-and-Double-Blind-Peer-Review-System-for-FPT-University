@@ -6,6 +6,7 @@ import {
   createUser,
   activateUser,
   deactivateUser,
+  getAllMajors,
 } from "../../service/adminService";
 
 export default function AdminUserManagement() {
@@ -34,34 +35,62 @@ export default function AdminUserManagement() {
 
     try {
       setIsLoading(true);
+
+      // 🟢 1. Lấy danh sách user theo campus
       const data = await getUsersByCampus(campusId);
-      const formattedUsers = data.data.map((u) => ({
-        id: u.id,
-        studentCode: u.studentCode || "-",
-        fullName:
-          u.fullName || `${u.firstName || ""} ${u.lastName || ""}`.trim(),
-        email: u.email || "-",
-        roleName: Array.isArray(u.roles)
-          ? u.roles.map((r) => r.roleName || r.name || "-").join(", ")
-          : u.roleName || u.role || "-",
-        campusName:
-          u.campus?.campusName ||
-          (u.campusId === 1 ? "Hồ Chí Minh" : "Hà Nội"),
-        campusId: u.campusId || 0,
-        majorName: u.major?.majorName || "Chưa có chuyên ngành",
-        majorId: u.majorId || null,
-        isActive:
-          typeof u.isActive === "boolean"
-            ? u.isActive
-            : u.status?.toLowerCase() === "active",
-      }));
+      const usersArray = Array.isArray(data) ? data : data.data || [];
+
+      // 🟢 2. Lấy tất cả majors (một lần duy nhất)
+      const majorsRes = await getAllMajors();
+      const majorsData = Array.isArray(majorsRes)
+        ? majorsRes
+        : majorsRes.data || majorsRes.data?.data || [];
+
+
+      // 🟢 3. Tạo map { majorCode: majorName }
+      const majorMap = {};
+      majorsData.forEach((m) => {
+        // ví dụ: { SE: "Software Engineering", BA: "Business Administration" }
+        majorMap[m.majorCode?.toUpperCase()] = m.majorName;
+      });
+
+      console.log("🧭 majorMap:", majorMap);
+
+      // 🟢 4. Format danh sách user + gán ngành học dựa theo studentCode
+      const formattedUsers = usersArray.map((u) => {
+        const prefix = u.studentCode?.slice(0, 2)?.toUpperCase() || "";
+        const majorName = majorMap[prefix] || "Không xác định";
+
+        return {
+          id: u.id,
+          studentCode: u.studentCode || "-",
+          fullName:
+            u.fullName || `${u.firstName || ""} ${u.lastName || ""}`.trim(),
+          email: u.email || "-",
+          roleName: Array.isArray(u.roles)
+            ? u.roles.join(", ")
+            : u.roleName || u.role || "-",
+          campusName:
+            u.campus?.campusName ||
+            (u.campusId === 1 ? "Hồ Chí Minh" : "Hà Nội"),
+          campusId: u.campusId || 0,
+          majorName, // 🔥 Gắn tên ngành học dựa theo mã studentCode
+          isActive:
+            typeof u.isActive === "boolean"
+              ? u.isActive
+              : u.status?.toLowerCase() === "active",
+        };
+      });
 
       setUsers(formattedUsers);
 
+      // 🟢 5. Tạo danh sách ngành cho dropdown filter
       const majorsSet = [
         ...new Set(formattedUsers.map((u) => u.majorName).filter(Boolean)),
       ];
       setMajors(majorsSet);
+
+      console.log("👥 formattedUsers sample:", formattedUsers.slice(0, 3));
     } catch (error) {
       console.error("❌ Fetch users failed:", error);
       alert("❌ Không thể tải danh sách user.");
@@ -71,6 +100,8 @@ export default function AdminUserManagement() {
       setIsLoading(false);
     }
   };
+
+
 
   // ✅ Lọc theo major + search
   useEffect(() => {
@@ -91,6 +122,15 @@ export default function AdminUserManagement() {
     }
     setFilteredUsers(result);
   }, [filters, users]);
+
+  //test vớ vẩn
+  useEffect(() => {
+    fetch("https://localhost:7104/api/Users/4")
+      .then(res => res.json())
+      .then(data => console.log("📦 GET /Users/4 result:", data))
+      .catch(err => console.error(err));
+  }, []);
+
 
   // ✅ Import file Excel
   const handleImportFile = (e) => {
@@ -162,30 +202,51 @@ export default function AdminUserManagement() {
     }
   };
 
-  // ✅ Cập nhật thông tin user
   const handleSaveUser = async () => {
     try {
+      if (!selectedUser) {
+        alert("No user selected.");
+        return;
+      }
+
       setIsUpdating(true);
+
+      const userId = Number(selectedUser.id);
       const payload = {
-        email: selectedUser.email,
-        fullName: selectedUser.fullName,
-        studentCode: selectedUser.studentCode,
-        roleName: selectedUser.roleName,
-        campusId: selectedUser.campusId,
-        majorId: selectedUser.majorId,
-        isActive: selectedUser.isActive,
+        Id: userId,
+        Username: selectedUser.username || selectedUser.email?.split("@")[0] || "",
+        Email: selectedUser.email || "",
+        FirstName: selectedUser.firstName || "",
+        LastName: selectedUser.lastName || "",
+        AvatarUrl: selectedUser.avatarUrl || "",
+        StudentCode: selectedUser.studentCode || "",
+        Roles: Array.isArray(selectedUser.roles)
+          ? selectedUser.roles
+          : [selectedUser.roleName || "Student"],
+        CampusId: selectedUser.campusId ?? 0,
+        MajorId: selectedUser.majorId ?? 0,
+        IsActive:
+          typeof selectedUser.isActive === "boolean"
+            ? selectedUser.isActive
+            : true,
       };
-      await updateUser(selectedUser.id, payload);
+
+      console.log("🟡 PUT URL:", `/Users/${userId}`);
+      console.log("🟡 Payload gửi BE:", payload);
+
+      await updateUser(userId, payload);
+
       alert("✅ User updated successfully!");
       setSelectedUser(null);
       handleCampusChange({ target: { value: filters.campus } });
     } catch (err) {
-      console.error("❌ Update failed:", err);
-      alert("❌ Update failed.");
+      console.error("❌ Update failed:", err.response?.data || err);
+      alert(`❌ Update failed: ${err.response?.data?.message || "Unknown error"}`);
     } finally {
       setIsUpdating(false);
     }
   };
+
 
   return (
     <div className="space-y-6">
@@ -281,11 +342,10 @@ export default function AdminUserManagement() {
                     <td className="p-2">{u.majorName}</td>
                     <td className="p-2">
                       <span
-                        className={`px-2 py-1 rounded text-xs ${
-                          u.isActive
-                            ? "bg-green-100 text-green-700"
-                            : "bg-red-100 text-red-700"
-                        }`}
+                        className={`px-2 py-1 rounded text-xs ${u.isActive
+                          ? "bg-green-100 text-green-700"
+                          : "bg-red-100 text-red-700"
+                          }`}
                       >
                         {u.isActive ? "active" : "deactive"}
                       </span>

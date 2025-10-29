@@ -196,3 +196,37 @@ export const getAssignmentsByCourseInstance = async (courseInstanceId) => {
   const res = await api.get(`/Assignment/course-instance/${courseInstanceId}`);
   return res.data;
 };
+
+// ===============================
+// 🔹 MAJOR API (Ngành học)
+// ===============================
+
+// 🔹 Lấy danh sách tất cả ngành học
+export const getAllMajors = async () => {
+  const res = await api.get("/Major");
+  return res.data;
+};
+
+// 🔹 Lấy thông tin ngành học theo ID
+export const getMajorById = async (id) => {
+  const res = await api.get(`/Major/${id}`);
+  return res.data;
+};
+
+// 🔹 Tạo ngành học mới
+export const createMajor = async (data) => {
+  const res = await api.post("/Major", data);
+  return res.data;
+};
+
+// 🔹 Cập nhật thông tin ngành học
+export const updateMajor = async (data) => {
+  const res = await api.put("/Major", data);
+  return res.data;
+};
+
+// 🔹 Xóa ngành học
+export const deleteMajor = async (id) => {
+  const res = await api.delete(`/Major/${id}`);
+  return res.data;
+};
