@@ -230,3 +230,38 @@ export const deleteMajor = async (id) => {
   const res = await api.delete(`/Major/${id}`);
   return res.data;
 };
+
+
+// ===============================
+// 🔹 CAMPUS API (Cơ sở - Campus)
+// ===============================
+
+// 🔹 Lấy danh sách tất cả campus
+export const getAllCampuses = async () => {
+  const res = await api.get("/Campus");
+  return res.data;
+};
+
+// 🔹 Lấy thông tin campus theo ID
+export const getCampusById = async (id) => {
+  const res = await api.get(`/Campus/${id}`);
+  return res.data;
+};
+
+// 🔹 Tạo campus mới
+export const createCampus = async (data) => {
+  const res = await api.post("/Campus", data);
+  return res.data;
+};
+
+// 🔹 Cập nhật thông tin campus
+export const updateCampus = async (data) => {
+  const res = await api.put("/Campus", data);
+  return res.data;
+};
+
+// 🔹 Xóa campus
+export const deleteCampus = async (id) => {
+  const res = await api.delete(`/Campus/${id}`);
+  return res.data;
+};

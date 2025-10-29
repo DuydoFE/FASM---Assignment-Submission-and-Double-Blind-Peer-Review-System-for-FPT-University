@@ -6,10 +6,12 @@ import {
   createUser,
   activateUser,
   deactivateUser,
-  getAllMajors,
+  getMajorById,
+  getAllCampuses
 } from "../../service/adminService";
 
 export default function AdminUserManagement() {
+  const [campuses, setCampuses] = useState([]); // 🟢 THÊM DÒNG NÀY
   const [users, setUsers] = useState([]);
   const [filteredUsers, setFilteredUsers] = useState([]);
   const [filters, setFilters] = useState({
@@ -22,7 +24,7 @@ export default function AdminUserManagement() {
   const [isUpdating, setIsUpdating] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  // ✅ Load users theo campus
+  // ✅ Load users theo campus (hiển thị tên ngành từ majorId)
   const handleCampusChange = async (e) => {
     const campusId = e.target.value;
     setFilters({ campus: campusId, major: "", search: "" });
@@ -36,55 +38,58 @@ export default function AdminUserManagement() {
     try {
       setIsLoading(true);
 
-      // 🟢 1. Lấy danh sách user theo campus
+      // 🟢 Gọi API lấy danh sách user theo campus
       const data = await getUsersByCampus(campusId);
       const usersArray = Array.isArray(data) ? data : data.data || [];
 
-      // 🟢 2. Lấy tất cả majors (một lần duy nhất)
-      const majorsRes = await getAllMajors();
-      const majorsData = Array.isArray(majorsRes)
-        ? majorsRes
-        : majorsRes.data || majorsRes.data?.data || [];
+      // 🧠 Cache để tránh gọi trùng majorId
+      const majorCache = {};
 
+      // 🟢 Dùng Promise.all để xử lý song song và gắn majorName cho từng user
+      const formattedUsers = await Promise.all(
+        usersArray.map(async (u) => {
+          let majorName = "Không xác định";
 
-      // 🟢 3. Tạo map { majorCode: majorName }
-      const majorMap = {};
-      majorsData.forEach((m) => {
-        // ví dụ: { SE: "Software Engineering", BA: "Business Administration" }
-        majorMap[m.majorCode?.toUpperCase()] = m.majorName;
-      });
+          if (u.majorId && u.majorId !== 0) {
+            if (!majorCache[u.majorId]) {
+              try {
+                const res = await getMajorById(u.majorId);
+                majorCache[u.majorId] =
+                  res.majorName || res.data?.majorName || "Không rõ";
+              } catch (err) {
+                console.error(`⚠️ Lỗi lấy majorName cho ID ${u.majorId}:`, err);
+                majorCache[u.majorId] = "Không xác định";
+              }
+            }
+            majorName = majorCache[u.majorId];
+          }
 
-      console.log("🧭 majorMap:", majorMap);
-
-      // 🟢 4. Format danh sách user + gán ngành học dựa theo studentCode
-      const formattedUsers = usersArray.map((u) => {
-        const prefix = u.studentCode?.slice(0, 2)?.toUpperCase() || "";
-        const majorName = majorMap[prefix] || "Không xác định";
-
-        return {
-          id: u.id,
-          studentCode: u.studentCode || "-",
-          fullName:
-            u.fullName || `${u.firstName || ""} ${u.lastName || ""}`.trim(),
-          email: u.email || "-",
-          roleName: Array.isArray(u.roles)
-            ? u.roles.join(", ")
-            : u.roleName || u.role || "-",
-          campusName:
-            u.campus?.campusName ||
-            (u.campusId === 1 ? "Hồ Chí Minh" : "Hà Nội"),
-          campusId: u.campusId || 0,
-          majorName, // 🔥 Gắn tên ngành học dựa theo mã studentCode
-          isActive:
-            typeof u.isActive === "boolean"
-              ? u.isActive
-              : u.status?.toLowerCase() === "active",
-        };
-      });
+          return {
+            id: u.id || u.userId,
+            studentCode: u.studentCode || "-",
+            fullName:
+              u.fullName || `${u.firstName || ""} ${u.lastName || ""}`.trim(),
+            email: u.email || "-",
+            roleName: Array.isArray(u.roles)
+              ? u.roles.join(", ")
+              : u.roleName || u.role || "-",
+            campusName:
+              u.campus?.campusName ||
+              (u.campusId === 1 ? "Hồ Chí Minh" : "Hà Nội"),
+            campusId: u.campusId || 0,
+            majorId: u.majorId || 0,
+            majorName, // ✅ Gắn tên ngành vào đây
+            isActive:
+              typeof u.isActive === "boolean"
+                ? u.isActive
+                : u.status?.toLowerCase() === "active",
+          };
+        })
+      );
 
       setUsers(formattedUsers);
 
-      // 🟢 5. Tạo danh sách ngành cho dropdown filter
+      // 🟢 Danh sách majorName duy nhất để filter dropdown
       const majorsSet = [
         ...new Set(formattedUsers.map((u) => u.majorName).filter(Boolean)),
       ];
@@ -100,8 +105,6 @@ export default function AdminUserManagement() {
       setIsLoading(false);
     }
   };
-
-
 
   // ✅ Lọc theo major + search
   useEffect(() => {
@@ -122,6 +125,26 @@ export default function AdminUserManagement() {
     }
     setFilteredUsers(result);
   }, [filters, users]);
+
+  useEffect(() => {
+  const fetchCampuses = async () => {
+    try {
+      const res = await getAllCampuses();
+      // Nếu API trả về danh sách campus dạng { id, campusName }
+      const formatted = Array.isArray(res)
+        ? res.map((c) => ({
+            id: c.id || c.campusId,
+            name: c.campusName || c.name,
+          }))
+        : [];
+      setCampuses(formatted);
+    } catch (err) {
+      console.error("❌ Lỗi khi load campus:", err);
+    }
+  };
+
+  fetchCampuses();
+}, []);
 
   //test vớ vẩn
   useEffect(() => {
@@ -213,19 +236,19 @@ export default function AdminUserManagement() {
 
       const userId = Number(selectedUser.id);
       const payload = {
-        Id: userId,
-        Username: selectedUser.username || selectedUser.email?.split("@")[0] || "",
-        Email: selectedUser.email || "",
-        FirstName: selectedUser.firstName || "",
-        LastName: selectedUser.lastName || "",
-        AvatarUrl: selectedUser.avatarUrl || "",
-        StudentCode: selectedUser.studentCode || "",
-        Roles: Array.isArray(selectedUser.roles)
+        userId: userId, // 🔥 chữ thường, để khớp với backend
+        username: selectedUser.username || selectedUser.email?.split("@")[0] || "",
+        email: selectedUser.email || "",
+        firstName: selectedUser.firstName || "",
+        lastName: selectedUser.lastName || "",
+        avatarUrl: selectedUser.avatarUrl || "",
+        studentCode: selectedUser.studentCode || "",
+        roles: Array.isArray(selectedUser.roles)
           ? selectedUser.roles
           : [selectedUser.roleName || "Student"],
-        CampusId: selectedUser.campusId ?? 0,
-        MajorId: selectedUser.majorId ?? 0,
-        IsActive:
+        campusId: selectedUser.campusId ?? 0,
+        majorId: selectedUser.majorId ?? 0,
+        isActive:
           typeof selectedUser.isActive === "boolean"
             ? selectedUser.isActive
             : true,
@@ -339,7 +362,7 @@ export default function AdminUserManagement() {
                     <td className="p-2">{u.email}</td>
                     <td className="p-2 capitalize">{u.roleName}</td>
                     <td className="p-2">{u.campusName}</td>
-                    <td className="p-2">{u.majorName}</td>
+                    <td className="p-2">{u.majorName || "Chưa có"}</td>
                     <td className="p-2">
                       <span
                         className={`px-2 py-1 rounded text-xs ${u.isActive
@@ -379,65 +402,115 @@ export default function AdminUserManagement() {
       </div>
 
       {/* Modal Edit */}
+      {/* Modal Edit */}
       {selectedUser && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-30">
           <div className="bg-white p-6 rounded-xl w-96 space-y-4 shadow-lg">
             <h3 className="text-lg font-semibold text-orange-500">Edit User</h3>
 
+            {/* 🧍‍♂️ First Name */}
             <input
               type="text"
               className="border rounded w-full p-2"
-              placeholder="Full Name"
-              value={selectedUser.fullName}
+              placeholder="First Name"
+              value={selectedUser.firstName || ""}
               onChange={(e) =>
-                setSelectedUser({ ...selectedUser, fullName: e.target.value })
+                setSelectedUser({ ...selectedUser, firstName: e.target.value })
               }
             />
 
+            {/* 🧍‍♀️ Last Name */}
+            <input
+              type="text"
+              className="border rounded w-full p-2"
+              placeholder="Last Name"
+              value={selectedUser.lastName || ""}
+              onChange={(e) =>
+                setSelectedUser({ ...selectedUser, lastName: e.target.value })
+              }
+            />
+
+            {/* 🎓 Student Code */}
             <input
               type="text"
               className="border rounded w-full p-2"
               placeholder="Student Code"
-              value={selectedUser.studentCode}
+              value={selectedUser.studentCode || ""}
               onChange={(e) =>
                 setSelectedUser({ ...selectedUser, studentCode: e.target.value })
               }
             />
 
+            {/* 📧 Email */}
             <input
               type="text"
               className="border rounded w-full p-2"
               placeholder="Email"
-              value={selectedUser.email}
+              value={selectedUser.email || ""}
               onChange={(e) =>
                 setSelectedUser({ ...selectedUser, email: e.target.value })
               }
             />
 
-            <input
-              type="text"
-              className="border rounded w-full p-2"
-              placeholder="Major"
-              value={selectedUser.majorName}
-              onChange={(e) =>
-                setSelectedUser({ ...selectedUser, majorName: e.target.value })
-              }
-            />
-
+            {/* 🏫 Major */}
             <select
               className="border rounded w-full p-2"
-              value={selectedUser.isActive ? "active" : "deactive"}
+              value={selectedUser.majorName || ""}
+              onChange={(e) => {
+                const selectedMajor = majors.find((m) => m === e.target.value);
+                const foundMajor = users.find((u) => u.majorName === selectedMajor);
+                setSelectedUser({
+                  ...selectedUser,
+                  majorName: e.target.value,
+                  majorId: foundMajor?.majorId || 0,
+                });
+              }}
+            >
+              <option value="">Chọn chuyên ngành</option>
+              {majors.map((m, i) => (
+                <option key={i} value={m}>
+                  {m}
+                </option>
+              ))}
+            </select>
+
+            {/* 🏢 Campus */}
+            <select
+              className="border rounded w-full p-2"
+              value={selectedUser.campusId || ""}
               onChange={(e) =>
                 setSelectedUser({
                   ...selectedUser,
-                  isActive: e.target.value === "active",
+                  campusId: parseInt(e.target.value),
                 })
               }
             >
-              <option value="active">Active</option>
-              <option value="deactive">Deactive</option>
+              <option value="">Chọn campus</option>
+              {campuses.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                </option>
+              ))}
             </select>
 
+            {/* 🎭 Role */}
+            <select
+              className="border rounded w-full p-2"
+              value={selectedUser.roles?.[0] || ""}
+              onChange={(e) =>
+                setSelectedUser({
+                  ...selectedUser,
+                  roles: [e.target.value],
+                })
+              }
+            >
+              <option value="">Chọn role</option>
+              <option value="Student">Student</option>
+              <option value="Lecturer">Lecturer</option>
+              <option value="Admin">Admin</option>
+            </select>
+
+            {/* ⚙️ Buttons */}
             <div className="flex justify-end gap-2">
               <button
                 onClick={() => setSelectedUser(null)}
