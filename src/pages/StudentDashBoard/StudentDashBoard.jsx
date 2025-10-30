@@ -8,7 +8,7 @@ import { ChevronRight, Link, Upload, FileText, Calendar, Bell } from 'lucide-rea
 import AssignmentCard from '../../component/MiniDashBoard/AssignmentCard';
 import CourseCard from '../../component/MiniDashBoard/CourseCard';
 // 👉 1. Import component RecentActivity mới
-import RecentActivity from '../../component/StudentDashBoard/RecentActivity';
+import RecentActivity from '../../component/MiniDashBoard/RecentActivity';
 
 const getAssignmentColor = (days) => {
   if (days <= 3) return 'red';
