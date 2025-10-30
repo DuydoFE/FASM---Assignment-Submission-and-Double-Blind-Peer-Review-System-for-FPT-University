@@ -1,13 +1,14 @@
 import React from 'react';
 import { useSelector } from 'react-redux';
 import { useQuery } from '@tanstack/react-query';
-import { selectUser } from '../../redux/features/userSlice'; // Sửa lại đường dẫn nếu cần
-// 👉 1. Sửa lại cách import: import đối tượng assignmentService
+import { selectUser } from '../../redux/features/userSlice';
 import { assignmentService } from '../../service/assignmentService'; 
 
-import { ChevronRight, Link, Upload, FileText, Calendar, CheckCircle, MessageSquare, Clock, Bell } from 'lucide-react';
+import { ChevronRight, Link, Upload, FileText, Calendar, Bell } from 'lucide-react';
 import AssignmentCard from '../../component/MiniDashBoard/AssignmentCard';
 import CourseCard from '../../component/MiniDashBoard/CourseCard';
+// 👉 1. Import component RecentActivity mới
+import RecentActivity from '../../component/StudentDashBoard/RecentActivity';
 
 const getAssignmentColor = (days) => {
   if (days <= 3) return 'red';
@@ -26,7 +27,6 @@ const StudentDashBoard = () => {
 
   const { data: assignmentData, isLoading, isError } = useQuery({
     queryKey: ['studentAssignments', studentId],
-    // 👉 2. Sửa lại cách gọi hàm: sử dụng assignmentService.getStudentAssignments
     queryFn: () => assignmentService.getStudentAssignments(studentId),
     enabled: !!studentId,
   });
@@ -73,35 +73,10 @@ const StudentDashBoard = () => {
               </div>
             </div>
 
-        
-            <div className="bg-white p-6 rounded-lg shadow-sm">
-              <h2 className="text-xl font-bold text-gray-800 mb-4">Recent Activity</h2>
-              <ul className="space-y-4">
-                <li className="flex items-start">
-                  <CheckCircle className="w-5 h-5 text-green-500 mt-1 mr-4" />
-                  <div>
-                    <p className="text-gray-800">Assignment submitted: <span className="font-semibold">Web Development Lab 5</span></p>
-                    <p className="text-sm text-gray-500">2 hours ago • PRN231</p>
-                  </div>
-                </li>
-                <li className="flex items-start">
-                  <MessageSquare className="w-5 h-5 text-blue-500 mt-1 mr-4" />
-                  <div>
-                    <p className="text-gray-800">Get feedback from instructors <span className="font-semibold">Database Lab 3</span></p>
-                    <p className="text-sm text-gray-500">5 hours ago • DBI202 • Grade: 8.5/10</p>
-                  </div>
-                </li>
-                 <li className="flex items-start">
-                  <Clock className="w-5 h-5 text-red-500 mt-1 mr-4" />
-                  <div>
-                    <p className="text-gray-800">Deadline reminder: <span className="font-semibold">Mobile App Final Project</span></p>
-                    <p className="text-sm text-gray-500">1 day ago • PRN231</p>
-                  </div>
-                </li>
-              </ul>
-            </div>
-          </div>
+            {/* 👉 2. Xóa bỏ code cũ và thay bằng component mới */}
+            <RecentActivity />
 
+          </div>
 
           <div className="space-y-8">
             {/* Thao tác nhanh */}
@@ -153,12 +128,10 @@ const StudentDashBoard = () => {
           </div>
         </div>
         
-
         <div className="mt-8">
             <h2 className="text-xl font-bold text-gray-800">Your class</h2>
             <p className="text-gray-600 mb-4">The classes you are taking</p>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-         
                 <CourseCard title="Mobile App Development" code="PRM391" teacher="Nguyễn Văn A" students={45} campus="Hồ Chí Minh" />
                 <CourseCard title="Database Design" code="DBI202" teacher="Trần Thị B" students={38} campus="Hồ Chí Minh" />
                 <CourseCard title="Software Engineering" code="SWE201" teacher="Lê Văn C" students={42} campus="Hồ Chí Minh" />
