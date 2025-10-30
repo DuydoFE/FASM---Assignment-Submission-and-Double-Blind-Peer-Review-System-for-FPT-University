@@ -1,9 +1,8 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useSelector } from 'react-redux';
-import { selectUser } from '../../redux/features/userSlice'; 
-import { assignmentService } from '../../service/assignmentService'; 
-
+import { selectUser } from '../../redux/features/userSlice';
+import { assignmentService } from '../../service/assignmentService';
 
 import { Clock, MessageSquare, XCircle, AlertCircle, FileText } from 'lucide-react';
 
@@ -38,19 +37,24 @@ const getActivityDetails = (activity) => {
   }
 };
 
+const formatDeadline = (dateString) => {
+    if (!dateString) return '';
+    const options = { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' };
+    return new Date(dateString).toLocaleDateString('vi-VN', options);
+}
+
+
 const RecentActivity = () => {
   const currentUser = useSelector(selectUser);
   const studentId = currentUser?.userId;
 
-
   const { data: activityData, isLoading, isError } = useQuery({
     queryKey: ['studentActivities', studentId],
     queryFn: () => assignmentService.getStudentAssignments(studentId),
-    enabled: !!studentId, 
+    enabled: !!studentId,
   });
 
   const activities = activityData?.data || [];
-
   const displayedActivities = activities.slice(0, 3);
 
   const renderContent = () => {
@@ -78,8 +82,9 @@ const RecentActivity = () => {
                   {description}
                   <span className="font-semibold">{activity.title}</span>
                 </p>
+             
                 <p className="text-sm text-gray-500">
-                  {activity.courseName}
+                  {activity.courseName} • Deadline: {formatDeadline(activity.deadline)}
                 </p>
               </div>
             </li>
