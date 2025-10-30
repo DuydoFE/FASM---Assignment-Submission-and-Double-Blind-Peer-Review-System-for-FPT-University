@@ -38,11 +38,10 @@ const getActivityDetails = (activity) => {
 };
 
 const formatDeadline = (dateString) => {
-    if (!dateString) return '';
+    if (!dateString) return 'N/A';
     const options = { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' };
     return new Date(dateString).toLocaleDateString('vi-VN', options);
 }
-
 
 const RecentActivity = () => {
   const currentUser = useSelector(selectUser);
@@ -55,7 +54,7 @@ const RecentActivity = () => {
   });
 
   const activities = activityData?.data || [];
-  const displayedActivities = activities.slice(0, 3);
+  const displayedActivities = activities.slice(0, 3); 
 
   const renderContent = () => {
     if (isLoading) {
@@ -71,7 +70,7 @@ const RecentActivity = () => {
     }
 
     return (
-      <ul className="space-y-4">
+      <ul className="space-y-5"> 
         {displayedActivities.map((activity) => {
           const { icon, description } = getActivityDetails(activity);
           return (
@@ -82,10 +81,18 @@ const RecentActivity = () => {
                   {description}
                   <span className="font-semibold">{activity.title}</span>
                 </p>
-             
-                <p className="text-sm text-gray-500">
-                  {activity.courseName} • Deadline: {formatDeadline(activity.deadline)}
+                
+                
+                <p className="text-sm text-gray-600 font-medium mt-1">
+                  {activity.courseName} ({activity.sectionCode})
                 </p>
+
+                
+                <div className="text-xs text-gray-500 mt-1 space-y-0.5">
+                    <p>Deadline Submit: <span className="font-mono">{formatDeadline(activity.deadline)}</span></p>
+                    <p>Review Deadline: <span className="font-mono">{formatDeadline(activity.reviewDeadline)}</span></p>
+                    <p>Final Deadline: <span className="font-mono">{formatDeadline(activity.finalDeadline)}</span></p>
+                </div>
               </div>
             </li>
           );
