@@ -1,5 +1,79 @@
 import api from "../config/axios";
 
+// 🔹 Lấy thông tin user theo ID
+export const getUserById = async (id) => {
+  const res = await api.get(`/Users/${id}`);
+  return res.data;
+};
+
+// 🔹 Xóa người dùng (Admin-only)
+export const deleteUser = async (id) => {
+  const res = await api.delete(`/Users/${id}`);
+  return res.data;
+};
+
+// 🔹 Tìm user theo email
+export const getUserByEmail = async (email) => {
+  const res = await api.get(`/Users/email/${encodeURIComponent(email)}`);
+  return res.data;
+};
+
+// 🔹 Tìm user theo username
+export const getUserByUsername = async (username) => {
+  const res = await api.get(`/Users/username/${encodeURIComponent(username)}`);
+  return res.data;
+};
+
+// 🔹 Lấy danh sách user theo role
+export const getUsersByRole = async (roleName) => {
+  const res = await api.get(`/Users/role/${encodeURIComponent(roleName)}`);
+  return res.data;
+};
+
+// 🔹 Cập nhật avatar người dùng
+export const updateUserAvatar = async (id, avatarUrl) => {
+  const res = await api.put(`/Users/${id}/avatar`, avatarUrl, {
+    headers: { "Content-Type": "application/json" },
+  });
+  return res.data;
+};
+
+// 🔹 Đổi mật khẩu người dùng
+export const changeUserPassword = async (id, requestData) => {
+  const res = await api.put(`/Users/${id}/password`, requestData);
+  return res.data;
+};
+
+// 🔹 Lấy thống kê tài khoản
+export const getAccountStatistics = async () => {
+  const res = await api.get(`/Users/statistics`);
+  return res.data;
+};
+
+// 🔹 Tạo instructor qua email
+export const addInstructorByEmail = async (email, firstName, lastName, campusId) => {
+  const res = await api.post(
+    `/Users/instructor-email?firstName=${encodeURIComponent(firstName)}&LastName=${encodeURIComponent(
+      lastName
+    )}&campus=${campusId}`,
+    JSON.stringify(email),
+    { headers: { "Content-Type": "application/json" } }
+  );
+  return res.data;
+};
+
+// ✅ Gán vai trò cho user
+export const assignUserRoles = async (userId, roles) => {
+  const res = await api.post(`/Users/${userId}/roles`, { userId, roles });
+  return res.data;
+};
+
+// 🔹 Lấy danh sách vai trò của user
+export const getUserRoles = async (id) => {
+  const res = await api.get(`/Users/${id}/roles`);
+  return res.data;
+};
+
 // ✅ Lấy toàn bộ user
 export const getAllUsers = async () => {
   const res = await api.get("/Users");

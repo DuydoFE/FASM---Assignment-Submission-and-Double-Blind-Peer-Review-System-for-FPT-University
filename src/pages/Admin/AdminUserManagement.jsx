@@ -2,111 +2,125 @@ import React, { useState, useEffect } from "react";
 import * as XLSX from "xlsx";
 import {
   getUsersByCampus,
+  getAllUsers,
   updateUser,
   createUser,
   activateUser,
   deactivateUser,
   getMajorById,
-  getAllCampuses
+  getAllCampuses,
+  assignUserRoles,
 } from "../../service/adminService";
+import toast from "react-hot-toast";
 
 export default function AdminUserManagement() {
-  const [campuses, setCampuses] = useState([]); // 🟢 THÊM DÒNG NÀY
+  const [campuses, setCampuses] = useState([]);
+  const [selectedCampus, setSelectedCampus] = useState("");
   const [users, setUsers] = useState([]);
   const [filteredUsers, setFilteredUsers] = useState([]);
-  const [filters, setFilters] = useState({
-    campus: "",
-    major: "",
-    search: "",
-  });
+  const [filters, setFilters] = useState({ campus: "", major: "", search: "" });
   const [majors, setMajors] = useState([]);
-  const [selectedUser, setSelectedUser] = useState(null);
+  const [selectedUser, setSelectedUser] = useState({
+    id: "",
+    username: "",
+    email: "",
+    firstName: "",
+    lastName: "",
+    campusId: "",
+    majorId: "",
+    studentCode: "",
+    isActive: true,
+    roles: [], // 👈 thêm dòng này
+  });
   const [isUpdating, setIsUpdating] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  // ✅ Load users theo campus (hiển thị tên ngành từ majorId)
-  const handleCampusChange = async (e) => {
-    const campusId = e.target.value;
-    setFilters({ campus: campusId, major: "", search: "" });
+  // ✅ Load campus danh sách
+  useEffect(() => {
+    const fetchCampuses = async () => {
+      try {
+        const res = await getAllCampuses();
+        // 🧠 Đảm bảo dữ liệu luôn là mảng
+        const data = Array.isArray(res) ? res : res.data || [];
+        setCampuses(data);
+      } catch (err) {
+        console.error("Error fetching campuses:", err);
+        setCampuses([]); // fallback an toàn
+      }
+    };
+    fetchCampuses();
+  }, []);
 
-    if (!campusId) {
-      setUsers([]);
-      setMajors([]);
-      return;
-    }
-
+  // ✅ Load users khi chọn campus filter (dropdown phía trên)
+  const fetchUsers = async () => {
     try {
       setIsLoading(true);
+      if (selectedCampus) {
+        const res = await getUsersByCampus(selectedCampus);
+        const usersArray = Array.isArray(res) ? res : res.data || [];
 
-      // 🟢 Gọi API lấy danh sách user theo campus
-      const data = await getUsersByCampus(campusId);
-      const usersArray = Array.isArray(data) ? data : data.data || [];
-
-      // 🧠 Cache để tránh gọi trùng majorId
-      const majorCache = {};
-
-      // 🟢 Dùng Promise.all để xử lý song song và gắn majorName cho từng user
-      const formattedUsers = await Promise.all(
-        usersArray.map(async (u) => {
-          let majorName = "Không xác định";
-
-          if (u.majorId && u.majorId !== 0) {
-            if (!majorCache[u.majorId]) {
-              try {
-                const res = await getMajorById(u.majorId);
-                majorCache[u.majorId] =
-                  res.majorName || res.data?.majorName || "Không rõ";
-              } catch (err) {
-                console.error(`⚠️ Lỗi lấy majorName cho ID ${u.majorId}:`, err);
-                majorCache[u.majorId] = "Không xác định";
+        const majorCache = {};
+        const formattedUsers = await Promise.all(
+          usersArray.map(async (u) => {
+            let majorName = "Không xác định";
+            if (u.majorId && u.majorId !== 0) {
+              if (!majorCache[u.majorId]) {
+                try {
+                  const res = await getMajorById(u.majorId);
+                  majorCache[u.majorId] =
+                    res.majorName || res.data?.majorName || "Không rõ";
+                } catch {
+                  majorCache[u.majorId] = "Không xác định";
+                }
               }
+              majorName = majorCache[u.majorId];
             }
-            majorName = majorCache[u.majorId];
-          }
 
-          return {
-            id: u.id || u.userId,
-            studentCode: u.studentCode || "-",
-            fullName:
-              u.fullName || `${u.firstName || ""} ${u.lastName || ""}`.trim(),
-            email: u.email || "-",
-            roleName: Array.isArray(u.roles)
-              ? u.roles.join(", ")
-              : u.roleName || u.role || "-",
-            campusName:
-              u.campus?.campusName ||
-              (u.campusId === 1 ? "Hồ Chí Minh" : "Hà Nội"),
-            campusId: u.campusId || 0,
-            majorId: u.majorId || 0,
-            majorName, // ✅ Gắn tên ngành vào đây
-            isActive:
-              typeof u.isActive === "boolean"
-                ? u.isActive
-                : u.status?.toLowerCase() === "active",
-          };
-        })
-      );
+            return {
+              id: u.id || u.userId,
+              studentCode: u.studentCode || "-",
+              firstName: u.firstName || "",
+              lastName: u.lastName || "",
+              username: u.username || "",
+              email: u.email || "-",
+              roles: Array.isArray(u.roles)
+                ? u.roles
+                : [u.roleName || "Student"],
+              campusId: u.campusId || 0,
+              campusName:
+                u.campus?.campusName ||
+                (u.campusId === 1 ? "Hồ Chí Minh" : "Hà Nội"),
+              majorId: u.majorId || 0,
+              majorName,
+              isActive:
+                typeof u.isActive === "boolean"
+                  ? u.isActive
+                  : u.status?.toLowerCase() === "active",
+            };
+          })
+        );
 
-      setUsers(formattedUsers);
-
-      // 🟢 Danh sách majorName duy nhất để filter dropdown
-      const majorsSet = [
-        ...new Set(formattedUsers.map((u) => u.majorName).filter(Boolean)),
-      ];
-      setMajors(majorsSet);
-
-      console.log("👥 formattedUsers sample:", formattedUsers.slice(0, 3));
-    } catch (error) {
-      console.error("❌ Fetch users failed:", error);
-      alert("❌ Không thể tải danh sách user.");
-      setUsers([]);
-      setMajors([]);
+        setUsers(formattedUsers);
+        const majorsSet = [
+          ...new Set(formattedUsers.map((u) => u.majorName).filter(Boolean)),
+        ];
+        setMajors(majorsSet);
+      } else {
+        const res = await getAllUsers();
+        setUsers(res);
+      }
+    } catch (err) {
+      console.error("Error fetching users:", err);
     } finally {
       setIsLoading(false);
     }
   };
 
-  // ✅ Lọc theo major + search
+  useEffect(() => {
+    fetchUsers();
+  }, [selectedCampus]);
+
+  // ✅ Lọc user theo major và search
   useEffect(() => {
     let result = users;
     if (filters.major) {
@@ -116,184 +130,104 @@ export default function AdminUserManagement() {
       const keyword = filters.search.toLowerCase();
       result = result.filter(
         (u) =>
-          u.fullName.toLowerCase().includes(keyword) ||
+          u.firstName.toLowerCase().includes(keyword) ||
+          u.lastName.toLowerCase().includes(keyword) ||
           u.email.toLowerCase().includes(keyword) ||
-          u.campusName.toLowerCase().includes(keyword) ||
-          u.majorName.toLowerCase().includes(keyword) ||
-          (u.studentCode && u.studentCode.toLowerCase().includes(keyword))
+          u.studentCode.toLowerCase().includes(keyword)
       );
     }
     setFilteredUsers(result);
   }, [filters, users]);
-
-  useEffect(() => {
-  const fetchCampuses = async () => {
-    try {
-      const res = await getAllCampuses();
-      // Nếu API trả về danh sách campus dạng { id, campusName }
-      const formatted = Array.isArray(res)
-        ? res.map((c) => ({
-            id: c.id || c.campusId,
-            name: c.campusName || c.name,
-          }))
-        : [];
-      setCampuses(formatted);
-    } catch (err) {
-      console.error("❌ Lỗi khi load campus:", err);
-    }
-  };
-
-  fetchCampuses();
-}, []);
-
-  //test vớ vẩn
-  useEffect(() => {
-    fetch("https://localhost:7104/api/Users/4")
-      .then(res => res.json())
-      .then(data => console.log("📦 GET /Users/4 result:", data))
-      .catch(err => console.error(err));
-  }, []);
-
-
-  // ✅ Import file Excel
-  const handleImportFile = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = async (event) => {
-      const data = new Uint8Array(event.target.result);
-      const workbook = XLSX.read(data, { type: "array" });
-      const sheet = workbook.SheetNames[0];
-      const rows = XLSX.utils.sheet_to_json(workbook.Sheets[sheet]);
-
-      const importedUsers = rows.map((r, i) => ({
-        id: Date.now() + i,
-        studentCode: r.studentCode || "-",
-        fullName: r.fullName || r.name || "",
-        email: r.email || "-",
-        roleName: r.role || "student",
-        campusName: r.campus || "Không rõ",
-        majorName: r.major || "Không rõ",
-        isActive: r.status?.toLowerCase() === "active",
-      }));
-
-      setUsers((prev) => [...prev, ...importedUsers]);
-      alert(`✅ Imported ${importedUsers.length} users successfully`);
-    };
-    reader.readAsArrayBuffer(file);
-  };
-
-  // ✅ Thêm user thủ công
-  const handleAddUser = async () => {
-    if (!filters.campus) {
-      alert("⚠️ Vui lòng chọn campus trước khi thêm user.");
-      return;
-    }
-
-    const newUser = {
-      fullName: "New User",
-      email: "newuser@example.com",
-      studentCode: "MSSV" + Math.floor(Math.random() * 99999),
-      roleName: "student",
-      campusId: Number(filters.campus),
-      majorName: filters.major || "Chưa có chuyên ngành",
-      isActive: true,
-    };
-
-    try {
-      const res = await createUser(newUser);
-      alert("✅ User created successfully!");
-      // Reload lại danh sách
-      handleCampusChange({ target: { value: filters.campus } });
-    } catch (error) {
-      console.error("❌ Create user failed:", error);
-      alert("❌ Không thể tạo user mới.");
-    }
-  };
 
   // ✅ Bật/tắt tài khoản
   const toggleUserStatus = async (user) => {
     try {
       if (user.isActive) await deactivateUser(user.id);
       else await activateUser(user.id);
-      alert(`🔁 ${user.isActive ? "Deactivated" : "Activated"} successfully`);
-      // Cập nhật lại danh sách
-      handleCampusChange({ target: { value: filters.campus } });
+      toast.success(
+        `${user.isActive ? "Deactivated" : "Activated"} successfully!`
+      );
+      setSelectedCampus(selectedCampus); // reload user list
     } catch (err) {
       console.error("❌ Update status failed:", err);
-      alert("❌ Không thể thay đổi trạng thái user.");
+      toast.error("Không thể thay đổi trạng thái user.");
     }
   };
 
+  // ✅ Lưu user
   const handleSaveUser = async () => {
+    if (!selectedUser) return;
+
+    const userId = Number(selectedUser.id);
+    const payload = {
+      userId,
+      username:
+        selectedUser.username ||
+        selectedUser.email?.split("@")[0] ||
+        "unknown",
+      email: selectedUser.email || "",
+      firstName: selectedUser.firstName || "",
+      lastName: selectedUser.lastName || "",
+      studentCode: selectedUser.studentCode || "",
+      avatarUrl: selectedUser.avatarUrl || "",
+      campusId: selectedUser.campusId || 0,
+      majorId: selectedUser.majorId || 0,
+      isActive:
+        typeof selectedUser.isActive === "boolean"
+          ? selectedUser.isActive
+          : true,
+    };
+
     try {
-      if (!selectedUser) {
-        alert("No user selected.");
-        return;
-      }
-
       setIsUpdating(true);
-
-      const userId = Number(selectedUser.id);
-      const payload = {
-        userId: userId, // 🔥 chữ thường, để khớp với backend
-        username: selectedUser.username || selectedUser.email?.split("@")[0] || "",
-        email: selectedUser.email || "",
-        firstName: selectedUser.firstName || "",
-        lastName: selectedUser.lastName || "",
-        avatarUrl: selectedUser.avatarUrl || "",
-        studentCode: selectedUser.studentCode || "",
-        roles: Array.isArray(selectedUser.roles)
-          ? selectedUser.roles
-          : [selectedUser.roleName || "Student"],
-        campusId: selectedUser.campusId ?? 0,
-        majorId: selectedUser.majorId ?? 0,
-        isActive:
-          typeof selectedUser.isActive === "boolean"
-            ? selectedUser.isActive
-            : true,
-      };
-
-      console.log("🟡 PUT URL:", `/Users/${userId}`);
-      console.log("🟡 Payload gửi BE:", payload);
-
       await updateUser(userId, payload);
 
-      alert("✅ User updated successfully!");
+      // 🧩 Update role riêng
+      if (selectedUser.roles && selectedUser.roles.length > 0) {
+        console.log("🛰 Sending role update:", {
+          userId,
+          roles: selectedUser.roles,
+        });
+        await assignUserRoles(userId, selectedUser.roles);
+      }
+
+      toast.success("✅ Cập nhật user thành công!");
       setSelectedUser(null);
-      handleCampusChange({ target: { value: filters.campus } });
+      await fetchUsers(); // ✅ reload lại danh sách sau khi lưu thành công
     } catch (err) {
-      console.error("❌ Update failed:", err.response?.data || err);
-      alert(`❌ Update failed: ${err.response?.data?.message || "Unknown error"}`);
+      console.error("❌ Update failed:", err);
+      toast.error("Cập nhật thất bại!");
     } finally {
       setIsUpdating(false);
     }
   };
 
-
   return (
     <div className="space-y-6">
       <h2 className="text-2xl font-bold text-orange-500">👥 User Management</h2>
 
-      {/* Filter bar */}
-      <div className="bg-white p-4 rounded-xl shadow-md flex flex-wrap gap-4 items-center">
+      {/* 🔍 Bộ lọc Campus */}
+      <div className="flex justify-between items-center mb-4">
         <select
-          className="border rounded p-2"
-          value={filters.campus}
-          onChange={handleCampusChange}
+          className="border p-2 rounded"
+          value={selectedCampus}
+          onChange={(e) => setSelectedCampus(e.target.value)}
         >
-          <option value="">Select Campus</option>
-          <option value="1">Hồ Chí Minh</option>
-          <option value="2">Hà Nội</option>
+          <option value="">Tất cả campus</option>
+          {campuses.map((c) => (
+            <option key={c.campusId || c.id} value={c.campusId || c.id}>
+              {c.campusName || c.name}
+            </option>
+          ))}
         </select>
 
-        {filters.campus && majors.length > 0 && (
+        {selectedCampus && majors.length > 0 && (
           <select
-            className="border rounded p-2"
+            className="border p-2 rounded"
             value={filters.major}
             onChange={(e) => setFilters({ ...filters, major: e.target.value })}
           >
-            <option value="">All Majors</option>
+            <option value="">Tất cả chuyên ngành</option>
             {majors.map((m, i) => (
               <option key={i} value={m}>
                 {m}
@@ -302,44 +236,24 @@ export default function AdminUserManagement() {
           </select>
         )}
 
-        {filters.campus && (
+        {selectedCampus && (
           <input
             type="text"
-            placeholder="Search by name, email, MSSV..."
-            className="border rounded p-2 flex-1"
+            placeholder="Tìm kiếm..."
+            className="border p-2 rounded flex-1 ml-4"
             value={filters.search}
             onChange={(e) =>
               setFilters({ ...filters, search: e.target.value })
             }
           />
         )}
-
-        {filters.campus && (
-          <div className="ml-auto flex gap-2">
-            <label className="px-4 py-2 bg-orange-500 text-white rounded hover:bg-orange-600 cursor-pointer">
-              📁 Import
-              <input
-                type="file"
-                accept=".xlsx,.xls,.csv"
-                onChange={handleImportFile}
-                className="hidden"
-              />
-            </label>
-            <button
-              onClick={handleAddUser}
-              className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
-            >
-              ➕ Add User
-            </button>
-          </div>
-        )}
       </div>
 
-      {/* Table */}
+      {/* 🧾 Bảng user */}
       <div className="bg-white rounded-xl shadow-md overflow-x-auto">
         {isLoading ? (
           <p className="p-4 text-center text-gray-500">Loading...</p>
-        ) : filters.campus ? (
+        ) : selectedCampus ? (
           filteredUsers.length > 0 ? (
             <table className="w-full text-sm">
               <thead className="bg-orange-500 text-white">
@@ -357,10 +271,12 @@ export default function AdminUserManagement() {
               <tbody>
                 {filteredUsers.map((u) => (
                   <tr key={u.id} className="border-b hover:bg-gray-50">
-                    <td className="p-2">{u.fullName}</td>
+                    <td className="p-2">
+                      {u.firstName} {u.lastName}
+                    </td>
                     <td className="p-2">{u.studentCode}</td>
                     <td className="p-2">{u.email}</td>
-                    <td className="p-2 capitalize">{u.roleName}</td>
+                    <td className="p-2 capitalize">{u.roles.join(", ")}</td>
                     <td className="p-2">{u.campusName}</td>
                     <td className="p-2">{u.majorName || "Chưa có"}</td>
                     <td className="p-2">
@@ -392,23 +308,21 @@ export default function AdminUserManagement() {
               </tbody>
             </table>
           ) : (
-            <p className="p-4 text-center text-gray-500">No users found</p>
+            <p className="p-4 text-center text-gray-500">Không có user nào</p>
           )
         ) : (
           <p className="p-4 text-center text-gray-500">
-            Please select a campus to view users
+            Hãy chọn campus để xem user
           </p>
         )}
       </div>
 
-      {/* Modal Edit */}
-      {/* Modal Edit */}
+      {/* 🧩 Modal Edit User */}
       {selectedUser && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-30">
           <div className="bg-white p-6 rounded-xl w-96 space-y-4 shadow-lg">
             <h3 className="text-lg font-semibold text-orange-500">Edit User</h3>
 
-            {/* 🧍‍♂️ First Name */}
             <input
               type="text"
               className="border rounded w-full p-2"
@@ -419,7 +333,6 @@ export default function AdminUserManagement() {
               }
             />
 
-            {/* 🧍‍♀️ Last Name */}
             <input
               type="text"
               className="border rounded w-full p-2"
@@ -430,18 +343,19 @@ export default function AdminUserManagement() {
               }
             />
 
-            {/* 🎓 Student Code */}
             <input
               type="text"
               className="border rounded w-full p-2"
               placeholder="Student Code"
               value={selectedUser.studentCode || ""}
               onChange={(e) =>
-                setSelectedUser({ ...selectedUser, studentCode: e.target.value })
+                setSelectedUser({
+                  ...selectedUser,
+                  studentCode: e.target.value,
+                })
               }
             />
 
-            {/* 📧 Email */}
             <input
               type="text"
               className="border rounded w-full p-2"
@@ -452,29 +366,7 @@ export default function AdminUserManagement() {
               }
             />
 
-            {/* 🏫 Major */}
-            <select
-              className="border rounded w-full p-2"
-              value={selectedUser.majorName || ""}
-              onChange={(e) => {
-                const selectedMajor = majors.find((m) => m === e.target.value);
-                const foundMajor = users.find((u) => u.majorName === selectedMajor);
-                setSelectedUser({
-                  ...selectedUser,
-                  majorName: e.target.value,
-                  majorId: foundMajor?.majorId || 0,
-                });
-              }}
-            >
-              <option value="">Chọn chuyên ngành</option>
-              {majors.map((m, i) => (
-                <option key={i} value={m}>
-                  {m}
-                </option>
-              ))}
-            </select>
-
-            {/* 🏢 Campus */}
+            {/* 🏫 Campus */}
             <select
               className="border rounded w-full p-2"
               value={selectedUser.campusId || ""}
@@ -487,21 +379,40 @@ export default function AdminUserManagement() {
             >
               <option value="">Chọn campus</option>
               {campuses.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.name}
+                <option
+                  key={c.campusId || c.id}
+                  value={c.campusId || c.id}
+                >
+                  {c.campusName || c.name}
                 </option>
               ))}
             </select>
 
-            {/* 🎭 Role */}
+            {/* 🎓 Major */}
+            <select
+              className="border rounded w-full p-2"
+              value={selectedUser.majorId || ""}
+              onChange={(e) =>
+                setSelectedUser({
+                  ...selectedUser,
+                  majorId: parseInt(e.target.value),
+                })
+              }
+            >
+              <option value="">Chọn chuyên ngành</option>
+              {majors.map((m, i) => (
+                <option key={i} value={i + 1}>
+                  {m}
+                </option>
+              ))}
+            </select>
+
+            {/* 🧩 Role */}
             <select
               className="border rounded w-full p-2"
               value={selectedUser.roles?.[0] || ""}
               onChange={(e) =>
-                setSelectedUser({
-                  ...selectedUser,
-                  roles: [e.target.value],
-                })
+                setSelectedUser({ ...selectedUser, roles: [e.target.value] })
               }
             >
               <option value="">Chọn role</option>
@@ -510,7 +421,6 @@ export default function AdminUserManagement() {
               <option value="Admin">Admin</option>
             </select>
 
-            {/* ⚙️ Buttons */}
             <div className="flex justify-end gap-2">
               <button
                 onClick={() => setSelectedUser(null)}
