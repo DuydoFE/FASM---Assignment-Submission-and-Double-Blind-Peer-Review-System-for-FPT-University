@@ -43,16 +43,16 @@ const AiAssistantCard = ({ submissionId, criteria = [] }) => {
     <div className="bg-white p-6 rounded-lg border border-gray-200 sticky top-8">
       <div className="flex items-center mb-4">
         <Bot className="w-6 h-6 mr-3 text-blue-600" />
-        <h3 className="text-lg font-bold text-gray-800">Hỗ trợ AI chấm bài</h3>
+        <h3 className="text-lg font-bold text-gray-800">AI support for grading</h3>
       </div>
 
       <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
         <div className="flex items-center font-semibold text-blue-800 mb-2">
           <Sparkles size={18} className="mr-2" />
-          Tóm tắt nhanh bằng AI
+          Quick summary by criteria using AI
         </div>
         <p className="text-sm text-gray-600 mb-4">
-          AI sẽ phân tích bài làm và đưa ra gợi ý nhận xét cũng như điểm số cho từng tiêu chí.
+         AI will analyze the essay and give feedback suggestions for each criterion.
         </p>
         <button
           onClick={handleGenerateFeedback}
@@ -66,12 +66,12 @@ const AiAssistantCard = ({ submissionId, criteria = [] }) => {
           {isGenerating ? (
             <>
               <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              Đang phân tích...
+              Analyzing...
             </>
           ) : (
             <>
               <Zap className="w-4 h-4 mr-2" />
-              Tạo tóm tắt
+              Create a summary
             </>
           )}
         </button>
@@ -80,7 +80,7 @@ const AiAssistantCard = ({ submissionId, criteria = [] }) => {
       {/* 👉 KHỐI HIỂN THỊ KẾT QUẢ MỚI */}
       {aiFeedback && (
         <div className="mt-6 animate-fade-in">
-          <h4 className="font-bold text-gray-800 mb-3">Tóm tắt theo tiêu chí</h4>
+          <h4 className="font-bold text-gray-800 mb-3">Summary by criteria</h4>
           <div className="space-y-3">
             {aiFeedback.map((item) => {
               const weight = getCriterionWeight(item.criteriaId);
@@ -103,7 +103,7 @@ const AiAssistantCard = ({ submissionId, criteria = [] }) => {
               disabled={isGenerating}
               className="w-full mt-4 flex items-center justify-center px-3 py-1.5 bg-blue-100 text-blue-700 font-semibold rounded-md hover:bg-blue-200 text-sm"
             >
-              <RotateCcw className="w-3 h-3 mr-1.5" /> Tạo lại
+              <RotateCcw className="w-3 h-3 mr-1.5" /> Recreate
             </button>
           </div>
         </div>
