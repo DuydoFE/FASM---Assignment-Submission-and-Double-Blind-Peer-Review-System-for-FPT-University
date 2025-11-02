@@ -301,7 +301,11 @@ const PeerReviewPage = () => {
           </div>
 
          <div className="lg:col-span-1">
-            <AiAssistantCard submissionId={reviewData?.submissionId} />
+            {/* 👉 TRUYỀN THÊM PROP `criteria` XUỐNG ĐÂY */}
+            <AiAssistantCard 
+              submissionId={reviewData?.submissionId} 
+              criteria={reviewData?.rubric?.criteria} 
+            />
           </div>
         </div>
       </div>
