@@ -4,11 +4,11 @@ import { useQuery } from "@tanstack/react-query";
 import { reviewService } from "../../service/reviewService";
 import { 
     ChevronRight, Award, ArrowLeft, MessageSquare, 
-    Users, UserCheck, CalendarCheck, ShieldQuestion // 👉 2. Import icon mới
+    Users, UserCheck, CalendarCheck, ShieldQuestion 
 } from 'lucide-react';
 import RegradeRequestModal from '../../component/Modals/RegradeRequestModal'; 
 
-// Hàm helper để format ngày tháng
+
 const formatDate = (dateString) => {
   if (!dateString) return "N/A";
   const options = {
@@ -24,8 +24,8 @@ const formatDate = (dateString) => {
 const ViewScorePage = () => {
   const { courseId, assignmentId } = useParams();
   const navigate = useNavigate();
-
-  const {
+const [isModalOpen, setIsModalOpen] = useState(false);
+  const {   
     data: responseData,
     isLoading,
     isError,
@@ -82,13 +82,23 @@ const ViewScorePage = () => {
               This is the final score and comments for this exercise.
             </p>
           </div>
-          <button
-            onClick={() => navigate(`/assignment/${courseId}`)}
-            className="flex items-center px-4 py-2 border rounded-md font-semibold text-gray-700 hover:bg-gray-100"
-          >
-            <ArrowLeft size={16} className="mr-2" />
-            Back
-          </button>
+         <div className="flex space-x-3">
+                         <button
+                            onClick={() => setIsModalOpen(true)} // Mở modal khi click
+                            className="flex items-center px-4 py-2 bg-red-600 text-white rounded-md font-semibold hover:bg-red-700 transition-colors"
+                        >
+                            <ShieldQuestion size={16} className="mr-2" />
+                            Regrade Request
+                        </button>
+                        <button
+                            onClick={() => navigate(`/assignment/${courseId}`)}
+                            className="flex items-center px-4 py-2 border rounded-md font-semibold text-gray-700 hover:bg-gray-100"
+                        >
+                            <ArrowLeft size={16} className="mr-2" />
+                            Quay lại
+                        </button>
+                    
+                </div>
         </div>
 
         {/* Score Display */}
@@ -154,8 +164,13 @@ const ViewScorePage = () => {
           </div>
         </div>
       </div>
-    </div>
-  );
+    <RegradeRequestModal
+                isOpen={isModalOpen}
+                onClose={() => setIsModalOpen(false)} // Hàm để đóng modal
+                assignmentTitle={assignmentTitle}
+            />
+        </div>
+    );
 };
 
 export default ViewScorePage;
