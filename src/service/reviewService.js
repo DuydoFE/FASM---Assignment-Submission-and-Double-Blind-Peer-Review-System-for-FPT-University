@@ -70,6 +70,16 @@ const getMyScoreDetails = async (assignmentId) => {
     throw error;
   }
 };
+const submitRegradeRequest = async (payload) => {
+  try {
+   
+    const response = await api.post(`/RegradeRequests`, payload);
+    return response.data;
+  } catch (error) {
+    console.error(`Error submitting regrade request:`, error);
+    throw error;
+  }
+};
 
 export const reviewService = {
   getPeerReviewAssignment,
@@ -78,4 +88,5 @@ export const reviewService = {
   getAssignmentsWithTracking,
   generateAiReview, 
   getMyScoreDetails,
+  submitRegradeRequest,
 };
