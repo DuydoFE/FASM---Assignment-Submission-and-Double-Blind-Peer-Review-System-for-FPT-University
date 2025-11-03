@@ -1,4 +1,7 @@
 import api from "../config/axios";
+import axios from "axios";
+
+const API_BASE_URL = "https://localhost:7104";
 
 // 🔹 Lấy thông tin user theo ID
 export const getUserById = async (id) => {
@@ -138,61 +141,6 @@ export const createUser = async (userData) => {
 // ✅ Lấy tất cả lớp học
 export const getAllClasses = async () => {
   const res = await api.get("/CourseInstance");
-  return res.data;
-};
-
-// ===============================
-// 🔹 COURSE INSTANCE API
-// ===============================
-
-// 🔹 Lấy lớp học theo ID
-export const getCourseInstanceById = async (id) => {
-  const res = await api.get(`/CourseInstance/${id}`);
-  return res.data;
-};
-
-// 🔹 Lấy lớp học theo CourseId
-export const getCourseInstancesByCourseId = async (courseId) => {
-  const res = await api.get(`/CourseInstance/course/${courseId}`);
-  return res.data;
-};
-
-// 🔹 Lấy lớp học theo SemesterId
-export const getCourseInstancesBySemesterId = async (semesterId) => {
-  const res = await api.get(`/CourseInstance/semester/${semesterId}`);
-  return res.data;
-};
-
-// 🔹 Lấy lớp học theo CampusId
-export const getCourseInstancesByCampusId = async (campusId) => {
-  const res = await api.get(`/CourseInstance/campus/${campusId}`);
-  return res.data;
-};
-
-// 🔹 Tạo lớp học mới
-export const createCourseInstance = async (data) => {
-  const res = await api.post("/CourseInstance", data);
-  return res.data;
-};
-
-// 🔹 Cập nhật lớp học
-export const updateCourseInstance = async (data) => {
-  const res = await api.put("/CourseInstance", data);
-  return res.data;
-};
-
-// 🔹 Xóa lớp học
-export const deleteCourseInstance = async (id) => {
-  const res = await api.delete(`/CourseInstance/${id}`);
-  return res.data;
-};
-
-// 🔹 Cập nhật Enroll Key
-export const updateEnrollKey = async (courseInstanceId, newKey, userId) => {
-  const res = await api.put(`/CourseInstance/${courseInstanceId}/enroll-key`, {
-    newKey,
-    userId,
-  });
   return res.data;
 };
 
@@ -361,6 +309,210 @@ export const updateCampus = async (data) => {
 // 🔹 Xóa campus
 export const deleteCampus = async (id) => {
   const res = await api.delete(`/Campus/${id}`);
+  return res.data;
+};
+
+// ===============================
+// 📘 COURSE API (Môn học - Course)
+// ===============================
+
+/**
+ * Lấy thông tin môn học theo ID
+ * @param {number} id - ID của môn học
+ * @returns {Promise<object>} Thông tin chi tiết môn học
+ */
+export const getCourseById = async (id) => {
+  const res = await api.get(`/Course/${id}`);
+  return res.data;
+};
+
+/**
+ * Lấy danh sách toàn bộ môn học
+ * @returns {Promise<Array>} Danh sách tất cả môn học trong hệ thống
+ */
+export const getAllCourses = async () => {
+  const res = await api.get("/Course");
+  return res.data;
+};
+
+/**
+ * Tạo môn học mới
+ * @param {object} data - Thông tin môn học mới (curriculumId, courseCode, courseName, credits, ...)
+ * @returns {Promise<object>} Môn học vừa được tạo
+ */
+export const createCourse = async (data) => {
+  const res = await api.post("/Course", data);
+  return res.data;
+};
+
+/**
+ * Cập nhật thông tin môn học
+ * @param {object} data - Dữ liệu cập nhật (bao gồm courseId và các thuộc tính mới)
+ * @returns {Promise<object>} Môn học sau khi được cập nhật
+ */
+export const updateCourse = async (data) => {
+  const res = await api.put("/Course", data);
+  return res.data;
+};
+
+/**
+ * Xóa môn học theo ID
+ * ⚠️ Chỉ có thể xóa nếu môn học chưa có course instance nào
+ * @param {number} id - ID môn học cần xóa
+ * @returns {Promise<object>} Kết quả xóa
+ */
+export const deleteCourse = async (id) => {
+  const res = await api.delete(`/Course/${id}`);
+  return res.data;
+};
+
+/**
+ * Lấy danh sách môn học theo chương trình đào tạo (Curriculum)
+ * @param {number} curriculumId - ID của chương trình đào tạo
+ * @returns {Promise<Array>} Danh sách các môn học thuộc chương trình đó
+ */
+export const getCoursesByCurriculum = async (curriculumId) => {
+  const res = await api.get(`/Course/curriculum/${curriculumId}`);
+  return res.data;
+};
+
+/**
+ * Tìm kiếm môn học theo mã môn học (courseCode)
+ * @param {string} courseCode - Mã môn học cần tìm (có thể tìm partial)
+ * @returns {Promise<Array>} Danh sách môn học phù hợp
+ */
+export const getCoursesByCode = async (courseCode) => {
+  const res = await api.get(`/Course/code/${encodeURIComponent(courseCode)}`);
+  return res.data;
+};
+
+/**
+ * Lấy danh sách môn học đang hoạt động (IsActive = true)
+ * @returns {Promise<Array>} Danh sách môn học đang hoạt động
+ */
+export const getActiveCourses = async () => {
+  const res = await api.get("/Course/active");
+  return res.data;
+};
+
+/**
+ * Lấy danh sách môn học theo ngành (Major)
+ * @param {number} majorId - ID của ngành học
+ * @returns {Promise<Array>} Danh sách môn học thuộc ngành đó
+ */
+export const getCoursesByMajor = async (majorId) => {
+  const res = await api.get(`/Course/major/${majorId}`);
+  return res.data;
+};
+
+// ===========================================
+// 📗 COURSE INSTANCE API (Lớp học - CourseInstance)
+// ===========================================
+
+/**
+ * Lấy thông tin chi tiết lớp học theo ID
+ * @param {number} id - ID của lớp học
+ * @returns {Promise<object>} Thông tin lớp học bao gồm giảng viên, sinh viên, assignment,...
+ */
+export const getCourseInstanceById = async (id) => {
+  const res = await api.get(`/CourseInstance/${id}`);
+  return res.data;
+};
+
+/**
+ * Lấy danh sách tất cả lớp học
+ * @returns {Promise<Array>} Danh sách toàn bộ lớp học trong hệ thống
+ */
+export const getAllCourseInstances = async () => {
+  const res = await api.get("/CourseInstance");
+  return res.data;
+};
+
+/**
+ * Lấy danh sách lớp học theo môn học (CourseId)
+ * @param {number} courseId - ID của môn học
+ * @returns {Promise<Array>} Danh sách lớp học thuộc môn học đó
+ */
+export const getCourseInstancesByCourseId = async (courseId) => {
+  const res = await api.get(`/CourseInstance/course/${courseId}`);
+  return res.data;
+};
+
+/**
+ * Lấy danh sách lớp học theo kỳ học (SemesterId)
+ * @param {number} semesterId - ID của kỳ học
+ * @returns {Promise<Array>} Danh sách lớp học thuộc kỳ học được chỉ định
+ */
+export const getCourseInstancesBySemesterId = async (semesterId) => {
+  const res = await api.get(`/CourseInstance/semester/${semesterId}`);
+  return res.data;
+};
+
+/**
+ * Lấy danh sách lớp học theo campus
+ * @param {number} campusId - ID của campus
+ * @returns {Promise<Array>} Danh sách lớp học tại campus đó
+ */
+export const getCourseInstancesByCampusId = async (campusId) => {
+  const res = await api.get(`/CourseInstance/campus/${campusId}`);
+  return res.data;
+};
+
+/**
+ * Tạo mới một lớp học
+ * @param {object} data - Thông tin lớp học (courseId, semesterId, instructorId, campusId, ...)
+ * @returns {Promise<object>} Lớp học vừa được tạo
+ */
+export const createCourseInstance = async (payload) => {
+  try {
+    const res = await axios.post(
+      `${API_BASE_URL}/api/CourseInstance`,
+      payload,
+      {
+        headers: {
+          "Content-Type": "application/json", // ✅ Đổi từ json-patch+json thành json
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      }
+    );
+    return res.data;
+  } catch (error) {
+    console.error("❌ createCourseInstance error:", error);
+    throw error;
+  }
+};
+
+
+/**
+ * Cập nhật thông tin lớp học
+ * @param {object} data - Dữ liệu cập nhật (bao gồm courseInstanceId và thông tin cần thay đổi)
+ * @returns {Promise<object>} Lớp học sau khi cập nhật
+ */
+export const updateCourseInstance = async (data) => {
+  const res = await api.put("/CourseInstance", data);
+  return res.data;
+};
+
+/**
+ * Xóa lớp học
+ * ⚠️ Chỉ admin có quyền, và chỉ khi lớp chưa có dữ liệu liên quan
+ * @param {number} id - ID lớp học cần xóa
+ * @returns {Promise<object>} Kết quả xóa
+ */
+export const deleteCourseInstance = async (id) => {
+  const res = await api.delete(`/CourseInstance/${id}`);
+  return res.data;
+};
+
+/**
+ * Cập nhật mã Enroll Key cho lớp học
+ * ⚙️ Dành cho giảng viên của lớp, hệ thống sẽ kiểm tra quyền trước khi cập nhật
+ * @param {number} courseInstanceId - ID của lớp học
+ * @param {object} data - Dữ liệu cập nhật ({ newKey, userId })
+ * @returns {Promise<object>} Kết quả cập nhật mã Enroll Key
+ */
+export const updateEnrollKey = async (courseInstanceId, data) => {
+  const res = await api.put(`/CourseInstance/${courseInstanceId}/enroll-key`, data);
   return res.data;
 };
 

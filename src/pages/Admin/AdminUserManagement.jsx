@@ -11,6 +11,7 @@ import {
   getAllMajors,
   getAllCampuses,
   assignUserRoles,
+  importStudentsFromExcel,
 } from "../../service/adminService";
 import toast from "react-hot-toast";
 
@@ -275,6 +276,28 @@ export default function AdminUserManagement() {
     }
   };
 
+  // ✅ Import danh sách user từ file Excel
+  const handleImportUsers = async (event) => {
+    try {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const formData = new FormData();
+      formData.append("file", file);
+
+      toast.loading("Đang import danh sách user...");
+
+      await importUsersFromExcel(formData);
+      toast.dismiss();
+      toast.success("✅ Import danh sách user thành công!");
+      await fetchUsers(); // reload lại danh sách user
+    } catch (err) {
+      toast.dismiss();
+      console.error("❌ Import failed:", err);
+      toast.error("Import thất bại! Vui lòng kiểm tra lại file.");
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -288,11 +311,15 @@ export default function AdminUserManagement() {
           >
             + Add New User
           </button>
-          <button
-            className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded"
-          >
+          <label className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded cursor-pointer">
             📥 Import User List
-          </button>
+            <input
+              type="file"
+              accept=".xlsx, .xls"
+              onChange={handleImportUsers}
+              className="hidden"
+            />
+          </label>
         </div>
       </div>
 

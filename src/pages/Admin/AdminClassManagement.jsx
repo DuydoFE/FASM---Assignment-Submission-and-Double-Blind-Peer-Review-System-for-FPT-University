@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  getAllClasses, // ✅ dùng hàm có sẵn trong adminService
+  getCourseInstancesByCampusId,
   createCourseInstance,
   importStudentsFromMultipleSheets,
 } from "../../service/adminService";
@@ -29,27 +29,29 @@ export default function AdminClassManagement() {
     courseId: "",
     semesterId: "",
     campusId: "",
-    name: "",
-    startDate: "",
-    endDate: "",
+    sectionCode: "",
+    enrollmentPassword: "",
+    requiresApproval: true,
   });
 
-  // 🧠 Load toàn bộ lớp học khi trang mở
+  // 🧠 Load lớp học theo campus khi campus được chọn
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const res = await getAllClasses();
-        // API trả về dạng { message, statusCode, data: [...] }
+        if (!filters.campus) {
+          setClasses([]);
+          return;
+        }
+        const res = await getCourseInstancesByCampusId(Number(filters.campus));
         setClasses(Array.isArray(res?.data) ? res.data : []);
       } catch (err) {
-        console.error(err);
+        console.error("❌ Fetch classes error:", err);
         toast.error("Failed to load classes");
       }
     };
     fetchData();
-  }, []);
+  }, [filters.campus]);
 
-  // Handlers
   const handleCampusChange = (e) => {
     setFilters({ ...filters, campus: e.target.value });
   };
@@ -62,27 +64,75 @@ export default function AdminClassManagement() {
     navigate(`/admin/classes/${id}`);
   };
 
+  // ✅ Tạo lớp học mới (FE)
   const handleCreateClass = async (e) => {
     e.preventDefault();
+
+    // Validate
+    if (!newClass.courseId || !newClass.semesterId || !newClass.campusId) {
+      toast.error("Please select campus, course, and semester.");
+      return;
+    }
+    if (!newClass.sectionCode.trim()) {
+      toast.error("Please enter section code.");
+      return;
+    }
+    if (!newClass.enrollmentPassword.trim()) {
+      toast.error("Please enter enrollment password.");
+      return;
+    }
+
+    const payload = {
+      courseId: Number(newClass.courseId),
+      semesterId: Number(newClass.semesterId),
+      campusId: Number(newClass.campusId),
+      sectionCode: newClass.sectionCode.trim(),
+      enrollmentPassword: newClass.enrollmentPassword.trim(),
+      requiresApproval: Boolean(newClass.requiresApproval),
+    };
+
+    console.log("🚀 Payload gửi lên BE:", payload);
+
     try {
-      await createCourseInstance(newClass);
-      toast.success("Class created successfully!");
+      const token = localStorage.getItem("token");
+      if (!token) {
+        toast.error("Missing token. Please log in again.");
+        return;
+      }
+
+      const res = await createCourseInstance(payload);
+      console.log("📥 Response từ BE sau khi tạo class:", res);
+
+      if (res?.statusCode === 100 || res?.status === 201) {
+        toast.success("Class created successfully!");
+      } else {
+        console.warn("⚠️ Unexpected response từ BE:", res);
+        toast.error(res?.message || "Unexpected response from server.");
+      }
+
       setShowCreateModal(false);
       setNewClass({
         courseId: "",
         semesterId: "",
         campusId: "",
-        name: "",
-        startDate: "",
-        endDate: "",
+        sectionCode: "",
+        enrollmentPassword: "",
+        requiresApproval: true,
       });
 
-      // Refresh list
-      const res = await getAllClasses();
-      setClasses(Array.isArray(res?.data) ? res.data : []);
+      if (filters.campus) {
+        const updated = await getCourseInstancesByCampusId(
+          Number(filters.campus)
+        );
+        setClasses(Array.isArray(updated?.data) ? updated.data : []);
+      }
     } catch (err) {
-      console.error(err);
-      toast.error("Failed to create class");
+      console.error("❌ Create class error:", err);
+      const errorMsg =
+        err?.response?.data?.message ||
+        err?.message ||
+        "Failed to create class. Please check the server logs.";
+      toast.error(errorMsg);
     }
   };
 
@@ -91,27 +141,32 @@ export default function AdminClassManagement() {
     if (!importFile) return toast.error("Please select a file first");
 
     try {
-      await importStudentsFromMultipleSheets(filters.campus, importFile, 1);
-      toast.success("Import successfully!");
+      console.log("🚀 Importing students for campus:", filters.campus);
+      const res = await importStudentsFromMultipleSheets(filters.campus, importFile, 1);
+      console.log("📥 Response từ BE khi import:", res);
+
+      if (res?.statusCode === 200 || res?.success === true) {
+        toast.success("Import successfully!");
+      } else {
+        toast.error(res?.message || "Import failed!");
+      }
+
       setShowImportModal(false);
 
-      const res = await getAllClasses();
-      setClasses(Array.isArray(res?.data) ? res.data : []);
+      // Reload danh sách lớp sau khi import
+      const updated = await getCourseInstancesByCampusId(Number(filters.campus));
+      setClasses(Array.isArray(updated?.data) ? updated.data : []);
     } catch (err) {
-      console.error(err);
-      toast.error("Import failed");
+      console.error("❌ Import class list error:", err);
+      toast.error(err?.response?.data?.message || "Import failed. Please check the file or server.");
     }
   };
 
-  // 🧮 Filter trên FE
-  const filteredClasses = classes.filter((c) => {
-    const matchCampus = filters.campus
-      ? c.campusId?.toString() === filters.campus
-      : true;
+  const displayedClasses = classes.filter((c) => {
     const matchSearch =
       c.courseName?.toLowerCase().includes(filters.search.toLowerCase()) ||
       c.sectionCode?.toLowerCase().includes(filters.search.toLowerCase());
-    return matchCampus && matchSearch;
+    return matchSearch;
   });
 
   return (
@@ -157,45 +212,50 @@ export default function AdminClassManagement() {
 
       {/* Table */}
       <div className="bg-white rounded-xl shadow-md overflow-x-auto">
-        {filteredClasses.length > 0 ? (
-          <table className="w-full text-sm">
-            <thead className="bg-orange-500 text-white">
-              <tr>
-                <th className="p-2 text-left">Class Name</th>
-                <th className="p-2 text-left">Course</th>
-                <th className="p-2 text-left">Semester</th>
-                <th className="p-2 text-left">Campus</th>
-                <th className="p-2 text-left">Students</th>
-                <th className="p-2 text-left">Assignments</th>
-                <th className="p-2 text-left">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredClasses.map((c) => (
-                <tr key={c.courseInstanceId} className="border-b hover:bg-gray-50">
-                  <td className="p-2">{c.sectionCode || c.courseName}</td>
-                  <td className="p-2">{c.courseName}</td>
-                  <td className="p-2">{c.semesterName}</td>
-                  <td className="p-2">{c.campusName}</td>
-                  <td className="p-2">{c.studentCount}</td>
-                  <td className="p-2">{c.assignmentCount}</td>
-                  <td className="p-2 space-x-2">
-                    <button
-                      className="text-orange-500 hover:underline"
-                      onClick={() => handleViewDetail(c.courseInstanceId)}
-                    >
-                      View Detail
-                    </button>
-                  </td>
+        {filters.campus ? (
+          displayedClasses.length > 0 ? (
+            <table className="w-full text-sm">
+              <thead className="bg-orange-500 text-white">
+                <tr>
+                  <th className="p-2 text-left">Class Name</th>
+                  <th className="p-2 text-left">Course</th>
+                  <th className="p-2 text-left">Semester</th>
+                  <th className="p-2 text-left">Campus</th>
+                  <th className="p-2 text-left">Students</th>
+                  <th className="p-2 text-left">Assignments</th>
+                  <th className="p-2 text-left">Actions</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {displayedClasses.map((c) => (
+                  <tr
+                    key={c.courseInstanceId}
+                    className="border-b hover:bg-gray-50"
+                  >
+                    <td className="p-2">{c.sectionCode || c.courseName}</td>
+                    <td className="p-2">{c.courseName}</td>
+                    <td className="p-2">{c.semesterName}</td>
+                    <td className="p-2">{c.campusName}</td>
+                    <td className="p-2">{c.studentCount}</td>
+                    <td className="p-2">{c.assignmentCount}</td>
+                    <td className="p-2 space-x-2">
+                      <button
+                        className="text-orange-500 hover:underline"
+                        onClick={() => handleViewDetail(c.courseInstanceId)}
+                      >
+                        View Detail
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          ) : (
+            <p className="p-4 text-center text-gray-500">No classes found</p>
+          )
         ) : (
           <p className="p-4 text-center text-gray-500">
-            {filters.campus
-              ? "No classes found"
-              : "Please select a campus or search to filter classes"}
+            Please select a campus first
           </p>
         )}
       </div>
@@ -204,7 +264,9 @@ export default function AdminClassManagement() {
       {showImportModal && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center">
           <div className="bg-white rounded-xl p-6 w-full max-w-md">
-            <h3 className="text-lg font-semibold mb-4">Import Class List (Excel)</h3>
+            <h3 className="text-lg font-semibold mb-4">
+              Import Class List (Excel)
+            </h3>
             <input
               type="file"
               accept=".xlsx,.xls"
@@ -248,60 +310,73 @@ export default function AdminClassManagement() {
                   <option value="2">Hà Nội</option>
                 </select>
 
-                <input
-                  required
-                  value={newClass.name}
-                  onChange={(e) =>
-                    setNewClass({ ...newClass, name: e.target.value })
-                  }
-                  placeholder="Class name"
-                  className="border rounded p-2"
-                />
-
-                <input
-                  type="text"
+                <select
                   required
                   value={newClass.courseId}
                   onChange={(e) =>
                     setNewClass({ ...newClass, courseId: e.target.value })
                   }
-                  placeholder="Course ID"
+                  className="border rounded p-2"
+                >
+                  <option value="">Select Course</option>
+                  <option value="1">Object-Oriented Programming</option>
+                  <option value="2">Data Structures and Algorithms</option>
+                </select>
+
+                <select
+                  required
+                  value={newClass.semesterId}
+                  onChange={(e) =>
+                    setNewClass({ ...newClass, semesterId: e.target.value })
+                  }
+                  className="border rounded p-2"
+                >
+                  <option value="">Select Semester</option>
+                  <option value="1">Fall 2025</option>
+                  <option value="2">Spring 2026</option>
+                </select>
+
+                <input
+                  type="text"
+                  required
+                  value={newClass.sectionCode}
+                  onChange={(e) =>
+                    setNewClass({ ...newClass, sectionCode: e.target.value })
+                  }
+                  placeholder="Section Code"
                   className="border rounded p-2"
                 />
 
                 <input
                   type="text"
                   required
-                  value={newClass.semesterId}
+                  value={newClass.enrollmentPassword}
                   onChange={(e) =>
-                    setNewClass({ ...newClass, semesterId: e.target.value })
+                    setNewClass({
+                      ...newClass,
+                      enrollmentPassword: e.target.value,
+                    })
                   }
-                  placeholder="Semester ID"
-                  className="border rounded p-2"
-                />
-
-                <input
-                  type="date"
-                  required
-                  value={newClass.startDate}
-                  onChange={(e) =>
-                    setNewClass({ ...newClass, startDate: e.target.value })
-                  }
-                  className="border rounded p-2"
-                />
-
-                <input
-                  type="date"
-                  required
-                  value={newClass.endDate}
-                  onChange={(e) =>
-                    setNewClass({ ...newClass, endDate: e.target.value })
-                  }
+                  placeholder="Enrollment Password"
                   className="border rounded p-2"
                 />
               </div>
 
-              <div className="flex justify-end gap-2">
+              <div className="flex items-center gap-2 mt-2">
+                <input
+                  type="checkbox"
+                  checked={newClass.requiresApproval}
+                  onChange={(e) =>
+                    setNewClass({
+                      ...newClass,
+                      requiresApproval: e.target.checked,
+                    })
+                  }
+                />
+                <label>Requires Approval</label>
+              </div>
+
+              <div className="flex justify-end gap-2 mt-4">
                 <button
                   type="button"
                   onClick={() => setShowCreateModal(false)}
