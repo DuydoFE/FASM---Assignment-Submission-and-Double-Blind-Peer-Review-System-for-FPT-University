@@ -1,16 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, FileText, Clock, Lock, Calendar, X, Trash2, ChevronDown, Edit } from 'lucide-react';
+import { Plus, FileText, Clock, Lock, Calendar, X, Trash2, ChevronDown, Pencil, Edit } from 'lucide-react';
 import { toast } from "react-toastify";
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { getAssignmentsByCourseInstanceId, createAssignment, deleteAssignment, updateAssignment, assignmentService } from '../../service/assignmentService';
-import { submissionService } from '../../service/submissionService';
 import CreateAssignmentModal from '../../component/Assignment/CreateAssignmentModal';
 import EditAssignmentModal from '../../component/Assignment/EditAssignmentModal';
 import DeleteAssignmentModal from '../../component/Assignment/DeleteAssignmentModal';
 
 const InstructorManageAssignment = () => {
   const { id: courseInstanceId } = useParams();
-  const navigate = useNavigate();
   const [statusFilter, setStatusFilter] = useState('All');
   const [assignments, setAssignments] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -193,16 +191,6 @@ const InstructorManageAssignment = () => {
     }
   };
 
-  const handleViewSubmissions = async (assignment) => {
-    try { 
-      await submissionService.getSubmissionsByAssignment(assignment.assignmentId);
-      navigate(`/instructor/manage-submission/${assignment.assignmentId}`);
-    } catch (error) {
-      console.error('Failed to fetch submissions:', error);
-      toast.error('Failed to load submissions. Please try again.');
-    }
-  };
-
   const filteredAssignments = statusFilter === 'All'
     ? assignments
     : assignments.filter(a => a.status === statusFilter);
@@ -364,7 +352,6 @@ const InstructorManageAssignment = () => {
                 <Edit className="w-5 h-5" />
               </button>
               <button
-                onClick={() => handleViewSubmissions(assignment)}
                 className="text-gray-600 hover:text-gray-800 p-1.5 hover:bg-gray-50 rounded-lg transition-colors"
                 title="View Submissions"
               >
@@ -461,7 +448,7 @@ const InstructorManageAssignment = () => {
         assignment={selectedAssignment}
       />
 
-      {/* Create Assignment Modal */}
+      {/* Create Assignment Modal - SỬA ĐÂY */}
       <CreateAssignmentModal
         isOpen={showModal}
         onClose={() => setShowModal(false)}

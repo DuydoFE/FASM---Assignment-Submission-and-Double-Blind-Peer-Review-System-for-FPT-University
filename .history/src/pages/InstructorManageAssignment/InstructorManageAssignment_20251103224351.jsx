@@ -194,8 +194,17 @@ const InstructorManageAssignment = () => {
   };
 
   const handleViewSubmissions = async (assignment) => {
-    try { 
-      await submissionService.getSubmissionsByAssignment(assignment.assignmentId);
+    try {
+      // Show loading toast
+      const loadingToast = toast.loading('Loading submissions...');
+      
+      // Call API to get submissions
+      await submissionService.getSubmissionsByAssignmentId(assignment.assignmentId);
+      
+      // Dismiss loading toast
+      toast.dismiss(loadingToast);
+      
+      // Navigate to manage submissions page
       navigate(`/instructor/manage-submission/${assignment.assignmentId}`);
     } catch (error) {
       console.error('Failed to fetch submissions:', error);
