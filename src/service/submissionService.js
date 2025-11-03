@@ -48,7 +48,19 @@ const updateSubmission = async (submissionId, updateData) => {
 };
 
 
+
+const getSubmissionsByAssignment = async (assignmentId) => {
+  try {
+    const response = await api.get(`/instructor/InstructorSubmission/assignment/${assignmentId}/submissions`);
+    return response.data;
+  } catch (error) {
+    console.error("Lỗi khi lấy danh sách bài nộp:", error.response?.data || error.message);
+    throw error.response?.data || new Error("Lỗi mạng hoặc server không phản hồi");
+  }
+};
+
 export const submissionService = {
   submitAssignment,
   updateSubmission,
+  getSubmissionsByAssignment,
 };

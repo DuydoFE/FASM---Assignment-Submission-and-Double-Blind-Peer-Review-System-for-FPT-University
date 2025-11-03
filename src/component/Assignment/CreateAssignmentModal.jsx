@@ -338,7 +338,7 @@ const CreateAssignmentModal = ({ isOpen, onClose, onSubmit, courseInstanceId }) 
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Attach File <span className="text-gray-400">(Optional)</span>
+                  Document <span className="text-gray-400">(Optional)</span>
                 </label>
                 {!selectedFile ? (
                   <label className="flex items-center justify-center w-full px-4 py-6 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-orange-500 hover:bg-orange-50 transition-colors">
