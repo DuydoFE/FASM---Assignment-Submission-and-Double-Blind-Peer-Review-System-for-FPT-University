@@ -40,6 +40,7 @@ const InstructorManageSubmission = () => {
 
       setSubmissions(mappedSubmissions);
 
+      // Set assignment info từ nested assignment object
       if (submissionsData.length > 0 && submissionsData[0].assignment) {
         setAssignmentInfo({
           title: submissionsData[0].assignment.title,
