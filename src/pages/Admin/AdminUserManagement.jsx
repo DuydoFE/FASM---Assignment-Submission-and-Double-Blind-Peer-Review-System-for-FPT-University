@@ -8,6 +8,7 @@ import {
   activateUser,
   deactivateUser,
   getMajorById,
+  getAllMajors,
   getAllCampuses,
   assignUserRoles,
 } from "../../service/adminService";
@@ -20,38 +21,69 @@ export default function AdminUserManagement() {
   const [filteredUsers, setFilteredUsers] = useState([]);
   const [filters, setFilters] = useState({ campus: "", major: "", search: "" });
   const [majors, setMajors] = useState([]);
-  const [selectedUser, setSelectedUser] = useState({
-    id: "",
-    username: "",
-    email: "",
-    firstName: "",
-    lastName: "",
-    campusId: "",
-    majorId: "",
-    studentCode: "",
-    isActive: true,
-    roles: [], // 👈 thêm dòng này
-  });
+  const [majorNames, setMajorNames] = useState([]);
+  const [selectedUser, setSelectedUser] = useState(null);
   const [isUpdating, setIsUpdating] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  // ✅ Load campus danh sách
+  // ➕ Thêm state cho form tạo user
+  const [showAddForm, setShowAddForm] = useState(false);
+  // ✅ Đặt ở ngoài cùng component (trên useState)
+  const defaultUser = {
+    campusId: 0,
+    majorId: 0,
+    username: "",
+    password: "",
+    email: "",
+    firstName: "",
+    lastName: "",
+    studentCode: "",
+    avatarUrl: "",
+    role: "",
+    isActive: true,
+  };
+
+  // ✅ useState khởi tạo
+  const [newUser, setNewUser] = useState(defaultUser);
+
+  // ✅ Mỗi khi mở form "Add User" thì reset lại dữ liệu
+  useEffect(() => {
+    if (showAddForm) {
+      setNewUser(defaultUser);
+    }
+  }, [showAddForm]);
+
+  // ✅ Load campus
   useEffect(() => {
     const fetchCampuses = async () => {
       try {
         const res = await getAllCampuses();
-        // 🧠 Đảm bảo dữ liệu luôn là mảng
         const data = Array.isArray(res) ? res : res.data || [];
         setCampuses(data);
       } catch (err) {
         console.error("Error fetching campuses:", err);
-        setCampuses([]); // fallback an toàn
+        setCampuses([]);
       }
     };
     fetchCampuses();
   }, []);
 
-  // ✅ Load users khi chọn campus filter (dropdown phía trên)
+  // ✅ Load majors
+  useEffect(() => {
+    const fetchMajors = async () => {
+      try {
+        const res = await getAllMajors();
+        const data = Array.isArray(res) ? res : res.data || [];
+        setMajors(data);
+      } catch (err) {
+        console.error("Error fetching majors:", err);
+        setMajors([]);
+      }
+    };
+    fetchMajors();
+  }, []);
+
+  // ✅ Load users khi chọn campus
   const fetchUsers = async () => {
     try {
       setIsLoading(true);
@@ -101,10 +133,11 @@ export default function AdminUserManagement() {
         );
 
         setUsers(formattedUsers);
+
         const majorsSet = [
           ...new Set(formattedUsers.map((u) => u.majorName).filter(Boolean)),
         ];
-        setMajors(majorsSet);
+        setMajorNames(majorsSet);
       } else {
         const res = await getAllUsers();
         setUsers(res);
@@ -120,7 +153,7 @@ export default function AdminUserManagement() {
     fetchUsers();
   }, [selectedCampus]);
 
-  // ✅ Lọc user theo major và search
+  // ✅ Filter user
   useEffect(() => {
     let result = users;
     if (filters.major) {
@@ -139,7 +172,7 @@ export default function AdminUserManagement() {
     setFilteredUsers(result);
   }, [filters, users]);
 
-  // ✅ Bật/tắt tài khoản
+  // ✅ Toggle Active/Deactive
   const toggleUserStatus = async (user) => {
     try {
       if (user.isActive) await deactivateUser(user.id);
@@ -147,14 +180,14 @@ export default function AdminUserManagement() {
       toast.success(
         `${user.isActive ? "Deactivated" : "Activated"} successfully!`
       );
-      setSelectedCampus(selectedCampus); // reload user list
+      await fetchUsers();
     } catch (err) {
       console.error("❌ Update status failed:", err);
       toast.error("Không thể thay đổi trạng thái user.");
     }
   };
 
-  // ✅ Lưu user
+  // ✅ Save user (role không thay đổi)
   const handleSaveUser = async () => {
     if (!selectedUser) return;
 
@@ -181,19 +214,9 @@ export default function AdminUserManagement() {
     try {
       setIsUpdating(true);
       await updateUser(userId, payload);
-
-      // 🧩 Update role riêng
-      if (selectedUser.roles && selectedUser.roles.length > 0) {
-        console.log("🛰 Sending role update:", {
-          userId,
-          roles: selectedUser.roles,
-        });
-        await assignUserRoles(userId, selectedUser.roles);
-      }
-
       toast.success("✅ Cập nhật user thành công!");
+      await fetchUsers();
       setSelectedUser(null);
-      await fetchUsers(); // ✅ reload lại danh sách sau khi lưu thành công
     } catch (err) {
       console.error("❌ Update failed:", err);
       toast.error("Cập nhật thất bại!");
@@ -202,11 +225,78 @@ export default function AdminUserManagement() {
     }
   };
 
+  // ✅ Hàm tạo user mới
+  const handleCreateUser = async () => {
+    try {
+      if (!newUser.email || !newUser.password || !newUser.role) {
+        toast.error("Vui lòng điền đủ Email, Password và Role!");
+        return;
+      }
+
+      // ✅ Kiểm tra độ mạnh của mật khẩu
+      const isStrongPassword = (password) => {
+        const regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\W).{8,}$/;
+        return regex.test(password);
+      };
+
+      if (!isStrongPassword(newUser.password)) {
+        toast.error(
+          "Mật khẩu phải có ít nhất 1 chữ hoa, 1 chữ thường, 1 ký tự đặc biệt và dài tối thiểu 8 ký tự!"
+        );
+        return;
+      }
+
+      setIsUpdating(true);
+
+      const payload = {
+        ...newUser,
+        campusId: parseInt(newUser.campusId),
+        majorId: parseInt(newUser.majorId),
+      };
+
+      console.log("📦 Payload gửi lên:", payload);
+
+      await createUser(payload);
+      toast.success("✅ Tạo user mới thành công!");
+
+      await fetchUsers(); // reload danh sách user
+
+      // 🔹 Reset lại form sau khi tạo xong
+      setNewUser(defaultUser);
+
+      // 🔹 Ẩn form sau khi tạo
+      setShowAddForm(false);
+    } catch (err) {
+      console.error("❌ Create user failed:", err);
+      if (err.response) console.error("📨 BE Response:", err.response.data);
+      toast.error("Không thể tạo user!");
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
-      <h2 className="text-2xl font-bold text-orange-500">👥 User Management</h2>
+      <div className="flex justify-between items-center">
+        <h2 className="text-2xl font-bold text-orange-500">
+          👥 User Management
+        </h2>
+        <div className="flex gap-2">
+          <button
+            onClick={() => setShowAddForm(true)}
+            className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded"
+          >
+            + Add New User
+          </button>
+          <button
+            className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded"
+          >
+            📥 Import User List
+          </button>
+        </div>
+      </div>
 
-      {/* 🔍 Bộ lọc Campus */}
+      {/* 🔍 Bộ lọc */}
       <div className="flex justify-between items-center mb-4">
         <select
           className="border p-2 rounded"
@@ -221,14 +311,16 @@ export default function AdminUserManagement() {
           ))}
         </select>
 
-        {selectedCampus && majors.length > 0 && (
+        {selectedCampus && majorNames.length > 0 && (
           <select
             className="border p-2 rounded"
             value={filters.major}
-            onChange={(e) => setFilters({ ...filters, major: e.target.value })}
+            onChange={(e) =>
+              setFilters({ ...filters, major: e.target.value })
+            }
           >
             <option value="">Tất cả chuyên ngành</option>
-            {majors.map((m, i) => (
+            {majorNames.map((m, i) => (
               <option key={i} value={m}>
                 {m}
               </option>
@@ -249,7 +341,7 @@ export default function AdminUserManagement() {
         )}
       </div>
 
-      {/* 🧾 Bảng user */}
+      {/* 🧾 Table */}
       <div className="bg-white rounded-xl shadow-md overflow-x-auto">
         {isLoading ? (
           <p className="p-4 text-center text-gray-500">Loading...</p>
@@ -317,7 +409,7 @@ export default function AdminUserManagement() {
         )}
       </div>
 
-      {/* 🧩 Modal Edit User */}
+      {/* 🧩 Modal Edit */}
       {selectedUser && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-30">
           <div className="bg-white p-6 rounded-xl w-96 space-y-4 shadow-lg">
@@ -366,7 +458,6 @@ export default function AdminUserManagement() {
               }
             />
 
-            {/* 🏫 Campus */}
             <select
               className="border rounded w-full p-2"
               value={selectedUser.campusId || ""}
@@ -379,16 +470,12 @@ export default function AdminUserManagement() {
             >
               <option value="">Chọn campus</option>
               {campuses.map((c) => (
-                <option
-                  key={c.campusId || c.id}
-                  value={c.campusId || c.id}
-                >
+                <option key={c.campusId || c.id} value={c.campusId || c.id}>
                   {c.campusName || c.name}
                 </option>
               ))}
             </select>
 
-            {/* 🎓 Major */}
             <select
               className="border rounded w-full p-2"
               value={selectedUser.majorId || ""}
@@ -400,26 +487,28 @@ export default function AdminUserManagement() {
               }
             >
               <option value="">Chọn chuyên ngành</option>
-              {majors.map((m, i) => (
-                <option key={i} value={i + 1}>
-                  {m}
+              {majors.map((m) => (
+                <option key={m.majorId} value={m.majorId}>
+                  {m.majorName}
                 </option>
               ))}
             </select>
 
-            {/* 🧩 Role */}
-            <select
-              className="border rounded w-full p-2"
-              value={selectedUser.roles?.[0] || ""}
-              onChange={(e) =>
-                setSelectedUser({ ...selectedUser, roles: [e.target.value] })
-              }
-            >
-              <option value="">Chọn role</option>
-              <option value="Student">Student</option>
-              <option value="Lecturer">Lecturer</option>
-              <option value="Admin">Admin</option>
-            </select>
+            <div>
+              <select
+                className="border rounded w-full p-2 bg-gray-100"
+                value={selectedUser.roles?.[0] || ""}
+                disabled
+              >
+                <option value="">Chọn role</option>
+                <option value="Student">Student</option>
+                <option value="Lecturer">Instructor</option>
+                <option value="Admin">Admin</option>
+              </select>
+              <p className="text-xs text-gray-500 mt-1">
+                ⚠️ Chức năng sửa Role đang tạm khóa, chưa thể thay đổi.
+              </p>
+            </div>
 
             <div className="flex justify-end gap-2">
               <button
@@ -435,6 +524,167 @@ export default function AdminUserManagement() {
                 disabled={isUpdating}
               >
                 {isUpdating ? "Saving..." : "Save"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 🧩 Modal Add User */}
+      {showAddForm && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-30">
+          <div className="bg-white p-6 rounded-xl w-96 space-y-4 shadow-lg">
+            <h3 className="text-lg font-semibold text-orange-500">
+              Add New User
+            </h3>
+
+            {/* ✅ Select Campus */}
+            <select
+              className="border rounded w-full p-2"
+              value={newUser.campusId || ""}
+              onChange={(e) =>
+                setNewUser({ ...newUser, campusId: parseInt(e.target.value) })
+              }
+            >
+              <option value="">Select Campus</option>
+              {campuses.map((c) => (
+                <option key={c.campusId || c.id} value={c.campusId || c.id}>
+                  {c.campusName || c.name}
+                </option>
+              ))}
+            </select>
+
+            {/* ✅ Select Major */}
+            <select
+              className="border rounded w-full p-2"
+              value={newUser.majorId || ""}
+              onChange={(e) =>
+                setNewUser({ ...newUser, majorId: parseInt(e.target.value) })
+              }
+            >
+              <option value="">Select Major</option>
+              {majors.map((m) => (
+                <option key={m.majorId} value={m.majorId}>
+                  {m.majorName}
+                </option>
+              ))}
+            </select>
+
+            {/* ✅ Username */}
+            <input
+              type="text"
+              className="border rounded w-full p-2"
+              placeholder="Username"
+              value={newUser.username}
+              onChange={(e) =>
+                setNewUser({ ...newUser, username: e.target.value })
+              }
+            />
+
+            {/* ✅ Password */}
+            <input
+              type="password"
+              className="border rounded w-full p-2"
+              placeholder="Password"
+              value={newUser.password}
+              onChange={(e) =>
+                setNewUser({ ...newUser, password: e.target.value })
+              }
+            />
+
+            {/* ✅ Email */}
+            <input
+              type="text"
+              className="border rounded w-full p-2"
+              placeholder="Email"
+              value={newUser.email}
+              onChange={(e) =>
+                setNewUser({ ...newUser, email: e.target.value })
+              }
+            />
+
+            {/* ✅ First Name */}
+            <input
+              type="text"
+              className="border rounded w-full p-2"
+              placeholder="First Name"
+              value={newUser.firstName}
+              onChange={(e) =>
+                setNewUser({ ...newUser, firstName: e.target.value })
+              }
+            />
+
+            {/* ✅ Last Name */}
+            <input
+              type="text"
+              className="border rounded w-full p-2"
+              placeholder="Last Name"
+              value={newUser.lastName}
+              onChange={(e) =>
+                setNewUser({ ...newUser, lastName: e.target.value })
+              }
+            />
+
+            {/* ✅ Student Code */}
+            <input
+              type="text"
+              className="border rounded w-full p-2"
+              placeholder="Student Code"
+              value={newUser.studentCode}
+              onChange={(e) =>
+                setNewUser({ ...newUser, studentCode: e.target.value })
+              }
+            />
+
+            {/* ✅ Avatar */}
+            <input
+              type="text"
+              className="border rounded w-full p-2"
+              placeholder="Avatar URL"
+              value={newUser.avatarUrl}
+              onChange={(e) =>
+                setNewUser({ ...newUser, avatarUrl: e.target.value })
+              }
+            />
+
+            {/* ✅ Role */}
+            <select
+              className="border rounded w-full p-2"
+              value={newUser.role}
+              onChange={(e) => setNewUser({ ...newUser, role: e.target.value })}
+            >
+              <option value="">Select Role</option>
+              <option value="Student">Student</option>
+              <option value="Instructor">Instructor</option>
+              <option value="Admin">Admin</option>
+            </select>
+
+            {/* ✅ Status */}
+            <select
+              className="border rounded w-full p-2"
+              value={newUser.isActive ? "active" : "inactive"}
+              onChange={(e) =>
+                setNewUser({ ...newUser, isActive: e.target.value === "active" })
+              }
+            >
+              <option value="active">Active</option>
+              <option value="inactive">Inactive</option>
+            </select>
+
+            {/* ✅ Buttons */}
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={() => setShowAddForm(false)}
+                className="px-4 py-2 rounded bg-gray-200 hover:bg-gray-300"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleCreateUser}
+                className="px-4 py-2 rounded bg-orange-500 text-white hover:bg-orange-600"
+                disabled={isUpdating}
+              >
+                {isUpdating ? "Creating..." : "Create"}
               </button>
             </div>
           </div>

@@ -64,7 +64,27 @@ export const addInstructorByEmail = async (email, firstName, lastName, campusId)
 
 // ✅ Gán vai trò cho user
 export const assignUserRoles = async (userId, roles) => {
-  const res = await api.post(`/Users/${userId}/roles`, { userId, roles });
+  // Ánh xạ role name -> roleId tương ứng với DB
+  const roleIds = roles.map((r) => {
+    switch (r) {
+      case "Admin":
+        return 1;
+      case "Student":
+        return 2;
+      case "Instructor":
+        return 3;
+      default:
+        return null;
+    }
+  }).filter((id) => id !== null); // loại bỏ null
+
+  console.log("🛰 Gửi lên API:", { userId, roleIds });
+
+  const res = await api.post(`/Users/${userId}/roles`, {
+    userId,
+    roleIds, // 👈 Đúng key mà BE yêu cầu
+  });
+
   return res.data;
 };
 
@@ -106,8 +126,12 @@ export const activateUser = async (id) => {
 };
 
 // ✅ Tạo user mới
-export const createUser = async (data) => {
-  const res = await api.post("/Users", data);
+export const createUser = async (userData) => {
+  const res = await api.post("/Users", userData, {
+    headers: {
+      "Content-Type": "application/json-patch+json",
+    },
+  });
   return res.data;
 };
 
@@ -339,3 +363,4 @@ export const deleteCampus = async (id) => {
   const res = await api.delete(`/Campus/${id}`);
   return res.data;
 };
+
