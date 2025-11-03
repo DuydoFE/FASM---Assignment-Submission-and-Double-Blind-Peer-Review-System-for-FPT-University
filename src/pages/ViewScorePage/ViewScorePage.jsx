@@ -117,7 +117,7 @@ const [isModalOpen, setIsModalOpen] = useState(false);
             </p>
             <div className="flex items-center justify-center text-sm text-gray-500 mt-2">
               <CalendarCheck size={14} className="mr-2" />
-              Ngày chấm: {formatDate(scoreData.gradedAt)}
+              Date of Score: {formatDate(scoreData.gradedAt)}
             </div>
           </div>
         </div>
