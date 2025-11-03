@@ -1,89 +1,166 @@
-import React from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
-import { ChevronRight, Award, ArrowLeft, Star, MessageSquare, ListChecks } from 'lucide-react';
+import React from "react";
+import { useParams, useNavigate, Link } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { reviewService } from "../../service/reviewService";
+import {
+  ChevronRight,
+  Award,
+  ArrowLeft,
+  MessageSquare,
+  Users,
+  UserCheck,
+  CalendarCheck,
+} from "lucide-react";
 
-// Giả sử bạn sẽ có một service để lấy điểm
-// import { scoreService } from '../../service/scoreService';
-
-// Dữ liệu giả để hiển thị giao diện mẫu
-const mockScoreData = {
-    assignmentTitle: 'Basic Java Exercises',
-    finalScore: 88,
-    instructorFeedback: "Good effort overall. Your understanding of core concepts is solid. Try to improve on code commenting and handling edge cases in your next assignments.",
-    peerReviewScore: 85,
-    autoGraderScore: 92,
+// Hàm helper để format ngày tháng
+const formatDate = (dateString) => {
+  if (!dateString) return "N/A";
+  const options = {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  };
+  return new Date(dateString).toLocaleDateString("vi-VN", options);
 };
 
 const ViewScorePage = () => {
-    const { courseId, assignmentId } = useParams();
-    const navigate = useNavigate();
+  const { courseId, assignmentId } = useParams();
+  const navigate = useNavigate();
 
-   
-    const isLoading = false;
-    const isError = false;
-    const scoreData = mockScoreData;
+  const {
+    data: responseData,
+    isLoading,
+    isError,
+  } = useQuery({
+    queryKey: ["myScoreDetails", assignmentId],
+    queryFn: () => reviewService.getMyScoreDetails(assignmentId),
+    enabled: !!assignmentId,
+  });
 
+  const scoreData = responseData?.data;
 
-    if (isLoading) {
-        return <div className="p-8 text-center">Loading scores...</div>;
-    }
-
-    if (isError) {
-        return <div className="p-8 text-center text-red-500">Could not load scores.</div>;
-    }
-
+  if (isLoading) {
     return (
-        <div className="bg-gray-50 min-h-screen p-8">
-            <div className="max-w-4xl mx-auto">
-                {/* Breadcrumbs */}
-                <div className="mb-6 flex items-center text-sm text-gray-600">
-                    <Link to="/my-assignments" className="hover:underline">My Assignments</Link>
-                    <ChevronRight className="w-4 h-4 mx-1" />
-                    <Link to={`/assignment/${courseId}`} className="hover:underline">Assignments</Link>
-                    <ChevronRight className="w-4 h-4 mx-1" />
-                    <span className="font-semibold text-gray-800">Final Score</span>
-                </div>
-
-                {/* Header */}
-                <div className="flex justify-between items-center mb-8">
-                    <div>
-                        <h1 className="text-3xl font-bold text-gray-900">{scoreData.assignmentTitle}</h1>
-                        <p className="text-gray-500">Here is your final score and feedback for this assignment.</p>
-                    </div>
-                    <button
-                        onClick={() => navigate(-1)}
-                        className="flex items-center px-4 py-2 border rounded-md font-semibold text-gray-700 hover:bg-gray-100"
-                    >
-                        <ArrowLeft size={16} className="mr-2" />
-                        Back
-                    </button>
-                </div>
-                
-                {/* Score Display */}
-                <div className="bg-white p-8 rounded-lg shadow-md border text-center">
-                    <Award className="w-20 h-20 text-yellow-500 mx-auto mb-4" />
-                    <p className="text-xl font-semibold text-gray-700">Your Final Score</p>
-                    <p className="text-7xl font-extrabold text-blue-600 my-2">{scoreData.finalScore}<span className="text-4xl text-gray-400">/100</span></p>
-                </div>
-
-                {/* Score Breakdown */}
-                <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="bg-white p-6 rounded-lg shadow-md border">
-                         <h3 className="font-bold text-lg mb-4 flex items-center"><ListChecks className="mr-2 text-blue-500" />Score Breakdown</h3>
-                         <div className="space-y-3 text-gray-700">
-                             <div className="flex justify-between"><span>Peer Review Score:</span><span className="font-bold">{scoreData.peerReviewScore}/100</span></div>
-                             <div className="flex justify-between"><span>Auto-Grader Score:</span><span className="font-bold">{scoreData.autoGraderScore}/100</span></div>
-                         </div>
-                    </div>
-                     <div className="bg-white p-6 rounded-lg shadow-md border">
-                         <h3 className="font-bold text-lg mb-4 flex items-center"><MessageSquare className="mr-2 text-green-500" />Instructor's Feedback</h3>
-                         <p className="text-gray-600 italic">"{scoreData.instructorFeedback}"</p>
-                    </div>
-                </div>
-            </div>
-        </div>
+      <div className="p-8 text-center font-semibold text-lg">
+        Đang tải điểm của bạn...
+      </div>
     );
+  }
+
+  if (isError || !scoreData) {
+    return (
+      <div className="p-8 text-center text-red-500 font-semibold text-lg">
+        Không thể tải được điểm. Vui lòng thử lại sau.
+      </div>
+    );
+  }
+
+  const assignmentTitle =
+    navigate.state?.assignmentTitle || `Assignment #${assignmentId}`;
+
+  return (
+    <div className="bg-gray-50 min-h-screen p-8">
+      <div className="max-w-4xl mx-auto">
+        {/* Breadcrumbs */}
+        <div className="mb-6 flex items-center text-sm text-gray-600">
+          <Link to="/my-assignments" className="hover:underline">
+            My Assignments
+          </Link>
+          <ChevronRight className="w-4 h-4 mx-1" />
+          <Link to={`/assignment/${courseId}`} className="hover:underline">
+            Assignments
+          </Link>
+          <ChevronRight className="w-4 h-4 mx-1" />
+          <span className="font-semibold text-gray-800">Final Score</span>
+        </div>
+
+        {/* Header */}
+        <div className="flex justify-between items-center mb-8">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">
+              {assignmentTitle}
+            </h1>
+            <p className="text-gray-500">
+              Đây là điểm và nhận xét cuối cùng cho bài tập này.
+            </p>
+          </div>
+          <button
+            onClick={() => navigate(`/assignment/${courseId}`)}
+            className="flex items-center px-4 py-2 border rounded-md font-semibold text-gray-700 hover:bg-gray-100"
+          >
+            <ArrowLeft size={16} className="mr-2" />
+            Quay lại
+          </button>
+        </div>
+
+        {/* Score Display */}
+        <div className="bg-white p-8 rounded-lg shadow-md border text-center relative overflow-hidden">
+          <div className="absolute -top-12 -right-12 w-36 h-36 bg-blue-50 rounded-full"></div>
+          <div className="absolute -bottom-16 -left-10 w-40 h-40 bg-blue-50 rounded-full"></div>
+
+          <div className="relative z-10">
+            <Award className="w-20 h-20 text-yellow-500 mx-auto mb-4" />
+            <p className="text-xl font-semibold text-gray-700">
+              Điểm cuối cùng
+            </p>
+            <p className="text-7xl font-extrabold text-blue-600 my-2">
+              {scoreData.finalScore.toFixed(2)}
+              <span className="text-4xl text-gray-400">/10.00</span>
+            </p>
+            <div className="flex items-center justify-center text-sm text-gray-500 mt-2">
+              <CalendarCheck size={14} className="mr-2" />
+              Ngày chấm: {formatDate(scoreData.gradedAt)}
+            </div>
+          </div>
+        </div>
+
+        {/* Score Breakdown & Feedback */}
+        <div className="mt-8">
+          <h3 className="font-bold text-xl mb-4 text-gray-800">
+            Chi tiết điểm số
+          </h3>
+          <div className="bg-white p-6 rounded-lg shadow-md border space-y-4">
+            <div className="flex items-center p-3 bg-indigo-50 rounded-lg">
+              <UserCheck className="w-6 h-6 mr-4 text-indigo-500 flex-shrink-0" />
+              <div>
+                <p className="font-semibold text-indigo-800">
+                  Điểm từ giảng viên
+                </p>
+                <p className="text-2xl font-bold text-indigo-600">
+                  {scoreData.instructorScore.toFixed(2)}
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center p-3 bg-teal-50 rounded-lg">
+              <Users className="w-6 h-6 mr-4 text-teal-500 flex-shrink-0" />
+              <div>
+                <p className="font-semibold text-teal-800">
+                  Điểm trung bình từ Peer Review
+                </p>
+                <p className="text-2xl font-bold text-teal-600">
+                  {scoreData.peerAverageScore.toFixed(2)}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-8">
+          <h3 className="font-bold text-xl mb-4 text-gray-800 flex items-center">
+            <MessageSquare className="mr-2 text-green-500" /> Nhận xét từ Giảng
+            viên
+          </h3>
+          <div className="bg-white p-6 rounded-lg shadow-md border">
+            <p className="text-gray-600 italic">
+              "{scoreData.feedback || "Không có nhận xét."}"
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 };
 
 export default ViewScorePage;
