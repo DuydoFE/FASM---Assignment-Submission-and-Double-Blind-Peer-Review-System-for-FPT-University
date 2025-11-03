@@ -91,6 +91,10 @@ export const router = createBrowserRouter([
         path: "/review-success",
         element: <ReviewSuccessPage />,
       },
+      {
+        path: "assignment/:courseId/:assignmentId/scores",
+        element: <ViewScorePage />,
+      },
 
     ],
   },
