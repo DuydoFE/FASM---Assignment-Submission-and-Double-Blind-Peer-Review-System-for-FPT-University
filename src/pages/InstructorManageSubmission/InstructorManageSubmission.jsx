@@ -24,8 +24,8 @@ const InstructorManageSubmission = () => {
       const submissionsData = response?.data?.submissions || [];
 
       const mappedSubmissions = submissionsData.map(submission => ({
-        name: submission.user?.fullName || 'N/A',  
-        mssv: submission.user?.studentId || 'N/A', 
+        name: submission.user?.fullName || 'N/A',
+        mssv: submission.user?.studentId || 'N/A',
         status: getSubmissionStatus(submission),
         statusColor: getStatusColor(submission),
         submitTime: submission.submittedAt
@@ -51,6 +51,18 @@ const InstructorManageSubmission = () => {
       toast.error('Failed to load submissions');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleViewDetails = async (student) => {
+    if (!student.hasDetail) return;
+
+    try {
+      await submissionService.getSubmissionDetails(student.submissionId);
+      navigate(`/instructor/submission-detail/${student.submissionId}`);
+    } catch (error) {
+      console.error('Failed to fetch submission details:', error);
+      toast.error('Failed to load submission details. Please try again.');
     }
   };
 
@@ -203,10 +215,7 @@ const InstructorManageSubmission = () => {
                 <td className="px-6 py-4">
                   {student.hasDetail ? (
                     <button
-                      onClick={() => {
-                        // Navigate to submission detail page
-                        navigate(`/instructor/submission-detail/${student.submissionId}`);
-                      }}
+                      onClick={() => handleViewDetails(student)}
                       className="px-4 py-2 bg-blue-500 text-white text-sm rounded-lg hover:bg-blue-600 transition-colors"
                     >
                       View Details

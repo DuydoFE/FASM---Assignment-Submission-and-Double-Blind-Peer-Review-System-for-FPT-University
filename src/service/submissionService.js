@@ -59,8 +59,20 @@ const getSubmissionsByAssignment = async (assignmentId) => {
   }
 };
 
+const getSubmissionDetails = async (submissionId) => {
+  try {
+    const response = await api.get(`/instructor/InstructorSubmission/${submissionId}/details`);
+    return response.data;
+  } catch (error) {
+    console.error("Lỗi khi lấy chi tiết bài nộp:", error.response?.data || error.message);
+    throw error.response?.data || new Error("Lỗi mạng hoặc server không phản hồi");
+  }
+};
+
+
 export const submissionService = {
   submitAssignment,
   updateSubmission,
   getSubmissionsByAssignment,
+  getSubmissionDetails,
 };

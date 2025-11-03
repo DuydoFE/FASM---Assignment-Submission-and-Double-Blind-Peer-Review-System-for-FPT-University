@@ -184,7 +184,7 @@ export const router = createBrowserRouter([
         element: <InstructorManageSubmission />,
       },
       {
-        path: "submission-detail",
+        path: "submission-detail/:submissionId",
         element: <InstructorSubmissionDetail />,
       },
       {
