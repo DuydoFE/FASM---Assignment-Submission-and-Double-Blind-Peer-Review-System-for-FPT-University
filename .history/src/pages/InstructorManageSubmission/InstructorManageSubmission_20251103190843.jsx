@@ -21,11 +21,13 @@ const InstructorManageSubmission = () => {
       setLoading(true);
       const response = await submissionService.getSubmissionsByAssignment(assignmentId);
 
+      // FIX: Lấy data từ response.data.submissions thay vì response
       const submissionsData = response?.data?.submissions || [];
 
+      // Map the API response to the component's data structure
       const mappedSubmissions = submissionsData.map(submission => ({
-        name: submission.user?.fullName || 'N/A',  
-        mssv: submission.user?.studentId || 'N/A', 
+        name: submission.user?.fullName || 'N/A',  // FIX: Lấy từ user.fullName
+        mssv: submission.user?.studentId || 'N/A', // FIX: Lấy từ user.studentId
         status: getSubmissionStatus(submission),
         statusColor: getStatusColor(submission),
         submitTime: submission.submittedAt
@@ -40,6 +42,7 @@ const InstructorManageSubmission = () => {
 
       setSubmissions(mappedSubmissions);
 
+      // Set assignment info từ nested assignment object
       if (submissionsData.length > 0 && submissionsData[0].assignment) {
         setAssignmentInfo({
           title: submissionsData[0].assignment.title,

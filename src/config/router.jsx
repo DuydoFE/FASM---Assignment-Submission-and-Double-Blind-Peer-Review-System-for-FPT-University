@@ -180,7 +180,7 @@ export const router = createBrowserRouter([
         element: <InstructorManageCriteriaTemplate />,
       },
       {
-        path: "manage-submission",
+        path: "manage-submission/:assignmentId",
         element: <InstructorManageSubmission />,
       },
       {
