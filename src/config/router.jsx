@@ -53,6 +53,7 @@ import AdminAccountSettings from "../pages/Admin/AdminAccountSettings";
 import AdminSystemSetting from "../pages/Admin/AdminSystemSetting";
 
 import ProfilePage from "../pages/HomePage/ProfilePage";
+import ViewScorePage from "../pages/ViewScorePage/ViewScorePage";
 
 export const router = createBrowserRouter([
   {
