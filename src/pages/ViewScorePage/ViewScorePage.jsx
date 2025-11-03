@@ -6,7 +6,7 @@ import {
     ChevronRight, Award, ArrowLeft, MessageSquare, 
     Users, UserCheck, CalendarCheck, ShieldQuestion 
 } from 'lucide-react';
-import RegradeRequestModal from '../../component/Modals/RegradeRequestModal'; 
+import RegradeRequestModal from '../../component/Assignment/RegradeRequestModal.jsx'; 
 
 
 const formatDate = (dateString) => {
