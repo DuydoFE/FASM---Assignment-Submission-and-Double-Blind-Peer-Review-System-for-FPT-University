@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ChevronLeft, ChevronRight, FileText, Eye, Download, Expand, Maximize2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, FileText, Eye, Download, ArrowLeft } from 'lucide-react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { submissionService } from '../../service/submissionService';
@@ -18,7 +18,7 @@ const InstructorSubmissionDetail = () => {
     try {
       setLoading(true);
       const response = await submissionService.getSubmissionDetails(submissionId);
-      
+
       const data = response?.data || response;
       setSubmissionData(data);
     } catch (error) {
@@ -30,39 +30,63 @@ const InstructorSubmissionDetail = () => {
   };
 
   const getSubmissionStatusInfo = () => {
-    if (!submissionData?.submittedAt) {
+    const status = submissionData?.status?.toLowerCase();
+    const submittedAt = submissionData?.submittedAt;
+    const deadline = submissionData?.assignment?.deadline;
+
+    if (status === "not submitted" || status === "notsubmitted" || !submittedAt) {
       return {
-        status: 'Not Submitted',
-        color: 'bg-yellow-100 text-yellow-800',
-        message: 'Not yet submitted'
+        status: "Not Submitted",
+        color: "bg-yellow-100 text-yellow-800",
+        message: "Student has not submitted yet"
       };
     }
 
-    const submitDate = new Date(submissionData.submittedAt);
-    const deadline = new Date(submissionData.assignment?.deadline);
-    const diffTime = deadline - submitDate;
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    if (status === "submitted") {
+      if (!deadline) {
+        return {
+          status: "Submitted",
+          color: "bg-blue-100 text-blue-800",
+          message: "Awaiting grading"
+        };
+      }
 
-    if (submitDate > deadline) {
+      const submitDate = new Date(submittedAt);
+      const deadlineDate = new Date(deadline);
+      const diffTime = deadlineDate - submitDate;
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+      if (submitDate > deadlineDate) {
+        return {
+          status: "Late Submission",
+          color: "bg-red-100 text-red-800",
+          message: `${Math.abs(diffDays)} days after deadline`
+        };
+      }
+
       return {
-        status: 'Late Submission',
-        color: 'bg-red-100 text-red-800',
-        message: `${Math.abs(diffDays)} days after deadline`
+        status: "Submitted",
+        color: "bg-blue-100 text-blue-800",
+        message: diffDays > 0 ? `${diffDays} days before deadline` : "On deadline"
+      };
+    }
+
+    if (status === "graded") {
+      return {
+        status: "Graded",
+        color: "bg-green-100 text-green-800",
+        message: "Grading completed"
       };
     }
 
     return {
-      status: 'Submitted',
-      color: 'bg-green-100 text-green-800',
-      message: diffDays > 0 ? `${diffDays} days before deadline` : 'On deadline'
+      status: "Unknown",
+      color: "bg-gray-100 text-gray-800",
+      message: "Status not recognized"
     };
   };
 
-  const handleDownload = () => {
-    if (submissionData?.fileUrl) {
-      window.open(submissionData.fileUrl, '_blank');
-    }
-  };
+
 
   if (loading) {
     return (
@@ -80,7 +104,7 @@ const InstructorSubmissionDetail = () => {
       <div className="max-w-6xl mx-auto p-6 bg-white min-h-screen flex items-center justify-center">
         <div className="text-center">
           <p className="text-gray-500">No submission data found</p>
-          <button 
+          <button
             onClick={() => navigate(-1)}
             className="mt-4 px-4 py-2 bg-gray-100 rounded-lg hover:bg-gray-200"
           >
@@ -92,26 +116,38 @@ const InstructorSubmissionDetail = () => {
   }
 
   const statusInfo = getSubmissionStatusInfo();
-  const studentInitials = submissionData.user?.fullName
+
+  const studentInitials = submissionData?.studentName
     ?.split(' ')
+    .slice(-2)
     .map(n => n[0])
     .join('')
     .toUpperCase() || 'NA';
 
   return (
     <div className="max-w-6xl mx-auto p-6 bg-white min-h-screen">
-      {/* Breadcrumb */}
-      <nav className="flex items-center gap-2 text-sm text-gray-500 mb-6">
-        <span>Class List</span>
-        <ChevronRight className="w-4 h-4" />
-        <span>{submissionData.assignment?.courseCode || 'Course'}</span>
-        <ChevronRight className="w-4 h-4" />
-        <span>{submissionData.assignment?.title || 'Assignment'}</span>
-        <ChevronRight className="w-4 h-4" />
-        <span className="text-gray-800 font-medium">
-          {submissionData.user?.fullName || 'Student'}
-        </span>
-      </nav>
+      {/* Breadcrumb & Back Button */}
+      <div className="flex items-center justify-between mb-6">
+        <nav className="flex items-center gap-2 text-sm text-gray-500">
+          <span>Class List</span>
+          <ChevronRight className="w-4 h-4" />
+          <span>{submissionData?.assignment?.courseName || 'Course'}</span>
+          <ChevronRight className="w-4 h-4" />
+          <span>{submissionData?.assignment?.title || 'Assignment'}</span>
+          <ChevronRight className="w-4 h-4" />
+          <span className="text-gray-800 font-medium">
+            {submissionData?.studentName || 'Student'}
+          </span>
+        </nav>
+
+        <button
+          onClick={() => navigate(-1)}
+          className="inline-flex items-center gap-2 p-2 hover:bg-gray-100 rounded-lg"
+        >
+          <ArrowLeft className="w-5 h-5 text-gray-600" />
+          <span className="text-gray-600">Back</span>
+        </button>
+      </div>
 
       {/* Student Header */}
       <div className="flex items-center justify-between mb-8">
@@ -121,20 +157,20 @@ const InstructorSubmissionDetail = () => {
           </div>
           <div>
             <h1 className="text-xl font-semibold text-gray-800">
-              {submissionData.user?.fullName || 'N/A'}
+              {submissionData?.studentName || 'N/A'}
             </h1>
             <p className="text-gray-500">
-              Student ID: {submissionData.user?.studentId || 'N/A'}
+              Student ID: {submissionData?.studentCode || 'N/A'}
             </p>
           </div>
         </div>
         <div className="text-right">
-          <div className="flex items-center gap-2 mb-1">
+          <div className="flex items-center justify-end gap-2 mb-1">
             <span className={`inline-flex px-3 py-1 rounded-full text-xs font-medium ${statusInfo.color}`}>
               {statusInfo.status}
             </span>
           </div>
-          {submissionData.submittedAt && (
+          {submissionData?.submittedAt && (
             <>
               <p className="text-sm text-gray-800 font-medium">
                 Submitted on: {new Date(submissionData.submittedAt).toLocaleString('vi-VN')}
@@ -150,24 +186,57 @@ const InstructorSubmissionDetail = () => {
       {/* Assignment Details */}
       <div className="mb-8">
         <h2 className="text-xl font-semibold text-gray-800 mb-3">
-          {submissionData.assignment?.title || 'Assignment'}
+          {submissionData?.assignment?.title || 'Assignment'}
         </h2>
         <p className="text-gray-600">
-          {submissionData.assignment?.description || 'No description available'}
+          {submissionData?.assignment?.description || 'No description available'}
         </p>
-        {submissionData.keywords && (
-          <div className="mt-3">
-            <span className="text-sm font-medium text-gray-700">Keywords: </span>
-            <span className="text-sm text-gray-600">{submissionData.keywords}</span>
-          </div>
-        )}
+
       </div>
 
+      {/* Grading Info */}
+      {submissionData?.status === 'Graded' && (
+        <div className="mb-8 bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <h3 className="text-lg font-medium text-gray-800 mb-3">Grading Information</h3>
+          <div className="grid grid-cols-3 gap-4">
+            <div>
+              <p className="text-sm text-gray-600">Instructor Score</p>
+              <p className="text-2xl font-bold text-blue-600">
+                {submissionData.instructorScore || 0}
+              </p>
+            </div>
+            <div>
+              <p className="text-sm text-gray-600">Peer Average Score</p>
+              <p className="text-2xl font-bold text-green-600">
+                {submissionData.peerAverageScore || 0}
+              </p>
+            </div>
+            <div>
+              <p className="text-sm text-gray-600">Final Score</p>
+              <p className="text-2xl font-bold text-orange-600">
+                {submissionData.finalScore || 0}
+              </p>
+            </div>
+          </div>
+          {submissionData?.feedback && (
+            <div className="mt-4">
+              <p className="text-sm font-medium text-gray-700">Feedback:</p>
+              <p className="text-sm text-gray-600 mt-1">{submissionData.feedback}</p>
+            </div>
+          )}
+          {submissionData?.gradedAt && (
+            <p className="text-xs text-gray-500 mt-2">
+              Graded on: {new Date(submissionData.gradedAt).toLocaleString('vi-VN')}
+            </p>
+          )}
+        </div>
+      )}
+
       {/* Submitted File */}
-      {submissionData.fileUrl && (
+      {submissionData?.fileUrl && (
         <div className="mb-8">
           <h3 className="text-lg font-medium text-gray-800 mb-4">Submitted File</h3>
-          
+
           <div className="border border-gray-200 rounded-lg p-4">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-3">
@@ -176,7 +245,7 @@ const InstructorSubmissionDetail = () => {
                 </div>
                 <div>
                   <p className="font-medium text-gray-800">
-                    {submissionData.fileName || 'Submitted File'}
+                    {submissionData.fileName || submissionData.originalFileName || 'Submitted File'}
                   </p>
                   <div className="flex items-center gap-4 text-sm text-gray-500">
                     {submissionData.submittedAt && (
@@ -185,21 +254,26 @@ const InstructorSubmissionDetail = () => {
                   </div>
                 </div>
               </div>
+
               <div className="flex items-center gap-2">
-                <button 
-                  onClick={handleDownload}
+                <a
+                  href={submissionData.fileUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="flex items-center gap-2 px-3 py-2 text-sm text-gray-600 hover:bg-gray-50 rounded-lg"
                 >
                   <Eye className="w-4 h-4" />
                   Preview
-                </button>
-                <button 
-                  onClick={handleDownload}
+                </a>
+
+                <a
+                  href={submissionData.fileUrl}
+                  download
                   className="flex items-center gap-2 px-4 py-2 text-sm bg-blue-500 text-white rounded-lg hover:bg-blue-600"
                 >
                   <Download className="w-4 h-4" />
                   Download
-                </button>
+                </a>
               </div>
             </div>
           </div>
@@ -207,7 +281,7 @@ const InstructorSubmissionDetail = () => {
       )}
 
       {/* File Preview Placeholder */}
-      {submissionData.fileUrl && (
+      {submissionData?.fileUrl && (
         <div className="mb-8">
           <div className="border border-gray-200 rounded-lg p-8 bg-gray-50">
             <div className="text-center">
@@ -215,16 +289,20 @@ const InstructorSubmissionDetail = () => {
                 <FileText className="w-8 h-10 text-gray-400" />
               </div>
               <h4 className="text-lg font-medium text-gray-600 mb-2">File Preview</h4>
-              <p className="text-sm text-gray-500 mb-6">Click download to view the file</p>
-              
+              <p className="text-sm text-gray-500 mb-6">
+                {submissionData.originalFileName || 'Click download to view the file'}
+              </p>
+
               <div className="flex items-center justify-center gap-4">
-                <button 
-                  onClick={handleDownload}
+                <a
+                  href={submissionData.fileUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="flex items-center gap-2 px-4 py-2 text-sm bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
                 >
                   <Download className="w-4 h-4" />
                   Open File
-                </button>
+                </a>
               </div>
             </div>
           </div>
@@ -233,16 +311,18 @@ const InstructorSubmissionDetail = () => {
 
       {/* Bottom Actions */}
       <div className="flex items-center justify-between pt-6 border-t border-gray-200">
-        <button 
+        <button
           onClick={() => navigate(-1)}
           className="flex items-center gap-2 px-4 py-2 text-gray-600 hover:bg-gray-50 rounded-lg"
         >
           <ChevronLeft className="w-4 h-4" />
           Back to List
         </button>
-        <button className="px-6 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600">
-          Grade
-        </button>
+        {submissionData?.status !== 'Graded' && (
+          <button className="px-6 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600">
+            Grade Submission
+          </button>
+        )}
       </div>
     </div>
   );
