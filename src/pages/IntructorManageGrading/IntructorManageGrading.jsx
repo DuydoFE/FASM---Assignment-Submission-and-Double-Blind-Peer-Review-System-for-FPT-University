@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Search, ChevronDown, Eye, Loader2, BookOpen, Users, FileText, ArrowRight, CheckCircle2 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 import { getCoursesByUser } from '../../service/courseInstructorService';
 import { getClassesByUser } from '../../service/courseInstanceService';
@@ -9,6 +10,7 @@ import { getCurrentAccount } from '../../utils/accountUtils';
 
 const InstructorManageGrading = () => {
   const currentUser = getCurrentAccount();
+  const navigate = useNavigate();
 
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
@@ -199,6 +201,10 @@ const InstructorManageGrading = () => {
     const dateStr = date.toLocaleDateString('vi-VN');
     const timeStr = date.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
     return { date: dateStr, time: timeStr };
+  };
+
+  const handleGradeClick = (submissionId) => {
+    navigate(`/instructor/grading-detail/${submissionId}`);
   };
 
   return (
@@ -463,11 +469,17 @@ const InstructorManageGrading = () => {
                             </td>
                             <td className="px-6 py-4">
                               {student.status === 'submitted' ? (
-                                <button className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm font-medium">
+                                <button 
+                                  onClick={() => handleGradeClick(student.submissionId)}
+                                  className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm font-medium"
+                                >
                                   Grade
                                 </button>
                               ) : student.status === 'graded' ? (
-                                <button className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors text-sm font-medium">
+                                <button 
+                                  onClick={() => handleGradeClick(student.submissionId)}
+                                  className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors text-sm font-medium"
+                                >
                                   Re-grade
                                 </button>
                               ) : null}

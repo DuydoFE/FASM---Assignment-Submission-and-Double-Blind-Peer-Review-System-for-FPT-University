@@ -192,7 +192,7 @@ export const router = createBrowserRouter([
         element: <InstructorManageGrading />,
       },
       {
-        path: "grading-detail",
+        path: "grading-detail/:submissionId",
         element: <InstructorGradingDetail />,
       },
       {
