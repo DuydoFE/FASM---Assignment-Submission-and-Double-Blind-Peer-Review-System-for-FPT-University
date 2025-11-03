@@ -53,6 +53,7 @@ import AdminAccountSettings from "../pages/Admin/AdminAccountSettings";
 import AdminSystemSetting from "../pages/Admin/AdminSystemSetting";
 
 import ProfilePage from "../pages/HomePage/ProfilePage";
+import ViewScorePage from "../pages/ViewScorePage/ViewScorePage";
 
 export const router = createBrowserRouter([
   {
@@ -90,6 +91,10 @@ export const router = createBrowserRouter([
       {
         path: "/review-success",
         element: <ReviewSuccessPage />,
+      },
+      {
+        path: "assignment/:courseId/:assignmentId/scores",
+        element: <ViewScorePage />,
       },
 
     ],
