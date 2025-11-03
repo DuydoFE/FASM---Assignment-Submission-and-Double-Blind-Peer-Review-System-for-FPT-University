@@ -1,12 +1,10 @@
-
 import React from 'react';
 
-// 👉 1. Thêm prop `hasError` để nhận biết trạng thái lỗi từ component cha
 const CriterionForm = ({ criterion, score, onScoreChange, hasError }) => {
-  const { criteriaName, description, weight, maxScore, criteriaId } = criterion;
+  // 👉 1. Lấy cả 'title' và 'criteriaName' từ prop.
+  const { title, criteriaName, description, weight, maxScore, criteriaId } = criterion;
 
   const handleInputChange = (e) => {
-    // Chỉ truyền giá trị chuỗi lên component cha để xử lý logic
     onScoreChange(criteriaId, e.target.value);
   };
 
@@ -14,18 +12,17 @@ const CriterionForm = ({ criterion, score, onScoreChange, hasError }) => {
     <div className="border-t py-4">
       <div className="flex justify-between items-start">
         <div>
-          <h4 className="font-bold text-gray-800">{criteriaName}</h4>
+          {/* 👉 2. Ưu tiên hiển thị 'title'. Nếu 'title' không tồn tại, sẽ hiển thị 'criteriaName'. */}
+          <h4 className="font-bold text-gray-800">{title || criteriaName}</h4>
           <p className="text-sm text-gray-500">{description}</p>
         </div>
         <div className="flex items-center space-x-3 flex-shrink-0 ml-4">
           <span className="font-semibold text-blue-600">{weight}%</span>
           
-       
           <input
             type="number" 
             min="0"
             max={maxScore}
-          
             value={score === null ? '' : score} 
             onChange={handleInputChange}
             placeholder="0" 
@@ -37,7 +34,6 @@ const CriterionForm = ({ criterion, score, onScoreChange, hasError }) => {
           <span className="text-gray-500">/ {maxScore}</span>
         </div>
       </div>
-      {/* Slider có thể bị ẩn hoặc xóa đi nếu bạn không muốn dùng nó nữa */}
       <input
         type="range"
         min="0"

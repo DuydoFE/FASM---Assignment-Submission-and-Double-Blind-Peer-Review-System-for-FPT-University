@@ -42,12 +42,13 @@ const getAssignmentsWithTracking = async (courseInstanceId) => {
 
 const generateAiReview = async (submissionId) => {
   try {
+    // 👉 THAY ĐỔI ENDPOINT API TẠI ĐÂY
     const response = await api.post(
-      `/StudentReview/submission/${submissionId}/generate-review`
+      `/StudentReview/submission/${submissionId}/ai-criteria-feedback`
     );
     
     return response.data; 
-  } catch (error) {
+   } catch (error){ // Thiếu { ở đây
     console.error(
       `Lỗi khi tạo AI review cho submission ID ${submissionId}:`,
       error
