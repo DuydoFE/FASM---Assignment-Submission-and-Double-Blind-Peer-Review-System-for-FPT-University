@@ -19,14 +19,7 @@ const ViewScorePage = () => {
     const { courseId, assignmentId } = useParams();
     const navigate = useNavigate();
 
-    // Tích hợp API thật ở đây
-    // const { data: scoreData, isLoading, isError } = useQuery({
-    //     queryKey: ['finalScore', assignmentId],
-    //     queryFn: () => scoreService.getFinalScore(assignmentId),
-    //     enabled: !!assignmentId,
-    // });
-    
-    // Sử dụng dữ liệu giả
+   
     const isLoading = false;
     const isError = false;
     const scoreData = mockScoreData;
