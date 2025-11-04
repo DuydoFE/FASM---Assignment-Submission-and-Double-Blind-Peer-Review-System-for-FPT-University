@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { Search, ChevronDown, Eye, Loader2, BookOpen, Users, FileText, ArrowRight, CheckCircle2, Edit3 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
 
 import { getCoursesByUser } from '../../service/courseInstructorService';
 import { getClassesByUser } from '../../service/courseInstanceService';
 import { getAssignmentsByCourseInstanceId } from '../../service/assignmentService';
 import { getSubmissionSummary } from '../../service/instructorSubmission';
 import { getCurrentAccount } from '../../utils/accountUtils';
+import { publishGrades } from '../../service/instructorGrading';
 
 const InstructorPublishMark = () => {
   const currentUser = getCurrentAccount();
@@ -29,10 +31,12 @@ const InstructorPublishMark = () => {
     courses: false,
     classes: false,
     assignments: false,
-    summary: false
+    summary: false,
+    publishing: false
   });
 
   const [showTable, setShowTable] = useState(false);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
 
   useEffect(() => {
     fetchCourses();
@@ -94,7 +98,7 @@ const InstructorPublishMark = () => {
 
   const handleViewGrades = async () => {
     if (!selectedCourseId || !selectedClassId || !selectedAssignmentId) {
-      alert('Please select Course, Class, and Assignment');
+      toast.error('Please select Course, Class, and Assignment');
       return;
     }
 
@@ -107,6 +111,9 @@ const InstructorPublishMark = () => {
         classId: selectedClassId,
         assignmentId: selectedAssignmentId
       });
+      
+      console.log('API Response:', response);
+      console.log('First submission:', response[0]);
       
       const mappedStudents = response.map(submission => ({
         submissionId: submission.submissionId,
@@ -145,7 +152,7 @@ const InstructorPublishMark = () => {
       }
     } catch (error) {
       console.error('Error fetching grades:', error);
-      alert('Failed to fetch grades data. Please try again.');
+      toast.error('Failed to fetch grades data. Please try again.');
       setShowTable(false);
       setStudents([]);
       setAssignmentInfo(null);
@@ -181,6 +188,33 @@ const InstructorPublishMark = () => {
     return status === 'Published'
       ? 'bg-green-100 text-green-800'
       : 'bg-yellow-100 text-yellow-800';
+  };
+
+  const handlePublishGrades = async () => {
+    if (!selectedAssignmentId) {
+      toast.error('Please select an assignment first');
+      return;
+    }
+
+    setShowConfirmModal(true);
+  };
+
+  const confirmPublish = async () => {
+    setShowConfirmModal(false);
+    setLoading(prev => ({ ...prev, publishing: true }));
+    
+    try {
+      await publishGrades(selectedAssignmentId);
+      toast.success('Grades published successfully!');
+      
+      // Refresh the data to show updated status
+      await handleViewGrades();
+    } catch (error) {
+      console.error('Error publishing grades:', error);
+      toast.error('Failed to publish grades. Please try again.');
+    } finally {
+      setLoading(prev => ({ ...prev, publishing: false }));
+    }
   };
 
   return (
@@ -465,11 +499,64 @@ const InstructorPublishMark = () => {
               <button className="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 bg-white hover:bg-gray-50 transition-colors font-medium">
                 Save Draft
               </button>
-              <button className="px-6 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg transition-colors font-medium">
-                Publish Grades
+              <button 
+                onClick={handlePublishGrades}
+                disabled={loading.publishing || !selectedAssignmentId}
+                className="px-6 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg transition-colors font-medium flex items-center disabled:bg-gray-300 disabled:cursor-not-allowed"
+              >
+                {loading.publishing ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Publishing...
+                  </>
+                ) : (
+                  'Publish Grades'
+                )}
               </button>
             </div>
           </>
+        )}
+
+        {/* Confirmation Modal */}
+        {showConfirmModal && (
+          <div 
+            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+            onClick={() => setShowConfirmModal(false)}
+          >
+            <div 
+              className="bg-white rounded-lg p-6 max-w-md w-full mx-4 shadow-xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <h3 className="text-lg font-semibold text-gray-900 mb-3">
+                Confirm Publish Grades
+              </h3>
+              <p className="text-gray-600 mb-6">
+                Are you sure you want to publish grades for this assignment? Students will be able to see their grades.
+              </p>
+              <div className="flex justify-end gap-3">
+                <button
+                  onClick={() => setShowConfirmModal(false)}
+                  className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors font-medium"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={confirmPublish}
+                  disabled={loading.publishing}
+                  className="px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg transition-colors font-medium flex items-center disabled:bg-gray-300"
+                >
+                  {loading.publishing ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Publishing...
+                    </>
+                  ) : (
+                    'Confirm'
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
         )}
       </div>
     </div>

@@ -1,12 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Download, Eye, Star, ChevronDown, Sparkles, Loader2 } from 'lucide-react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
 import { submissionService } from '../../service/submissionService';
 import { getPeerReviewsBySubmissionId } from '../../service/instructorSubmission';
+import { gradeSubmission } from '../../service/instructorGrading';
+import { getCurrentAccount } from '../../utils/accountUtils';
 
 const InstructorGradingDetail = () => {
     const { submissionId } = useParams();
     const navigate = useNavigate();
+    const currentUser = getCurrentAccount();
 
     const [score, setScore] = useState(0);
     const [feedback, setFeedback] = useState('');
@@ -14,6 +18,7 @@ const InstructorGradingDetail = () => {
     const [submissionDetails, setSubmissionDetails] = useState(null);
     const [peerReviews, setPeerReviews] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState(null);
 
     useEffect(() => {
@@ -35,10 +40,11 @@ const InstructorGradingDetail = () => {
                 const details = detailsResponse.data;
                 setSubmissionDetails(details);
 
+                // Convert score from 0-100 to 0-10 for display
                 if (details.instructorScore !== null && details.instructorScore !== undefined) {
-                    setScore(details.instructorScore);
+                    setScore(details.instructorScore / 10);
                 } else if (details.finalScore !== null && details.finalScore !== undefined) {
-                    setScore(details.finalScore);
+                    setScore(details.finalScore / 10);
                 }
 
                 if (details.feedback) {
@@ -64,7 +70,48 @@ const InstructorGradingDetail = () => {
     };
 
     const handleSubmitGrade = async () => {
-        console.log('Submitting grade:', { submissionId, score, feedback });
+        if (!currentUser || !currentUser.id) {
+            toast.error('User not authenticated');
+            return;
+        }
+
+        if (score < 0 || score > 10) {
+            toast.error('Score must be between 0 and 10');
+            return;
+        }
+
+        if (!feedback.trim()) {
+            toast.error('Please provide feedback for the student');
+            return;
+        }
+
+        setSubmitting(true);
+        
+        try {
+            // Convert score from 0-10 to 0-100 for API
+            const instructorScore = Math.round(score * 10);
+            
+            await gradeSubmission({
+                submissionId: parseInt(submissionId),
+                instructorId: currentUser.id,
+                instructorScore: instructorScore,
+                feedback: feedback.trim()
+            });
+
+            toast.success('Grade submitted successfully!');
+            
+            await fetchData();
+            
+            setTimeout(() => {
+                navigate('/instructor/manage-grading');
+            }, 1500);
+            
+        } catch (error) {
+            console.error('Error submitting grade:', error);
+            toast.error('Failed to submit grade. Please try again.');
+        } finally {
+            setSubmitting(false);
+        }
     };
 
     const formatDateTime = (dateString) => {
@@ -188,7 +235,6 @@ const InstructorGradingDetail = () => {
                             </div>
                         </div>
 
-
                         {/* File Submission */}
                         <div className="bg-white rounded-lg border border-gray-200 p-6">
                             <h2 className="text-sm font-semibold text-gray-700 mb-3">Submitted File</h2>
@@ -278,7 +324,6 @@ const InstructorGradingDetail = () => {
 
                                                 <p className="text-sm text-gray-600 leading-relaxed mb-2">{review.generalFeedback || "No comment provided"}</p>
 
-                                                {/* Display Score (also /10) */}
                                                 {display10 !== null && (
                                                     <p className="text-xs text-gray-500">Display Score: {display10} / 10</p>
                                                 )}
@@ -324,10 +369,7 @@ const InstructorGradingDetail = () => {
                                 </div>
                             </div>
                         </div>
-
                     </div>
-
-                    
 
                     {/* Right Column */}
                     <div className="space-y-6">
@@ -449,9 +491,17 @@ const InstructorGradingDetail = () => {
                         <div className="flex gap-3">
                             <button
                                 onClick={handleSubmitGrade}
-                                className="flex-1 px-4 py-3 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors font-medium"
+                                disabled={submitting}
+                                className="flex-1 px-4 py-3 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors font-medium flex items-center justify-center disabled:bg-gray-300 disabled:cursor-not-allowed"
                             >
-                                {submissionDetails.instructorScore !== null ? 'Update Grade' : 'Submit Grade'}
+                                {submitting ? (
+                                    <>
+                                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                        Submitting...
+                                    </>
+                                ) : (
+                                    submissionDetails.instructorScore !== null ? 'Update Grade' : 'Submit Grade'
+                                )}
                             </button>
                         </div>
                     </div>
