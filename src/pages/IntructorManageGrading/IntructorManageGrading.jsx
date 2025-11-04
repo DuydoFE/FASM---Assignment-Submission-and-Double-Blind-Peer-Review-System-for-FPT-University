@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Search, ChevronDown, Eye, Loader2, BookOpen, Users, FileText, ArrowRight, CheckCircle2 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { toast } from 'react-toastify';
 
 import { getCoursesByUser } from '../../service/courseInstructorService';
 import { getClassesByUser } from '../../service/courseInstanceService';
@@ -11,6 +12,7 @@ import { getCurrentAccount } from '../../utils/accountUtils';
 const InstructorManageGrading = () => {
   const currentUser = getCurrentAccount();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
@@ -34,6 +36,29 @@ const InstructorManageGrading = () => {
 
   const [showTable, setShowTable] = useState(false);
 
+  // Restore state when coming back from detail page
+  useEffect(() => {
+    if (location.state?.returnState) {
+      const { 
+        selectedCourseId: courseId, 
+        selectedClassId: classId, 
+        selectedAssignmentId: assignmentId,
+        showTable: wasShowingTable,
+        searchTerm: prevSearchTerm,
+        statusFilter: prevStatusFilter
+      } = location.state.returnState;
+      
+      setSelectedCourseId(courseId);
+      setSelectedClassId(classId);
+      setSelectedAssignmentId(assignmentId);
+      setShowTable(wasShowingTable);
+      setSearchTerm(prevSearchTerm || '');
+      setStatusFilter(prevStatusFilter || 'All');
+      
+      window.history.replaceState({}, document.title);
+    }
+  }, [location]);
+
   useEffect(() => {
     fetchCourses();
   }, []);
@@ -55,6 +80,13 @@ const InstructorManageGrading = () => {
       setSelectedAssignmentId('');
     }
   }, [selectedClassId]);
+
+  // Auto-fetch data when state is restored
+  useEffect(() => {
+    if (location.state?.returnState && showTable && selectedCourseId && selectedClassId && selectedAssignmentId) {
+      handleViewMark();
+    }
+  }, [location.state]);
 
   const fetchCourses = async () => {
     setLoading(prev => ({ ...prev, courses: true }));
@@ -94,7 +126,7 @@ const InstructorManageGrading = () => {
 
   const handleViewMark = async () => {
     if (!selectedCourseId || !selectedClassId || !selectedAssignmentId) {
-      alert('Please select Course, Class, and Assignment');
+      toast.error('Please select Course, Class, and Assignment');
       return;
     }
 
@@ -114,6 +146,7 @@ const InstructorManageGrading = () => {
         studentCode: submission.studentCode,
         studentName: submission.studentName,
         studentEmail: submission.studentEmail,
+        instructorScore: submission.instructorScore,
         score: submission.finalScore !== null && submission.finalScore !== undefined ? submission.finalScore : null,
         feedback: submission.feedback,
         submittedAt: submission.submittedAt,
@@ -140,7 +173,7 @@ const InstructorManageGrading = () => {
       }
     } catch (error) {
       console.error('Error fetching submission summary:', error);
-      alert('Failed to fetch submission data. Please try again.');
+      toast.error('Failed to fetch submission data. Please try again.');
       setShowTable(false);
       setStudents([]);
       setAssignmentInfo(null);
@@ -165,9 +198,9 @@ const InstructorManageGrading = () => {
     return matchesSearch && matchesStatus;
   });
 
-  const getScoreStyle = (score) => {
-    if (score === null || score === undefined) return 'border-gray-300 text-gray-400';
-    const normalizedScore = score / 10;
+  const getScoreStyle = (instructorScore) => {
+    if (instructorScore === null || instructorScore === undefined) return 'border-gray-300 text-gray-400';
+    const normalizedScore = instructorScore / 10;
     if (normalizedScore >= 8) return 'border-green-500 text-green-600';
     if (normalizedScore >= 6.5) return 'border-green-400 text-green-500';
     return 'border-red-400 text-red-500';
@@ -204,7 +237,18 @@ const InstructorManageGrading = () => {
   };
 
   const handleGradeClick = (submissionId) => {
-    navigate(`/instructor/grading-detail/${submissionId}`);
+    navigate(`/instructor/grading-detail/${submissionId}`, {
+      state: {
+        returnState: {
+          selectedCourseId,
+          selectedClassId,
+          selectedAssignmentId,
+          showTable,
+          searchTerm,
+          statusFilter
+        }
+      }
+    });
   };
 
   return (
@@ -443,9 +487,9 @@ const InstructorManageGrading = () => {
                             <td className="px-6 py-4 text-sm text-gray-600">{student.studentCode}</td>
                             <td className="px-6 py-4 text-sm text-gray-800">{student.studentName}</td>
                             <td className="px-6 py-4">
-                              <span className={`inline-flex items-center justify-center w-20 h-10 border-2 rounded-lg font-semibold ${getScoreStyle(student.score)}`}>
-                                {student.score !== null && student.score !== undefined 
-                                  ? `${(student.score / 10).toFixed(1)}` 
+                              <span className={`inline-flex items-center justify-center w-20 h-10 border-2 rounded-lg font-semibold ${getScoreStyle(student.instructorScore)}`}>
+                                {student.instructorScore !== null && student.instructorScore !== undefined 
+                                  ? `${(student.instructorScore / 10).toFixed(1)}` 
                                   : '--'} / {(assignmentInfo?.maxScore || 10) }
                               </span>
                             </td>

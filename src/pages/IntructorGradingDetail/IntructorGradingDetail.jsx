@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Download, Eye, Star, ChevronDown, Sparkles, Loader2 } from 'lucide-react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { submissionService } from '../../service/submissionService';
 import { getPeerReviewsBySubmissionId } from '../../service/instructorSubmission';
@@ -10,6 +10,7 @@ import { getCurrentAccount } from '../../utils/accountUtils';
 const InstructorGradingDetail = () => {
     const { submissionId } = useParams();
     const navigate = useNavigate();
+    const location = useLocation();
     const currentUser = getCurrentAccount();
 
     const [score, setScore] = useState(0);
@@ -100,10 +101,14 @@ const InstructorGradingDetail = () => {
 
             toast.success('Grade submitted successfully!');
             
-            await fetchData();
-            
+            // Navigate back WITH state
             setTimeout(() => {
-                navigate('/instructor/manage-grading');
+                const returnPath = location.pathname.includes('publish') 
+                     '/instructor/manage-grading';
+                    
+                navigate(returnPath, {
+                    state: location.state
+                });
             }, 1500);
             
         } catch (error) {
@@ -112,6 +117,16 @@ const InstructorGradingDetail = () => {
         } finally {
             setSubmitting(false);
         }
+    };
+
+    const handleBackClick = () => {
+        const returnPath = location.pathname.includes('publish') 
+            ? '/instructor/publish-mark' 
+            : '/instructor/manage-grading';
+            
+        navigate(returnPath, {
+            state: location.state
+        });
     };
 
     const formatDateTime = (dateString) => {
@@ -165,7 +180,7 @@ const InstructorGradingDetail = () => {
                     <p className="text-gray-800 font-semibold mb-2">Error Loading Data</p>
                     <p className="text-gray-600 mb-4">{error}</p>
                     <button
-                        onClick={() => navigate('/instructor/manage-grading')}
+                        onClick={handleBackClick}
                         className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
                     >
                         Back to Grading List
@@ -193,7 +208,7 @@ const InstructorGradingDetail = () => {
             <div className="bg-white border-b border-gray-200 px-6 py-4">
                 <div className="max-w-6xl mx-auto flex items-center gap-3">
                     <button
-                        onClick={() => navigate('/instructor/manage-grading')}
+                        onClick={handleBackClick}
                         className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
                     >
                         <ArrowLeft className="w-5 h-5 text-gray-600" />
