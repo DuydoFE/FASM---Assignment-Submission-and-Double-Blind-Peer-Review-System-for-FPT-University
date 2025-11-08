@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ChevronLeft, ChevronRight, FileText, Eye, Download, ArrowLeft } from 'lucide-react';
+import { ChevronLeft, ChevronRight, FileText, Eye, Download, ArrowLeft, BookOpen, Users } from 'lucide-react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { submissionService } from '../../service/submissionService';
@@ -37,7 +37,7 @@ const InstructorSubmissionDetail = () => {
     if (status === "not submitted" || status === "notsubmitted" || !submittedAt) {
       return {
         status: "Not Submitted",
-        color: "bg-yellow-100 text-yellow-800",
+        color: "bg-gray-100 text-gray-800",
         message: "Student has not submitted yet"
       };
     }
@@ -131,7 +131,7 @@ const InstructorSubmissionDetail = () => {
         <nav className="flex items-center gap-2 text-sm text-gray-500">
           <span>Class List</span>
           <ChevronRight className="w-4 h-4" />
-          <span>{submissionData?.assignment?.courseName || 'Course'}</span>
+          <span>{submissionData?.courseName || 'Course'}</span>
           <ChevronRight className="w-4 h-4" />
           <span>{submissionData?.assignment?.title || 'Assignment'}</span>
           <ChevronRight className="w-4 h-4" />
@@ -142,11 +142,40 @@ const InstructorSubmissionDetail = () => {
 
         <button
           onClick={() => navigate(-1)}
-          className="inline-flex items-center gap-2 p-2 hover:bg-gray-100 rounded-lg"
+          className="inline-flex items-center gap-2 p-2 hover:bg-gray-100 rounded-lg transition-colors"
         >
           <ArrowLeft className="w-5 h-5 text-gray-600" />
           <span className="text-gray-600">Back</span>
         </button>
+      </div>
+
+      {/* Course and Class Info */}
+      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-4 mb-6">
+        <div className="flex items-center gap-6">
+          <div className="flex items-center gap-3">
+            <div className="bg-blue-100 p-2 rounded-lg">
+              <BookOpen className="w-5 h-5 text-blue-600" />
+            </div>
+            <div>
+              <p className="text-xs text-gray-600 mb-0.5">Course</p>
+              <p className="text-sm font-semibold text-gray-800">
+                {submissionData?.courseName || 'N/A'}
+              </p>
+            </div>
+          </div>
+          <div className="h-8 w-px bg-blue-300"></div>
+          <div className="flex items-center gap-3">
+            <div className="bg-indigo-100 p-2 rounded-lg">
+              <Users className="w-5 h-5 text-indigo-600" />
+            </div>
+            <div>
+              <p className="text-xs text-gray-600 mb-0.5">Class</p>
+              <p className="text-sm font-semibold text-gray-800">
+                {submissionData?.className || 'N/A'}
+              </p>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Student Header */}

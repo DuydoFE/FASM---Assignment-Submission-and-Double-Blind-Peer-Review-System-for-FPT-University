@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { X, Save, FileText, AlertCircle } from 'lucide-react';
-import { getAllRubrics } from '../../service/rubricService';
+import { getRubricTemplatesByUserId } from '../../service/rubricService';
 import { toast } from 'react-toastify';
+import { getCurrentAccount } from '../../utils/accountUtils';
 
 const EditAssignmentModal = ({ isOpen, onClose, onSubmit, assignment }) => {
   const [formData, setFormData] = useState({
     assignmentId: 0,
-    rubricId: 0,
+    rubricTemplateId: '',
     title: '',
     description: '',
     guidelines: '',
@@ -14,45 +15,21 @@ const EditAssignmentModal = ({ isOpen, onClose, onSubmit, assignment }) => {
     deadline: '',
     reviewDeadline: '',
     finalDeadline: '',
-    numPeerReviewsRequired: 0,
+    numPeerReviewsRequired: '',
+    missingReviewPenalty: 0,
     allowCrossClass: false,
     isBlindReview: false,
-    instructorWeight: 0,
-    peerWeight: 0,
+    instructorWeight: '',
+    peerWeight: '',
     gradingScale: 'Scale10',
-    weight: 0,
+    passThreshold: '',
     includeAIScore: false
   });
 
   const [errors, setErrors] = useState({});
   const [rubrics, setRubrics] = useState([]);
   const [loadingRubrics, setLoadingRubrics] = useState(false);
-
-  useEffect(() => {
-    if (isOpen && assignment) {
-      // Populate form with existing assignment data
-      setFormData({
-        assignmentId: assignment.assignmentId || 0,
-        rubricId: assignment.rubricId || 0,
-        title: assignment.title || '',
-        description: assignment.description || '',
-        guidelines: assignment.guidelines || '',
-        startDate: assignment.startDate ? formatDateTimeLocal(assignment.startDate) : '',
-        deadline: assignment.deadline ? formatDateTimeLocal(assignment.deadline) : '',
-        reviewDeadline: assignment.reviewDeadline ? formatDateTimeLocal(assignment.reviewDeadline) : '',
-        finalDeadline: assignment.finalDeadline ? formatDateTimeLocal(assignment.finalDeadline) : '',
-        numPeerReviewsRequired: assignment.numPeerReviewsRequired || 0,
-        allowCrossClass: assignment.allowCrossClass || false,
-        isBlindReview: assignment.isBlindReview || false,
-        instructorWeight: assignment.instructorWeight || 0,
-        peerWeight: assignment.peerWeight || 0,
-        gradingScale: assignment.gradingScale || 'Scale10',
-        weight: assignment.weight || 0,
-        includeAIScore: assignment.includeAIScore || false
-      });
-      fetchRubrics();
-    }
-  }, [isOpen, assignment]);
+  const currentUser = getCurrentAccount();
 
   const formatDateTimeLocal = (dateString) => {
     if (!dateString) return '';
@@ -68,29 +45,79 @@ const EditAssignmentModal = ({ isOpen, onClose, onSubmit, assignment }) => {
   const fetchRubrics = async () => {
     setLoadingRubrics(true);
     try {
-      const data = await getAllRubrics();
+      const data = await getRubricTemplatesByUserId(currentUser.id);
       if (data && data.length > 0) {
         setRubrics(data);
       } else {
         setRubrics([]);
-        toast.warning('No rubrics available. Please create a rubric first.');
       }
     } catch (error) {
       console.error('Error fetching rubrics:', error);
       setRubrics([]);
-      toast.error('Failed to load rubrics. Please try again.');
+      toast.error('Failed to load rubrics');
     } finally {
       setLoadingRubrics(false);
     }
   };
 
+  useEffect(() => {
+    if (isOpen && assignment) {
+      // Populate form with existing assignment data
+      setFormData({
+        assignmentId: assignment.assignmentId || 0,
+        rubricTemplateId: assignment.rubricTemplateId || assignment.rubricId || '',
+        title: assignment.title || '',
+        description: assignment.description || '',
+        guidelines: assignment.guidelines || '',
+        startDate: assignment.startDate ? formatDateTimeLocal(assignment.startDate) : '',
+        deadline: assignment.deadline ? formatDateTimeLocal(assignment.deadline) : '',
+        reviewDeadline: assignment.reviewDeadline ? formatDateTimeLocal(assignment.reviewDeadline) : '',
+        finalDeadline: assignment.finalDeadline ? formatDateTimeLocal(assignment.finalDeadline) : '',
+        numPeerReviewsRequired: assignment.numPeerReviewsRequired || '',
+        missingReviewPenalty: assignment.missingReviewPenalty || 0,
+        allowCrossClass: assignment.allowCrossClass || false,
+        isBlindReview: assignment.isBlindReview || false,
+        instructorWeight: assignment.instructorWeight || '',
+        peerWeight: assignment.peerWeight || '',
+        gradingScale: assignment.gradingScale || 'Scale10',
+        passThreshold: assignment.passThreshold ? String(assignment.passThreshold) : '',
+        includeAIScore: assignment.includeAIScore || false
+      });
+      fetchRubrics();
+    }
+  }, [isOpen, assignment]);
+
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
+
+    let newValue = value;
+
+    if (type === 'checkbox') {
+      newValue = checked;
+    } else if (type === 'number') {
+      newValue = value === '' ? '' : Number(value);
+    } else if (name === 'rubricTemplateId') {
+      newValue = value;
+    } else if (name === 'passThreshold') {
+      newValue = value;
+    } else if (name === 'gradingScale') {
+      // Reset passThreshold when changing grading scale
+      setFormData(prev => ({
+        ...prev,
+        gradingScale: value,
+        passThreshold: '' // Clear passThreshold when switching
+      }));
+      if (errors.passThreshold) {
+        setErrors(prev => ({ ...prev, passThreshold: '' }));
+      }
+      return;
+    }
+
     setFormData(prev => ({
       ...prev,
-      [name]: type === 'checkbox' ? checked : type === 'number' ? Number(value) : value
+      [name]: newValue
     }));
-    
+
     if (errors[name]) {
       setErrors(prev => ({ ...prev, [name]: '' }));
     }
@@ -101,10 +128,6 @@ const EditAssignmentModal = ({ isOpen, onClose, onSubmit, assignment }) => {
 
     if (!formData.title.trim()) {
       newErrors.title = 'Title is required';
-    }
-
-    if (!formData.rubricId || formData.rubricId === 0) {
-      newErrors.rubricId = 'Please select a rubric';
     }
 
     if (!formData.deadline) {
@@ -123,11 +146,14 @@ const EditAssignmentModal = ({ isOpen, onClose, onSubmit, assignment }) => {
       newErrors.numPeerReviewsRequired = 'Number of peer reviews is required';
     }
 
-    if (formData.weight === '' || formData.weight < 0 || formData.weight > 100) {
-      newErrors.weight = 'Weight must be between 0 and 100';
+    // Only validate passThreshold if gradingScale is PassFail
+    if (formData.gradingScale === 'PassFail') {
+      if (formData.passThreshold === '' || !formData.passThreshold) {
+        newErrors.passThreshold = 'Please select a pass threshold';
+      }
     }
 
-    const totalWeight = Number(formData.instructorWeight) + Number(formData.peerWeight);
+    const totalWeight = Number(formData.instructorWeight || 0) + Number(formData.peerWeight || 0);
     if (totalWeight !== 100) {
       newErrors.instructorWeight = 'Instructor and Peer weights must add up to 100%';
       newErrors.peerWeight = 'Instructor and Peer weights must add up to 100%';
@@ -139,7 +165,7 @@ const EditAssignmentModal = ({ isOpen, onClose, onSubmit, assignment }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
       return;
     }
@@ -147,25 +173,36 @@ const EditAssignmentModal = ({ isOpen, onClose, onSubmit, assignment }) => {
     try {
       const submitData = {
         assignmentId: formData.assignmentId,
-        rubricId: parseInt(formData.rubricId),
+        rubricTemplateId: parseInt(formData.rubricTemplateId),
         title: formData.title,
-        description: formData.description,
-        guidelines: formData.guidelines,
-        numPeerReviewsRequired: parseInt(formData.numPeerReviewsRequired),
-        weight: parseInt(formData.weight),
-        instructorWeight: parseInt(formData.instructorWeight),
-        peerWeight: parseInt(formData.peerWeight),
-        allowCrossClass: formData.allowCrossClass,
-        isBlindReview: formData.isBlindReview,
-        gradingScale: formData.gradingScale,
-        includeAIScore: formData.includeAIScore,
+        description: formData.description || null,
+        guidelines: formData.guidelines || null,
         startDate: formData.startDate ? new Date(formData.startDate).toISOString() : null,
         deadline: new Date(formData.deadline).toISOString(),
         reviewDeadline: new Date(formData.reviewDeadline).toISOString(),
-        finalDeadline: new Date(formData.finalDeadline).toISOString()
+        finalDeadline: new Date(formData.finalDeadline).toISOString(),
+        numPeerReviewsRequired: parseInt(formData.numPeerReviewsRequired),
+        missingReviewPenalty: parseInt(formData.missingReviewPenalty) || 0,
+        allowCrossClass: formData.allowCrossClass,
+        isBlindReview: formData.isBlindReview,
+        instructorWeight: parseInt(formData.instructorWeight),
+        peerWeight: parseInt(formData.peerWeight),
+        gradingScale: formData.gradingScale,
+        includeAIScore: formData.includeAIScore
       };
 
+      // Always include passThreshold
+      if (formData.gradingScale === 'PassFail') {
+        submitData.passThreshold = parseFloat(formData.passThreshold);
+      } else {
+        submitData.passThreshold = 0;
+      }
+
+      console.log('Updating assignment:', submitData);
+
       await onSubmit(submitData);
+      toast.success('Assignment updated successfully');
+      onClose();
     } catch (error) {
       console.error('Error updating assignment:', error);
       toast.error('Failed to update assignment. Please try again.');
@@ -196,7 +233,7 @@ const EditAssignmentModal = ({ isOpen, onClose, onSubmit, assignment }) => {
                 <div className="w-1 h-5 bg-blue-500 rounded"></div>
                 Basic Information
               </h3>
-              
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Title <span className="text-red-500">*</span>
@@ -249,32 +286,20 @@ const EditAssignmentModal = ({ isOpen, onClose, onSubmit, assignment }) => {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Rubric <span className="text-red-500">*</span>
+                  Rubric <span className="text-gray-400">(Cannot be changed)</span>
                 </label>
-                <select
-                  name="rubricId"
-                  value={formData.rubricId}
-                  onChange={handleChange}
-                  disabled={loadingRubrics}
-                  className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none ${
-                    errors.rubricId ? 'border-red-500' : 'border-gray-300'
-                  } ${loadingRubrics ? 'bg-gray-100 cursor-wait' : ''}`}
-                >
-                  <option value="0">
-                    {loadingRubrics ? 'Loading rubrics...' : 'Select a rubric'}
-                  </option>
-                  {rubrics.map((rubric) => (
-                    <option key={rubric.rubricId} value={rubric.rubricId}>
-                      {rubric.title || `Rubric #${rubric.rubricId}`}
-                    </option>
-                  ))}
-                </select>
-                {errors.rubricId && (
-                  <div className="flex items-center gap-1 mt-1 text-red-500 text-sm">
-                    <AlertCircle className="w-4 h-4" />
-                    <span>{errors.rubricId}</span>
+                {loadingRubrics ? (
+                  <div className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-600">
+                    Loading rubrics...
+                  </div>
+                ) : (
+                  <div className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-700">
+                    {rubrics.find(r => String(r.templateId) === String(formData.rubricTemplateId))?.title || 
+                     `Rubric #${formData.rubricTemplateId}` || 
+                     'No rubric selected'}
                   </div>
                 )}
+                <p className="text-xs text-gray-500 mt-1">The rubric cannot be changed after assignment creation</p>
               </div>
             </div>
 
@@ -385,28 +410,32 @@ const EditAssignmentModal = ({ isOpen, onClose, onSubmit, assignment }) => {
                   </select>
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Weight (%) <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="number"
-                    name="weight"
-                    value={formData.weight}
-                    onChange={handleChange}
-                    min="0"
-                    max="100"
-                    className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none ${
-                      errors.weight ? 'border-red-500' : 'border-gray-300'
-                    }`}
-                  />
-                  {errors.weight && (
-                    <div className="flex items-center gap-1 mt-1 text-red-500 text-sm">
-                      <AlertCircle className="w-4 h-4" />
-                      <span>{errors.weight}</span>
-                    </div>
-                  )}
-                </div>
+                {formData.gradingScale === 'PassFail' && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Pass Threshold <span className="text-red-500">*</span>
+                    </label>
+                    <select
+                      name="passThreshold"
+                      value={formData.passThreshold}
+                      onChange={handleChange}
+                      className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none ${
+                        errors.passThreshold ? 'border-red-500' : 'border-gray-300'
+                      }`}
+                    >
+                      <option value="">Select pass threshold</option>
+                      <option value="0">≥ 0.0</option>
+                      <option value="40">≥ 4.0</option>
+                      <option value="50">≥ 5.0</option>
+                    </select>
+                    {errors.passThreshold && (
+                      <div className="flex items-center gap-1 mt-1 text-red-500 text-sm">
+                        <AlertCircle className="w-4 h-4" />
+                        <span>{errors.passThreshold}</span>
+                      </div>
+                    )}
+                  </div>
+                )}
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -462,26 +491,42 @@ const EditAssignmentModal = ({ isOpen, onClose, onSubmit, assignment }) => {
                 Review Settings
               </h3>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Number of Peer Reviews Required <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="number"
-                  name="numPeerReviewsRequired"
-                  value={formData.numPeerReviewsRequired}
-                  onChange={handleChange}
-                  min="1"
-                  className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none ${
-                    errors.numPeerReviewsRequired ? 'border-red-500' : 'border-gray-300'
-                  }`}
-                />
-                {errors.numPeerReviewsRequired && (
-                  <div className="flex items-center gap-1 mt-1 text-red-500 text-sm">
-                    <AlertCircle className="w-4 h-4" />
-                    <span>{errors.numPeerReviewsRequired}</span>
-                  </div>
-                )}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Number of Peer Reviews Required <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="number"
+                    name="numPeerReviewsRequired"
+                    value={formData.numPeerReviewsRequired}
+                    onChange={handleChange}
+                    min="1"
+                    className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none ${
+                      errors.numPeerReviewsRequired ? 'border-red-500' : 'border-gray-300'
+                    }`}
+                  />
+                  {errors.numPeerReviewsRequired && (
+                    <div className="flex items-center gap-1 mt-1 text-red-500 text-sm">
+                      <AlertCircle className="w-4 h-4" />
+                      <span>{errors.numPeerReviewsRequired}</span>
+                    </div>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Missing Review Penalty <span className="text-gray-400">(Optional)</span>
+                  </label>
+                  <input
+                    type="number"
+                    name="missingReviewPenalty"
+                    value={formData.missingReviewPenalty}
+                    onChange={handleChange}
+                    min="0"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                  />
+                </div>
               </div>
 
               <div className="space-y-3">

@@ -32,25 +32,25 @@ const CreateAssignmentModal = ({ isOpen, onClose, onSubmit, courseInstanceId }) 
   const [loadingRubrics, setLoadingRubrics] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
   const currentUser = getCurrentAccount();
-  
+
 
   const fetchRubrics = async () => {
-  setLoadingRubrics(true);
-  try {
-    const data = await getRubricTemplatesByUserId(currentUser.id);
-    if (data && data.length > 0) {
-      setRubrics(data);
-    } else {
+    setLoadingRubrics(true);
+    try {
+      const data = await getRubricTemplatesByUserId(currentUser.id);
+      if (data && data.length > 0) {
+        setRubrics(data);
+      } else {
+        setRubrics([]);
+      }
+    } catch (error) {
+      console.error('Error fetching rubrics:', error);
       setRubrics([]);
+      toast.error('Failed to load rubrics');
+    } finally {
+      setLoadingRubrics(false);
     }
-  } catch (error) {
-    console.error('Error fetching rubrics:', error);
-    setRubrics([]);
-    toast.error('Failed to load rubrics');
-  } finally {
-    setLoadingRubrics(false);
-  }
-};
+  };
 
   useEffect(() => {
     if (isOpen) {
@@ -109,6 +109,7 @@ const CreateAssignmentModal = ({ isOpen, onClose, onSubmit, courseInstanceId }) 
 
   const validateForm = () => {
     const newErrors = {};
+    const now = new Date();
 
     if (!formData.title.trim()) {
       newErrors.title = 'Title is required';
@@ -129,6 +130,46 @@ const CreateAssignmentModal = ({ isOpen, onClose, onSubmit, courseInstanceId }) 
     if (!formData.finalDeadline) {
       newErrors.finalDeadline = 'Final deadline is required';
     }
+
+    // Date sequence validation
+    const startDate = formData.startDate && formData.startDate.trim() !== '' ? new Date(formData.startDate) : null;
+    const deadline = formData.deadline && formData.deadline.trim() !== '' ? new Date(formData.deadline) : null;
+    const reviewDeadline = formData.reviewDeadline && formData.reviewDeadline.trim() !== '' ? new Date(formData.reviewDeadline) : null;
+    const finalDeadline = formData.finalDeadline && formData.finalDeadline.trim() !== '' ? new Date(formData.finalDeadline) : null;
+
+    // Check if start date is in the past
+    if (startDate && !isNaN(startDate.getTime()) && startDate <= now) {
+      newErrors.startDate = 'Start date must be in the future';
+    }
+
+    // Check if deadline is in the past or before start date
+    if (deadline && !isNaN(deadline.getTime())) {
+      if (deadline <= now) {
+        newErrors.deadline = 'Deadline must be in the future';
+      } else if (startDate && !isNaN(startDate.getTime()) && deadline <= startDate) {
+        newErrors.deadline = 'Deadline must be after start date';
+      }
+    }
+
+    // Check if review deadline is in the past or before deadline
+    if (reviewDeadline && !isNaN(reviewDeadline.getTime())) {
+      if (reviewDeadline <= now) {
+        newErrors.reviewDeadline = 'Review deadline must be in the future';
+      } else if (deadline && !isNaN(deadline.getTime()) && reviewDeadline <= deadline) {
+        newErrors.reviewDeadline = 'Review deadline must be after submission deadline';
+      }
+    }
+
+    // Check if final deadline is in the past or before review deadline
+    if (finalDeadline && !isNaN(finalDeadline.getTime())) {
+      if (finalDeadline <= now) {
+        newErrors.finalDeadline = 'Final deadline must be in the future';
+      } else if (reviewDeadline && !isNaN(reviewDeadline.getTime()) && finalDeadline <= reviewDeadline) {
+        newErrors.finalDeadline = 'Final deadline must be after review deadline';
+      }
+    }
+
+    console.log('All validation errors:', newErrors);
 
     if (!formData.numPeerReviewsRequired || formData.numPeerReviewsRequired === '') {
       newErrors.numPeerReviewsRequired = 'Number of peer reviews is required';
@@ -197,7 +238,7 @@ const CreateAssignmentModal = ({ isOpen, onClose, onSubmit, courseInstanceId }) 
 
       await onSubmit(submitData, selectedFile);
       toast.success('Assignment created successfully');
-      
+
       // Reset form
       setFormData({
         courseInstanceId: courseInstanceId || 0,
@@ -222,7 +263,7 @@ const CreateAssignmentModal = ({ isOpen, onClose, onSubmit, courseInstanceId }) 
       });
       setSelectedFile(null);
       setErrors({});
-      
+
       onClose();
     } catch (error) {
       console.error('Error creating assignment:', error);
@@ -393,6 +434,12 @@ const CreateAssignmentModal = ({ isOpen, onClose, onSubmit, courseInstanceId }) 
                     onChange={handleChange}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none"
                   />
+                  {errors.startDate && (
+                    <div className="flex items-center gap-1 mt-1 text-red-500 text-sm">
+                      <AlertCircle className="w-4 h-4" />
+                      <span>{errors.startDate}</span>
+                    </div>
+                  )}
                 </div>
 
                 <div>
