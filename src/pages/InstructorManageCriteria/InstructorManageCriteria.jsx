@@ -164,25 +164,7 @@ function InstructorManageCriteria() {
         <div className="p-8">
             <div className="max-w-6xl mx-auto">
                 
-                {/* Course and Class Information Card */}
-                {(courseName || className) && (
-                    <div className="bg-gradient-to-r from-indigo-50 to-blue-50 border border-indigo-200 rounded-lg p-4 mb-6">
-                        <div className="flex items-center gap-6">
-                            {courseName && (
-                                <div className="flex items-center gap-2">
-                                    <span className="text-sm font-medium text-gray-600">Course:</span>
-                                    <span className="text-base font-semibold text-indigo-700">{courseName}</span>
-                                </div>
-                            )}
-                            {className && (
-                                <div className="flex items-center gap-2">
-                                    <span className="text-sm font-medium text-gray-600">Class:</span>
-                                    <span className="text-base font-semibold text-indigo-700">{className}</span>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                )}
+               
                 {/* Back Button */}
                 <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-2 text-sm text-gray-600">
@@ -201,6 +183,26 @@ function InstructorManageCriteria() {
                     </button>
                 </div>
 
+                
+                 {/* Course and Class Information Card */}
+                {(courseName || className) && (
+                    <div className="bg-gradient-to-r from-indigo-50 to-blue-50 border border-indigo-200 rounded-lg p-4 mb-6">
+                        <div className="flex items-center gap-6">
+                            {courseName && (
+                                <div className="flex items-center gap-2">
+                                    <span className="text-sm font-medium text-gray-600">Course:</span>
+                                    <span className="text-base font-semibold text-indigo-700">{courseName}</span>
+                                </div>
+                            )}
+                            {className && (
+                                <div className="flex items-center gap-2">
+                                    <span className="text-sm font-medium text-gray-600">Class:</span>
+                                    <span className="text-base font-semibold text-indigo-700">{className}</span>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                )}
 
                 {/* Rubric Summary Card */}
                 <div className="bg-white rounded-lg shadow-sm p-6 mb-8">
