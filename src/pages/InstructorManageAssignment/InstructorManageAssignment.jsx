@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Plus, FileText, Clock, Lock, Calendar, X, Trash2, ChevronDown, Edit } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Plus, FileText, Calendar, X, Trash2, Edit, MoreVertical } from 'lucide-react';
 import { toast } from "react-toastify";
 import { useParams, useNavigate } from 'react-router-dom';
 import { getAssignmentsByCourseInstanceId, createAssignment, deleteAssignment, updateAssignment, assignmentService } from '../../service/assignmentService';
@@ -11,7 +11,7 @@ import DeleteAssignmentModal from '../../component/Assignment/DeleteAssignmentMo
 const InstructorManageAssignment = () => {
   const { id: courseInstanceId } = useParams();
   const navigate = useNavigate();
-  const [statusFilter, setStatusFilter] = useState('All');
+
   const [assignments, setAssignments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showUpdateDeadlineModal, setShowUpdateDeadlineModal] = useState(false);
@@ -22,6 +22,19 @@ const InstructorManageAssignment = () => {
   const [showModal, setShowModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingAssignment, setEditingAssignment] = useState(null);
+  const [openDropdownId, setOpenDropdownId] = useState(null);
+  const dropdownRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setOpenDropdownId(null);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const fetchAssignments = async () => {
     try {
@@ -42,8 +55,8 @@ const InstructorManageAssignment = () => {
         total: assignment.submissionCount,
         courseCode: assignment.courseCode,
         sectionCode: assignment.sectionCode,
-        status: new Date(assignment.deadline) > new Date() ? "Open" : "Closed",
-        statusColor: new Date(assignment.deadline) > new Date()
+        status: assignment.status || 'Open',
+        statusColor: (assignment.status || 'Open') === 'Open'
           ? "bg-green-100 text-green-800"
           : "bg-red-100 text-red-800",
         originalData: assignment
@@ -64,11 +77,7 @@ const InstructorManageAssignment = () => {
     }
   }, [courseInstanceId]);
 
-  const handleStatusClick = () => {
-    if (statusFilter === 'All') setStatusFilter('Open');
-    else if (statusFilter === 'Open') setStatusFilter('Closed');
-    else setStatusFilter('All');
-  };
+
 
   const handleUpdateDeadlineClick = (assignment) => {
     setSelectedAssignment(assignment);
@@ -82,6 +91,7 @@ const InstructorManageAssignment = () => {
     setNewTime(formattedTime);
 
     setShowUpdateDeadlineModal(true);
+    setOpenDropdownId(null);
   };
 
   const handleSaveDeadline = async () => {
@@ -103,11 +113,7 @@ const InstructorManageAssignment = () => {
             ? {
               ...a,
               deadline: deadlineDate.toLocaleDateString(),
-              time: deadlineDate.toLocaleTimeString(),
-              status: deadlineDate > new Date() ? "Open" : "Closed",
-              statusColor: deadlineDate > new Date()
-                ? "bg-green-100 text-green-800"
-                : "bg-red-100 text-red-800"
+              time: deadlineDate.toLocaleTimeString()
             }
             : a
         )
@@ -133,6 +139,7 @@ const InstructorManageAssignment = () => {
   const handleDeleteClick = (assignment) => {
     setSelectedAssignment(assignment);
     setShowDeleteModal(true);
+    setOpenDropdownId(null);
   };
 
   const handleDeleteConfirm = async (assignmentId) => {
@@ -158,6 +165,7 @@ const InstructorManageAssignment = () => {
       const fullDetails = await assignmentService.getAssignmentDetailsById(assignment.assignmentId);
       setEditingAssignment(fullDetails);
       setShowEditModal(true);
+      setOpenDropdownId(null);
     } catch (error) {
       console.error('Failed to fetch assignment details:', error);
       toast.error('Failed to load assignment details. Please try again.');
@@ -197,15 +205,18 @@ const InstructorManageAssignment = () => {
     try { 
       await submissionService.getSubmissionsByAssignment(assignment.assignmentId);
       navigate(`/instructor/manage-submission/${assignment.assignmentId}`);
+      setOpenDropdownId(null);
     } catch (error) {
       console.error('Failed to fetch submissions:', error);
       toast.error('Failed to load submissions. Please try again.');
     }
   };
 
-  const filteredAssignments = statusFilter === 'All'
-    ? assignments
-    : assignments.filter(a => a.status === statusFilter);
+  const toggleDropdown = (assignmentId) => {
+    setOpenDropdownId(openDropdownId === assignmentId ? null : assignmentId);
+  };
+
+  const filteredAssignments = assignments;
 
   if (loading) {
     return (
@@ -252,7 +263,7 @@ const InstructorManageAssignment = () => {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-3 gap-6 mb-8">
+      <div className="grid grid-cols-1 gap-6 mb-8">
         <div className="bg-white p-6 rounded-xl border border-gray-200">
           <div className="flex items-center justify-between">
             <div>
@@ -264,54 +275,23 @@ const InstructorManageAssignment = () => {
             </div>
           </div>
         </div>
-
-        <div className="bg-white p-6 rounded-xl border border-gray-200">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-gray-600 text-sm font-medium">Open</p>
-              <p className="text-3xl font-bold text-green-600 mt-1">
-                {assignments.filter(a => a.status === 'Open').length}
-              </p>
-            </div>
-            <div className="bg-green-100 p-3 rounded-lg">
-              <Clock className="w-6 h-6 text-green-600" />
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white p-6 rounded-xl border border-gray-200">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-gray-600 text-sm font-medium">Closed</p>
-              <p className="text-3xl font-bold text-red-600 mt-1">
-                {assignments.filter(a => a.status === 'Closed').length}
-              </p>
-            </div>
-            <div className="bg-red-100 p-3 rounded-lg">
-              <Lock className="w-6 h-6 text-red-600" />
-            </div>
-          </div>
-        </div>
       </div>
 
       {/* Assignment Table */}
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+      <div className="bg-white rounded-xl border border-gray-200 overflow-visible">
         <div className="grid grid-cols-12 gap-4 px-6 py-4 bg-gray-50 border-b border-gray-200 text-sm font-medium text-gray-700">
           <div className="col-span-3">Assignment Name</div>
           <div className="col-span-2 text-center">Deadline</div>
           <div className="col-span-2 text-center">Review Deadline</div>
           <div className="col-span-2 text-center">Submissions</div>
-          <div className="col-span-1 text-center cursor-pointer select-none hover:text-orange-600 transition flex items-center justify-center gap-1">
-            Status
-            <ChevronDown size={16} />
-          </div>
-          <div className="col-span-2 text-center">Actions</div>
+          <div className="col-span-2 text-center">Status</div>
+          <div className="col-span-1 text-center">Actions</div>
         </div>
 
         {filteredAssignments.map((assignment) => (
           <div
             key={assignment.id}
-            className="grid grid-cols-12 gap-4 px-6 py-4 border-b border-gray-100 hover:bg-gray-50 items-center transition-colors"
+            className="grid grid-cols-12 gap-4 px-6 py-4 border-b border-gray-100 hover:bg-gray-50 items-center transition-colors relative"
           >
             <div className="col-span-3 space-y-1">
               <h3 className="font-semibold text-gray-900 text-base truncate">{assignment.title}</h3>
@@ -336,47 +316,57 @@ const InstructorManageAssignment = () => {
                 {Math.round((assignment.submitted / assignment.total) * 100)}% completed
               </div>
             </div>
-            <div className="col-span-1 flex justify-center">
+            <div className="col-span-2 flex justify-center">
               <span
-                className={`px-2 py-1 rounded-full text-xs font-medium ${assignment.statusColor} flex items-center space-x-1`}
+                className={`px-2 py-1 rounded-full text-xs font-medium ${assignment.statusColor}`}
               >
-                {assignment.status === "Open" ? (
-                  <Clock className="w-3 h-3" />
-                ) : (
-                  <Lock className="w-3 h-3" />
-                )}
                 <span>{assignment.status}</span>
               </span>
             </div>
-            <div className="col-span-2 flex justify-center items-center space-x-2">
-              <button
-                onClick={() => handleUpdateDeadlineClick(assignment)}
-                className="text-blue-600 hover:text-blue-800 p-1.5 hover:bg-blue-50 rounded-lg transition-colors"
-                title="Extend Deadline"
-              >
-                <Calendar className="w-5 h-5" />
-              </button>
-              <button
-                onClick={() => handleEditClick(assignment)}
-                className="text-green-600 hover:text-green-800 p-1.5 hover:bg-green-50 rounded-lg transition-colors"
-                title="Edit Assignment"
-              >
-                <Edit className="w-5 h-5" />
-              </button>
-              <button
-                onClick={() => handleViewSubmissions(assignment)}
-                className="text-gray-600 hover:text-gray-800 p-1.5 hover:bg-gray-50 rounded-lg transition-colors"
-                title="View Submissions"
-              >
-                <FileText className="w-5 h-5" />
-              </button>
-              <button
-                onClick={() => handleDeleteClick(assignment)}
-                className="text-red-600 hover:text-red-800 p-1.5 hover:bg-red-50 rounded-lg transition-colors"
-                title="Delete Assignment"
-              >
-                <Trash2 className="w-5 h-5" />
-              </button>
+            <div className="col-span-1 flex justify-center items-center">
+              <div className="relative" ref={openDropdownId === assignment.id ? dropdownRef : null}>
+                <button
+                  onClick={() => toggleDropdown(assignment.id)}
+                  className="text-gray-600 hover:text-gray-800 p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                  title="More actions"
+                >
+                  <MoreVertical className="w-5 h-5" />
+                </button>
+
+                {openDropdownId === assignment.id && (
+                  <div className="absolute right-0 top-full mt-1 w-52 bg-white rounded-lg shadow-2xl border border-gray-200 z-[100] overflow-hidden">
+                    <button
+                      onClick={() => handleUpdateDeadlineClick(assignment)}
+                      className="w-full flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-blue-50 transition-colors text-left"
+                    >
+                      <Calendar className="w-4 h-4 text-blue-600" />
+                      <span>Extend Deadline</span>
+                    </button>
+                    <button
+                      onClick={() => handleEditClick(assignment)}
+                      className="w-full flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-green-50 transition-colors text-left"
+                    >
+                      <Edit className="w-4 h-4 text-green-600" />
+                      <span>Edit Assignment</span>
+                    </button>
+                    <button
+                      onClick={() => handleViewSubmissions(assignment)}
+                      className="w-full flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors text-left"
+                    >
+                      <FileText className="w-4 h-4 text-gray-600" />
+                      <span>View Submissions</span>
+                    </button>
+                    <div className="border-t border-gray-200 my-1"></div>
+                    <button
+                      onClick={() => handleDeleteClick(assignment)}
+                      className="w-full flex items-center gap-3 px-4 py-3 text-sm text-red-600 hover:bg-red-50 transition-colors text-left"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                      <span>Delete Assignment</span>
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         ))}

@@ -191,6 +191,7 @@ function InstructorManageCriteriaTemplate() {
     return (
         <div className="p-8">
             <div className="max-w-6xl mx-auto">
+                
                 {/* Back Button */}
                 <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-2 text-sm text-gray-600">
