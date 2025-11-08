@@ -13,6 +13,8 @@ function InstructorManageCriteria() {
     const [loading, setLoading] = useState(true);
     const [criteria, setCriteria] = useState([]);
     const [rubricTitle, setRubricTitle] = useState('');
+    const [courseName, setCourseName] = useState('');
+    const [className, setClassName] = useState('');
     const [deleteConfirm, setDeleteConfirm] = useState({ show: false, criterionId: null, criterionTitle: '' });
     const [deleting, setDeleting] = useState(false);
     const [showAddModal, setShowAddModal] = useState(false);
@@ -28,15 +30,21 @@ function InstructorManageCriteria() {
                 if (Array.isArray(data) && data.length > 0) {
                     setCriteria(data);
                     setRubricTitle(data[0].rubricTitle || 'Rubric Details');
+                    setCourseName(data[0].courseName || '');
+                    setClassName(data[0].className || '');
                 } else {
                     setCriteria([]);
                     setRubricTitle('Rubric Details');
+                    setCourseName('');
+                    setClassName('');
                 }
             } catch (error) {
                 console.error('Failed to fetch criteria:', error);
                 toast.error('Failed to load criteria');
                 setCriteria([]);
                 setRubricTitle('Rubric Details');
+                setCourseName('');
+                setClassName('');
             } finally {
                 setLoading(false);
             }
@@ -92,6 +100,8 @@ function InstructorManageCriteria() {
             if (Array.isArray(data) && data.length > 0) {
                 setCriteria(data);
                 setRubricTitle(data[0].rubricTitle || 'Rubric Details');
+                setCourseName(data[0].courseName || '');
+                setClassName(data[0].className || '');
             } else {
                 setCriteria([]);
             }
@@ -121,6 +131,8 @@ function InstructorManageCriteria() {
             if (Array.isArray(data) && data.length > 0) {
                 setCriteria(data);
                 setRubricTitle(data[0].rubricTitle || 'Rubric Details');
+                setCourseName(data[0].courseName || '');
+                setClassName(data[0].className || '');
             }
 
             toast.success('Criterion updated successfully');
@@ -151,6 +163,26 @@ function InstructorManageCriteria() {
     return (
         <div className="p-8">
             <div className="max-w-6xl mx-auto">
+                
+                {/* Course and Class Information Card */}
+                {(courseName || className) && (
+                    <div className="bg-gradient-to-r from-indigo-50 to-blue-50 border border-indigo-200 rounded-lg p-4 mb-6">
+                        <div className="flex items-center gap-6">
+                            {courseName && (
+                                <div className="flex items-center gap-2">
+                                    <span className="text-sm font-medium text-gray-600">Course:</span>
+                                    <span className="text-base font-semibold text-indigo-700">{courseName}</span>
+                                </div>
+                            )}
+                            {className && (
+                                <div className="flex items-center gap-2">
+                                    <span className="text-sm font-medium text-gray-600">Class:</span>
+                                    <span className="text-base font-semibold text-indigo-700">{className}</span>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                )}
                 {/* Back Button */}
                 <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-2 text-sm text-gray-600">
@@ -169,6 +201,7 @@ function InstructorManageCriteria() {
                     </button>
                 </div>
 
+
                 {/* Rubric Summary Card */}
                 <div className="bg-white rounded-lg shadow-sm p-6 mb-8">
                     <h2 className="text-lg font-semibold text-gray-900 mb-4">Rubric Summary</h2>
@@ -181,12 +214,6 @@ function InstructorManageCriteria() {
                             <div className="text-sm text-gray-600 mb-1">Total Criteria</div>
                             <div className="text-3xl font-bold text-gray-900">{criteria.length || 0}</div>
                         </div>
-                        {/* <div>
-                            <div className="text-sm text-gray-600 mb-1">Scoring Methods</div>
-                            <div className="inline-block mt-2 px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm font-medium">
-                                {criteria.length > 0 && criteria[0].scoringMethod ? criteria[0].scoringMethod : 'Not set'}
-                            </div>
-                        </div> */}
                     </div>
                 </div>
 
@@ -274,8 +301,6 @@ function InstructorManageCriteria() {
                     </div>
                 )}
             </div>
-
-
 
             {/* Add Criterion Modal */}
             <AddCriterionModal
