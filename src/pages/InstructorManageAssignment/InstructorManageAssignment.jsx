@@ -342,13 +342,15 @@ const InstructorManageAssignment = () => {
                       <Calendar className="w-4 h-4 text-blue-600" />
                       <span>Extend Deadline</span>
                     </button>
-                    <button
-                      onClick={() => handleEditClick(assignment)}
-                      className="w-full flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-green-50 transition-colors text-left"
-                    >
-                      <Edit className="w-4 h-4 text-green-600" />
-                      <span>Edit Assignment</span>
-                    </button>
+                    {(assignment.status === 'Draft' || assignment.status === 'Upcoming') && (
+                      <button
+                        onClick={() => handleEditClick(assignment)}
+                        className="w-full flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-green-50 transition-colors text-left"
+                      >
+                        <Edit className="w-4 h-4 text-green-600" />
+                        <span>Edit Assignment</span>
+                      </button>
+                    )}
                     <button
                       onClick={() => handleViewSubmissions(assignment)}
                       className="w-full flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors text-left"
