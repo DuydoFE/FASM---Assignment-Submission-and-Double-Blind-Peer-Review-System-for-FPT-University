@@ -32,6 +32,20 @@ const getAssignmentStyles = (assignment) => {
         badgeClasses: "bg-green-100 text-green-700",
         icon: <CheckCircle className="w-6 h-6 text-blue-500" />,
       };
+      case "Upcoming":
+      return {
+        cardBg: "bg-blue-50",
+        borderColor: "border-blue-200",
+        badgeClasses: "bg-blue-100 text-blue-700",
+        icon: <CheckCircle className="w-6 h-6 text-blue-500" />,
+      };
+      case "Active":
+      return {
+        cardBg: "bg-green-50",
+        borderColor: "border-blue-200",
+        badgeClasses: "bg-green-100 text-green-700",
+        icon: <CheckCircle className="w-6 h-6 text-green-500" />,
+      };
     case "Closed":
       return {
         cardBg: "bg-red-50",
