@@ -1,10 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Pencil, Trash2, Plus, Loader, ArrowLeft } from 'lucide-react';
+import { Loader, ArrowLeft } from 'lucide-react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getCriteriaByTemplateId, deleteCriteriaTemplate, createCriteriaTemplate, updateCriteriaTemplate } from '../../service/criteriaService';
-import AddCriterionModal from '../../component/Criteria/AddCriterionModal';
-import EditCriterionModal from '../../component/Criteria/EditCriterionModal';
-import DeleteCriterionModal from '../../component/Criteria/DeleteCriterionModal';
+import { getCriteriaByTemplateId } from '../../service/criteriaService';
 import { toast } from 'react-toastify';
 
 function InstructorManageCriteriaTemplate() {
@@ -13,12 +10,6 @@ function InstructorManageCriteriaTemplate() {
     const [loading, setLoading] = useState(true);
     const [criteria, setCriteria] = useState([]);
     const [templateTitle, setTemplateTitle] = useState('');
-    const [deleteConfirm, setDeleteConfirm] = useState({ show: false, criterionId: null, criterionTitle: '' });
-    const [deleting, setDeleting] = useState(false);
-    const [showAddModal, setShowAddModal] = useState(false);
-    const [submitting, setSubmitting] = useState(false);
-    const [showEditModal, setShowEditModal] = useState(false);
-    const [editingCriterion, setEditingCriterion] = useState(null);
 
     useEffect(() => {
         const fetchCriteria = async () => {
@@ -64,116 +55,6 @@ function InstructorManageCriteriaTemplate() {
         navigate(-1);
     };
 
-    const handleDeleteClick = (criterionId, criterionTitle) => {
-        setDeleteConfirm({ show: true, criterionId, criterionTitle });
-    };
-
-    const handleDeleteCancel = () => {
-        setDeleteConfirm({ show: false, criterionId: null, criterionTitle: '' });
-    };
-
-    const handleDeleteConfirm = async () => {
-        try {
-            if (!deleteConfirm.criterionId) {
-                toast.error('Invalid criterion ID');
-                return;
-            }
-            setDeleting(true);
-            await deleteCriteriaTemplate(deleteConfirm.criterionId);
-
-            setCriteria(prev => prev.filter(c => c.criteriaId !== deleteConfirm.criterionId));
-
-            toast.success('Criterion template deleted successfully');
-            setDeleteConfirm({ show: false, criterionId: null, criterionTitle: '' });
-        } catch (error) {
-            console.error('Failed to delete criterion template:', error);
-            toast.error('Failed to delete criterion template');
-        } finally {
-            setDeleting(false);
-        }
-    };
-
-    const handleAddCriterion = async (criterionData) => {
-        try {
-            setSubmitting(true);
-            // Map rubricId to templateId for the API call
-            const templateData = {
-                ...criterionData,
-                templateId: templateId,
-                rubricId: undefined // Remove rubricId if it exists
-            };
-            delete templateData.rubricId;
-
-            await createCriteriaTemplate(templateData);
-
-            // Refresh the list
-            const data = await getCriteriaByTemplateId(templateId);
-            if (Array.isArray(data) && data.length > 0) {
-                const mappedCriteria = data.map(item => ({
-                    criteriaId: item.criteriaTemplateId,
-                    title: item.title,
-                    description: item.description,
-                    weight: item.weight,
-                    maxScore: item.maxScore,
-                    scoringMethod: item.scoringType,
-                    items: item.scoreLabels ? item.scoreLabels.split(',').map(s => s.trim()) : []
-                }));
-                setCriteria(mappedCriteria);
-                setTemplateTitle(data[0].templateTitle || 'Template Details');
-            } else {
-                setCriteria([]);
-            }
-
-            toast.success('Criterion template added successfully');
-            setShowAddModal(false);
-        } catch (error) {
-            console.error('Failed to add criterion template:', error);
-            toast.error(error.response?.data?.message || 'Failed to add criterion template');
-        } finally {
-            setSubmitting(false);
-        }
-    };
-
-    const handleEditClick = (criterion) => {
-        setEditingCriterion(criterion);
-        setShowEditModal(true);
-    };
-
-    const handleUpdateCriterion = async (criterionData) => {
-        try {
-            setSubmitting(true);
-
-            const templateUpdateData = {
-                ...criterionData,
-                templateId: templateId,
-                criteriaTemplateId: criterionData.criteriaId
-            };
-
-            await updateCriteriaTemplate(criterionData.criteriaId, templateUpdateData);
-            const data = await getCriteriaByTemplateId(templateId);
-            if (Array.isArray(data) && data.length > 0) {
-                const mappedCriteria = data.map(item => ({
-                    criteriaId: item.criteriaTemplateId,
-                    title: item.title,
-                    description: item.description,
-                    weight: item.weight,
-                    maxScore: item.maxScore,
-                }));
-                setCriteria(mappedCriteria);
-                setTemplateTitle(data[0].templateTitle || 'Template Details');
-            }
-
-            toast.success('Criterion template updated successfully');
-            setShowEditModal(false);
-            setEditingCriterion(null);
-        } catch (error) {
-            console.error('Failed to update criterion template:', error);
-            toast.error(error.response?.data?.message || 'Failed to update criterion template');
-        } finally {
-            setSubmitting(false);
-        }
-    };
-
     const totalWeight = criteria.reduce((sum, c) => sum + (c.weight || 0), 0);
     const remainingWeight = 100 - totalWeight;
 
@@ -192,22 +73,30 @@ function InstructorManageCriteriaTemplate() {
         <div className="p-8">
             <div className="max-w-6xl mx-auto">
                 
-                {/* Back Button */}
-                <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center gap-2 text-sm text-gray-600">
-                        <span>Rubric Templates</span>
-                        <span>&gt;</span>
-                        <span className="font-semibold text-gray-900">{templateTitle}</span>
-                    </div>
-
+                {/* Header Section */}
+                <div className="mb-6">
                     <button
                         onClick={handleBack}
-                        className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors font-medium"
+                        className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors font-medium mb-4"
                         type="button"
                     >
                         <ArrowLeft size={20} />
-                        <span>Back</span>
+                        <span>Back to Templates</span>
                     </button>
+                    
+                    <div className="bg-gradient-to-r from-indigo-50 to-blue-50 border border-indigo-200 rounded-lg p-6 shadow-sm">
+                        <div className="flex items-center justify-between">
+                            <div className="flex-1">
+                                <div className="flex items-center gap-2 text-indigo-600 text-sm mb-2 font-medium">
+                                    <span>Template Management</span>
+                                    <span>/</span>
+                                    <span>Criteria</span>
+                                </div>
+                                <h1 className="text-3xl font-bold mb-2 text-gray-900">{templateTitle}</h1>
+                                <p className="text-gray-600">View evaluation criteria template details</p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 {/* Template Summary Card */}
@@ -228,67 +117,70 @@ function InstructorManageCriteriaTemplate() {
                 {/* Evaluation Criteria Section */}
                 <div className="flex justify-between items-center mb-6">
                     <div>
-                        <h2 className="text-xl font-semibold text-gray-900">Evaluation Criteria Templates</h2>
-                        <p className="text-sm text-gray-600">Manage and configure assessment criteria templates</p>
+                        <h2 className="text-xl font-semibold text-gray-900">Evaluation Criteria</h2>
+                        <p className="text-sm text-gray-600">View assessment criteria templates</p>
                     </div>
-                    <button
-                        onClick={() => setShowAddModal(true)}
-                        className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors"
-                    >
-                        <Plus size={20} />
-                        Add Criteria Template
-                    </button>
                 </div>
 
                 {/* Criteria Cards */}
-                <div className="space-y-6">
+                <div className="space-y-4">
                     {criteria.length > 0 ? (
                         criteria.map((criterion, index) => (
                             <div
                                 key={criterion.criteriaId}
-                                className="bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow p-6"
+                                className="bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow"
                             >
-                                <div className="flex justify-between items-start mb-4">
+                                <div className="p-6">
                                     <div className="flex items-start gap-4">
-                                        <span className="flex-shrink-0 w-8 h-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center font-semibold text-sm">
+                                        {/* Number Badge */}
+                                        <span className="flex-shrink-0 w-10 h-10 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center font-semibold text-base">
                                             {index + 1}
                                         </span>
-                                        <div>
-                                            <h3 className="text-xl font-semibold text-gray-900">{criterion.title}</h3>
+
+                                        {/* Content */}
+                                        <div className="flex-1 min-w-0">
+                                            <div className="flex items-start justify-between gap-4 mb-3">
+                                                <h3 className="text-lg font-semibold text-gray-900">{criterion.title}</h3>
+                                                
+                                                {/* Stats */}
+                                                <div className="flex items-center gap-3 flex-shrink-0">
+                                                    <div className="flex items-center gap-4">
+                                                        <div className="text-right">
+                                                            <div className="text-xs text-gray-500 mb-0.5">Weight:</div>
+                                                            <div className="text-base font-semibold text-indigo-600">{criterion.weight}%</div>
+                                                        </div>
+                                                        <div className="text-right">
+                                                            <div className="text-xs text-gray-500 mb-0.5">Max Score:</div>
+                                                            <div className="text-base font-semibold text-indigo-600">{criterion.maxScore}</div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            {/* Description */}
                                             {criterion.description && (
-                                                <p className="text-sm text-gray-600 mt-1">{criterion.description}</p>
+                                                <p className="text-sm text-gray-600 leading-relaxed mb-3">{criterion.description}</p>
+                                            )}
+
+                                            {/* Score Labels */}
+                                            {criterion.items && criterion.items.length > 0 && (
+                                                <div className="mt-3 pt-3 border-t border-gray-100">
+                                                    <div className="text-xs font-medium text-gray-500 mb-2">Score Labels:</div>
+                                                    <div className="flex flex-wrap gap-2">
+                                                        {criterion.items.map((item, idx) => (
+                                                            <span 
+                                                                key={idx}
+                                                                className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-indigo-50 text-indigo-700 border border-indigo-200"
+                                                            >
+                                                                {item}
+                                                            </span>
+                                                        ))}
+                                                    </div>
+                                                </div>
                                             )}
                                         </div>
                                     </div>
-                                    <div className="flex items-center gap-4">
-                                        <span className="text-blue-600 font-semibold text-base">Weight: {criterion.weight}%</span>
-                                        <span className="text-blue-600 font-semibold text-base">Max Score: {criterion.maxScore}</span>
-                                        <button
-                                            onClick={() => handleEditClick(criterion)}
-                                            className="text-gray-400 hover:text-gray-600 transition-colors p-1"
-                                        >
-                                            <Pencil size={18} />
-                                        </button>
-                                        <button
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                handleDeleteClick(criterion.criteriaId, criterion.title);
-                                            }}
-                                            className="text-gray-400 hover:text-red-600 transition-colors p-1"
-                                        >
-                                            <Trash2 size={18} />
-                                        </button>
-                                    </div>
                                 </div>
-
-                                <ul className="ml-12 space-y-2">
-                                    {criterion.items && criterion.items.map((item, idx) => (
-                                        <li key={idx} className="text-gray-600 text-base flex items-start">
-                                            <span className="mr-2">•</span>
-                                            <span>{item}</span>
-                                        </li>
-                                    ))}
-                                </ul>
                             </div>
                         ))
                     ) : (
@@ -309,32 +201,6 @@ function InstructorManageCriteriaTemplate() {
                     </div>
                 )}
             </div>
-
-            {/* Add Criterion Modal */}
-            <AddCriterionModal
-                isOpen={showAddModal}
-                onClose={() => setShowAddModal(false)}
-                onSubmit={handleAddCriterion}
-                rubricId={templateId}
-                isSubmitting={submitting}
-            />
-            <EditCriterionModal
-                isOpen={showEditModal}
-                onClose={() => {
-                    setShowEditModal(false);
-                    setEditingCriterion(null);
-                }}
-                onSubmit={handleUpdateCriterion}
-                criterion={editingCriterion}
-                isSubmitting={submitting}
-            />
-            <DeleteCriterionModal
-                isOpen={deleteConfirm.show}
-                onClose={handleDeleteCancel}
-                onConfirm={handleDeleteConfirm}
-                criterionTitle={deleteConfirm.criterionTitle}
-                isDeleting={deleting}
-            />
         </div>
     );
 }

@@ -16,7 +16,12 @@ export const publishGrades = async (assignmentId) => {
     }
 };
 
-export const gradeSubmission = async ({ submissionId, instructorId, instructorScore, feedback }) => {
+export const gradeSubmission = async ({ 
+    submissionId, 
+    instructorId, 
+    feedback,
+    criteriaFeedbacks
+}) => {
     if (!submissionId || !instructorId) {
         throw new Error("submissionId and instructorId are required");
     }
@@ -25,8 +30,8 @@ export const gradeSubmission = async ({ submissionId, instructorId, instructorSc
         const response = await api.post("/instructor/InstructorSubmission/grade", {
             submissionId,
             instructorId,
-            instructorScore,
             feedback,
+            criteriaFeedbacks
         });
         return response.data;
     } catch (error) {
