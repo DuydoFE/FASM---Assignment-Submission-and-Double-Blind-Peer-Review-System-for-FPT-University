@@ -1,12 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Plus, Eye, Pencil, Trash2, Loader, Edit2 } from 'lucide-react';
-import { getAllRubrics, updateRubric, deleteRubric, getRubricTemplatesByUserId, createRubricTemplate, deleteRubricTemplate, updateRubricTemplate, getRubricByUserId } from '../../service/rubricService';
+import { Search, Eye, Pencil, Loader } from 'lucide-react';
+import { updateRubric, getRubricTemplatesByUserId, getRubricByUserId } from '../../service/rubricService';
 import { toast } from 'react-toastify';
 import { getCurrentAccount } from '../../utils/accountUtils';
-import DeleteRubricTemplateModal from '../../component/Rubric/DeleteRubricTemplateModal';
-import CreateRubricTemplateModal from '../../component/Rubric/CreateRubricTemplateModal';
-import EditRubricTemplateModal from '../../component/Rubric/EditRubricTemplateModal';
 
 
 const InstructorManageRubric = () => {
@@ -20,17 +17,7 @@ const InstructorManageRubric = () => {
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [editingRubric, setEditingRubric] = useState(null);
     const [editTitle, setEditTitle] = useState('');
-    const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-    const [newRubricTitle, setNewRubricTitle] = useState('');
-    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-    const [deletingRubric, setDeletingRubric] = useState(null);
-    const [isCreateTemplateModalOpen, setIsCreateTemplateModalOpen] = useState(false);
-    const [isEditTemplateModalOpen, setIsEditTemplateModalOpen] = useState(false);
-    const [editingTemplate, setEditingTemplate] = useState(null);
-    const [isDeleteTemplateModalOpen, setIsDeleteTemplateModalOpen] = useState(false);
-    const [deletingTemplate, setDeletingTemplate] = useState(null);
     const [currentPage, setCurrentPage] = useState(1);
-    const [refreshTemplates, setRefreshTemplates] = useState(0);
     const itemsPerPage = 5;
 
     const fetchTemplates = async () => {
@@ -63,7 +50,7 @@ const InstructorManageRubric = () => {
 
     useEffect(() => {
         fetchTemplates();
-    }, [refreshTemplates]);
+    }, []);
 
     useEffect(() => {
         const fetchRubrics = async () => {
@@ -95,47 +82,6 @@ const InstructorManageRubric = () => {
     const filteredRubrics = rubrics.filter(rubric =>
         rubric.title.toLowerCase().includes(searchQuery.toLowerCase())
     );
-
-    const handleCreateClick = () => {
-        setNewRubricTitle('');
-        setIsCreateModalOpen(true);
-    };
-
-    const handleSaveCreate = async () => {
-        const trimmedTitle = newRubricTitle.trim();
-
-        if (!trimmedTitle) {
-            toast.error('Title cannot be empty');
-            return;
-        }
-
-        try {
-            const newRubric = await createRubricTemplate({ title: trimmedTitle, createdByUserId: currentUser.id });
-
-            toast.success('Rubric created successfully');
-            setIsCreateModalOpen(false);
-            setNewRubricTitle('');
-
-            const data = await getAllRubrics();
-            const formattedRubrics = data.map(rubric => ({
-                ...rubric,
-                id: rubric.id,
-                rubricId: rubric.rubricId || rubric.id,
-                title: rubric.title,
-                criteriaCount: rubric.criteriaCount || rubric.criteria?.length || 0,
-                createdDate: rubric.createdDate || new Date().toISOString()
-            }));
-            setRubrics(formattedRubrics);
-        } catch (error) {
-            console.error('Failed to create rubric:', error);
-            toast.error('Failed to create rubric');
-        }
-    };
-
-    const handleCancelCreate = () => {
-        setIsCreateModalOpen(false);
-        setNewRubricTitle('');
-    };
 
     const handleEditClick = (rubric) => {
         setEditingRubric(rubric);
@@ -187,153 +133,10 @@ const InstructorManageRubric = () => {
         setEditTitle('');
     };
 
-    const handleDeleteClick = (e, rubric) => {
-        e.stopPropagation();
-        setDeletingRubric(rubric);
-        setIsDeleteModalOpen(true);
-    };
-
-    const handleConfirmDelete = async () => {
-        if (!deletingRubric?.rubricId) {
-            toast.error('Could not identify rubric');
-            return;
-        }
-
-        try {
-            await deleteRubric(deletingRubric.rubricId);
-
-            setRubrics(rubrics.filter(r => r.rubricId !== deletingRubric.rubricId));
-
-            toast.success('Rubric deleted successfully');
-            setIsDeleteModalOpen(false);
-            setDeletingRubric(null);
-        } catch (error) {
-            console.error('Failed to delete rubric:', error);
-            const errorMessage = error.response?.data?.message || 'Failed to delete rubric';
-            toast.error(errorMessage);
-        }
-    };
-
-    const handleCancelDelete = () => {
-        setIsDeleteModalOpen(false);
-        setDeletingRubric(null);
-    };
-
-    const handleDeleteTemplateClick = (e, template) => {
-        e.stopPropagation();
-        setDeletingTemplate(template);
-        setIsDeleteTemplateModalOpen(true);
-    };
-
-    const handleConfirmDeleteTemplate = async () => {
-        if (!deletingTemplate?.templateId) {
-            toast.error('Could not identify template');
-            return;
-        }
-
-        try {
-            await deleteRubricTemplate(deletingTemplate.templateId);
-
-            toast.success('Rubric template deleted successfully');
-            setIsDeleteTemplateModalOpen(false);
-            setDeletingTemplate(null);
-
-            // Trigger refresh
-            setRefreshTemplates(prev => prev + 1);
-        } catch (error) {
-            console.error('Failed to delete rubric template:', error);
-            const errorMessage = error.response?.data?.message || 'Failed to delete rubric template';
-            toast.error(errorMessage);
-        }
-    };
-
-    const handleCancelDeleteTemplate = () => {
-        setIsDeleteTemplateModalOpen(false);
-        setDeletingTemplate(null);
-    };
-
-    const handleCreateTemplateClick = () => {
-        setIsCreateTemplateModalOpen(true);
-    };
-
-    const handleConfirmCreateTemplate = async (title) => {
-        const trimmedTitle = title.trim();
-
-        if (!trimmedTitle) {
-            toast.error('Title cannot be empty');
-            return;
-        }
-
-        try {
-            await createRubricTemplate({
-                title: trimmedTitle,
-                createdByUserId: currentUser.id
-            });
-
-            toast.success('Rubric template created successfully');
-            setIsCreateTemplateModalOpen(false);
-
-            setRefreshTemplates(prev => prev + 1);
-        } catch (error) {
-            toast.error('Failed to create rubric template');
-        }
-    };
-
-    const handleCancelCreateTemplate = () => {
-        setIsCreateTemplateModalOpen(false);
-    };
-
-    const handleEditTemplateClick = (e, template) => {
-        e.stopPropagation();
-        setEditingTemplate(template);
-        setIsEditTemplateModalOpen(true);
-    };
-
-    const handleConfirmEditTemplate = async (newTitle) => {
-        const trimmedTitle = newTitle.trim();
-
-        if (!trimmedTitle) {
-            toast.error('Title cannot be empty');
-            return;
-        }
-
-        if (!editingTemplate?.templateId) {
-            toast.error('Could not identify template');
-            return;
-        }
-
-        if (trimmedTitle === editingTemplate.title.trim()) {
-            toast.info('No changes made to the title');
-            setIsEditTemplateModalOpen(false);
-            setEditingTemplate(null);
-            return;
-        }
-
-        try {
-            await updateRubricTemplate(editingTemplate.templateId, { title: trimmedTitle });
-
-            toast.success('Rubric template updated successfully');
-            setIsEditTemplateModalOpen(false);
-            setEditingTemplate(null);
-
-            setRefreshTemplates(prev => prev + 1);
-        } catch (error) {
-            console.error('Failed to update rubric template:', error);
-            toast.error(error.response?.data?.message || 'Failed to update rubric template');
-        }
-    };
-
-    const handleCancelEditTemplate = () => {
-        setIsEditTemplateModalOpen(false);
-        setEditingTemplate(null);
-    };
-
     const handleViewCriteriaTemplateClick = (e, template) => {
         e.stopPropagation();
         navigate(`/instructor/manage-criteria-template/${template.templateId}`);
     };
-
-
 
     const indexOfLastItem = currentPage * itemsPerPage;
     const indexOfFirstItem = indexOfLastItem - itemsPerPage;
@@ -349,7 +152,7 @@ const InstructorManageRubric = () => {
                     <p className="text-gray-600">Create and manage rubrics for courses</p>
                 </div>
 
-                {/* Search and Create Button */}
+                {/* Search */}
                 <div className="flex gap-4 mb-8">
                     <div className="flex-1 relative">
                         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
@@ -361,13 +164,6 @@ const InstructorManageRubric = () => {
                             className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
                         />
                     </div>
-                    <button
-                        onClick={handleCreateTemplateClick}
-                        className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-lg flex items-center gap-2 font-medium transition-colors"
-                    >
-                        <Plus className="w-5 h-5" />
-                        Create Rubric
-                    </button>
                 </div>
 
                 {/* Template Section */}
@@ -467,20 +263,6 @@ const InstructorManageRubric = () => {
                                                             onClick={(e) => handleViewCriteriaTemplateClick(e, template)}
                                                         >
                                                             <Eye className="w-5 h-5" />
-                                                        </button>
-                                                        <button
-                                                            className="p-2 text-yellow-600 rounded-lg hover:bg-yellow-50 transition border border-yellow-200"
-                                                            title="Edit Template"
-                                                            onClick={(e) => handleEditTemplateClick(e, template)}
-                                                        >
-                                                            <Edit2 className="w-5 h-5" />
-                                                        </button>
-                                                        <button
-                                                            className="p-2 text-red-600 rounded-lg hover:bg-red-50 transition border border-red-200"
-                                                            title="Delete Template"
-                                                            onClick={(e) => handleDeleteTemplateClick(e, template)}
-                                                        >
-                                                            <Trash2 className="w-5 h-5" />
                                                         </button>
                                                     </div>
                                                 </td>
@@ -600,64 +382,12 @@ const InstructorManageRubric = () => {
                                         >
                                             <Pencil className="w-5 h-5" />
                                         </button>
-                                        {/* <button
-                                            className="p-2 rounded-lg hover:bg-red-50 text-red-500 transition"
-                                            title="Delete"
-                                            onClick={(e) => handleDeleteClick(e, rubric)}
-                                        >
-                                            <Trash2 className="w-5 h-5" />
-                                        </button> */}
                                     </div>
                                 </div>
                             ))
                         )}
                     </div>
-
-
-
-
                 </div>
-
-                {/* Create Modal */}
-                {/* {isCreateModalOpen && (
-                    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                        <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
-                            <div className="p-6">
-                                <h3 className="text-xl font-bold text-gray-900 mb-4">Create New Rubric</h3>
-
-                                <div className="mb-6">
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        Rubric Name
-                                    </label>
-                                    <input
-                                        type="text"
-                                        value={newRubricTitle}
-                                        onChange={(e) => setNewRubricTitle(e.target.value)}
-                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
-                                        placeholder="Enter rubric name..."
-                                        autoFocus
-                                    />
-                                </div>
-
-                                <div className="flex gap-3 justify-end">
-                                    <button
-                                        onClick={handleCancelCreate}
-                                        className="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors font-medium"
-                                    >
-                                        Cancel
-                                    </button>
-                                    <button
-                                        onClick={handleSaveCreate}
-                                        disabled={!newRubricTitle.trim()}
-                                        className="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-                                    >
-                                        Create Rubric
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                )} */}
 
                 {/* Edit Modal */}
                 {isEditModalOpen && (
@@ -699,72 +429,6 @@ const InstructorManageRubric = () => {
                         </div>
                     </div>
                 )}
-
-                {/* Delete Rubric Confirmation Modal */}
-                {/* {isDeleteModalOpen && (
-                    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                        <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
-                            <div className="p-6">
-                                <div className="flex items-center gap-3 mb-4">
-                                    <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center">
-                                        <Trash2 className="w-6 h-6 text-red-600" />
-                                    </div>
-                                    <h3 className="text-xl font-bold text-gray-900">Delete Rubric</h3>
-                                </div>
-
-                                {deletingRubric && (
-                                    <div className="bg-gray-50 rounded-lg p-3 mb-4">
-                                        <p className="text-gray-600 mb-2">
-                                            Are you sure you want to delete the rubric{' '}
-                                            <span className="font-bold">{deletingRubric.title}</span>?
-                                        </p>
-                                    </div>
-                                )}
-
-                                <p className="text-sm text-red-600 mb-6">
-                                    <strong>Note:</strong> You can only delete rubrics that have no criteria.
-                                </p>
-
-                                <div className="flex gap-3 justify-end">
-                                    <button
-                                        onClick={handleCancelDelete}
-                                        className="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors font-medium"
-                                    >
-                                        Cancel
-                                    </button>
-                                    <button
-                                        onClick={handleConfirmDelete}
-                                        className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors font-medium"
-                                    >
-                                        Delete Rubric
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                )} */}
-
-                {/* Delete Template Modal */}
-                <DeleteRubricTemplateModal
-                    isOpen={isDeleteTemplateModalOpen}
-                    template={deletingTemplate}
-                    onConfirm={handleConfirmDeleteTemplate}
-                    onCancel={handleCancelDeleteTemplate}
-                />
-                {/* Create Template Modal */}
-                <CreateRubricTemplateModal
-                    isOpen={isCreateTemplateModalOpen}
-                    onConfirm={handleConfirmCreateTemplate}
-                    onCancel={handleCancelCreateTemplate}
-                />
-
-                {/* Edit Template Modal */}
-                <EditRubricTemplateModal
-                    isOpen={isEditTemplateModalOpen}
-                    template={editingTemplate}
-                    onConfirm={handleConfirmEditTemplate}
-                    onCancel={handleCancelEditTemplate}
-                />
             </div>
         </div>
     );
