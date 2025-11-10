@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Plus, FileText, Calendar, X, Trash2, Edit, MoreVertical } from 'lucide-react';
+import { Plus, FileText, Calendar, X, Trash2, Edit, MoreVertical, Upload } from 'lucide-react';
 import { toast } from "react-toastify";
 import { useParams, useNavigate } from 'react-router-dom';
 import { getAssignmentsByCourseInstanceId, createAssignment, deleteAssignment, updateAssignment, assignmentService } from '../../service/assignmentService';
@@ -202,13 +202,27 @@ const InstructorManageAssignment = () => {
   };
 
   const handleViewSubmissions = async (assignment) => {
-    try { 
+    try {
       await submissionService.getSubmissionsByAssignment(assignment.assignmentId);
       navigate(`/instructor/manage-submission/${assignment.assignmentId}`);
       setOpenDropdownId(null);
     } catch (error) {
       console.error('Failed to fetch submissions:', error);
       toast.error('Failed to load submissions. Please try again.');
+    }
+  };
+
+  const handlePublishAssignment = async (assignment) => {
+    try {
+      // Use the id property (assignment.assignmentId) as other handlers do
+      await assignmentService.publishAssignment(assignment.id || assignment.assignmentId);
+      toast.success('Assignment published successfully!');
+      setOpenDropdownId(null);
+      // Refresh the list to reflect new status
+      await fetchAssignments();
+    } catch (error) {
+      console.error('Failed to publish assignment:', error);
+      toast.error(error.response?.data?.message || 'Failed to publish assignment. Please try again.');
     }
   };
 
@@ -335,13 +349,24 @@ const InstructorManageAssignment = () => {
 
                 {openDropdownId === assignment.id && (
                   <div className="absolute right-0 top-full mt-1 w-52 bg-white rounded-lg shadow-2xl border border-gray-200 z-[100] overflow-hidden">
-                    <button
-                      onClick={() => handleUpdateDeadlineClick(assignment)}
-                      className="w-full flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-blue-50 transition-colors text-left"
-                    >
-                      <Calendar className="w-4 h-4 text-blue-600" />
-                      <span>Extend Deadline</span>
-                    </button>
+                    {(assignment.status === 'Draft') && (
+                      <button
+                        onClick={() => handlePublishAssignment(assignment)}
+                        className="w-full flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-yellow-50 transition-colors text-left"
+                      >
+                        <Upload className="w-4 h-4 text-yellow-600" />
+                        <span>Publish Assignment</span>
+                      </button>
+                    )}
+                    {(assignment.status === 'Active') && (
+                      <button
+                        onClick={() => handleUpdateDeadlineClick(assignment)}
+                        className="w-full flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-blue-50 transition-colors text-left"
+                      >
+                        <Calendar className="w-4 h-4 text-blue-600" />
+                        <span>Extend Deadline</span>
+                      </button>
+                    )}
                     {(assignment.status === 'Draft' || assignment.status === 'Upcoming') && (
                       <button
                         onClick={() => handleEditClick(assignment)}
@@ -359,13 +384,15 @@ const InstructorManageAssignment = () => {
                       <span>View Submissions</span>
                     </button>
                     <div className="border-t border-gray-200 my-1"></div>
-                    <button
-                      onClick={() => handleDeleteClick(assignment)}
-                      className="w-full flex items-center gap-3 px-4 py-3 text-sm text-red-600 hover:bg-red-50 transition-colors text-left"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                      <span>Delete Assignment</span>
-                    </button>
+                    {(assignment.status === 'Draft' || assignment.status === 'Upcoming') && (
+                      <button
+                        onClick={() => handleDeleteClick(assignment)}
+                        className="w-full flex items-center gap-3 px-4 py-3 text-sm text-red-600 hover:bg-red-50 transition-colors text-left"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                        <span>Delete Assignment</span>
+                      </button>
+                    )}
                   </div>
                 )}
               </div>
@@ -457,7 +484,7 @@ const InstructorManageAssignment = () => {
       <CreateAssignmentModal
         isOpen={showModal}
         onClose={() => setShowModal(false)}
-        onSubmit={handleCreateAssignment}  
+        onSubmit={handleCreateAssignment}
         courseInstanceId={courseInstanceId}
       />
 
