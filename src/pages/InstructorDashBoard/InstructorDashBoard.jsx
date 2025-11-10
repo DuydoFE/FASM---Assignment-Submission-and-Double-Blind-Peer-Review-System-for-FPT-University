@@ -183,7 +183,7 @@ const InstructorDashboard = () => {
                       </span>
                     </div>
                   </div>
-                  <h3 className="font-medium text-gray-900 mb-4 text-base">Basic Java Programming</h3>
+                  <h3 className="font-medium text-gray-900 mb-4 text-base">{course.courseName}</h3>
 
                   <div className="space-y-2">
                     <div className="flex items-center text-sm text-gray-500">

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, ChevronDown, Eye, Loader2, BookOpen, Users, FileText, ArrowRight, CheckCircle2, Edit3 } from 'lucide-react';
+import { Search, ChevronDown, Eye, Loader2, BookOpen, Users, FileText, ArrowRight, CheckCircle2, Edit3, AlertCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 
@@ -8,7 +8,7 @@ import { getClassesByUser } from '../../service/courseInstanceService';
 import { getAssignmentsByCourseInstanceId } from '../../service/assignmentService';
 import { getSubmissionSummary } from '../../service/instructorSubmission';
 import { getCurrentAccount } from '../../utils/accountUtils';
-import { publishGrades } from '../../service/instructorGrading';
+import { publishGrades, autoGradeZero } from '../../service/instructorGrading';
 
 const InstructorPublishMark = () => {
   const currentUser = getCurrentAccount();
@@ -32,11 +32,13 @@ const InstructorPublishMark = () => {
     classes: false,
     assignments: false,
     summary: false,
-    publishing: false
+    publishing: false,
+    autoGrading: false
   });
 
   const [showTable, setShowTable] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [showAutoGradeModal, setShowAutoGradeModal] = useState(false);
 
   useEffect(() => {
     fetchCourses();
@@ -113,7 +115,6 @@ const InstructorPublishMark = () => {
       });
       
       console.log('API Response:', response);
-      console.log('First submission:', response[0]);
       
       const mappedStudents = response.map(submission => ({
         submissionId: submission.submissionId,
@@ -130,15 +131,16 @@ const InstructorPublishMark = () => {
         feedback: submission.feedback,
         submittedAt: submission.submittedAt,
         gradedAt: submission.gradedAt,
-        status: submission.status.toLowerCase() === 'graded' ? 'Published' : 'Draft'
+        status: submission.status
       }));
       
       setStudents(mappedStudents);
       
       const assignmentData = assignments.find(a => a.assignmentId == selectedAssignmentId);
       if (assignmentData) {
-        const publishedCount = mappedStudents.filter(s => s.status === 'Published').length;
-        const draftCount = mappedStudents.filter(s => s.status === 'Draft').length;
+        const gradedCount = mappedStudents.filter(s => s.status === 'Graded').length;
+        const submittedCount = mappedStudents.filter(s => s.status === 'Submitted').length;
+        const notSubmittedCount = mappedStudents.filter(s => s.status === 'Not Submitted').length;
         
         setAssignmentInfo({
           title: assignmentData.title,
@@ -146,8 +148,9 @@ const InstructorPublishMark = () => {
           deadline: assignmentData.dueDate,
           maxScore: assignmentData.maxScore || 10,
           totalStudents: mappedStudents.length,
-          published: publishedCount,
-          draft: draftCount
+          graded: gradedCount,
+          submitted: submittedCount,
+          notSubmitted: notSubmittedCount
         });
       }
     } catch (error) {
@@ -162,8 +165,9 @@ const InstructorPublishMark = () => {
   };
 
   const handleStatusClick = () => {
-    if (statusFilter === 'All') setStatusFilter('Published');
-    else if (statusFilter === 'Published') setStatusFilter('Draft');
+    if (statusFilter === 'All') setStatusFilter('Graded');
+    else if (statusFilter === 'Graded') setStatusFilter('Submitted');
+    else if (statusFilter === 'Submitted') setStatusFilter('Not Submitted');
     else setStatusFilter('All');
   };
 
@@ -185,9 +189,16 @@ const InstructorPublishMark = () => {
   };
 
   const getStatusStyle = (status) => {
-    return status === 'Published'
-      ? 'bg-green-100 text-green-800'
-      : 'bg-yellow-100 text-yellow-800';
+    switch(status) {
+      case 'Graded':
+        return 'bg-green-100 text-green-800';
+      case 'Submitted':
+        return 'bg-blue-100 text-blue-800';
+      case 'Not Submitted':
+        return 'bg-gray-100 text-gray-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
   };
 
   const handlePublishGrades = async () => {
@@ -207,7 +218,6 @@ const InstructorPublishMark = () => {
       await publishGrades(selectedAssignmentId);
       toast.success('Grades published successfully!');
       
-      // Refresh the data to show updated status
       await handleViewGrades();
     } catch (error) {
       console.error('Error publishing grades:', error);
@@ -215,6 +225,49 @@ const InstructorPublishMark = () => {
     } finally {
       setLoading(prev => ({ ...prev, publishing: false }));
     }
+  };
+
+  const handleAutoGradeZero = () => {
+    if (!selectedAssignmentId) {
+      toast.error('Please select an assignment first');
+      return;
+    }
+
+    const notSubmittedCount = students.filter(s => s.status === 'Not Submitted').length;
+    if (notSubmittedCount === 0) {
+      toast.info('No students with "Not Submitted" status to grade');
+      return;
+    }
+
+    setShowAutoGradeModal(true);
+  };
+
+  const confirmAutoGradeZero = async () => {
+    setShowAutoGradeModal(false);
+    setLoading(prev => ({ ...prev, autoGrading: true }));
+    
+    try {
+      await autoGradeZero(selectedAssignmentId);
+      toast.success('Auto-graded all non-submitted assignments with 0 points!');
+      
+      await handleViewGrades();
+    } catch (error) {
+      console.error('Error auto-grading:', error);
+      toast.error('Failed to auto-grade submissions. Please try again.');
+    } finally {
+      setLoading(prev => ({ ...prev, autoGrading: false }));
+    }
+  };
+
+  const handleEditGrade = (student) => {
+    navigate(`/instructor/publish-mark/submission/${student.submissionId}`, {
+      state: {
+        courseId: selectedCourseId,
+        classId: selectedClassId,
+        assignmentId: selectedAssignmentId,
+        returnPath: '/instructor/publish-mark'
+      }
+    });
   };
 
   return (
@@ -349,7 +402,7 @@ const InstructorPublishMark = () => {
                     <Search className="w-6 h-6 text-blue-600" />
                   </div>
                   <h3 className="font-semibold text-gray-800 mb-2">Search & Filter</h3>
-                  <p className="text-sm text-gray-600">Quickly find students and filter by publication status</p>
+                  <p className="text-sm text-gray-600">Quickly find students and filter by submission status</p>
                 </div>
 
                 <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
@@ -365,7 +418,7 @@ const InstructorPublishMark = () => {
                     <FileText className="w-6 h-6 text-purple-600" />
                   </div>
                   <h3 className="font-semibold text-gray-800 mb-2">Publication Control</h3>
-                  <p className="text-sm text-gray-600">Save drafts or publish final grades to students</p>
+                  <p className="text-sm text-gray-600">Publish final grades to students when ready</p>
                 </div>
               </div>
             </div>
@@ -388,12 +441,22 @@ const InstructorPublishMark = () => {
                 <div className="flex gap-6">
                   <div className="flex items-center gap-2">
                     <span className="text-green-600 font-medium">
-                      ✓ {assignmentInfo.published || 0}/{assignmentInfo.totalStudents || 0} published
+                      ✓ {assignmentInfo.graded || 0} graded
                     </span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="text-yellow-600 font-medium">
-                      ⚠ {assignmentInfo.draft || 0} drafts
+                    <span className="text-blue-600 font-medium">
+                      📝 {assignmentInfo.submitted || 0} submitted
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-gray-600 font-medium">
+                      ⚠ {assignmentInfo.notSubmitted || 0} not submitted
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2 ml-auto">
+                    <span className="text-gray-700 font-semibold">
+                      Total: {assignmentInfo.totalStudents || 0} students
                     </span>
                   </div>
                 </div>
@@ -439,7 +502,6 @@ const InstructorPublishMark = () => {
                           Status <ChevronDown size={16} />
                         </div>
                       </th>
-                      <th className="px-6 py-3 text-center text-sm font-medium text-gray-600">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-200">
@@ -475,11 +537,6 @@ const InstructorPublishMark = () => {
                               {student.status}
                             </span>
                           </td>
-                          <td className="px-6 py-4 text-center">
-                            <button className="text-gray-400 hover:text-gray-600 transition-colors duration-200">
-                              <Edit3 className="w-4 h-4" />
-                            </button>
-                          </td>
                         </tr>
                       ))
                     ) : (
@@ -496,8 +553,22 @@ const InstructorPublishMark = () => {
 
             {/* Action Buttons */}
             <div className="flex justify-end space-x-4 mt-6">
-              <button className="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 bg-white hover:bg-gray-50 transition-colors font-medium">
-                Save Draft
+              <button 
+                onClick={handleAutoGradeZero}
+                disabled={loading.autoGrading || !selectedAssignmentId || assignmentInfo?.notSubmitted === 0}
+                className="px-6 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors font-medium flex items-center disabled:bg-gray-300 disabled:cursor-not-allowed"
+              >
+                {loading.autoGrading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Grading...
+                  </>
+                ) : (
+                  <>
+                    <AlertCircle className="w-4 h-4 mr-2" />
+                    Auto Grade Zero
+                  </>
+                )}
               </button>
               <button 
                 onClick={handlePublishGrades}
@@ -517,7 +588,7 @@ const InstructorPublishMark = () => {
           </>
         )}
 
-        {/* Confirmation Modal */}
+        {/* Confirmation Modal for Publish */}
         {showConfirmModal && (
           <div 
             className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
@@ -552,6 +623,59 @@ const InstructorPublishMark = () => {
                     </>
                   ) : (
                     'Confirm'
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Confirmation Modal for Auto Grade Zero */}
+        {showAutoGradeModal && (
+          <div 
+            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+            onClick={() => setShowAutoGradeModal(false)}
+          >
+            <div 
+              className="bg-white rounded-lg p-6 max-w-md w-full mx-4 shadow-xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
+                  <AlertCircle className="w-6 h-6 text-red-600" />
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900">
+                  Auto Grade with Zero Points
+                </h3>
+              </div>
+              <p className="text-gray-600 mb-2">
+                This will automatically assign <span className="font-semibold text-red-600">0 points</span> to all students with "Not Submitted" status.
+              </p>
+              <p className="text-gray-600 mb-6">
+                <span className="font-semibold">{assignmentInfo?.notSubmitted || 0} student(s)</span> will be affected. This action cannot be undone.
+              </p>
+              <div className="flex justify-end gap-3">
+                <button
+                  onClick={() => setShowAutoGradeModal(false)}
+                  className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors font-medium"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={confirmAutoGradeZero}
+                  disabled={loading.autoGrading}
+                  className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors font-medium flex items-center disabled:bg-gray-300"
+                >
+                  {loading.autoGrading ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Grading...
+                    </>
+                  ) : (
+                    <>
+                      <AlertCircle className="w-4 h-4 mr-2" />
+                      Confirm Auto Grade
+                    </>
                   )}
                 </button>
               </div>
