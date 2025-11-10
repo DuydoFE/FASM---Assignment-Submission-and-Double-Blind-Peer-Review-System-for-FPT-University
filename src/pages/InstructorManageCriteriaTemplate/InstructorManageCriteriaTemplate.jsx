@@ -1,10 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Pencil, Trash2, Plus, Loader, ArrowLeft } from 'lucide-react';
+import { Loader, ArrowLeft } from 'lucide-react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getCriteriaByTemplateId, deleteCriteriaTemplate, createCriteriaTemplate, updateCriteriaTemplate } from '../../service/criteriaService';
-import AddCriterionModal from '../../component/Criteria/AddCriterionModal';
-import EditCriterionModal from '../../component/Criteria/EditCriterionModal';
-import DeleteCriterionModal from '../../component/Criteria/DeleteCriterionModal';
+import { getCriteriaByTemplateId } from '../../service/criteriaService';
 import { toast } from 'react-toastify';
 
 function InstructorManageCriteriaTemplate() {
@@ -13,12 +10,6 @@ function InstructorManageCriteriaTemplate() {
     const [loading, setLoading] = useState(true);
     const [criteria, setCriteria] = useState([]);
     const [templateTitle, setTemplateTitle] = useState('');
-    const [deleteConfirm, setDeleteConfirm] = useState({ show: false, criterionId: null, criterionTitle: '' });
-    const [deleting, setDeleting] = useState(false);
-    const [showAddModal, setShowAddModal] = useState(false);
-    const [submitting, setSubmitting] = useState(false);
-    const [showEditModal, setShowEditModal] = useState(false);
-    const [editingCriterion, setEditingCriterion] = useState(null);
 
     useEffect(() => {
         const fetchCriteria = async () => {
@@ -62,116 +53,6 @@ function InstructorManageCriteriaTemplate() {
 
     const handleBack = () => {
         navigate(-1);
-    };
-
-    const handleDeleteClick = (criterionId, criterionTitle) => {
-        setDeleteConfirm({ show: true, criterionId, criterionTitle });
-    };
-
-    const handleDeleteCancel = () => {
-        setDeleteConfirm({ show: false, criterionId: null, criterionTitle: '' });
-    };
-
-    const handleDeleteConfirm = async () => {
-        try {
-            if (!deleteConfirm.criterionId) {
-                toast.error('Invalid criterion ID');
-                return;
-            }
-            setDeleting(true);
-            await deleteCriteriaTemplate(deleteConfirm.criterionId);
-
-            setCriteria(prev => prev.filter(c => c.criteriaId !== deleteConfirm.criterionId));
-
-            toast.success('Criterion template deleted successfully');
-            setDeleteConfirm({ show: false, criterionId: null, criterionTitle: '' });
-        } catch (error) {
-            console.error('Failed to delete criterion template:', error);
-            toast.error('Failed to delete criterion template');
-        } finally {
-            setDeleting(false);
-        }
-    };
-
-    const handleAddCriterion = async (criterionData) => {
-        try {
-            setSubmitting(true);
-            // Map rubricId to templateId for the API call
-            const templateData = {
-                ...criterionData,
-                templateId: templateId,
-                rubricId: undefined // Remove rubricId if it exists
-            };
-            delete templateData.rubricId;
-
-            await createCriteriaTemplate(templateData);
-
-            // Refresh the list
-            const data = await getCriteriaByTemplateId(templateId);
-            if (Array.isArray(data) && data.length > 0) {
-                const mappedCriteria = data.map(item => ({
-                    criteriaId: item.criteriaTemplateId,
-                    title: item.title,
-                    description: item.description,
-                    weight: item.weight,
-                    maxScore: item.maxScore,
-                    scoringMethod: item.scoringType,
-                    items: item.scoreLabels ? item.scoreLabels.split(',').map(s => s.trim()) : []
-                }));
-                setCriteria(mappedCriteria);
-                setTemplateTitle(data[0].templateTitle || 'Template Details');
-            } else {
-                setCriteria([]);
-            }
-
-            toast.success('Criterion template added successfully');
-            setShowAddModal(false);
-        } catch (error) {
-            console.error('Failed to add criterion template:', error);
-            toast.error(error.response?.data?.message || 'Failed to add criterion template');
-        } finally {
-            setSubmitting(false);
-        }
-    };
-
-    const handleEditClick = (criterion) => {
-        setEditingCriterion(criterion);
-        setShowEditModal(true);
-    };
-
-    const handleUpdateCriterion = async (criterionData) => {
-        try {
-            setSubmitting(true);
-
-            const templateUpdateData = {
-                ...criterionData,
-                templateId: templateId,
-                criteriaTemplateId: criterionData.criteriaId
-            };
-
-            await updateCriteriaTemplate(criterionData.criteriaId, templateUpdateData);
-            const data = await getCriteriaByTemplateId(templateId);
-            if (Array.isArray(data) && data.length > 0) {
-                const mappedCriteria = data.map(item => ({
-                    criteriaId: item.criteriaTemplateId,
-                    title: item.title,
-                    description: item.description,
-                    weight: item.weight,
-                    maxScore: item.maxScore,
-                }));
-                setCriteria(mappedCriteria);
-                setTemplateTitle(data[0].templateTitle || 'Template Details');
-            }
-
-            toast.success('Criterion template updated successfully');
-            setShowEditModal(false);
-            setEditingCriterion(null);
-        } catch (error) {
-            console.error('Failed to update criterion template:', error);
-            toast.error(error.response?.data?.message || 'Failed to update criterion template');
-        } finally {
-            setSubmitting(false);
-        }
     };
 
     const totalWeight = criteria.reduce((sum, c) => sum + (c.weight || 0), 0);
@@ -229,15 +110,8 @@ function InstructorManageCriteriaTemplate() {
                 <div className="flex justify-between items-center mb-6">
                     <div>
                         <h2 className="text-xl font-semibold text-gray-900">Evaluation Criteria Templates</h2>
-                        <p className="text-sm text-gray-600">Manage and configure assessment criteria templates</p>
+                        <p className="text-sm text-gray-600">View assessment criteria templates</p>
                     </div>
-                    <button
-                        onClick={() => setShowAddModal(true)}
-                        className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors"
-                    >
-                        <Plus size={20} />
-                        Add Criteria Template
-                    </button>
                 </div>
 
                 {/* Criteria Cards */}
@@ -263,21 +137,6 @@ function InstructorManageCriteriaTemplate() {
                                     <div className="flex items-center gap-4">
                                         <span className="text-blue-600 font-semibold text-base">Weight: {criterion.weight}%</span>
                                         <span className="text-blue-600 font-semibold text-base">Max Score: {criterion.maxScore}</span>
-                                        <button
-                                            onClick={() => handleEditClick(criterion)}
-                                            className="text-gray-400 hover:text-gray-600 transition-colors p-1"
-                                        >
-                                            <Pencil size={18} />
-                                        </button>
-                                        <button
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                handleDeleteClick(criterion.criteriaId, criterion.title);
-                                            }}
-                                            className="text-gray-400 hover:text-red-600 transition-colors p-1"
-                                        >
-                                            <Trash2 size={18} />
-                                        </button>
                                     </div>
                                 </div>
 
@@ -309,32 +168,6 @@ function InstructorManageCriteriaTemplate() {
                     </div>
                 )}
             </div>
-
-            {/* Add Criterion Modal */}
-            <AddCriterionModal
-                isOpen={showAddModal}
-                onClose={() => setShowAddModal(false)}
-                onSubmit={handleAddCriterion}
-                rubricId={templateId}
-                isSubmitting={submitting}
-            />
-            <EditCriterionModal
-                isOpen={showEditModal}
-                onClose={() => {
-                    setShowEditModal(false);
-                    setEditingCriterion(null);
-                }}
-                onSubmit={handleUpdateCriterion}
-                criterion={editingCriterion}
-                isSubmitting={submitting}
-            />
-            <DeleteCriterionModal
-                isOpen={deleteConfirm.show}
-                onClose={handleDeleteCancel}
-                onConfirm={handleDeleteConfirm}
-                criterionTitle={deleteConfirm.criterionTitle}
-                isDeleting={deleting}
-            />
         </div>
     );
 }
