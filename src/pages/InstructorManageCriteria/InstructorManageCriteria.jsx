@@ -275,54 +275,66 @@ function InstructorManageCriteria() {
                 </div>
 
                 {/* Criteria Cards */}
-                <div className="space-y-6">
+                <div className="space-y-4">
                     {criteria.length > 0 ? (
                         criteria.map((criterion, index) => (
                             <div
                                 key={criterion.criteriaId}
-                                className="bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow p-6"
+                                className="bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow"
                             >
-                                <div className="flex justify-between items-start mb-4">
+                                <div className="p-6">
                                     <div className="flex items-start gap-4">
-                                        <span className="flex-shrink-0 w-8 h-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center font-semibold text-sm">
+                                        {/* Number Badge */}
+                                        <span className="flex-shrink-0 w-10 h-10 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center font-semibold text-base">
                                             {index + 1}
                                         </span>
-                                        <div>
-                                            <h3 className="text-xl font-semibold text-gray-900">{criterion.title}</h3>
+
+                                        {/* Content */}
+                                        <div className="flex-1 min-w-0">
+                                            <div className="flex items-start justify-between gap-4 mb-3">
+                                                <h3 className="text-lg font-semibold text-gray-900">{criterion.title}</h3>
+                                                
+                                                {/* Stats and Actions */}
+                                                <div className="flex items-center gap-3 flex-shrink-0">
+                                                    <div className="flex items-center gap-4">
+                                                        <div className="text-right">
+                                                            <div className="text-xs text-gray-500 mb-0.5">Weight:</div>
+                                                            <div className="text-base font-semibold text-indigo-600">{criterion.weight}%</div>
+                                                        </div>
+                                                        <div className="text-right">
+                                                            <div className="text-xs text-gray-500 mb-0.5">Max Score:</div>
+                                                            <div className="text-base font-semibold text-indigo-600">{criterion.maxScore}</div>
+                                                        </div>
+                                                    </div>
+                                                    <div className="flex items-center gap-1 ml-2">
+                                                        <button
+                                                            onClick={() => handleEditClick(criterion)}
+                                                            className="text-gray-400 hover:text-indigo-600 transition-colors p-2 rounded-lg hover:bg-indigo-50"
+                                                            title="Edit criterion"
+                                                        >
+                                                            <Pencil size={18} />
+                                                        </button>
+                                                        <button
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                handleDeleteClick(criterion.criteriaId, criterion.title);
+                                                            }}
+                                                            className="text-gray-400 hover:text-red-600 transition-colors p-2 rounded-lg hover:bg-red-50"
+                                                            title="Delete criterion"
+                                                        >
+                                                            <Trash2 size={18} />
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            {/* Description */}
                                             {criterion.description && (
-                                                <p className="text-sm text-gray-600 mt-1">{criterion.description}</p>
+                                                <p className="text-sm text-gray-600 leading-relaxed">{criterion.description}</p>
                                             )}
                                         </div>
                                     </div>
-                                    <div className="flex items-center gap-4">
-                                        <span className="text-blue-600 font-semibold text-base">Weight: {criterion.weight}%</span>
-                                        <span className="text-blue-600 font-semibold text-base">Max Score: {criterion.maxScore}</span>
-                                        <button
-                                            onClick={() => handleEditClick(criterion)}
-                                            className="text-gray-400 hover:text-gray-600 transition-colors p-1"
-                                        >
-                                            <Pencil size={18} />
-                                        </button>
-                                        <button
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                handleDeleteClick(criterion.criteriaId, criterion.title);
-                                            }}
-                                            className="text-gray-400 hover:text-red-600 transition-colors p-1"
-                                        >
-                                            <Trash2 size={18} />
-                                        </button>
-                                    </div>
                                 </div>
-
-                                <ul className="ml-12 space-y-2">
-                                    {criterion.items && criterion.items.map((item, idx) => (
-                                        <li key={idx} className="text-gray-600 text-base flex items-start">
-                                            <span className="mr-2">•</span>
-                                            <span>{item}</span>
-                                        </li>
-                                    ))}
-                                </ul>
                             </div>
                         ))
                     ) : (

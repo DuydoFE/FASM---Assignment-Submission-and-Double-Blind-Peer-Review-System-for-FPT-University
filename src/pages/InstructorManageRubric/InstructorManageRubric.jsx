@@ -206,7 +206,7 @@ const InstructorManageRubric = () => {
                                                     <div className="flex items-center justify-center gap-2">
                                                         <button
                                                             className="p-2 text-blue-600 rounded-lg hover:bg-blue-50 transition border border-blue-200"
-                                                            title="View Template"
+                                                            title="View Criteria Template"
                                                             onClick={(e) => handleViewCriteriaTemplateClick(e, template)}
                                                         >
                                                             <Eye className="w-5 h-5" />
