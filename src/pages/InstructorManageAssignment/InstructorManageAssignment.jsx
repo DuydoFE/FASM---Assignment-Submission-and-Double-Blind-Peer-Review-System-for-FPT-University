@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Plus, FileText, Calendar, X, Trash2, Edit, MoreVertical, Upload } from 'lucide-react';
 import { toast } from "react-toastify";
-import { useParams, useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { getAssignmentsByCourseInstanceId, createAssignment, deleteAssignment, updateAssignment, assignmentService } from '../../service/assignmentService';
 import { submissionService } from '../../service/submissionService';
 import CreateAssignmentModal from '../../component/Assignment/CreateAssignmentModal';
@@ -9,8 +9,16 @@ import EditAssignmentModal from '../../component/Assignment/EditAssignmentModal'
 import DeleteAssignmentModal from '../../component/Assignment/DeleteAssignmentModal';
 
 const InstructorManageAssignment = () => {
-  const { id: courseInstanceId } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const [courseInstanceId, setCourseInstanceId] = useState(() => {
+    try {
+      return location?.state?.courseInstanceId || sessionStorage.getItem('currentCourseInstanceId') || null;
+    } catch (e) {
+      return location?.state?.courseInstanceId || null;
+    }
+  });
 
   const [assignments, setAssignments] = useState([]);
   const [loading, setLoading] = useState(true);

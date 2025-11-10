@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { Search, Users, Trash2, Plus } from 'lucide-react';
-import { useParams } from 'react-router-dom';
 import { getCurrentAccount } from '../../utils/accountUtils';
 import { getStudentsInCourse, removeStudentFromCourse, addStudentToCourse } from '../../service/courseService';
 import { toast } from 'react-toastify';
@@ -8,8 +8,8 @@ import AddStudentModal from '../../component/Student/AddStudentModal.jsx';
 import DeleteStudentModal from '../../component/Student/DeleteStudentModal.jsx';
 
 const InstructorManageClass = () => {
-  const { id: courseInstanceId } = useParams();
   const currentUser = getCurrentAccount();
+  const location = useLocation();
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
   const [courseInfo, setCourseInfo] = useState(null);
@@ -21,6 +21,13 @@ const InstructorManageClass = () => {
   const [addingStudent, setAddingStudent] = useState(false);
   const [confirmDeleteModal, setConfirmDeleteModal] = useState(false);
   const [studentToDelete, setStudentToDelete] = useState(null);
+  const [courseInstanceId, setCourseInstanceId] = useState(() => {
+    try {
+      return location?.state?.courseInstanceId || sessionStorage.getItem('currentCourseInstanceId') || null;
+    } catch (e) {
+      return location?.state?.courseInstanceId || null;
+    }
+  });
 
   const bgColors = [
     'bg-blue-100 text-blue-800',
@@ -34,7 +41,7 @@ const InstructorManageClass = () => {
   useEffect(() => {
     const fetchStudents = async () => {
       if (!courseInstanceId) {
-        console.error('No courseInstanceId provided');
+        // If we don't have courseInstanceId yet, don't fetch. It will be set by navigation state or later.
         setLoading(false);
         return;
       }
@@ -59,6 +66,9 @@ const InstructorManageClass = () => {
         setStudents(mappedStudents);
 
         if (response.length > 0) {
+          // Persist the authoritative courseInstanceId returned by the API
+          try { sessionStorage.setItem('currentCourseInstanceId', String(response[0].courseInstanceId)); } catch (e) { /* ignore */ }
+          setCourseInstanceId(response[0].courseInstanceId);
           setCourseInfo({
             courseCode: response[0].courseCode,
             className: response[0].courseInstanceName

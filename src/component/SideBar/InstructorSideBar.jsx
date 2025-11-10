@@ -6,8 +6,9 @@ const InstructorSideBar = () => {
   const location = useLocation();
   const params = useParams();
 
-  // ✅ Lấy lại id từ state nếu URL không còn param
-  const courseInstanceId = params.id || location.state?.courseInstanceId;
+  // Try to get courseInstanceId from URL params, navigation state, or sessionStorage fallback
+  const storedId = typeof window !== 'undefined' ? sessionStorage.getItem('currentCourseInstanceId') : null;
+  const courseInstanceId = params?.id || location.state?.courseInstanceId || storedId || null;
 
   const menuItems = [
     {
