@@ -12,16 +12,16 @@ import {
   MessageSquare,
   Users,
   BarChart,
-  Clock, 
+  Clock,
   CheckCircle,
-   XCircle,
+  XCircle,
   UserCheck,
   FileText,
   Eye,
   Download,
   CalendarCheck,
   ShieldQuestion,
-  TrendingUp, 
+  TrendingUp,
   Trophy,
 } from "lucide-react";
 import RegradeRequestModal from "../../component/Assignment/RegradeRequestModal.jsx";
@@ -38,7 +38,6 @@ const formatDate = (dateString) => {
   return new Date(dateString).toLocaleDateString("vi-VN", options);
 };
 
-// === 2. TẠO COMPONENT HELPER ĐỂ HIỂN THỊ HUY HIỆU TRẠNG THÁI ===
 const RegradeStatusBadge = ({ status }) => {
   const statusStyles = {
     Pending: {
@@ -160,7 +159,6 @@ const ViewScorePage = () => {
   return (
     <div className="bg-gray-50 min-h-screen p-8">
       <div className="max-w-4xl mx-auto">
-        {/* Breadcrumbs */}
         <div className="mb-6 flex items-center text-sm text-gray-600">
           <Link to="/my-assignments" className="hover:underline">
             My Assignments
@@ -184,7 +182,6 @@ const ViewScorePage = () => {
             </p>
           </div>
           <div className="flex space-x-3">
-            {/* === 3. HIỂN THỊ CÓ ĐIỀU KIỆN: HUY HIỆU HOẶC NÚT BẤM === */}
             {scoreData.regradeStatus ? (
               <RegradeStatusBadge status={scoreData.regradeStatus} />
             ) : (
@@ -224,7 +221,7 @@ const ViewScorePage = () => {
             </div>
           </div>
         </div>
-         {scoreData.fileUrl && (
+        {scoreData.fileUrl && (
           <div className="mt-8">
             <h3 className="font-bold text-xl mb-4 text-gray-800 flex items-center">
               <FileText className="mr-2 text-gray-500" /> Submission Details
@@ -265,9 +262,10 @@ const ViewScorePage = () => {
             Score details
           </h3>
           <div className="bg-white p-6 rounded-lg shadow-md border space-y-4">
-            {/* Điểm từ giảng viên */}
-            <div className="flex items-center p-3 bg-indigo-50 rounded-lg">
-              <UserCheck className="w-6 h-6 mr-4 text-indigo-500 flex-shrink-0" />
+            <div className="flex items-center p-4 bg-indigo-50 rounded-lg">
+              <div className="p-3 bg-white rounded-full mr-4">
+                <UserCheck className="w-6 h-6 text-indigo-500" />
+              </div>
               <div>
                 <p className="font-semibold text-indigo-800">
                   Points from the instructor
@@ -277,9 +275,11 @@ const ViewScorePage = () => {
                 </p>
               </div>
             </div>
-            {/* Điểm từ Peer Review */}
-            <div className="flex items-center p-3 bg-teal-50 rounded-lg">
-              <Users className="w-6 h-6 mr-4 text-teal-500 flex-shrink-0" />
+
+            <div className="flex items-center p-4 bg-teal-50 rounded-lg">
+              <div className="p-3 bg-white rounded-full mr-4">
+                <Users className="w-6 h-6 text-teal-500" />
+              </div>
               <div>
                 <p className="font-semibold text-teal-800">
                   Average score from Peer Review
@@ -290,23 +290,31 @@ const ViewScorePage = () => {
               </div>
             </div>
 
-            {/* === 4. THÊM KHỐI MỚI: ĐIỂM CỦA LỚP === */}
-            <div className="flex items-center p-3 bg-gray-100 rounded-lg">
-              <BarChart className="w-6 h-6 mr-4 text-gray-500 flex-shrink-0" />
-              <div className="flex-grow grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+              {/* Card Điểm trung bình */}
+              <div className="p-4 bg-gradient-to-br from-blue-100 to-purple-100 rounded-lg flex items-center transition-transform hover:scale-105">
+                <div className="p-3 bg-white/60 rounded-full mr-4 shadow-inner">
+                  <TrendingUp className="w-6 h-6 text-purple-600" />
+                </div>
                 <div>
-                  <p className="font-semibold text-gray-800">
+                  <p className="font-semibold text-purple-900">
                     Class Average Score
                   </p>
-                  <p className="text-2xl font-bold text-gray-600">
+                  <p className="text-3xl font-bold text-purple-700">
                     {scoreData.classAverageScore.toFixed(2)}
                   </p>
                 </div>
+              </div>
+
+              <div className="p-4 bg-gradient-to-br from-yellow-100 to-orange-100 rounded-lg flex items-center transition-transform hover:scale-105">
+                <div className="p-3 bg-white/60 rounded-full mr-4 shadow-inner">
+                  <Trophy className="w-6 h-6 text-orange-500" />
+                </div>
                 <div>
-                  <p className="font-semibold text-gray-800">
+                  <p className="font-semibold text-orange-900">
                     Class Highest Score
                   </p>
-                  <p className="text-2xl font-bold text-gray-600">
+                  <p className="text-3xl font-bold text-orange-700">
                     {scoreData.classMaxScore.toFixed(2)}
                   </p>
                 </div>
@@ -330,9 +338,8 @@ const ViewScorePage = () => {
       <RegradeRequestModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        onSubmit={handleRegradeSubmit} // 👉 6. Pass the handler to the modal
-        assignmentTitle={assignmentTitle}
-        isSubmitting={isSubmitting} // 👉 7. Pass the submitting state
+        onSubmit={handleRegradeSubmit}
+        isSubmitting={isSubmitting}
       />
     </div>
   );
