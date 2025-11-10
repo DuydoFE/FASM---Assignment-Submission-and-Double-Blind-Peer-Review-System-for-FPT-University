@@ -16,6 +16,9 @@ import {
   CheckCircle,
    XCircle,
   UserCheck,
+  FileText,
+  Eye,
+  Download,
   CalendarCheck,
   ShieldQuestion,
 } from "lucide-react";
@@ -219,6 +222,41 @@ const ViewScorePage = () => {
             </div>
           </div>
         </div>
+         {scoreData.fileUrl && (
+          <div className="mt-8">
+            <h3 className="font-bold text-xl mb-4 text-gray-800 flex items-center">
+              <FileText className="mr-2 text-gray-500" /> Submission Details
+            </h3>
+            <div className="bg-white p-4 rounded-lg shadow-md border">
+              <div className="flex items-center text-sm">
+                <p className="font-semibold text-gray-700 mr-4 truncate flex-grow">
+                  {scoreData.fileName || "Submission File"}
+                </p>
+                <div className="ml-auto flex space-x-2 flex-shrink-0">
+                  <a
+                    href={scoreData.fileUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    title="Preview File"
+                    className="flex items-center px-3 py-1.5 border rounded-md font-semibold text-gray-700 hover:bg-gray-100 text-sm"
+                  >
+                    <Eye size={14} className="mr-1.5" />
+                    Preview
+                  </a>
+                  <a
+                    href={scoreData.fileUrl}
+                    download={scoreData.fileName}
+                    title="Download File"
+                    className="flex items-center px-3 py-1.5 border rounded-md font-semibold text-gray-700 hover:bg-gray-100 text-sm"
+                  >
+                    <Download size={14} className="mr-1.5" />
+                    Download
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         <div className="mt-8">
           <h3 className="font-bold text-xl mb-4 text-gray-800">
