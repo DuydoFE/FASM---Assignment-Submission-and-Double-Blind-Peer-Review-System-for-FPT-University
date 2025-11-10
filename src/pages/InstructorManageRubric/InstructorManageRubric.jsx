@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Eye, Pencil, Loader } from 'lucide-react';
-import { updateRubric, getRubricTemplatesByUserId, getRubricByUserId } from '../../service/rubricService';
+import { Search, Eye, Loader, Pencil } from 'lucide-react';
+import { getRubricTemplatesByUserId, getRubricByUserId } from '../../service/rubricService';
 import { toast } from 'react-toastify';
 import { getCurrentAccount } from '../../utils/accountUtils';
 
@@ -14,9 +14,6 @@ const InstructorManageRubric = () => {
     const [templates, setTemplates] = useState([]);
     const [loading, setLoading] = useState(true);
     const [templatesLoading, setTemplatesLoading] = useState(true);
-    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-    const [editingRubric, setEditingRubric] = useState(null);
-    const [editTitle, setEditTitle] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 5;
 
@@ -82,56 +79,6 @@ const InstructorManageRubric = () => {
     const filteredRubrics = rubrics.filter(rubric =>
         rubric.title.toLowerCase().includes(searchQuery.toLowerCase())
     );
-
-    const handleEditClick = (rubric) => {
-        setEditingRubric(rubric);
-        setEditTitle(rubric.title);
-        setIsEditModalOpen(true);
-    };
-
-    const handleSaveEdit = async () => {
-        const trimmedNewTitle = editTitle.trim();
-
-        if (!trimmedNewTitle) {
-            toast.error('Title cannot be empty');
-            return;
-        }
-
-        if (!editingRubric?.rubricId) {
-            toast.error('Could not identify rubric');
-            return;
-        }
-
-        if (trimmedNewTitle === editingRubric.title.trim()) {
-            toast.info('No changes made to the title');
-            setIsEditModalOpen(false);
-            setEditingRubric(null);
-            setEditTitle('');
-            return;
-        }
-
-        try {
-            await updateRubric(editingRubric.rubricId, { title: trimmedNewTitle });
-
-            setRubrics(rubrics.map(r =>
-                r.rubricId === editingRubric.rubricId ? { ...r, title: editTitle.trim() } : r
-            ));
-
-            toast.success('Rubric updated successfully');
-            setIsEditModalOpen(false);
-            setEditingRubric(null);
-            setEditTitle('');
-        } catch (error) {
-            console.error('Failed to update rubric:', error);
-            toast.error(error.response?.data?.message || 'Failed to update rubric');
-        }
-    };
-
-    const handleCancelEdit = () => {
-        setIsEditModalOpen(false);
-        setEditingRubric(null);
-        setEditTitle('');
-    };
 
     const handleViewCriteriaTemplateClick = (e, template) => {
         e.stopPropagation();
@@ -366,19 +313,12 @@ const InstructorManageRubric = () => {
                                     <div className="col-span-1 flex justify-center gap-2">
                                         <button
                                             className="p-2 rounded-lg hover:bg-gray-100 text-gray-600 transition"
-                                            title="View"
+                                            title="Edit Rubric and Criteria"
                                             onClick={() =>
                                                 navigate(`/instructor/manage-criteria/${rubric.rubricId}`, {
                                                     state: { from: "/instructor/manage-rubric" },
                                                 })
                                             }
-                                        >
-                                            <Eye className="w-5 h-5" />
-                                        </button>
-                                        <button
-                                            className="p-2 rounded-lg hover:bg-gray-100 text-gray-600 transition"
-                                            title="Edit"
-                                            onClick={() => handleEditClick(rubric)}
                                         >
                                             <Pencil className="w-5 h-5" />
                                         </button>
@@ -388,47 +328,6 @@ const InstructorManageRubric = () => {
                         )}
                     </div>
                 </div>
-
-                {/* Edit Modal */}
-                {isEditModalOpen && (
-                    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                        <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
-                            <div className="p-6">
-                                <h3 className="text-xl font-bold text-gray-900 mb-4">Edit Rubric</h3>
-
-                                <div className="mb-6">
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        Rubric Name
-                                    </label>
-                                    <input
-                                        type="text"
-                                        value={editTitle}
-                                        onChange={(e) => setEditTitle(e.target.value)}
-                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
-                                        placeholder="Enter rubric name..."
-                                        autoFocus
-                                    />
-                                </div>
-
-                                <div className="flex gap-3 justify-end">
-                                    <button
-                                        onClick={handleCancelEdit}
-                                        className="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors font-medium"
-                                    >
-                                        Cancel
-                                    </button>
-                                    <button
-                                        onClick={handleSaveEdit}
-                                        disabled={!editTitle.trim()}
-                                        className="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-                                    >
-                                        Save Changes
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                )}
             </div>
         </div>
     );
