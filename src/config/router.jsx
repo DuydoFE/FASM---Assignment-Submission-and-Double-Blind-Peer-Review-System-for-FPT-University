@@ -149,6 +149,10 @@ export const router = createBrowserRouter([
         path: "regrade-request",
         element: <InstructorRegradeRequest />,
       },
+      {
+        path: "grading-detail/:submissionId",
+        element: <InstructorGradingDetail />,
+      },
     ],
   },
   {
@@ -176,7 +180,7 @@ export const router = createBrowserRouter([
         element: <InstructorManageCriteria />,
       },
       {
-        path: "manage-criteria-template/:templateId?", 
+        path: "manage-criteria-template/:templateId?",
         element: <InstructorManageCriteriaTemplate />,
       },
       {
@@ -190,10 +194,6 @@ export const router = createBrowserRouter([
       {
         path: "manage-grading",
         element: <InstructorManageGrading />,
-      },
-      {
-        path: "grading-detail/:submissionId",
-        element: <InstructorGradingDetail />,
       },
       {
         path: "publish-mark",
