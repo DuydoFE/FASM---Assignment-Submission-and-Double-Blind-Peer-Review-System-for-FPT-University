@@ -21,6 +21,8 @@ import {
   Download,
   CalendarCheck,
   ShieldQuestion,
+  TrendingUp, 
+  Trophy,
 } from "lucide-react";
 import RegradeRequestModal from "../../component/Assignment/RegradeRequestModal.jsx";
 
