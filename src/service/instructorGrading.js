@@ -7,7 +7,8 @@ export const publishGrades = async (assignmentId) => {
 
     try {
         const response = await api.post("/instructor/InstructorSubmission/publish-grades", {
-            assignmentId
+            assignmentId,
+            forcePublish: false
         });
         return response.data;
     } catch (error) {
@@ -15,6 +16,7 @@ export const publishGrades = async (assignmentId) => {
         throw error;
     }
 };
+
 
 export const gradeSubmission = async ({ 
     submissionId, 
