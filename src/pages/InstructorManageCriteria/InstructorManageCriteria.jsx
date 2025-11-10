@@ -2,9 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { Pencil, Trash2, Plus, Loader, ArrowLeft } from 'lucide-react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getCriteriaByRubricId, deleteCriterion, createCriterion, updateCriterion } from '../../service/criteriaService';
+import { updateRubric } from '../../service/rubricService';
 import AddCriterionModal from '../../component/Criteria/AddCriterionModal';
 import EditCriterionModal from '../../component/Criteria/EditCriterionModal';
 import DeleteCriterionModal from '../../component/Criteria/DeleteCriterionModal';
+import EditRubricModal from '../../component/Rubric/EditRubricModal';
 import { toast } from 'react-toastify';
 
 function InstructorManageCriteria() {
@@ -21,6 +23,8 @@ function InstructorManageCriteria() {
     const [submitting, setSubmitting] = useState(false);
     const [showEditModal, setShowEditModal] = useState(false);
     const [editingCriterion, setEditingCriterion] = useState(null);
+    const [showEditRubricModal, setShowEditRubricModal] = useState(false);
+    const [updatingRubric, setUpdatingRubric] = useState(false);
 
     useEffect(() => {
         const fetchCriteria = async () => {
@@ -60,6 +64,29 @@ function InstructorManageCriteria() {
 
     const handleBack = () => {
         navigate(-1);
+    };
+
+    const handleEditRubric = () => {
+        // Open edit rubric modal
+        setShowEditRubricModal(true);
+    };
+
+    const handleUpdateRubric = async (rubricData) => {
+        try {
+            setUpdatingRubric(true);
+            await updateRubric(rubricData.rubricId, { title: rubricData.title });
+
+            // Update local state
+            setRubricTitle(rubricData.title);
+
+            toast.success('Rubric updated successfully');
+            setShowEditRubricModal(false);
+        } catch (error) {
+            console.error('Failed to update rubric:', error);
+            toast.error(error.response?.data?.message || 'Failed to update rubric');
+        } finally {
+            setUpdatingRubric(false);
+        }
     };
 
     const handleDeleteClick = (criterionId, criterionTitle) => {
@@ -164,27 +191,40 @@ function InstructorManageCriteria() {
         <div className="p-8">
             <div className="max-w-6xl mx-auto">
                 
-               
-                {/* Back Button */}
-                <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center gap-2 text-sm text-gray-600">
-                        <span>Rubrics</span>
-                        <span>&gt;</span>
-                        <span className="font-semibold text-gray-900">{rubricTitle}</span>
-                    </div>
-
+                {/* Header Section */}
+                <div className="mb-6">
                     <button
                         onClick={handleBack}
-                        className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors font-medium"
+                        className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors font-medium mb-4"
                         type="button"
                     >
                         <ArrowLeft size={20} />
-                        <span>Back</span>
+                        <span>Back to Rubrics</span>
                     </button>
+                    
+                    <div className="bg-gradient-to-r from-indigo-50 to-blue-50 border border-indigo-200 rounded-lg p-6 shadow-sm">
+                        <div className="flex items-center justify-between">
+                            <div className="flex-1">
+                                <div className="flex items-center gap-2 text-indigo-600 text-sm mb-2 font-medium">
+                                    <span>Rubric Management</span>
+                                    <span>/</span>
+                                    <span>Criteria</span>
+                                </div>
+                                <h1 className="text-3xl font-bold mb-2 text-gray-900">{rubricTitle}</h1>
+                                <p className="text-gray-600">Manage evaluation criteria for this rubric</p>
+                            </div>
+                            <button
+                                onClick={handleEditRubric}
+                                className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2.5 rounded-lg hover:bg-indigo-700 transition-colors font-medium shadow-sm"
+                            >
+                                <Pencil size={18} />
+                                <span>Edit Rubric</span>
+                            </button>
+                        </div>
+                    </div>
                 </div>
 
-                
-                 {/* Course and Class Information Card */}
+                {/* Course and Class Information Card */}
                 {(courseName || className) && (
                     <div className="bg-gradient-to-r from-indigo-50 to-blue-50 border border-indigo-200 rounded-lg p-4 mb-6">
                         <div className="flex items-center gap-6">
@@ -328,6 +368,13 @@ function InstructorManageCriteria() {
                 onConfirm={handleDeleteConfirm}
                 criterionTitle={deleteConfirm.criterionTitle}
                 isDeleting={deleting}
+            />
+            <EditRubricModal
+                isOpen={showEditRubricModal}
+                onClose={() => setShowEditRubricModal(false)}
+                onSubmit={handleUpdateRubric}
+                rubric={{ rubricId, title: rubricTitle }}
+                isSubmitting={updatingRubric}
             />
         </div>
     );
