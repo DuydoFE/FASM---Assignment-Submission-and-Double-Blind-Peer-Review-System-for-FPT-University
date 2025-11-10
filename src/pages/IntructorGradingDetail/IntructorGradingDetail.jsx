@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Download, Eye, Star, ChevronDown, Sparkles, Loader2 } from 'lucide-react';
+import { ArrowLeft, Loader2 } from 'lucide-react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { submissionService } from '../../service/submissionService';
 import { getPeerReviewsBySubmissionId } from '../../service/instructorSubmission';
 import { gradeSubmission } from '../../service/instructorGrading';
 import { getCurrentAccount } from '../../utils/accountUtils';
+import { getCriteriaByAssignmentId } from '../../service/criteriaService';
+import SubmissionLeftColumn from '../../component/InstructorGrading/SubmissionLeftColumn';
+import GradingRightColumn from '../../component/InstructorGrading/GradingRightColumn';
 
 const InstructorGradingDetail = () => {
     const { submissionId } = useParams();
@@ -13,42 +16,14 @@ const InstructorGradingDetail = () => {
     const location = useLocation();
     const currentUser = getCurrentAccount();
 
-    const [criteriaScores, setCriteriaScores] = useState({
-        wireframe: {
-            score: 0,
-            feedback: '',
-            weight: 40,
-            name: 'Wireframe Design',
-            icon: '📱',
-            description: 'Detail and accuracy of the wireframe',
-            color: 'bg-blue-50 border-blue-200'
-        },
-        prototype: {
-            score: 0,
-            feedback: '',
-            weight: 30,
-            name: 'Interactive Prototype',
-            icon: '⚡',
-            description: 'Level of interaction and screen transitions',
-            color: 'bg-amber-50 border-amber-200'
-        },
-        uxReport: {
-            score: 0,
-            feedback: '',
-            weight: 30,
-            name: 'UX Analysis Report',
-            icon: '📊',
-            description: 'Depth and quality of analysis',
-            color: 'bg-green-50 border-green-200'
-        }
-    });
-
+    const [criteriaList, setCriteriaList] = useState([]);
     const [showAllReviews, setShowAllReviews] = useState(false);
     const [submissionDetails, setSubmissionDetails] = useState(null);
     const [peerReviews, setPeerReviews] = useState([]);
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState(null);
+    const [generalFeedback, setGeneralFeedback] = useState('');
 
     useEffect(() => {
         if (submissionId) {
@@ -60,28 +35,80 @@ const InstructorGradingDetail = () => {
         setLoading(true);
         setError(null);
         try {
-            const [detailsResponse, reviewsResponse] = await Promise.all([
-                submissionService.getSubmissionDetails(submissionId),
-                getPeerReviewsBySubmissionId(submissionId)
-            ]);
+            const detailsResponse = await submissionService.getSubmissionDetails(submissionId);
 
-            if (detailsResponse?.data) {
-                const details = detailsResponse.data;
-                setSubmissionDetails(details);
+            if (!detailsResponse?.data) {
+                throw new Error('Submission details not found');
+            }
 
-                // Load existing criteria scores if available
-                if (details.criteriaGrades) {
-                    setCriteriaScores(prev => ({
-                        wireframe: { ...prev.wireframe, ...details.criteriaGrades.wireframe },
-                        prototype: { ...prev.prototype, ...details.criteriaGrades.prototype },
-                        uxReport: { ...prev.uxReport, ...details.criteriaGrades.uxReport }
-                    }));
+            const details = detailsResponse.data;
+            setSubmissionDetails(details);
+            const reviewsPromise = getPeerReviewsBySubmissionId(submissionId);
+            const criteriaResponse = await getCriteriaByAssignmentId(details.assignmentId);
+            let criteriaArray = [];
+            if (Array.isArray(criteriaResponse)) {
+                criteriaArray = criteriaResponse;
+            } else if (criteriaResponse && Array.isArray(criteriaResponse.data)) {
+                criteriaArray = criteriaResponse.data;
+            } else if (criteriaResponse && Array.isArray(criteriaResponse.data?.data)) {
+                criteriaArray = criteriaResponse.data.data;
+            } else if (criteriaResponse?.data?.length) {
+                criteriaArray = criteriaResponse.data;
+            } else if (criteriaResponse?.length) {
+                criteriaArray = criteriaResponse;
+            } else {
+                criteriaArray = criteriaResponse || [];
+            }
+
+            const formatted = (criteriaArray || []).map((c, index) => ({
+                criteriaId: c.criteriaId ?? c.id ?? index,
+                name: c.title ?? c.criteriaTitle ?? 'Untitled',
+                description: c.description ?? '',
+                weight: typeof c.weight === 'number' ? c.weight : parseFloat(c.weight) || 0,
+                score: 0,
+                feedback: '',
+                order: index + 1
+            }));
+
+            if (details.criteriaGrades) {
+                if (Array.isArray(details.criteriaGrades)) {
+                    details.criteriaGrades.forEach(saved => {
+                        const idx = formatted.findIndex(f => f.criteriaId === (saved.criteriaId ?? saved.id));
+                        if (idx >= 0) {
+                            formatted[idx].score = typeof saved.score === 'number' ? (saved.score / 10) : parseFloat(saved.score) / 10 || formatted[idx].score;
+                            formatted[idx].feedback = saved.feedback ?? formatted[idx].feedback;
+                        }
+                    });
+                } else if (typeof details.criteriaGrades === 'object') {
+                    Object.values(details.criteriaGrades).forEach(saved => {
+                        const savedId = saved.criteriaId ?? saved.id ?? null;
+                        if (savedId) {
+                            const idx = formatted.findIndex(f => f.criteriaId === savedId);
+                            if (idx >= 0) {
+                                formatted[idx].score = typeof saved.score === 'number' ? (saved.score / 10) : parseFloat(saved.score) / 10 || formatted[idx].score;
+                                formatted[idx].feedback = saved.feedback ?? formatted[idx].feedback;
+                            }
+                        } else if (saved.name) {
+                            const idx = formatted.findIndex(f => f.name === saved.name);
+                            if (idx >= 0) {
+                                formatted[idx].score = typeof saved.score === 'number' ? (saved.score / 10) : parseFloat(saved.score) / 10 || formatted[idx].score;
+                                formatted[idx].feedback = saved.feedback ?? formatted[idx].feedback;
+                            }
+                        }
+                    });
                 }
             }
 
-            if (reviewsResponse) {
-                setPeerReviews(reviewsResponse);
+            setCriteriaList(formatted);
+
+            const reviews = await reviewsPromise;
+            if (reviews) setPeerReviews(reviews);
+
+            // Load general feedback if exists
+            if (details.feedback) {
+                setGeneralFeedback(details.feedback);
             }
+
         } catch (err) {
             console.error('Error fetching data:', err);
             setError('Failed to load submission details. Please try again.');
@@ -91,19 +118,20 @@ const InstructorGradingDetail = () => {
     };
 
     const calculateTotalScore = () => {
-        const total = Object.values(criteriaScores).reduce((acc, criteria) => {
-            return acc + (criteria.score * criteria.weight / 100);
+        const total = criteriaList.reduce((acc, c) => {
+            const s = Number(c.score) || 0;
+            const w = Number(c.weight) || 0;
+            return acc + (s * w / 100);
         }, 0);
         return total.toFixed(2);
     };
 
-    const updateCriteriaScore = (criteriaKey, field, value) => {
-        setCriteriaScores(prev => ({
-            ...prev,
-            [criteriaKey]: {
-                ...prev[criteriaKey],
-                [field]: value
+    const updateCriteriaScore = (criteriaId, field, value) => {
+        setCriteriaList(prev => prev.map(c => {
+            if (c.criteriaId === criteriaId) {
+                return { ...c, [field]: value };
             }
+            return c;
         }));
     };
 
@@ -119,7 +147,7 @@ const InstructorGradingDetail = () => {
             return;
         }
 
-        const hasEmptyFeedback = Object.values(criteriaScores).some(c => !c.feedback.trim());
+        const hasEmptyFeedback = criteriaList.some(c => !String(c.feedback || '').trim());
         if (hasEmptyFeedback) {
             toast.error('Please enter feedback for all criteria');
             return;
@@ -129,13 +157,19 @@ const InstructorGradingDetail = () => {
 
         try {
             const totalScore = calculateTotalScore();
+            
+            // Map to match API structure: criteriaFeedbacks
+            const criteriaFeedbacksPayload = criteriaList.map(c => ({
+                criteriaId: c.criteriaId,
+                score: Math.round((Number(c.score) || 0) * 10), // Convert to 0-100 scale
+                feedback: c.feedback
+            }));
 
             await gradeSubmission({
-                submissionId: parseInt(submissionId),
+                submissionId: parseInt(submissionId, 10),
                 instructorId: currentUser.id,
-                instructorScore: Math.round(totalScore * 10),
-                criteriaGrades: criteriaScores,
-                feedback: `Total Score: ${totalScore}/10`
+                feedback: generalFeedback || `Total Score: ${totalScore}/10`,
+                criteriaFeedbacks: criteriaFeedbacksPayload
             });
 
             toast.success('Grading submitted successfully!');
@@ -148,7 +182,7 @@ const InstructorGradingDetail = () => {
                 navigate(returnPath, {
                     state: location.state
                 });
-            }, 1500);
+            }, 800);
 
         } catch (error) {
             console.error('Error submitting grade:', error);
@@ -171,7 +205,6 @@ const InstructorGradingDetail = () => {
     const formatDateTime = (dateString) => {
         if (!dateString) return '--';
         const date = new Date(dateString);
-        // Using common English locale format
         const dateStr = date.toLocaleDateString('en-US');
         const timeStr = date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
         return `${dateStr} - ${timeStr}`;
@@ -195,7 +228,6 @@ const InstructorGradingDetail = () => {
         }
     };
 
-    const visibleReviews = showAllReviews ? peerReviews : peerReviews.slice(0, 3);
     const submitButtonText = submissionDetails?.instructorScore !== null ? 'Update Grade' : 'Submit Grade';
 
     if (loading) {
@@ -239,13 +271,11 @@ const InstructorGradingDetail = () => {
         );
     }
 
-    const statusBadge = getStatusBadge(submissionDetails.status);
     const assignment = submissionDetails.assignment || {};
-    const user = submissionDetails.user || {};
 
     return (
         <div className="min-h-screen bg-gray-50">
-            {/* Header - Fixed and Translated */}
+            {/* Header */}
             <div className="bg-white border-b border-gray-200 px-4 md:px-8 py-4 sticky top-0 z-10">
                 <div className="max-w-7xl mx-auto flex items-center gap-4">
                     <button
@@ -265,265 +295,28 @@ const InstructorGradingDetail = () => {
             <div className="max-w-7xl mx-auto p-4 md:p-8">
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     {/* Left Column */}
-                    <div className="space-y-6">
-                        {/* Student Info */}
-                        <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
-                            <div className="flex items-center mb-4">
-                                <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center mr-3">
-                                    👤
-                                </div>
-                                <h2 className="font-semibold text-gray-900">Student Information</h2>
-                            </div>
-                            <div className="space-y-2 text-sm">
-                                <p><span className="text-gray-600">Full Name:</span> <span className="font-medium">{submissionDetails.studentName || 'N/A'}</span></p>
-                                <p><span className="text-gray-600">Student ID:</span> <span className="font-medium">{submissionDetails.studentCode || 'N/A'}</span></p>
-                                <p><span className="text-gray-600">Course:</span> <span className="font-medium">{submissionDetails.courseName || 'N/A'}</span></p>
-                                <p><span className="text-gray-600">Class:</span> <span className="font-medium">{submissionDetails.className || 'N/A'}</span></p>
-                            </div>
-                        </div>
-
-                        {/* Submission Status */}
-                        <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
-                            <div className="flex items-center mb-4">
-                                <svg className="w-5 h-5 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                                </svg>
-                                <h2 className="font-semibold text-gray-900">Submission Status</h2>
-                            </div>
-                            <div className="flex gap-2 mb-4">
-                                <span className={`px-3 py-1 rounded-full text-sm font-medium ${statusBadge.class}`}>
-                                    {statusBadge.text}
-                                </span>
-                            </div>
-                            <div className="space-y-2 text-sm text-gray-600">
-                                <p>Submitted At: {formatDateTime(submissionDetails.submittedAt)}</p>
-                                <p>Deadline: {formatDateTime(assignment.deadline)}</p>
-                                {submissionDetails.gradedAt && (
-                                    <p>Graded At: {formatDateTime(submissionDetails.gradedAt)}</p>
-                                )}
-                            </div>
-                        </div>
-
-                        {/* Submitted Files */}
-                        <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
-                            <div className="flex items-center mb-4">
-                                <svg className="w-5 h-5 text-gray-700 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clipRule="evenodd" />
-                                </svg>
-                                <h2 className="font-semibold text-gray-900">Submitted File</h2>
-                            </div>
-                            {submissionDetails.fileUrl ? (
-                                <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200">
-                                    <div className="flex items-center">
-                                        <div className="w-10 h-10 bg-blue-100 rounded flex items-center justify-center mr-3">
-                                            📄
-                                        </div>
-                                        <div>
-                                            <p className="font-medium text-sm text-gray-900">{submissionDetails.fileName || getFileNameFromUrl(submissionDetails.fileUrl)}</p>
-                                            <p className="text-xs text-gray-500">2.4 MB • PDF File</p>
-                                        </div>
-                                    </div>
-                                    <div className="flex gap-2">
-                                        <a
-                                            href={submissionDetails.fileUrl}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="p-2 hover:bg-gray-200 rounded"
-                                            aria-label="View file"
-                                        >
-                                            <Eye className="w-4 h-4 text-gray-600" />
-                                        </a>
-                                        <a
-                                            href={submissionDetails.fileUrl}
-                                            download
-                                            className="p-2 hover:bg-blue-100 rounded"
-                                            aria-label="Download file"
-                                        >
-                                            <Download className="w-4 h-4 text-blue-600" />
-                                        </a>
-                                    </div>
-                                </div>
-                            ) : (
-                                <p className="text-sm text-gray-500">No file submitted</p>
-                            )}
-                        </div>
-
-                        {/* Peer Reviews */}
-                        {peerReviews.length > 0 && (
-                            <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
-                                <div className="flex items-center justify-between mb-4">
-                                    <div className="flex items-center gap-2">
-                                        <svg className="w-5 h-5 text-gray-600" fill="currentColor" viewBox="0 0 20 20">
-                                            <path d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" />
-                                        </svg>
-                                        <h2 className="font-semibold text-gray-900">Peer Reviews</h2>
-                                    </div>
-                                </div>
-                                <p className="text-sm text-gray-500 mb-3">
-                                    Average Score: <span className="font-semibold text-blue-600">{(calculateAveragePeerScore() / 10).toFixed(1)}/10</span>
-                                </p>
-
-                                <div className="space-y-3">
-                                    {visibleReviews.map((review, index) => {
-                                        const score10 = review.overallScore ? (review.overallScore / 10).toFixed(1) : "0.0";
-                                        return (
-                                            <div key={review.reviewId || index} className="p-3 border border-gray-200 rounded-lg">
-                                                <div className="flex items-start justify-between mb-2">
-                                                    <div className="flex items-center gap-2">
-                                                        <div className="w-8 h-8 bg-gradient-to-br from-purple-400 to-pink-400 rounded-full flex items-center justify-center text-white font-semibold text-xs">
-                                                            {review.reviewerName ? review.reviewerName.charAt(0).toUpperCase() : "U"}
-                                                        </div>
-                                                        <div>
-                                                            <p className="font-medium text-gray-800 text-sm">
-                                                                {review.reviewerName || "Anonymous"}
-                                                            </p>
-                                                            <p className="text-xs text-gray-500">{formatDateTime(review.reviewedAt)}</p>
-                                                        </div>
-                                                    </div>
-                                                    <div className="flex items-center gap-1">
-                                                        <Star className="w-4 h-4 text-yellow-400 fill-current" />
-                                                        <span className="text-sm font-semibold text-gray-800">{score10}</span>
-                                                    </div>
-                                                </div>
-                                                <p className="text-xs text-gray-600">{review.generalFeedback || "No feedback provided"}</p>
-                                            </div>
-                                        );
-                                    })}
-                                </div>
-
-                                {!showAllReviews && peerReviews.length > 3 && (
-                                    <button
-                                        onClick={() => setShowAllReviews(true)}
-                                        className="w-full mt-3 py-2 text-sm text-blue-600 hover:bg-blue-50 rounded-lg transition-colors flex items-center justify-center gap-1"
-                                    >
-                                        Show More ({peerReviews.length - 3} reviews)
-                                        <ChevronDown className="w-4 h-4" />
-                                    </button>
-                                )}
-                            </div>
-                        )}
-                    </div>
+                    <SubmissionLeftColumn
+                        submissionDetails={submissionDetails}
+                        peerReviews={peerReviews}
+                        showAllReviews={showAllReviews}
+                        setShowAllReviews={setShowAllReviews}
+                        formatDateTime={formatDateTime}
+                        getFileNameFromUrl={getFileNameFromUrl}
+                        getStatusBadge={getStatusBadge}
+                        calculateAveragePeerScore={calculateAveragePeerScore}
+                    />
 
                     {/* Right Column - Grading */}
-                    <div className="lg:col-span-2 space-y-6">
-                        {/* Grading Criteria */}
-                        <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
-                            <div className="flex items-center mb-6">
-                                <span className="text-xl mr-2">📋</span>
-                                <h2 className="font-semibold text-gray-900 text-lg">Grading Criteria</h2>
-                            </div>
-
-                            <div className="space-y-4">
-                                {Object.entries(criteriaScores).map(([key, criteria]) => (
-                                    <div key={key} className={`border-2 rounded-lg p-4 ${criteria.color}`}>
-                                        <div className="flex items-start justify-between mb-3">
-                                            <div className="flex items-center">
-                                                <span className="text-2xl mr-3">{criteria.icon}</span>
-                                                <div>
-                                                    <h3 className="font-semibold text-gray-900">{criteria.name}</h3>
-                                                    <p className="text-sm text-gray-600">{criteria.description}</p>
-                                                </div>
-                                            </div>
-                                            <span className="bg-white px-3 py-1 rounded-full text-sm font-medium text-gray-700">
-                                                {criteria.weight}%
-                                            </span>
-                                        </div>
-
-                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                            <div>
-                                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                    Score
-                                                </label>
-                                                <input
-                                                    type="number"
-                                                    min="0"
-                                                    max="10"
-                                                    step="0.1"
-                                                    value={criteria.score}
-                                                    onChange={(e) => {
-                                                        let value = parseFloat(e.target.value);
-                                                        if (isNaN(value)) value = 0;
-                                                        value = Math.round(value * 10) / 10;
-                                                        updateCriteriaScore(key, 'score', Math.min(10, Math.max(0, value)));
-                                                    }}
-                                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                                />
-                                            </div>
-
-                                            <div className="md:col-span-2">
-                                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                    Feedback
-                                                </label>
-                                                <textarea
-                                                    value={criteria.feedback}
-                                                    onChange={(e) => updateCriteriaScore(key, 'feedback', e.target.value)}
-                                                    rows="3"
-                                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
-                                                    placeholder="Enter detailed feedback..."
-                                                />
-                                            </div>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-
-                        {/* Auto Calculation */}
-                        <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
-                            <div className="flex items-center mb-4">
-                                <span className="text-xl mr-2">🧮</span>
-                                <h2 className="font-semibold text-gray-900">Auto Score Calculation</h2>
-                            </div>
-
-                            <div className="space-y-2 text-sm mb-4">
-                                {Object.entries(criteriaScores).map(([key, criteria]) => (
-                                    <div key={key} className="flex justify-between text-gray-700">
-                                        <span>{criteria.name} ({criteria.weight}%):</span>
-                                        <span className="font-medium">
-                                            {criteria.score} × {(criteria.weight / 100).toFixed(2)} = {(criteria.score * criteria.weight / 100).toFixed(2)}
-                                        </span>
-                                    </div>
-                                ))}
-                            </div>
-
-                            <div className="flex items-center justify-between pt-4 border-t-2 border-gray-200">
-                                <span className="text-lg font-semibold text-gray-900">Total Score:</span>
-                                <div className="flex items-center gap-4">
-                                    <span className="text-3xl font-bold text-green-600">
-                                        {calculateTotalScore()}
-                                    </span>
-                                    <span className="text-gray-500">/ 10</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Action Button */}
-                        <div className="flex gap-3">
-                            <button
-                                onClick={handleBackClick}
-                                className="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors font-medium"
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                onClick={handleSubmitGrade}
-                                disabled={submitting}
-                                className="flex-1 bg-orange-500 hover:bg-orange-600 text-white font-semibold py-3 px-6 rounded-lg transition-colors flex items-center justify-center gap-2 disabled:bg-gray-300 disabled:cursor-not-allowed"
-                            >
-                                {submitting ? (
-                                    <>
-                                        <Loader2 className="w-5 h-5 animate-spin" />
-                                        <span>Submitting...</span>
-                                    </>
-                                ) : (
-                                    <>
-                                        <span>📋</span>
-                                        <span>{submitButtonText}</span>
-                                    </>
-                                )}
-                            </button>
-                        </div>
-                    </div>
+                    <GradingRightColumn
+                        criteriaList={criteriaList}
+                        updateCriteriaScore={updateCriteriaScore}
+                        calculateTotalScore={calculateTotalScore}
+                        handleSubmitGrade={handleSubmitGrade}
+                        submitting={submitting}
+                        submitButtonText={submitButtonText}
+                        generalFeedback={generalFeedback}
+                        setGeneralFeedback={setGeneralFeedback}
+                    />
                 </div>
             </div>
         </div>
