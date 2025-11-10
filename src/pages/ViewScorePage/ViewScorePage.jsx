@@ -82,7 +82,9 @@ const ViewScorePage = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const currentUser = useSelector(selectUser);
-
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+  const [requestDetails, setRequestDetails] = useState(null);
+  const [isFetchingDetails, setIsFetchingDetails] = useState(false);
   const {
     data: responseData,
     isLoading,
@@ -96,19 +98,13 @@ const ViewScorePage = () => {
   const scoreData = responseData?.data;
 
   const handleRegradeSubmit = async ({ reason }) => {
-    console.log("--- Step 1: handleRegradeSubmit function was called. ---");
-
-    console.log("Step 2.1: Checking scoreData:", scoreData);
-    console.log("Step 2.2: Checking currentUser:", currentUser);
-
+    // Kiểm tra dữ liệu đầu vào
     if (!scoreData?.submissionId) {
       toast.error("Submission ID not found. Cannot submit request.");
-      console.error("ERROR: scoreData.submissionId is missing!", scoreData);
       return;
     }
     if (!currentUser?.userId) {
       toast.error("User information not found. Please log in again.");
-      console.error("ERROR: currentUser.userId is missing!", currentUser);
       return;
     }
 
@@ -119,24 +115,43 @@ const ViewScorePage = () => {
         reason: reason,
         requestedByUserId: currentUser.userId,
       };
-
-      console.log("Step 3: Payload is ready to be sent:", payload);
-
-      console.log(
-        "Step 4: Attempting to call reviewService.submitRegradeRequest..."
-      );
+      
+      // Gọi API một lần duy nhất ở đây
       await reviewService.submitRegradeRequest(payload);
-
-      console.log("Step 5: API call successful!");
+      
+      // Xử lý sau khi thành công
       toast.success("Your regrade request has been sent successfully!");
       setIsModalOpen(false);
+      refetch(); // Tải lại dữ liệu để cập nhật trạng thái trên giao diện
+
     } catch (error) {
-      console.error("Step 6: API call failed!", error);
+      console.error("API call failed!", error);
       toast.error("Failed to send request. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
   };
+
+const handleViewRequest = async () => {
+    // Không cần kiểm tra regradeRequestId nữa
+    console.log("Fetching details for hardcoded Request ID: 5"); // Thêm log để bạn biết đang dùng ID tạm
+    
+    setIsFetchingDetails(true);
+    setRequestDetails(null); // Xóa dữ liệu cũ trước khi gọi API mới
+    setIsViewModalOpen(true);
+    
+    try {
+        // Truyền thẳng số 5 vào hàm gọi API
+        const response = await reviewService.getRegradeRequestDetails(5); 
+        setRequestDetails(response.data);
+    } catch (error) {
+        toast.error("Failed to load request details.");
+        setIsViewModalOpen(false); // Đóng modal nếu có lỗi
+    } finally {
+        setIsFetchingDetails(false);
+    }
+}
+
   if (isLoading) {
     return (
       <div className="p-8 text-center font-semibold text-lg">
@@ -183,7 +198,16 @@ const ViewScorePage = () => {
           </div>
           <div className="flex space-x-3">
             {scoreData.regradeStatus ? (
-              <RegradeStatusBadge status={scoreData.regradeStatus} />
+              <div className="flex items-center space-x-3">
+                <RegradeStatusBadge status={scoreData.regradeStatus} />
+                <button
+                    onClick={handleViewRequest}
+                    className="flex items-center p-2 border rounded-md font-semibold text-gray-700 hover:bg-gray-100"
+                    title="View Request Details"
+                >
+                    <Eye size={16} />
+                </button>
+              </div>
             ) : (
               <button
                 onClick={() => setIsModalOpen(true)}
@@ -340,6 +364,11 @@ const ViewScorePage = () => {
         onClose={() => setIsModalOpen(false)}
         onSubmit={handleRegradeSubmit}
         isSubmitting={isSubmitting}
+      />
+     <ViewRequestModal 
+        isOpen={isViewModalOpen}
+        onClose={() => setIsViewModalOpen(false)}
+        details={requestDetails}
       />
     </div>
   );
