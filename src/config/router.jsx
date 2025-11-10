@@ -184,7 +184,7 @@ export const router = createBrowserRouter([
         element: <InstructorManageSubmission />,
       },
       {
-        path: "submission-detail",
+        path: "submission-detail/:submissionId",
         element: <InstructorSubmissionDetail />,
       },
       {
@@ -192,7 +192,7 @@ export const router = createBrowserRouter([
         element: <InstructorManageGrading />,
       },
       {
-        path: "grading-detail",
+        path: "grading-detail/:submissionId",
         element: <InstructorGradingDetail />,
       },
       {

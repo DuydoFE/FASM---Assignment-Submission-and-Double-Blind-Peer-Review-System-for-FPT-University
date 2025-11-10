@@ -12,3 +12,20 @@ export const updateEnrollKey = async (courseInstanceId, newKey, userId) => {
     throw error;
   }
 };
+
+export const getClassesByUser = async (userId, courseId) => {
+  if (!userId || !courseId) {
+    throw new Error("userId and courseId are required");
+  }
+
+  try {
+    const response = await api.get(
+      `/CourseInstance/classes-by-user/${userId}?courseId=${courseId}`
+    );
+    return response.data.data;
+  } catch (error) {
+    console.error("Get Classes By User Failed:", error);
+    throw error;
+  }
+};
+

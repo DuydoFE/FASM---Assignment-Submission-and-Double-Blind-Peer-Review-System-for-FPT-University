@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, FileText, Link, ChevronDown } from 'lucide-react';
+import { ArrowLeft, ChevronDown, BookOpen, Users } from 'lucide-react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { submissionService } from '../../service/submissionService';
@@ -24,26 +24,27 @@ const InstructorManageSubmission = () => {
       const submissionsData = response?.data?.submissions || [];
 
       const mappedSubmissions = submissionsData.map(submission => ({
-        name: submission.user?.fullName || 'N/A',  
-        mssv: submission.user?.studentId || 'N/A', 
-        status: getSubmissionStatus(submission),
-        statusColor: getStatusColor(submission),
+        name: submission.user?.fullName || 'N/A',
+        mssv: submission.user?.studentId || 'N/A',
+        status: submission.status || 'Not Submitted',
+        statusColor: getStatusColor(submission.status),
         submitTime: submission.submittedAt
           ? new Date(submission.submittedAt).toLocaleString('vi-VN')
           : '--',
-        file: submission.fileUrl || submission.fileName || '--',
-        fileType: submission.fileUrl ? (submission.fileUrl.startsWith('http') ? 'link' : 'file') : null,
         hasDetail: submission.submissionId != null,
-        submissionId: submission.submissionId,
-        keywords: submission.keywords || ''
+        submissionId: submission.submissionId
       }));
 
       setSubmissions(mappedSubmissions);
 
-      if (submissionsData.length > 0 && submissionsData[0].assignment) {
+      if (submissionsData.length > 0) {
+        // Get course and class info from first submission
+        const firstSubmission = submissionsData[0];
         setAssignmentInfo({
-          title: submissionsData[0].assignment.title,
-          deadline: submissionsData[0].assignment.deadline
+          title: firstSubmission.assignment?.title || 'N/A',
+          deadline: firstSubmission.assignment?.deadline,
+          courseName: firstSubmission.courseName || 'N/A',
+          className: firstSubmission.className || 'N/A'
         });
       }
     } catch (error) {
@@ -54,25 +55,26 @@ const InstructorManageSubmission = () => {
     }
   };
 
-  const getSubmissionStatus = (submission) => {
-    if (!submission.submittedAt) return 'Not Submitted';
+  const handleViewDetails = async (student) => {
+    if (!student.hasDetail) return;
 
-    const submitDate = new Date(submission.submittedAt);
-    const deadline = new Date(submission.deadline);
-
-    if (submitDate > deadline) return 'Late Submission';
-    return 'Submitted';
+    try {
+      await submissionService.getSubmissionDetails(student.submissionId);
+      navigate(`/instructor/submission-detail/${student.submissionId}`);
+    } catch (error) {
+      console.error('Failed to fetch submission details:', error);
+      toast.error('Failed to load submission details. Please try again.');
+    }
   };
 
-  const getStatusColor = (submission) => {
-    const status = getSubmissionStatus(submission);
+  const getStatusColor = (status) => {
     switch (status) {
       case 'Submitted':
+        return 'bg-blue-100 text-blue-800';
+      case 'Graded':
         return 'bg-green-100 text-green-800';
-      case 'Late Submission':
-        return 'bg-red-100 text-red-800';
       case 'Not Submitted':
-        return 'bg-yellow-100 text-yellow-800';
+        return 'bg-gray-100 text-gray-800';
       default:
         return 'bg-gray-100 text-gray-800';
     }
@@ -80,8 +82,8 @@ const InstructorManageSubmission = () => {
 
   const handleStatusClick = () => {
     if (statusFilter === 'All') setStatusFilter('Submitted');
-    else if (statusFilter === 'Submitted') setStatusFilter('Not Submitted');
-    else if (statusFilter === 'Not Submitted') setStatusFilter('Late Submission');
+    else if (statusFilter === 'Submitted') setStatusFilter('Graded');
+    else if (statusFilter === 'Graded') setStatusFilter('Not Submitted');
     else setStatusFilter('All');
   };
 
@@ -91,8 +93,8 @@ const InstructorManageSubmission = () => {
 
   const totalStudents = submissions.length;
   const submittedCount = submissions.filter(s => s.status === 'Submitted').length;
+  const gradedCount = submissions.filter(s => s.status === 'Graded').length;
   const notSubmittedCount = submissions.filter(s => s.status === 'Not Submitted').length;
-  const lateSubmissionCount = submissions.filter(s => s.status === 'Late Submission').length;
 
   if (loading) {
     return (
@@ -106,17 +108,15 @@ const InstructorManageSubmission = () => {
   return (
     <div className="max-w-7xl mx-auto p-6 bg-white">
       {/* Header */}
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-4">
           <button
             onClick={() => navigate(-1)}
-            className="inline-flex items-center gap-2 p-2 hover:bg-gray-100 rounded-lg"
+            className="inline-flex items-center gap-2 p-2 hover:bg-gray-100 rounded-lg transition-colors"
           >
             <ArrowLeft className="w-5 h-5 text-gray-600" />
             <span className="text-gray-600">Back</span>
           </button>
-
-
         </div>
         <div className="text-right">
           <h1 className="text-xl font-semibold text-gray-800">
@@ -130,6 +130,35 @@ const InstructorManageSubmission = () => {
         </div>
       </div>
 
+      {/* Course and Class Info */}
+      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-4 mb-6">
+        <div className="flex items-center gap-6">
+          <div className="flex items-center gap-3">
+            <div className="bg-blue-100 p-2 rounded-lg">
+              <BookOpen className="w-5 h-5 text-blue-600" />
+            </div>
+            <div>
+              <p className="text-xs text-gray-600 mb-0.5">Course</p>
+              <p className="text-sm font-semibold text-gray-800">
+                {assignmentInfo?.courseName || 'N/A'}
+              </p>
+            </div>
+          </div>
+          <div className="h-8 w-px bg-blue-300"></div>
+          <div className="flex items-center gap-3">
+            <div className="bg-indigo-100 p-2 rounded-lg">
+              <Users className="w-5 h-5 text-indigo-600" />
+            </div>
+            <div>
+              <p className="text-xs text-gray-600 mb-0.5">Class</p>
+              <p className="text-sm font-semibold text-gray-800">
+                {assignmentInfo?.className || 'N/A'}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Title */}
       <h2 className="text-2xl font-bold text-gray-800 mb-6">Manage Submissions</h2>
 
@@ -139,17 +168,17 @@ const InstructorManageSubmission = () => {
           <p className="text-sm text-gray-600 mb-1">Total Students</p>
           <p className="text-3xl font-bold text-gray-800">{totalStudents}</p>
         </div>
-        <div className="bg-green-50 p-4 rounded-lg">
+        <div className="bg-blue-50 p-4 rounded-lg">
           <p className="text-sm text-gray-600 mb-1">Submitted</p>
-          <p className="text-3xl font-bold text-green-600">{submittedCount}</p>
+          <p className="text-3xl font-bold text-blue-600">{submittedCount}</p>
         </div>
-        <div className="bg-yellow-50 p-4 rounded-lg">
+        <div className="bg-green-50 p-4 rounded-lg">
+          <p className="text-sm text-gray-600 mb-1">Graded</p>
+          <p className="text-3xl font-bold text-green-600">{gradedCount}</p>
+        </div>
+        <div className="bg-gray-50 p-4 rounded-lg">
           <p className="text-sm text-gray-600 mb-1">Not Submitted</p>
-          <p className="text-3xl font-bold text-yellow-600">{notSubmittedCount}</p>
-        </div>
-        <div className="bg-red-50 p-4 rounded-lg">
-          <p className="text-sm text-gray-600 mb-1">Late Submissions</p>
-          <p className="text-3xl font-bold text-red-600">{lateSubmissionCount}</p>
+          <p className="text-3xl font-bold text-gray-600">{notSubmittedCount}</p>
         </div>
       </div>
 
@@ -170,7 +199,6 @@ const InstructorManageSubmission = () => {
                 </div>
               </th>
               <th className="px-6 py-4 text-left text-sm font-medium text-gray-600">Submission Time</th>
-              <th className="px-6 py-4 text-left text-sm font-medium text-gray-600">File/Link Submitted</th>
               <th className="px-6 py-4 text-left text-sm font-medium text-gray-600">Actions</th>
             </tr>
           </thead>
@@ -186,27 +214,9 @@ const InstructorManageSubmission = () => {
                 </td>
                 <td className="px-6 py-4 text-sm text-gray-600">{student.submitTime}</td>
                 <td className="px-6 py-4">
-                  {student.file !== "--" && (
-                    <div className="flex items-center gap-2 text-sm text-blue-600">
-                      {student.fileType === "file" ? (
-                        <FileText className="w-4 h-4" />
-                      ) : (
-                        <Link className="w-4 h-4" />
-                      )}
-                      <span className="truncate max-w-xs">{student.file}</span>
-                    </div>
-                  )}
-                  {student.file === "--" && (
-                    <span className="text-sm text-gray-400">--</span>
-                  )}
-                </td>
-                <td className="px-6 py-4">
                   {student.hasDetail ? (
                     <button
-                      onClick={() => {
-                        // Navigate to submission detail page
-                        navigate(`/instructor/submission-detail/${student.submissionId}`);
-                      }}
+                      onClick={() => handleViewDetails(student)}
                       className="px-4 py-2 bg-blue-500 text-white text-sm rounded-lg hover:bg-blue-600 transition-colors"
                     >
                       View Details

@@ -56,6 +56,30 @@ const generateAiReview = async (submissionId) => {
     throw error;
   }
 };
+const getMyScoreDetails = async (assignmentId) => {
+  try {
+    const response = await api.get(
+      `/StudentReview/assignment/${assignmentId}/my-score-details`
+    );
+    return response.data; 
+  } catch (error) {
+    console.error(
+      `Lỗi khi lấy chi tiết điểm cho assignment ID ${assignmentId}:`,
+      error
+    );
+    throw error;
+  }
+};
+const submitRegradeRequest = async (payload) => {
+  try {
+   
+    const response = await api.post(`/RegradeRequests`, payload);
+    return response.data;
+  } catch (error) {
+    console.error(`Error submitting regrade request:`, error);
+    throw error;
+  }
+};
 
 export const reviewService = {
   getPeerReviewAssignment,
@@ -63,4 +87,6 @@ export const reviewService = {
   getStudentReviewTracking,
   getAssignmentsWithTracking,
   generateAiReview, 
+  getMyScoreDetails,
+  submitRegradeRequest,
 };
