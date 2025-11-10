@@ -311,17 +311,31 @@ const InstructorManageRubric = () => {
 
                                     {/* Actions */}
                                     <div className="col-span-1 flex justify-center gap-2">
-                                        <button
-                                            className="p-2 rounded-lg hover:bg-gray-100 text-gray-600 transition"
-                                            title="Edit Rubric and Criteria"
-                                            onClick={() =>
-                                                navigate(`/instructor/manage-criteria/${rubric.rubricId}`, {
-                                                    state: { from: "/instructor/manage-rubric" },
-                                                })
-                                            }
-                                        >
-                                            <Pencil className="w-5 h-5" />
-                                        </button>
+                                        {(rubric.assignmentStatus === 'Draft' || rubric.assignmentStatus === 'Upcoming') ? (
+                                            <button
+                                                className="p-2 rounded-lg hover:bg-blue-50 text-blue-600 transition border border-blue-200"
+                                                title="Edit Rubric and Criteria"
+                                                onClick={() =>
+                                                    navigate(`/instructor/manage-criteria/${rubric.rubricId}`, {
+                                                        state: { from: "/instructor/manage-rubric" },
+                                                    })
+                                                }
+                                            >
+                                                <Pencil className="w-5 h-5" />
+                                            </button>
+                                        ) : (
+                                            <button
+                                                className="p-2 rounded-lg hover:bg-gray-100 text-gray-600 transition border border-gray-200"
+                                                title="View Rubric and Criteria"
+                                                onClick={() =>
+                                                    navigate(`/instructor/manage-criteria/${rubric.rubricId}`, {
+                                                        state: { from: "/instructor/manage-rubric" },
+                                                    })
+                                                }
+                                            >
+                                                <Eye className="w-5 h-5" />
+                                            </button>
+                                        )}
                                     </div>
                                 </div>
                             ))
