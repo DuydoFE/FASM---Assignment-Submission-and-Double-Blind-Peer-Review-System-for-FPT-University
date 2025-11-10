@@ -80,6 +80,15 @@ const submitRegradeRequest = async (payload) => {
     throw error;
   }
 };
+const getRegradeRequestDetails = async (requestId) => {
+  try {
+    const response = await api.get(`/RegradeRequests/${requestId}`);
+    return response.data;
+  } catch (error) {
+    console.error(`Lỗi khi lấy chi tiết yêu cầu phúc khảo ID ${requestId}:`, error);
+    throw error;
+  }
+};
 
 export const reviewService = {
   getPeerReviewAssignment,
@@ -89,4 +98,5 @@ export const reviewService = {
   generateAiReview, 
   getMyScoreDetails,
   submitRegradeRequest,
+  getRegradeRequestDetails
 };
