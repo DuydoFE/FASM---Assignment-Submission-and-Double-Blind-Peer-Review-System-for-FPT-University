@@ -2,9 +2,10 @@ import { useState, useEffect } from "react";
 import { Scale, Clock, CheckCircle, XCircle, HelpCircle, FileText, Calendar, MessageSquare, Edit } from "lucide-react";
 import { Tag, Spin, Alert, Empty, Pagination, Card } from "antd";
 
-import { getRegradeRequestByStudentId } from "../../service/regradeService";  
+import { getRegradeRequestsByStudentId } from "../../service/regradeService";
 
-import { getCurrentAccount } from "../../utils/accountUtils";
+import { useSelector } from "react-redux";
+import { selectUser } from "../../redux/features/userSlice"; // <-- Sửa đường dẫn cho đúng
 import { toast } from "react-toastify";
 
 const StatusTag = ({ status }) => {
@@ -35,8 +36,8 @@ const StatCard = ({ count }) => (
 );
 
 const ViewRequestHistoryPage = () => {
-  const user = getCurrentAccount(); 
-
+  const user = useSelector(selectUser);
+ console.log("Current User Object:", user);
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -50,11 +51,13 @@ const ViewRequestHistoryPage = () => {
     setLoading(true);
     setError(null);
     try {
-      const data = await getRegradeRequestByStudentId(studentId, {
+    
+      const data = await getRegradeRequestsByStudentId(studentId, {
         pageNumber: page,
         pageSize: size,
       });
-      setRequests(data.requests);
+
+      
       setPagination({
         pageNumber: data.pageNumber,
         pageSize: data.pageSize,
@@ -62,7 +65,6 @@ const ViewRequestHistoryPage = () => {
       });
 
     } catch (err) {
-
       const errorMessage = err.response?.data?.message || err.message || "An unexpected error occurred.";
       setError(errorMessage);
       toast.error(errorMessage);
@@ -72,18 +74,21 @@ const ViewRequestHistoryPage = () => {
   };
 
   useEffect(() => {
-    const userId = user?.id; 
+    const userId = user?.userId;
 
     if (userId) {
       fetchRequests(userId, pagination.pageNumber, pagination.pageSize);
     } else {
-      setError("User information not available. Please log in.");
+      // Chỉ hiển thị lỗi nếu user không tồn tại sau khi đã hết trạng thái loading ban đầu
+      if (!loading) {
+         setError("User information not available. Please log in.");
+      }
       setLoading(false);
     }
   }, [user]);
 
   const handlePageChange = (page, pageSize) => {
-    if (user?.id) {
+    if (user?.userId) {
       fetchRequests(user.id, page, pageSize);
     }
   };
@@ -151,8 +156,7 @@ const ViewRequestHistoryPage = () => {
       </>
     );
   };
-
-  return (
+   return (
     <div className="container mx-auto px-4 py-8 bg-gray-50 min-h-screen">
         <h1 className="text-3xl font-bold text-gray-800 mb-6">
           My Regrade Request History
