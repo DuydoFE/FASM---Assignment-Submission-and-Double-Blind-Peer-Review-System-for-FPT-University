@@ -3,7 +3,7 @@ import { X, Send, ShieldQuestion } from 'lucide-react';
 import { toast } from 'react-toastify';
 
 const RegradeRequestModal = ({ isOpen, onClose, onSubmit, assignmentTitle, isSubmitting }) => {
-    // 👉 1. Remove expectedScore state
+    
     const [reason, setReason] = useState('');
 
     if (!isOpen) {
@@ -16,7 +16,7 @@ const RegradeRequestModal = ({ isOpen, onClose, onSubmit, assignmentTitle, isSub
             toast.error("Please enter a reason for your request.");
             return;
         }
-        // 👉 2. Pass only the reason object up to the parent component
+        
         onSubmit({ reason });
     };
 
@@ -38,8 +38,6 @@ const RegradeRequestModal = ({ isOpen, onClose, onSubmit, assignmentTitle, isSub
                             Submit a regrade request for assignment: <span className="font-semibold">{assignmentTitle}</span>.
                             Please state your reasons clearly.
                         </p>
-
-                        {/* 👉 3. Remove the 'Desired score' input field */}
 
                         <div>
                             <label htmlFor="reason" className="block text-sm font-medium text-gray-700 mb-1">
