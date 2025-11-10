@@ -21,11 +21,16 @@ const InstructorManageClass = () => {
   const [addingStudent, setAddingStudent] = useState(false);
   const [confirmDeleteModal, setConfirmDeleteModal] = useState(false);
   const [studentToDelete, setStudentToDelete] = useState(null);
+ 
   const [courseInstanceId, setCourseInstanceId] = useState(() => {
     try {
-      return location?.state?.courseInstanceId || sessionStorage.getItem('currentCourseInstanceId') || null;
+      const fromState = location?.state?.courseInstanceId;
+      const fromStorage = sessionStorage.getItem('currentCourseInstanceId');
+      if (fromState !== undefined && fromState !== null) return String(fromState);
+      if (fromStorage) return String(fromStorage);
+      return null;
     } catch (e) {
-      return location?.state?.courseInstanceId || null;
+      return location?.state?.courseInstanceId ? String(location.state.courseInstanceId) : null;
     }
   });
 
@@ -41,7 +46,6 @@ const InstructorManageClass = () => {
   useEffect(() => {
     const fetchStudents = async () => {
       if (!courseInstanceId) {
-        // If we don't have courseInstanceId yet, don't fetch. It will be set by navigation state or later.
         setLoading(false);
         return;
       }
@@ -66,9 +70,11 @@ const InstructorManageClass = () => {
         setStudents(mappedStudents);
 
         if (response.length > 0) {
-          // Persist the authoritative courseInstanceId returned by the API
-          try { sessionStorage.setItem('currentCourseInstanceId', String(response[0].courseInstanceId)); } catch (e) { /* ignore */ }
-          setCourseInstanceId(response[0].courseInstanceId);
+          const apiId = String(response[0].courseInstanceId);
+          try { sessionStorage.setItem('currentCourseInstanceId', apiId); } catch (e) { /* ignore */ }
+          if (apiId !== String(courseInstanceId)) {
+            setCourseInstanceId(apiId);
+          }
           setCourseInfo({
             courseCode: response[0].courseCode,
             className: response[0].courseInstanceName
