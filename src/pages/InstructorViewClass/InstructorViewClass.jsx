@@ -252,13 +252,14 @@ const InstructorViewClass = () => {
                     <tr
                       key={cls.id}
                       className="hover:bg-gray-50 transition-colors cursor-pointer"
-                      onClick={() => navigate(`/instructor/manage-class/${cls.id}`)}
+                      onClick={() => {
+                        try { sessionStorage.setItem('currentCourseInstanceId', String(cls.id)); } catch (e) { /* ignore */ }
+                        navigate('/instructor/manage-class', { state: { courseInstanceId: cls.id } });
+                      }}
                     >
                       <td className="py-4 px-6">
                         <div>
-                          <h3 className="font-semibold text-gray-900 mb-1">
-                            {cls.code}
-                          </h3>
+                          <h3 className="font-semibold text-gray-900 mb-1">{cls.code}</h3>
                         </div>
                       </td>
                       <td className="py-4 px-6">

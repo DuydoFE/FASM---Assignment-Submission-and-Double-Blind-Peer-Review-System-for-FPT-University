@@ -15,6 +15,7 @@ function InstructorManageCriteria() {
     const [loading, setLoading] = useState(true);
     const [criteria, setCriteria] = useState([]);
     const [rubricTitle, setRubricTitle] = useState('');
+    const [assignmentStatus, setAssignmentStatus] = useState('');
     const [courseName, setCourseName] = useState('');
     const [className, setClassName] = useState('');
     const [deleteConfirm, setDeleteConfirm] = useState({ show: false, criterionId: null, criterionTitle: '' });
@@ -36,11 +37,13 @@ function InstructorManageCriteria() {
                     setRubricTitle(data[0].rubricTitle || 'Rubric Details');
                     setCourseName(data[0].courseName || '');
                     setClassName(data[0].className || '');
+                    setAssignmentStatus(data[0].assignmentStatus || ''); // THÊM DÒNG NÀY
                 } else {
                     setCriteria([]);
                     setRubricTitle('Rubric Details');
                     setCourseName('');
                     setClassName('');
+                    setAssignmentStatus(''); // THÊM DÒNG NÀY
                 }
             } catch (error) {
                 console.error('Failed to fetch criteria:', error);
@@ -49,6 +52,7 @@ function InstructorManageCriteria() {
                 setRubricTitle('Rubric Details');
                 setCourseName('');
                 setClassName('');
+                setAssignmentStatus('');
             } finally {
                 setLoading(false);
             }
@@ -190,7 +194,7 @@ function InstructorManageCriteria() {
     return (
         <div className="p-8">
             <div className="max-w-6xl mx-auto">
-                
+
                 {/* Header Section */}
                 <div className="mb-6">
                     <button
@@ -201,7 +205,7 @@ function InstructorManageCriteria() {
                         <ArrowLeft size={20} />
                         <span>Back to Rubrics</span>
                     </button>
-                    
+
                     <div className="bg-gradient-to-r from-indigo-50 to-blue-50 border border-indigo-200 rounded-lg p-6 shadow-sm">
                         <div className="flex items-center justify-between">
                             <div className="flex-1">
@@ -213,13 +217,15 @@ function InstructorManageCriteria() {
                                 <h1 className="text-3xl font-bold mb-2 text-gray-900">{rubricTitle}</h1>
                                 <p className="text-gray-600">Manage evaluation criteria for this rubric</p>
                             </div>
-                            <button
-                                onClick={handleEditRubric}
-                                className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2.5 rounded-lg hover:bg-indigo-700 transition-colors font-medium shadow-sm"
-                            >
-                                <Pencil size={18} />
-                                <span>Edit Rubric</span>
-                            </button>
+                            {(assignmentStatus === 'Draft' || assignmentStatus === 'Upcoming') && (
+                                <button
+                                    onClick={handleEditRubric}
+                                    className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2.5 rounded-lg hover:bg-indigo-700 transition-colors font-medium shadow-sm"
+                                >
+                                    <Pencil size={18} />
+                                    <span>Edit Rubric</span>
+                                </button>
+                            )}
                         </div>
                     </div>
                 </div>
@@ -265,13 +271,15 @@ function InstructorManageCriteria() {
                         <h2 className="text-xl font-semibold text-gray-900">Evaluation Criteria</h2>
                         <p className="text-sm text-gray-600">Manage and configure assessment criteria</p>
                     </div>
-                    <button
-                        onClick={() => setShowAddModal(true)}
-                        className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors"
-                    >
-                        <Plus size={20} />
-                        Add Criteria
-                    </button>
+                    {(assignmentStatus === 'Draft' || assignmentStatus === 'Upcoming') && (
+                        <button
+                            onClick={() => setShowAddModal(true)}
+                            className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors"
+                        >
+                            <Plus size={20} />
+                            Add Criteria
+                        </button>
+                    )}
                 </div>
 
                 {/* Criteria Cards */}
@@ -293,7 +301,7 @@ function InstructorManageCriteria() {
                                         <div className="flex-1 min-w-0">
                                             <div className="flex items-start justify-between gap-4 mb-3">
                                                 <h3 className="text-lg font-semibold text-gray-900">{criterion.title}</h3>
-                                                
+
                                                 {/* Stats and Actions */}
                                                 <div className="flex items-center gap-3 flex-shrink-0">
                                                     <div className="flex items-center gap-4">
@@ -307,23 +315,27 @@ function InstructorManageCriteria() {
                                                         </div>
                                                     </div>
                                                     <div className="flex items-center gap-1 ml-2">
-                                                        <button
-                                                            onClick={() => handleEditClick(criterion)}
-                                                            className="text-gray-400 hover:text-indigo-600 transition-colors p-2 rounded-lg hover:bg-indigo-50"
-                                                            title="Edit criterion"
-                                                        >
-                                                            <Pencil size={18} />
-                                                        </button>
-                                                        <button
-                                                            onClick={(e) => {
-                                                                e.stopPropagation();
-                                                                handleDeleteClick(criterion.criteriaId, criterion.title);
-                                                            }}
-                                                            className="text-gray-400 hover:text-red-600 transition-colors p-2 rounded-lg hover:bg-red-50"
-                                                            title="Delete criterion"
-                                                        >
-                                                            <Trash2 size={18} />
-                                                        </button>
+                                                        {(assignmentStatus === 'Draft' || assignmentStatus === 'Upcoming') && (
+                                                            <button
+                                                                onClick={() => handleEditClick(criterion)}
+                                                                className="text-gray-400 hover:text-indigo-600 transition-colors p-2 rounded-lg hover:bg-indigo-50"
+                                                                title="Edit criterion"
+                                                            >
+                                                                <Pencil size={18} />
+                                                            </button>
+                                                        )}
+                                                        {(assignmentStatus === 'Draft' || assignmentStatus === 'Upcoming') && (
+                                                            <button
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    handleDeleteClick(criterion.criteriaId, criterion.title);
+                                                                }}
+                                                                className="text-gray-400 hover:text-red-600 transition-colors p-2 rounded-lg hover:bg-red-50"
+                                                                title="Delete criterion"
+                                                            >
+                                                                <Trash2 size={18} />
+                                                            </button>
+                                                        )}
                                                     </div>
                                                 </div>
                                             </div>
