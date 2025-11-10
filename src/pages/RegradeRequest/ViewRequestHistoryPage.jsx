@@ -1,141 +1,167 @@
 import { useState, useEffect } from "react";
-import { Scale, Clock, CheckCircle, XCircle, HelpCircle } from "lucide-react";
-import { Tag } from "antd";
+import { Scale, Clock, CheckCircle, XCircle, HelpCircle, FileText, Calendar, MessageSquare, Edit } from "lucide-react";
+import { Tag, Spin, Alert, Empty, Pagination, Card } from "antd";
 
-// Giả lập dữ liệu API
-const mockRequests = [
-  {
-    id: 1,
-    assignmentName: "Assignment 1: React Basics",
-    courseName: "Frontend Development",
-    requestDate: "2024-10-28",
-    status: "Approved",
-    reason: "I believe there was a miscalculation in the grading of question 3.",
-    response: "After review, you are correct. The grade has been updated.",
-  },
-  {
-    id: 2,
-    assignmentName: "Midterm Project",
-    courseName: "Software Engineering",
-    requestDate: "2024-10-25",
-    status: "Rejected",
-    reason: "The rubric for the UI/UX part was not followed correctly in my opinion.",
-    response: "The grading was consistent with the provided rubric. No changes will be made.",
-  },
-  {
-    id: 3,
-    assignmentName: "Lab 5: API Integration",
-    courseName: "Advanced Web Development",
-    requestDate: "2024-10-22",
-    status: "Pending",
-    reason: "My submission was not graded for the bonus part.",
-    response: null,
-  },
-  {
-    id: 4,
-    assignmentName: "Assignment 3: State Management",
-    courseName: "Frontend Development",
-    requestDate: "2024-10-20",
-    status: "Approved",
-    reason: "The functionality for state persistence was implemented but not credited.",
-    response: "You are right, we have re-evaluated and updated your score.",
-  },
-];
+import { getRegradeRequestByStudentId } from "../../service/regradeService";  
 
-// Component để hiển thị tag trạng thái với màu sắc và icon tương ứng
+import { getCurrentAccount } from "../../utils/accountUtils";
+import { toast } from "react-toastify";
+
 const StatusTag = ({ status }) => {
   switch (status) {
     case "Approved":
-      return (
-        <Tag icon={<CheckCircle className="w-4 h-4" />} color="success">
-          Approved
-        </Tag>
-      );
+      return <Tag icon={<CheckCircle className="w-4 h-4" />} color="success">Approved</Tag>;
     case "Rejected":
-      return (
-        <Tag icon={<XCircle className="w-4 h-4" />} color="error">
-          Rejected
-        </Tag>
-      );
+      return <Tag icon={<XCircle className="w-4 h-4" />} color="error">Rejected</Tag>;
     case "Pending":
-      return (
-        <Tag icon={<Clock className="w-4 h-4" />} color="processing">
-          Pending
-        </Tag>
-      );
+      return <Tag icon={<Clock className="w-4 h-4" />} color="processing">Pending</Tag>;
     default:
-      return (
-        <Tag icon={<HelpCircle className="w-4 h-4" />} color="default">
-          Unknown
-        </Tag>
-      );
+      return <Tag icon={<HelpCircle className="w-4 h-4" />} color="default">Unknown</Tag>;
   }
 };
 
+const StatCard = ({ count }) => (
+  <Card className="shadow-lg border-l-4 border-orange-500 mb-8">
+    <div className="flex items-center space-x-4">
+      <div className="p-3 bg-orange-100 rounded-full">
+        <Scale className="w-8 h-8 text-orange-600" />
+      </div>
+      <div>
+        <p className="text-gray-500 font-medium">Total Regrade Requests</p>
+        <p className="text-3xl font-bold text-gray-800">{count}</p>
+      </div>
+    </div>
+  </Card>
+);
+
 const ViewRequestHistoryPage = () => {
+  const user = getCurrentAccount(); 
+
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [pagination, setPagination] = useState({
+    pageNumber: 1,
+    pageSize: 10,
+    totalCount: 0,
+  });
 
-  // Giả lập việc fetch data từ API
-  useEffect(() => {
-    // Trong thực tế, bạn sẽ gọi API ở đây
-    // ví dụ: regradeService.getHistory().then(data => setRequests(data));
-    setTimeout(() => {
-      setRequests(mockRequests);
+  const fetchRequests = async (studentId, page = 1, size = 10) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await getRegradeRequestByStudentId(studentId, {
+        pageNumber: page,
+        pageSize: size,
+      });
+      setRequests(data.requests);
+      setPagination({
+        pageNumber: data.pageNumber,
+        pageSize: data.pageSize,
+        totalCount: data.totalCount,
+      });
+
+    } catch (err) {
+
+      const errorMessage = err.response?.data?.message || err.message || "An unexpected error occurred.";
+      setError(errorMessage);
+      toast.error(errorMessage);
+    } finally {
       setLoading(false);
-    }, 1000); // Giả lập độ trễ mạng
-  }, []);
+    }
+  };
+
+  useEffect(() => {
+    const userId = user?.id; 
+
+    if (userId) {
+      fetchRequests(userId, pagination.pageNumber, pagination.pageSize);
+    } else {
+      setError("User information not available. Please log in.");
+      setLoading(false);
+    }
+  }, [user]);
+
+  const handlePageChange = (page, pageSize) => {
+    if (user?.id) {
+      fetchRequests(user.id, page, pageSize);
+    }
+  };
+
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleString();
+  };
+  
+  const renderContent = () => {
+    if (loading) {
+      return <div className="text-center p-12"><Spin size="large" /></div>;
+    }
+    if (error) {
+      return <Alert message="Error" description={error} type="error" showIcon />;
+    }
+    if (requests.length === 0) {
+      return <Empty description="You have not made any regrade requests yet." />;
+    }
+    return (
+      <>
+        <div className="space-y-6">
+          {requests.map((request) => (
+            <div key={request.requestId} className="bg-white shadow-md rounded-lg p-6 border border-gray-200 hover:shadow-xl transition-shadow">
+              <div className="flex flex-col md:flex-row justify-between items-start">
+                <div className="flex-1">
+                  <div className="flex items-center mb-2">
+                    <FileText className="w-5 h-5 mr-2 text-gray-500" />
+                    <p className="text-lg font-semibold text-gray-800">
+                      File: <span className="text-orange-600">{request.submission.fileName}</span>
+                    </p>
+                  </div>
+                  <div className="flex items-center text-sm text-gray-500">
+                    <Calendar className="w-4 h-4 mr-2" />
+                    <span>Requested on: {formatDate(request.requestedAt)}</span>
+                  </div>
+                </div>
+                <div className="mt-4 md:mt-0">
+                  <StatusTag status={request.status} />
+                </div>
+              </div>
+              <div className="mt-4 pt-4 border-t border-gray-200 space-y-3">
+                <div>
+                  <h4 className="font-semibold text-gray-700 flex items-center"><Edit className="w-4 h-4 mr-2" />Your Reason:</h4>
+                  <p className="text-gray-600 pl-6 italic bg-gray-50 p-3 rounded-md mt-1">"{request.reason}"</p>
+                </div>
+                {request.resolutionNotes && (
+                  <div>
+                    <h4 className="font-semibold text-gray-700 flex items-center"><MessageSquare className="w-4 h-4 mr-2" />Instructor's Response:</h4>
+                    <p className="text-gray-600 pl-6 bg-green-50 p-3 rounded-md mt-1">{request.resolutionNotes}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+        <div className="mt-8 flex justify-center">
+          <Pagination
+            current={pagination.pageNumber}
+            pageSize={pagination.pageSize}
+            total={pagination.totalCount}
+            onChange={handlePageChange}
+            showSizeChanger
+          />
+        </div>
+      </>
+    );
+  };
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-3xl font-bold text-gray-800 flex items-center">
-          <Scale className="w-8 h-8 mr-3 text-orange-500" />
-          Regrade Request History
+    <div className="container mx-auto px-4 py-8 bg-gray-50 min-h-screen">
+        <h1 className="text-3xl font-bold text-gray-800 mb-6">
+          My Regrade Request History
         </h1>
-      </div>
+      
+      {!loading && !error && requests.length > 0 && <StatCard count={pagination.totalCount} />}
 
-      <div className="bg-white shadow-lg rounded-lg overflow-hidden">
-        <div className="overflow-x-auto">
-          {loading ? (
-            <p className="text-center p-8">Loading request history...</p>
-          ) : (
-            <ul className="divide-y divide-gray-200">
-              {requests.map((request) => (
-                <li key={request.id} className="p-6 hover:bg-gray-50 transition-colors">
-                  <div className="flex flex-col md:flex-row justify-between">
-                    <div className="flex-1 mb-4 md:mb-0">
-                      <p className="text-lg font-semibold text-orange-600">
-                        {request.assignmentName}
-                      </p>
-                      <p className="text-sm text-gray-500">
-                        {request.courseName}
-                      </p>
-                      <p className="text-sm text-gray-400 mt-1">
-                        Requested on: {request.requestDate}
-                      </p>
-                    </div>
-                    <div className="flex items-center">
-                      <StatusTag status={request.status} />
-                    </div>
-                  </div>
-                  <div className="mt-4 pt-4 border-t border-gray-200">
-                    <p className="font-semibold text-gray-700">Your Reason:</p>
-                    <p className="text-gray-600 italic">"{request.reason}"</p>
-                    {request.response && (
-                      <div className="mt-3">
-                        <p className="font-semibold text-gray-700">Instructor's Response:</p>
-                        <p className="text-gray-600 bg-gray-100 p-3 rounded-md">
-                          {request.response}
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
+      <div className="bg-white p-6 rounded-lg shadow-sm">
+        {renderContent()}
       </div>
     </div>
   );

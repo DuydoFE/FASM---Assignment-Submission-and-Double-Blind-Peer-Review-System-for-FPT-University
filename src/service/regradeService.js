@@ -1,8 +1,23 @@
-import api from "./api"; // Import aaxios instance đã cấu hình
+import api from "../config/axios";
 
-const getRegradeRequestByStudentId = (studentId, params) => {
-  const url = `/RegradeRequests/student/${studentId}`;
-  return api.get(url, { params });
+export const getRegradeRequestsByStudentId = async (
+  studentId,
+  { pageNumber, pageSize }
+) => {
+  try {
+    const response = await api.get(`/RegradeRequests/student/${studentId}`, {
+      params: {
+        pageNumber,
+        pageSize,
+      },
+    });
+
+    return response.data;
+  } catch (error) {
+    console.error(
+      `Lỗi khi lấy danh sách yêu cầu chấm lại cho sinh viên ID ${studentId}:`,
+      error
+    );
+    throw error;
+  }
 };
-
-export default getRegradeRequestByStudentId;
