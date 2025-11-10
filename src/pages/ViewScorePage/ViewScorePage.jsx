@@ -11,6 +11,10 @@ import {
   ArrowLeft,
   MessageSquare,
   Users,
+  BarChart,
+  Clock, 
+  CheckCircle,
+   XCircle,
   UserCheck,
   CalendarCheck,
   ShieldQuestion,
@@ -28,6 +32,46 @@ const formatDate = (dateString) => {
   };
   return new Date(dateString).toLocaleDateString("vi-VN", options);
 };
+
+// === 2. TẠO COMPONENT HELPER ĐỂ HIỂN THỊ HUY HIỆU TRẠNG THÁI ===
+const RegradeStatusBadge = ({ status }) => {
+  const statusStyles = {
+    Pending: {
+      bgColor: "bg-yellow-100",
+      textColor: "text-yellow-800",
+      icon: <Clock size={14} className="mr-1.5" />,
+      text: "Request Pending",
+    },
+    Approved: {
+      bgColor: "bg-green-100",
+      textColor: "text-green-800",
+      icon: <CheckCircle size={14} className="mr-1.5" />,
+      text: "Request Approved",
+    },
+    Rejected: {
+      bgColor: "bg-red-100",
+      textColor: "text-red-800",
+      icon: <XCircle size={14} className="mr-1.5" />,
+      text: "Request Rejected",
+    },
+  };
+
+  const currentStatus = statusStyles[status];
+
+  if (!currentStatus) {
+    return null;
+  }
+
+  return (
+    <div
+      className={`flex items-center px-3 py-2 rounded-md font-semibold text-sm ${currentStatus.bgColor} ${currentStatus.textColor}`}
+    >
+      {currentStatus.icon}
+      {currentStatus.text}
+    </div>
+  );
+};
+
 const ViewScorePage = () => {
   const { courseId, assignmentId } = useParams();
   const navigate = useNavigate();
@@ -48,22 +92,20 @@ const ViewScorePage = () => {
   const scoreData = responseData?.data;
 
   const handleRegradeSubmit = async ({ reason }) => {
-    // BƯỚC 1: KIỂM TRA HÀM CÓ ĐƯỢC GỌI KHÔNG
     console.log("--- Step 1: handleRegradeSubmit function was called. ---");
 
-    // BƯỚC 2: KIỂM TRA DỮ LIỆU ĐẦU VÀO
     console.log("Step 2.1: Checking scoreData:", scoreData);
     console.log("Step 2.2: Checking currentUser:", currentUser);
 
     if (!scoreData?.submissionId) {
       toast.error("Submission ID not found. Cannot submit request.");
       console.error("ERROR: scoreData.submissionId is missing!", scoreData);
-      return; // Dừng lại ở đây
+      return;
     }
     if (!currentUser?.userId) {
       toast.error("User information not found. Please log in again.");
       console.error("ERROR: currentUser.userId is missing!", currentUser);
-      return; // Dừng lại ở đây
+      return;
     }
 
     setIsSubmitting(true);
@@ -73,20 +115,18 @@ const ViewScorePage = () => {
         reason: reason,
         requestedByUserId: currentUser.userId,
       };
-      
-      // BƯỚC 3: KIỂM TRA PAYLOAD TRƯỚC KHI GỬI
+
       console.log("Step 3: Payload is ready to be sent:", payload);
 
-      // BƯỚC 4: BẮT ĐẦU GỌI API
-      console.log("Step 4: Attempting to call reviewService.submitRegradeRequest...");
+      console.log(
+        "Step 4: Attempting to call reviewService.submitRegradeRequest..."
+      );
       await reviewService.submitRegradeRequest(payload);
-      
-      // BƯỚC 5: GỌI API THÀNH CÔNG
+
       console.log("Step 5: API call successful!");
       toast.success("Your regrade request has been sent successfully!");
       setIsModalOpen(false);
     } catch (error) {
-      // BƯỚC 6: GỌI API THẤT BẠI
       console.error("Step 6: API call failed!", error);
       toast.error("Failed to send request. Please try again.");
     } finally {
@@ -139,13 +179,18 @@ const ViewScorePage = () => {
             </p>
           </div>
           <div className="flex space-x-3">
-            <button
-              onClick={() => setIsModalOpen(true)} // Mở modal khi click
-              className="flex items-center px-4 py-2 bg-red-600 text-white rounded-md font-semibold hover:bg-red-700 transition-colors"
-            >
-              <ShieldQuestion size={16} className="mr-2" />
-              Regrade Request
-            </button>
+            {/* === 3. HIỂN THỊ CÓ ĐIỀU KIỆN: HUY HIỆU HOẶC NÚT BẤM === */}
+            {scoreData.regradeStatus ? (
+              <RegradeStatusBadge status={scoreData.regradeStatus} />
+            ) : (
+              <button
+                onClick={() => setIsModalOpen(true)}
+                className="flex items-center px-4 py-2 bg-red-600 text-white rounded-md font-semibold hover:bg-red-700 transition-colors"
+              >
+                <ShieldQuestion size={16} className="mr-2" />
+                Regrade Request
+              </button>
+            )}
             <button
               onClick={() => navigate(`/assignment/${courseId}`)}
               className="flex items-center px-4 py-2 border rounded-md font-semibold text-gray-700 hover:bg-gray-100"
@@ -175,12 +220,12 @@ const ViewScorePage = () => {
           </div>
         </div>
 
-        {/* Score Breakdown & Feedback */}
         <div className="mt-8">
           <h3 className="font-bold text-xl mb-4 text-gray-800">
             Score details
           </h3>
           <div className="bg-white p-6 rounded-lg shadow-md border space-y-4">
+            {/* Điểm từ giảng viên */}
             <div className="flex items-center p-3 bg-indigo-50 rounded-lg">
               <UserCheck className="w-6 h-6 mr-4 text-indigo-500 flex-shrink-0" />
               <div>
@@ -192,6 +237,7 @@ const ViewScorePage = () => {
                 </p>
               </div>
             </div>
+            {/* Điểm từ Peer Review */}
             <div className="flex items-center p-3 bg-teal-50 rounded-lg">
               <Users className="w-6 h-6 mr-4 text-teal-500 flex-shrink-0" />
               <div>
@@ -201,6 +247,29 @@ const ViewScorePage = () => {
                 <p className="text-2xl font-bold text-teal-600">
                   {scoreData.peerAverageScore.toFixed(2)}
                 </p>
+              </div>
+            </div>
+
+            {/* === 4. THÊM KHỐI MỚI: ĐIỂM CỦA LỚP === */}
+            <div className="flex items-center p-3 bg-gray-100 rounded-lg">
+              <BarChart className="w-6 h-6 mr-4 text-gray-500 flex-shrink-0" />
+              <div className="flex-grow grid grid-cols-2 gap-4">
+                <div>
+                  <p className="font-semibold text-gray-800">
+                    Class Average Score
+                  </p>
+                  <p className="text-2xl font-bold text-gray-600">
+                    {scoreData.classAverageScore.toFixed(2)}
+                  </p>
+                </div>
+                <div>
+                  <p className="font-semibold text-gray-800">
+                    Class Highest Score
+                  </p>
+                  <p className="text-2xl font-bold text-gray-600">
+                    {scoreData.classMaxScore.toFixed(2)}
+                  </p>
+                </div>
               </div>
             </div>
           </div>
