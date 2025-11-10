@@ -140,26 +140,29 @@ const InstructorManageGrading = () => {
         assignmentId: selectedAssignmentId
       });
       
-      const mappedStudents = response.map(submission => ({
-        submissionId: submission.submissionId,
-        studentId: submission.userId,
-        studentCode: submission.studentCode,
-        studentName: submission.studentName,
-        studentEmail: submission.studentEmail,
-        instructorScore: submission.instructorScore,
-        score: submission.finalScore !== null && submission.finalScore !== undefined ? submission.finalScore : null,
-        feedback: submission.feedback,
-        submittedAt: submission.submittedAt,
-        gradedAt: submission.gradedAt,
-        status: submission.status.toLowerCase()
-      }));
+      const mappedStudents = response.map(submission => {
+        console.log('Original status from API:', submission.status); // Debug log
+        return {
+          submissionId: submission.submissionId,
+          studentId: submission.userId,
+          studentCode: submission.studentCode,
+          studentName: submission.studentName,
+          studentEmail: submission.studentEmail,
+          instructorScore: submission.instructorScore,
+          score: submission.finalScore !== null && submission.finalScore !== undefined ? submission.finalScore : null,
+          feedback: submission.feedback,
+          submittedAt: submission.submittedAt,
+          gradedAt: submission.gradedAt,
+          status: submission.status // Keep original status from API
+        };
+      });
       
       setStudents(mappedStudents);
       
       const assignmentData = assignments.find(a => a.assignmentId == selectedAssignmentId);
       if (assignmentData) {
-        const submittedCount = mappedStudents.filter(s => s.status !== 'not-submitted').length;
-        const gradedCount = mappedStudents.filter(s => s.status === 'graded').length;
+        const submittedCount = mappedStudents.filter(s => s.status === 'Submitted' || s.status === 'Graded').length;
+        const gradedCount = mappedStudents.filter(s => s.status === 'Graded').length;
         
         setAssignmentInfo({
           title: assignmentData.title,
@@ -183,9 +186,9 @@ const InstructorManageGrading = () => {
   };
 
   const handleStatusClick = () => {
-    if (statusFilter === 'All') setStatusFilter('submitted');
-    else if (statusFilter === 'submitted') setStatusFilter('not-submitted');
-    else if (statusFilter === 'not-submitted') setStatusFilter('graded');
+    if (statusFilter === 'All') setStatusFilter('Submitted');
+    else if (statusFilter === 'Submitted') setStatusFilter('Graded');
+    else if (statusFilter === 'Graded') setStatusFilter('Not Submitted');
     else setStatusFilter('All');
   };
 
@@ -208,20 +211,16 @@ const InstructorManageGrading = () => {
 
   const getStatusStyle = (status) => {
     switch (status) {
-      case 'graded': return 'bg-green-100 text-green-700';
-      case 'submitted': return 'bg-blue-100 text-blue-700';
-      case 'not-submitted': return 'bg-gray-100 text-gray-600';
+      case 'Graded': return 'bg-green-100 text-green-700';
+      case 'Submitted': return 'bg-blue-100 text-blue-700';
+      case 'Not Submitted': return 'bg-red-100 text-red-700';
       default: return 'bg-gray-100 text-gray-600';
     }
   };
 
   const getStatusText = (status) => {
-    switch (status) {
-      case 'graded': return 'Graded';
-      case 'submitted': return 'Submitted';
-      case 'not-submitted': return 'Not Submitted';
-      default: return '';
-    }
+    // Return status as-is since API already returns proper format
+    return status || '';
   };
 
   const getSubmissionTimeStyle = (status) => {
@@ -236,7 +235,13 @@ const InstructorManageGrading = () => {
     return { date: dateStr, time: timeStr };
   };
 
-  const handleGradeClick = (submissionId) => {
+  const handleGradeClick = (submissionId, status) => {
+    // Only allow grading for submitted and graded status
+    if (status === 'Not Submitted') {
+      toast.warning('Cannot grade a submission that has not been submitted');
+      return;
+    }
+    
     navigate(`/instructor/grading-detail/${submissionId}`, {
       state: {
         returnState: {
@@ -512,16 +517,16 @@ const InstructorManageGrading = () => {
                               </span>
                             </td>
                             <td className="px-6 py-4">
-                              {student.status === 'submitted' ? (
+                              {student.status === 'Submitted' ? (
                                 <button 
-                                  onClick={() => handleGradeClick(student.submissionId)}
+                                  onClick={() => handleGradeClick(student.submissionId, student.status)}
                                   className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm font-medium"
                                 >
                                   Grade
                                 </button>
-                              ) : student.status === 'graded' ? (
+                              ) : student.status === 'Graded' ? (
                                 <button 
-                                  onClick={() => handleGradeClick(student.submissionId)}
+                                  onClick={() => handleGradeClick(student.submissionId, student.status)}
                                   className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors text-sm font-medium"
                                 >
                                   Re-grade
