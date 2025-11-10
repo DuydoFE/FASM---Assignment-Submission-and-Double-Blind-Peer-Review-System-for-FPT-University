@@ -1,12 +1,11 @@
 import { useState, useEffect } from "react";
+import { useSelector } from "react-redux";
 import { Scale, Clock, CheckCircle, XCircle, HelpCircle, FileText, Calendar, MessageSquare, Edit } from "lucide-react";
 import { Tag, Spin, Alert, Empty, Pagination, Card } from "antd";
-
-import { getRegradeRequestsByStudentId } from "../../service/regradeService";
-
-import { useSelector } from "react-redux";
-import { selectUser } from "../../redux/features/userSlice"; // <-- Sửa đường dẫn cho đúng
 import { toast } from "react-toastify";
+
+import { selectUser } from "../../redux/features/userSlice";
+import { getRegradeRequestsByStudentId } from "../../service/regradeService"; 
 
 const StatusTag = ({ status }) => {
   switch (status) {
@@ -37,7 +36,6 @@ const StatCard = ({ count }) => (
 
 const ViewRequestHistoryPage = () => {
   const user = useSelector(selectUser);
- console.log("Current User Object:", user);
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -51,18 +49,22 @@ const ViewRequestHistoryPage = () => {
     setLoading(true);
     setError(null);
     try {
-    
-      const data = await getRegradeRequestsByStudentId(studentId, {
+      const apiResponse = await getRegradeRequestsByStudentId(studentId, {
         pageNumber: page,
         pageSize: size,
       });
 
-      
-      setPagination({
-        pageNumber: data.pageNumber,
-        pageSize: data.pageSize,
-        totalCount: data.totalCount,
-      });
+      if (apiResponse && apiResponse.data) {
+        setRequests(apiResponse.data.requests);
+        setPagination({
+          pageNumber: apiResponse.data.pageNumber,
+          pageSize: apiResponse.data.pageSize,
+          totalCount: apiResponse.data.totalCount,
+        });
+      } else {
+        setRequests([]);
+        setPagination(prev => ({ ...prev, totalCount: 0 }));
+      }
 
     } catch (err) {
       const errorMessage = err.response?.data?.message || err.message || "An unexpected error occurred.";
@@ -74,26 +76,23 @@ const ViewRequestHistoryPage = () => {
   };
 
   useEffect(() => {
-    const userId = user?.userId;
-
-    if (userId) {
-      fetchRequests(userId, pagination.pageNumber, pagination.pageSize);
+    const studentId = user?.userId;
+    if (studentId) {
+      fetchRequests(studentId, pagination.pageNumber, pagination.pageSize);
     } else {
-      // Chỉ hiển thị lỗi nếu user không tồn tại sau khi đã hết trạng thái loading ban đầu
-      if (!loading) {
-         setError("User information not available. Please log in.");
-      }
       setLoading(false);
     }
   }, [user]);
 
   const handlePageChange = (page, pageSize) => {
-    if (user?.userId) {
-      fetchRequests(user.id, page, pageSize);
+    const studentId = user?.userId;
+    if (studentId) {
+      fetchRequests(studentId, page, pageSize);
     }
   };
 
   const formatDate = (dateString) => {
+    if (!dateString) return "N/A";
     return new Date(dateString).toLocaleString();
   };
   
@@ -104,7 +103,7 @@ const ViewRequestHistoryPage = () => {
     if (error) {
       return <Alert message="Error" description={error} type="error" showIcon />;
     }
-    if (requests.length === 0) {
+    if (!requests || requests.length === 0) {
       return <Empty description="You have not made any regrade requests yet." />;
     }
     return (
@@ -117,7 +116,7 @@ const ViewRequestHistoryPage = () => {
                   <div className="flex items-center mb-2">
                     <FileText className="w-5 h-5 mr-2 text-gray-500" />
                     <p className="text-lg font-semibold text-gray-800">
-                      File: <span className="text-orange-600">{request.submission.fileName}</span>
+                      File: <span className="text-orange-600">{request.submission?.fileName}</span>
                     </p>
                   </div>
                   <div className="flex items-center text-sm text-gray-500">
@@ -156,13 +155,14 @@ const ViewRequestHistoryPage = () => {
       </>
     );
   };
-   return (
+
+  return (
     <div className="container mx-auto px-4 py-8 bg-gray-50 min-h-screen">
         <h1 className="text-3xl font-bold text-gray-800 mb-6">
           My Regrade Request History
         </h1>
       
-      {!loading && !error && requests.length > 0 && <StatCard count={pagination.totalCount} />}
+      {!loading && !error && requests && requests.length > 0 && <StatCard count={pagination.totalCount} />}
 
       <div className="bg-white p-6 rounded-lg shadow-sm">
         {renderContent()}
