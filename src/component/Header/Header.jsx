@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Search, Filter, User, LogOut } from "lucide-react";
+import { Search, Filter, User, LogOut, Home, LayoutDashboard, ClipboardList, History } from "lucide-react"; // Import thêm các icon mới
 import { getCurrentAccount } from "../../utils/accountUtils";
 import { useDispatch } from "react-redux";
 import { logout } from "../../redux/features/userSlice";
@@ -50,20 +50,27 @@ const Header = () => {
               <span className="font-bold text-2xl text-gray-800">FASM</span>
             </Link>
             <nav className="hidden md:flex items-center space-x-6">
-              <Link to="/" className="text-gray-600 hover:text-orange-500">
-                Home
+              <Link to="/" className="text-gray-600 hover:text-orange-500 flex items-center">
+                <Home className="w-4 h-4 mr-1" /> Home
               </Link>
               <Link
                 to="/studentdashboard"
-                className="text-gray-600 hover:text-orange-500"
+                className="text-gray-600 hover:text-orange-500 flex items-center"
               >
-                MiniDashBoard
+                <LayoutDashboard className="w-4 h-4 mr-1" /> MiniDashBoard
               </Link>
               <Link
                 to="/my-assignments"
-                className="text-gray-600 hover:text-orange-500"
+                className="text-gray-600 hover:text-orange-500 flex items-center"
               >
-                My Assignments
+                <ClipboardList className="w-4 h-4 mr-1" /> My Assignments
+              </Link>
+              {/* Nút "View Request History" mới */}
+              <Link
+                to="/regrade-request" // Giả định đường dẫn cho lịch sử yêu cầu
+                className="text-gray-600 hover:text-orange-500 flex items-center"
+              >
+                <History className="w-4 h-4 mr-1" /> View Request History
               </Link>
             </nav>
           </div>

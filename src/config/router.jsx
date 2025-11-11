@@ -54,6 +54,7 @@ import AdminSystemSetting from "../pages/Admin/AdminSystemSetting";
 
 import ProfilePage from "../pages/HomePage/ProfilePage";
 import ViewScorePage from "../pages/ViewScorePage/ViewScorePage";
+import ViewRequestHistoryPage from "../pages/RegradeRequest/ViewRequestHistoryPage";
 
 export const router = createBrowserRouter([
   {
@@ -95,6 +96,10 @@ export const router = createBrowserRouter([
       {
         path: "assignment/:courseId/:assignmentId/scores",
         element: <ViewScorePage />,
+      },
+       {
+        path: "regrade-request",
+        element: <ViewRequestHistoryPage />,
       },
 
     ],
