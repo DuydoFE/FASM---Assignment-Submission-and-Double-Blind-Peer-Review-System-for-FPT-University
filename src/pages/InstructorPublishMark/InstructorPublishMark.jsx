@@ -192,20 +192,23 @@ const InstructorPublishMark = () => {
   };
 
   const confirmPublish = async () => {
-    setShowConfirmModal(false);
-    setLoading(prev => ({ ...prev, publishing: true }));
+  setShowConfirmModal(false);
+  setLoading(prev => ({ ...prev, publishing: true }));
+  
+  try {
+    await publishGrades(selectedAssignmentId);
+    toast.success('Grades published successfully!');
+    await handleViewGrades();
+  } catch (error) {
+    console.error('Error publishing grades:', error);
     
-    try {
-      await publishGrades(selectedAssignmentId);
-      toast.success('Grades published successfully!');
-      await handleViewGrades();
-    } catch (error) {
-      console.error('Error publishing grades:', error);
-      toast.error('Failed to publish grades. Please try again.');
-    } finally {
-      setLoading(prev => ({ ...prev, publishing: false }));
-    }
-  };
+    const message = error?.message || 'Failed to publish grades. Please try again.';
+    toast.error(message);
+  } finally {
+    setLoading(prev => ({ ...prev, publishing: false }));
+  }
+};
+
 
   const handleAutoGradeZero = () => {
     if (!selectedAssignmentId) {

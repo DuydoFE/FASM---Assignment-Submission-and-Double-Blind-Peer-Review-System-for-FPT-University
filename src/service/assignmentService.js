@@ -112,7 +112,6 @@ export const createAssignment = async (assignmentData, file = null) => {
     
     return response.data;
   } catch (error) {
-    console.error('Lỗi khi tạo assignment mới:', error);
     console.error('Error response:', error.response?.data);
     throw error;
   }

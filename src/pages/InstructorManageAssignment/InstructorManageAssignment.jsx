@@ -14,9 +14,13 @@ const InstructorManageAssignment = () => {
 
   const [courseInstanceId, setCourseInstanceId] = useState(() => {
     try {
-      return location?.state?.courseInstanceId || sessionStorage.getItem('currentCourseInstanceId') || null;
+      const fromState = location?.state?.courseInstanceId;
+      const fromStorage = sessionStorage.getItem('currentCourseInstanceId');
+      if (fromState !== undefined && fromState !== null) return String(fromState);
+      if (fromStorage) return String(fromStorage);
+      return null;
     } catch (e) {
-      return location?.state?.courseInstanceId || null;
+      return location?.state?.courseInstanceId ? String(location.state.courseInstanceId) : null;
     }
   });
 
@@ -32,6 +36,7 @@ const InstructorManageAssignment = () => {
   const [editingAssignment, setEditingAssignment] = useState(null);
   const [openDropdownId, setOpenDropdownId] = useState(null);
   const dropdownRef = useRef(null);
+  const toastShownRef = useRef(false);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -201,13 +206,14 @@ const InstructorManageAssignment = () => {
     try {
       await createAssignment(assignmentData, file);
       await fetchAssignments();
-      setShowModal(false);
       toast.success('Assignment created successfully!');
+      setShowModal(false);
     } catch (error) {
-      console.error('Error creating assignment:', error);
-      toast.error('Failed to create assignment');
+      const message = error?.response?.data?.message || 'Failed to create assignment';
+      toast.error(message);
     }
   };
+
 
   const handleViewSubmissions = async (assignment) => {
     try {
