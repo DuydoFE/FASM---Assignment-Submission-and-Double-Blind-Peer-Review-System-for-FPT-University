@@ -256,7 +256,7 @@ const PeerReviewPage = () => {
               </button>
               <button onClick={handleGenerateAiSummary} disabled={isGeneratingAi} className="flex items-center px-4 py-2 bg-green-600 text-white rounded-md font-semibold hover:bg-green-700 text-sm disabled:bg-green-400 disabled:cursor-not-allowed">
                 {isGeneratingAi ? <Loader2 size={14} className="mr-2 animate-spin" /> : <Bot size={14} className="mr-2" />}
-                Tạo tóm tắt AI
+                Create Summary AI
               </button>
               <button className="flex items-center px-4 py-2 border rounded-md font-semibold text-gray-700 hover:bg-gray-100 text-sm">
                 <RotateCcw size={14} className="mr-2" />
@@ -265,8 +265,8 @@ const PeerReviewPage = () => {
             </div>
             
             <div className="grid grid-cols-12 gap-4 px-4 pb-2 border-b font-bold text-gray-600">
-              <div className="col-span-5">Form Grading</div>
-              <div className="col-span-5">AI Summary</div>
+              <div className="col-span-7">Form Grading</div>
+              <div className="col-span-3">AI Summary</div>
               <div className="col-span-2 text-center">Score Input</div>
             </div>
 
@@ -287,14 +287,14 @@ const PeerReviewPage = () => {
                     </div>
                     <div className="col-span-5">
                       {isGeneratingAi ? (
-                         <div className="flex items-center text-gray-500"><Loader2 className="w-4 h-4 mr-2 animate-spin" /><span>Đang phân tích...</span></div>
+                         <div className="flex items-center text-gray-500"><Loader2 className="w-4 h-4 mr-2 animate-spin" /><span>Analyzing...</span></div>
                       ) : aiFeedbackForItem ? (
                         <div>
                           <div className="flex items-center mb-1"><span className="font-semibold text-gray-700 text-sm">{aiFeedbackForItem.title}</span><span className="ml-2 text-xs font-medium text-gray-500 bg-gray-200 px-1.5 py-0.5 rounded">{criterion.weight}%</span></div>
                           <p className="text-sm text-gray-600">{aiFeedbackForItem.summary}</p>
                         </div>
                       ) : (
-                        <div className="text-center text-gray-400"><Zap size={24} className="mx-auto mb-1" /><p className="text-sm font-semibold">Chưa có tóm tắt AI</p><p className="text-xs">Bấm 'Tạo tóm tắt AI' để phân tích</p></div>
+                        <div className="text-center text-gray-400"><Zap size={24} className="mx-auto mb-1" /><p className="text-sm font-semibold">No AI summary yet</p><p className="text-xs">Click 'Generate AI summary' to analyzes</p></div>
                       )}
                     </div>
                     <div className="col-span-2 flex items-center justify-center">

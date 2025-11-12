@@ -112,6 +112,16 @@ export const updateCriteriaTemplate = async (criteriaTemplateId, criteriaData) =
     }
 };
 
+export const getCriteriaByAssignmentId = async (assignmentId) => {
+    try {
+        const response = await api.get(`/Assignment/assignment/${assignmentId}/criteria`);
+        return response.data.data;
+    } catch (error) {
+        console.error(`Error fetching criteria for assignment ${assignmentId}:`, error);
+        throw error;
+    }
+};
+
 export const criteriaService = {
     getCriteriaByRubricId,
     deleteCriterion,
@@ -120,5 +130,6 @@ export const criteriaService = {
     getCriteriaByTemplateId,
     deleteCriteriaTemplate,
     createCriteriaTemplate,
-    updateCriteriaTemplate
+    updateCriteriaTemplate,
+    getCriteriaByAssignmentId   
 };

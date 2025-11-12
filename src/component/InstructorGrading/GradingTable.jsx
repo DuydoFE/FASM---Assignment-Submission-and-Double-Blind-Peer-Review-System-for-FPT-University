@@ -1,0 +1,183 @@
+import React from 'react';
+import { Search, ChevronDown, Loader2 } from 'lucide-react';
+
+const GradingTable = ({
+  assignmentInfo,
+  searchTerm,
+  setSearchTerm,
+  statusFilter,
+  handleStatusClick,
+  filteredStudents,
+  loading,
+  onGradeClick
+}) => {
+  const formatDateTime = (dateString) => {
+    if (!dateString) return { date: '--', time: '' };
+    const date = new Date(dateString);
+    const dateStr = date.toLocaleDateString('vi-VN');
+    const timeStr = date.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+    return { date: dateStr, time: timeStr };
+  };
+
+  const getScoreStyle = (instructorScore) => {
+    if (instructorScore === null || instructorScore === undefined) return 'border-gray-300 text-gray-400';
+    const normalizedScore = instructorScore / 10;
+    if (normalizedScore >= 8) return 'border-green-500 text-green-600';
+    if (normalizedScore >= 6.5) return 'border-green-400 text-green-500';
+    return 'border-red-400 text-red-500';
+  };
+
+  const getStatusStyle = (status) => {
+    switch (status) {
+      case 'Graded': return 'bg-green-100 text-green-700';
+      case 'Submitted': return 'bg-blue-100 text-blue-700';
+      case 'Not Submitted': return 'bg-red-100 text-red-700';
+      default: return 'bg-gray-100 text-gray-600';
+    }
+  };
+
+  const getSubmissionTimeStyle = () => {
+    return 'text-gray-600';
+  };
+
+  return (
+    <>
+      {/* Assignment Info Card */}
+      {assignmentInfo && (
+        <div className="bg-white rounded-lg border border-gray-200 p-6 mb-6">
+          <div className="flex justify-between items-start mb-3">
+            <div>
+              <h2 className="text-xl font-semibold text-gray-800 mb-1">
+                {assignmentInfo.title}
+              </h2>
+              <p className="text-gray-600">{assignmentInfo.description}</p>
+            </div>
+            <div className="text-right">
+              <p className="text-red-600 font-medium mb-1">
+                Deadline: {formatDateTime(assignmentInfo.deadline).date} - {formatDateTime(assignmentInfo.deadline).time}
+              </p>
+            </div>
+          </div>
+          <div className="flex gap-6">
+            <div className="flex items-center gap-2">
+              <span className="text-green-600 font-medium">
+                ✓ {assignmentInfo.submitted || 0}/{assignmentInfo.totalStudents || 0} submitted
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-yellow-600 font-medium">
+                ⭐ {assignmentInfo.graded || 0}/{assignmentInfo.submitted || 0} graded
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Search Bar */}
+      <div className="mb-6">
+        <div className="relative">
+          <Search className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
+          <input
+            type="text"
+            placeholder="Search students..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+      </div>
+
+      {/* Table */}
+      <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+        {loading.summary ? (
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
+            <span className="ml-3 text-gray-600">Loading students...</span>
+          </div>
+        ) : (
+          <table className="w-full">
+            <thead className="bg-gray-50 border-b border-gray-200">
+              <tr>
+                <th className="px-6 py-3 text-left text-sm font-medium text-gray-600">Member</th>
+                <th className="px-6 py-3 text-left text-sm font-medium text-gray-600">Full Name</th>
+                <th className="px-6 py-3 text-left text-sm font-medium text-gray-600">Score</th>
+                <th className="px-6 py-3 text-left text-sm font-medium text-gray-600">Feedback</th>
+                <th className="px-6 py-3 text-left text-sm font-medium text-gray-600">Submission Time</th>
+                <th
+                  onClick={handleStatusClick}
+                  className="px-6 py-3 text-left text-sm font-medium text-gray-600 cursor-pointer hover:text-orange-600 select-none flex items-center gap-1"
+                >
+                  Status <ChevronDown size={16} />
+                </th>
+                <th className="px-6 py-3 text-left text-sm font-medium text-gray-600">Action</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-200">
+              {filteredStudents.length > 0 ? (
+                filteredStudents.map((student) => {
+                  const submissionTime = formatDateTime(student.submittedAt);
+                  return (
+                    <tr key={student.studentId} className="hover:bg-gray-50">
+                      <td className="px-6 py-4 text-sm text-gray-600">{student.studentCode}</td>
+                      <td className="px-6 py-4 text-sm text-gray-800">{student.studentName}</td>
+                      <td className="px-6 py-4">
+                        <span className={`inline-flex items-center justify-center w-20 h-10 border-2 rounded-lg font-semibold ${getScoreStyle(student.instructorScore)}`}>
+                          {student.instructorScore !== null && student.instructorScore !== undefined 
+                            ? `${(student.instructorScore / 10).toFixed(1)}` 
+                            : '--'} / {(assignmentInfo?.maxScore || 10)}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-500 max-w-xs truncate">
+                        {student.feedback || 'No feedback yet'}
+                      </td>
+                      <td className="px-6 py-4 text-sm">
+                        {student.submittedAt ? (
+                          <div className={getSubmissionTimeStyle()}>
+                            {submissionTime.date}<br />
+                            {submissionTime.time}
+                          </div>
+                        ) : (
+                          <span className="text-gray-400">--</span>
+                        )}
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${getStatusStyle(student.status)}`}>
+                          {student.status}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        {student.status === 'Submitted' ? (
+                          <button 
+                            onClick={() => onGradeClick(student.submissionId, student.status)}
+                            className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm font-medium"
+                          >
+                            Grade
+                          </button>
+                        ) : student.status === 'Graded' ? (
+                          <button 
+                            onClick={() => onGradeClick(student.submissionId, student.status)}
+                            className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors text-sm font-medium"
+                          >
+                            Re-grade
+                          </button>
+                        ) : null}
+                      </td>
+                    </tr>
+                  );
+                })
+              ) : (
+                <tr>
+                  <td colSpan="7" className="px-6 py-12 text-center text-gray-500">
+                    No students found
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        )}
+      </div>
+    </>
+  );
+};
+
+export default GradingTable;

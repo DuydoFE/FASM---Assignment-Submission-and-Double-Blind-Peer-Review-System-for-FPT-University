@@ -65,12 +65,10 @@ export const createAssignment = async (assignmentData, file = null) => {
   try {
     const formData = new FormData();
     
-    // Append từng field riêng lẻ thay vì JSON string
     formData.append('CourseInstanceId', assignmentData.courseInstanceId);
     formData.append('RubricTemplateId', assignmentData.rubricTemplateId);
     formData.append('Title', assignmentData.title);
     
-    // Optional fields - chỉ append nếu có giá trị
     if (assignmentData.description) {
       formData.append('Description', assignmentData.description);
     }
@@ -81,27 +79,22 @@ export const createAssignment = async (assignmentData, file = null) => {
       formData.append('StartDate', assignmentData.startDate);
     }
     
-    // Required date fields
     formData.append('Deadline', assignmentData.deadline);
     formData.append('ReviewDeadline', assignmentData.reviewDeadline);
     formData.append('FinalDeadline', assignmentData.finalDeadline);
     
-    // Number fields
     formData.append('NumPeerReviewsRequired', assignmentData.numPeerReviewsRequired);
     formData.append('MissingReviewPenalty', assignmentData.missingReviewPenalty);
     formData.append('InstructorWeight', assignmentData.instructorWeight);
     formData.append('PeerWeight', assignmentData.peerWeight);
     formData.append('PassThreshold', assignmentData.passThreshold);
     
-    // Boolean fields
     formData.append('AllowCrossClass', assignmentData.allowCrossClass);
     formData.append('IsBlindReview', assignmentData.isBlindReview);
     formData.append('IncludeAIScore', assignmentData.includeAIScore);
     
-    // String fields
     formData.append('GradingScale', assignmentData.gradingScale);
     
-    // File (if exists)
     if (file) {
       formData.append('File', file);
     }
@@ -146,9 +139,18 @@ export const updateAssignment = async (assignmentData) => {
   }
 };
 
+const publishAssignment = async (assignmentId) => {
+  try {
+    const response = await api.put(`/Assignment/${assignmentId}/publish`);
+    return response.data;
+  } catch (error) {
+    console.error(`Lỗi khi publish assignment ID ${assignmentId}:`, error);
+    throw error;
+  }
+};
 
 
-// Export service
+
 export const assignmentService = {
   getAssignmentsByCourseInstanceId,
   getAssignmentDetailsById,
@@ -157,5 +159,6 @@ export const assignmentService = {
   extendDeadline,
   createAssignment,
   deleteAssignment,
-  updateAssignment
+  updateAssignment,
+  publishAssignment
 };

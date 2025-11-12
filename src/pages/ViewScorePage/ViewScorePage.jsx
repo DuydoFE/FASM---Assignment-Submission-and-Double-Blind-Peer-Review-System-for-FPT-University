@@ -11,12 +11,21 @@ import {
   ArrowLeft,
   MessageSquare,
   Users,
+  BarChart,
+  Clock,
+  CheckCircle,
+  XCircle,
   UserCheck,
+  FileText,
+  Eye,
+  Download,
   CalendarCheck,
   ShieldQuestion,
+  TrendingUp,
+  Trophy,
 } from "lucide-react";
 import RegradeRequestModal from "../../component/Assignment/RegradeRequestModal.jsx";
-
+import ViewRequestModal from "../../component/Assignment/ViewRequestModal.jsx";
 const formatDate = (dateString) => {
   if (!dateString) return "N/A";
   const options = {
@@ -28,13 +37,54 @@ const formatDate = (dateString) => {
   };
   return new Date(dateString).toLocaleDateString("vi-VN", options);
 };
+
+const RegradeStatusBadge = ({ status }) => {
+  const statusStyles = {
+    Pending: {
+      bgColor: "bg-yellow-100",
+      textColor: "text-yellow-800",
+      icon: <Clock size={14} className="mr-1.5" />,
+      text: "Request Pending",
+    },
+    Approved: {
+      bgColor: "bg-green-100",
+      textColor: "text-green-800",
+      icon: <CheckCircle size={14} className="mr-1.5" />,
+      text: "Request Approved",
+    },
+    Rejected: {
+      bgColor: "bg-red-100",
+      textColor: "text-red-800",
+      icon: <XCircle size={14} className="mr-1.5" />,
+      text: "Request Rejected",
+    },
+  };
+
+  const currentStatus = statusStyles[status];
+
+  if (!currentStatus) {
+    return null;
+  }
+
+  return (
+    <div
+      className={`flex items-center px-3 py-2 rounded-md font-semibold text-sm ${currentStatus.bgColor} ${currentStatus.textColor}`}
+    >
+      {currentStatus.icon}
+      {currentStatus.text}
+    </div>
+  );
+};
+
 const ViewScorePage = () => {
   const { courseId, assignmentId } = useParams();
   const navigate = useNavigate();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const currentUser = useSelector(selectUser);
-
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+  const [requestDetails, setRequestDetails] = useState(null);
+  const [isFetchingDetails, setIsFetchingDetails] = useState(false);
   const {
     data: responseData,
     isLoading,
@@ -48,22 +98,14 @@ const ViewScorePage = () => {
   const scoreData = responseData?.data;
 
   const handleRegradeSubmit = async ({ reason }) => {
-    // BƯỚC 1: KIỂM TRA HÀM CÓ ĐƯỢC GỌI KHÔNG
-    console.log("--- Step 1: handleRegradeSubmit function was called. ---");
-
-    // BƯỚC 2: KIỂM TRA DỮ LIỆU ĐẦU VÀO
-    console.log("Step 2.1: Checking scoreData:", scoreData);
-    console.log("Step 2.2: Checking currentUser:", currentUser);
-
+    // Kiểm tra dữ liệu đầu vào
     if (!scoreData?.submissionId) {
       toast.error("Submission ID not found. Cannot submit request.");
-      console.error("ERROR: scoreData.submissionId is missing!", scoreData);
-      return; // Dừng lại ở đây
+      return;
     }
     if (!currentUser?.userId) {
       toast.error("User information not found. Please log in again.");
-      console.error("ERROR: currentUser.userId is missing!", currentUser);
-      return; // Dừng lại ở đây
+      return;
     }
 
     setIsSubmitting(true);
@@ -74,25 +116,42 @@ const ViewScorePage = () => {
         requestedByUserId: currentUser.userId,
       };
       
-      // BƯỚC 3: KIỂM TRA PAYLOAD TRƯỚC KHI GỬI
-      console.log("Step 3: Payload is ready to be sent:", payload);
-
-      // BƯỚC 4: BẮT ĐẦU GỌI API
-      console.log("Step 4: Attempting to call reviewService.submitRegradeRequest...");
+      // Gọi API một lần duy nhất ở đây
       await reviewService.submitRegradeRequest(payload);
       
-      // BƯỚC 5: GỌI API THÀNH CÔNG
-      console.log("Step 5: API call successful!");
+      // Xử lý sau khi thành công
       toast.success("Your regrade request has been sent successfully!");
       setIsModalOpen(false);
+      refetch(); // Tải lại dữ liệu để cập nhật trạng thái trên giao diện
+
     } catch (error) {
-      // BƯỚC 6: GỌI API THẤT BẠI
-      console.error("Step 6: API call failed!", error);
+      console.error("API call failed!", error);
       toast.error("Failed to send request. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
   };
+
+const handleViewRequest = async () => {
+    // Không cần kiểm tra regradeRequestId nữa
+    console.log("Fetching details for hardcoded Request ID: 5"); // Thêm log để bạn biết đang dùng ID tạm
+    
+    setIsFetchingDetails(true);
+    setRequestDetails(null); // Xóa dữ liệu cũ trước khi gọi API mới
+    setIsViewModalOpen(true);
+    
+    try {
+        // Truyền thẳng số 5 vào hàm gọi API
+        const response = await reviewService.getRegradeRequestDetails(5); 
+        setRequestDetails(response.data);
+    } catch (error) {
+        toast.error("Failed to load request details.");
+        setIsViewModalOpen(false); // Đóng modal nếu có lỗi
+    } finally {
+        setIsFetchingDetails(false);
+    }
+}
+
   if (isLoading) {
     return (
       <div className="p-8 text-center font-semibold text-lg">
@@ -115,7 +174,6 @@ const ViewScorePage = () => {
   return (
     <div className="bg-gray-50 min-h-screen p-8">
       <div className="max-w-4xl mx-auto">
-        {/* Breadcrumbs */}
         <div className="mb-6 flex items-center text-sm text-gray-600">
           <Link to="/my-assignments" className="hover:underline">
             My Assignments
@@ -139,13 +197,26 @@ const ViewScorePage = () => {
             </p>
           </div>
           <div className="flex space-x-3">
-            <button
-              onClick={() => setIsModalOpen(true)} // Mở modal khi click
-              className="flex items-center px-4 py-2 bg-red-600 text-white rounded-md font-semibold hover:bg-red-700 transition-colors"
-            >
-              <ShieldQuestion size={16} className="mr-2" />
-              Regrade Request
-            </button>
+            {scoreData.regradeStatus ? (
+              <div className="flex items-center space-x-3">
+                <RegradeStatusBadge status={scoreData.regradeStatus} />
+                <button
+                    onClick={handleViewRequest}
+                    className="flex items-center p-2 border rounded-md font-semibold text-gray-700 hover:bg-gray-100"
+                    title="View Request Details"
+                >
+                    <Eye size={16} />
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => setIsModalOpen(true)}
+                className="flex items-center px-4 py-2 bg-red-600 text-white rounded-md font-semibold hover:bg-red-700 transition-colors"
+              >
+                <ShieldQuestion size={16} className="mr-2" />
+                Regrade Request
+              </button>
+            )}
             <button
               onClick={() => navigate(`/assignment/${courseId}`)}
               className="flex items-center px-4 py-2 border rounded-md font-semibold text-gray-700 hover:bg-gray-100"
@@ -174,15 +245,51 @@ const ViewScorePage = () => {
             </div>
           </div>
         </div>
+        {scoreData.fileUrl && (
+          <div className="mt-8">
+            <h3 className="font-bold text-xl mb-4 text-gray-800 flex items-center">
+              <FileText className="mr-2 text-gray-500" /> Submission Details
+            </h3>
+            <div className="bg-white p-4 rounded-lg shadow-md border">
+              <div className="flex items-center text-sm">
+                <p className="font-semibold text-gray-700 mr-4 truncate flex-grow">
+                  {scoreData.fileName || "Submission File"}
+                </p>
+                <div className="ml-auto flex space-x-2 flex-shrink-0">
+                  <a
+                    href={scoreData.fileUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    title="Preview File"
+                    className="flex items-center px-3 py-1.5 border rounded-md font-semibold text-gray-700 hover:bg-gray-100 text-sm"
+                  >
+                    <Eye size={14} className="mr-1.5" />
+                    Preview
+                  </a>
+                  <a
+                    href={scoreData.fileUrl}
+                    download={scoreData.fileName}
+                    title="Download File"
+                    className="flex items-center px-3 py-1.5 border rounded-md font-semibold text-gray-700 hover:bg-gray-100 text-sm"
+                  >
+                    <Download size={14} className="mr-1.5" />
+                    Download
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
-        {/* Score Breakdown & Feedback */}
         <div className="mt-8">
           <h3 className="font-bold text-xl mb-4 text-gray-800">
             Score details
           </h3>
           <div className="bg-white p-6 rounded-lg shadow-md border space-y-4">
-            <div className="flex items-center p-3 bg-indigo-50 rounded-lg">
-              <UserCheck className="w-6 h-6 mr-4 text-indigo-500 flex-shrink-0" />
+            <div className="flex items-center p-4 bg-indigo-50 rounded-lg">
+              <div className="p-3 bg-white rounded-full mr-4">
+                <UserCheck className="w-6 h-6 text-indigo-500" />
+              </div>
               <div>
                 <p className="font-semibold text-indigo-800">
                   Points from the instructor
@@ -192,8 +299,11 @@ const ViewScorePage = () => {
                 </p>
               </div>
             </div>
-            <div className="flex items-center p-3 bg-teal-50 rounded-lg">
-              <Users className="w-6 h-6 mr-4 text-teal-500 flex-shrink-0" />
+
+            <div className="flex items-center p-4 bg-teal-50 rounded-lg">
+              <div className="p-3 bg-white rounded-full mr-4">
+                <Users className="w-6 h-6 text-teal-500" />
+              </div>
               <div>
                 <p className="font-semibold text-teal-800">
                   Average score from Peer Review
@@ -201,6 +311,37 @@ const ViewScorePage = () => {
                 <p className="text-2xl font-bold text-teal-600">
                   {scoreData.peerAverageScore.toFixed(2)}
                 </p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+              {/* Card Điểm trung bình */}
+              <div className="p-4 bg-gradient-to-br from-blue-100 to-purple-100 rounded-lg flex items-center transition-transform hover:scale-105">
+                <div className="p-3 bg-white/60 rounded-full mr-4 shadow-inner">
+                  <TrendingUp className="w-6 h-6 text-purple-600" />
+                </div>
+                <div>
+                  <p className="font-semibold text-purple-900">
+                    Class Average Score
+                  </p>
+                  <p className="text-3xl font-bold text-purple-700">
+                    {scoreData.classAverageScore.toFixed(2)}
+                  </p>
+                </div>
+              </div>
+
+              <div className="p-4 bg-gradient-to-br from-yellow-100 to-orange-100 rounded-lg flex items-center transition-transform hover:scale-105">
+                <div className="p-3 bg-white/60 rounded-full mr-4 shadow-inner">
+                  <Trophy className="w-6 h-6 text-orange-500" />
+                </div>
+                <div>
+                  <p className="font-semibold text-orange-900">
+                    Class Highest Score
+                  </p>
+                  <p className="text-3xl font-bold text-orange-700">
+                    {scoreData.classMaxScore.toFixed(2)}
+                  </p>
+                </div>
               </div>
             </div>
           </div>
@@ -221,9 +362,13 @@ const ViewScorePage = () => {
       <RegradeRequestModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        onSubmit={handleRegradeSubmit} // 👉 6. Pass the handler to the modal
-        assignmentTitle={assignmentTitle}
-        isSubmitting={isSubmitting} // 👉 7. Pass the submitting state
+        onSubmit={handleRegradeSubmit}
+        isSubmitting={isSubmitting}
+      />
+     <ViewRequestModal 
+        isOpen={isViewModalOpen}
+        onClose={() => setIsViewModalOpen(false)}
+        details={requestDetails}
       />
     </div>
   );

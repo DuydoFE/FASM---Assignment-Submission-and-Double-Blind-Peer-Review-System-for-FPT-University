@@ -170,7 +170,10 @@ const InstructorDashboard = () => {
                 <div
                   key={course.id}
                   className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow bg-white cursor-pointer"
-                  onClick={() => navigate(`/instructor/manage-class/${course.id}`)}
+                    onClick={() => {
+                      try { sessionStorage.setItem('currentCourseInstanceId', String(course.id)); } catch (e) { /* ignore */ }
+                      navigate(`/instructor/manage-class/${course.id}`, { state: { courseInstanceId: course.id } });
+                    }}
                 >
                   <div className="mb-3">
                     <div className="flex items-center justify-between">
@@ -183,7 +186,7 @@ const InstructorDashboard = () => {
                       </span>
                     </div>
                   </div>
-                  <h3 className="font-medium text-gray-900 mb-4 text-base">Basic Java Programming</h3>
+                  <h3 className="font-medium text-gray-900 mb-4 text-base">{course.courseName}</h3>
 
                   <div className="space-y-2">
                     <div className="flex items-center text-sm text-gray-500">
