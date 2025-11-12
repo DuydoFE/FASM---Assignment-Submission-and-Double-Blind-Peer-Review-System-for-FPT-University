@@ -10,8 +10,7 @@ import {
   getMajorById,
   getAllMajors,
   getAllCampuses,
-  assignUserRoles,
-  importStudentsFromExcel,
+  importStudentsFromMultipleSheets,
 } from "../../service/adminService";
 import toast from "react-hot-toast";
 
@@ -287,7 +286,7 @@ export default function AdminUserManagement() {
 
       toast.loading("Đang import danh sách user...");
 
-      await importUsersFromExcel(formData);
+      await importStudentsFromMultipleSheets(campusId, file, userId);
       toast.dismiss();
       toast.success("✅ Import danh sách user thành công!");
       await fetchUsers(); // reload lại danh sách user
@@ -521,21 +520,7 @@ export default function AdminUserManagement() {
               ))}
             </select>
 
-            <div>
-              <select
-                className="border rounded w-full p-2 bg-gray-100"
-                value={selectedUser.roles?.[0] || ""}
-                disabled
-              >
-                <option value="">Chọn role</option>
-                <option value="Student">Student</option>
-                <option value="Lecturer">Instructor</option>
-                <option value="Admin">Admin</option>
-              </select>
-              <p className="text-xs text-gray-500 mt-1">
-                ⚠️ Chức năng sửa Role đang tạm khóa, chưa thể thay đổi.
-              </p>
-            </div>
+            {/* ⚠️ Phần Role đã bị loại bỏ */}
 
             <div className="flex justify-end gap-2">
               <button

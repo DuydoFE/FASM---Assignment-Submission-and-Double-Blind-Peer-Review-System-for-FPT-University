@@ -86,9 +86,9 @@ export default function AdminClassManagement() {
       courseId: Number(newClass.courseId),
       semesterId: Number(newClass.semesterId),
       campusId: Number(newClass.campusId),
-      sectionCode: newClass.sectionCode.trim(),
-      enrollmentPassword: newClass.enrollmentPassword.trim(),
-      requiresApproval: Boolean(newClass.requiresApproval),
+      sectionCode: newClass.sectionCode.trim(),           // 🔹 Thay className bằng sectionCode
+      enrollmentPassword: newClass.enrollmentPassword.trim(), // 🔹 Thêm enrollmentPassword
+      requiresApproval: Boolean(newClass.requiresApproval),    // 🔹 Thêm requiresApproval
     };
 
     console.log("🚀 Payload gửi lên BE:", payload);

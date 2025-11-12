@@ -39,8 +39,10 @@ export default function AdminClassDetailsManagement() {
         setClassInfo(classData?.data || classData);
 
         const studentData = await getCourseStudentsByCourseInstance(id);
-        const userArray = Array.isArray(studentData?.data?.data)
-          ? studentData.data.data
+        console.log("studentData:", studentData);
+
+        const userArray = Array.isArray(studentData?.data)
+          ? studentData.data
           : [];
         setUsers(userArray);
       } catch (err) {
@@ -58,31 +60,44 @@ export default function AdminClassDetailsManagement() {
 
   // 📌 Thêm user vào lớp
   const handleAddUser = async () => {
-    if (!newUser.userId) return toast.error("Please enter a valid user ID");
+    if (!newUser.userId || !newUser.studentCode)
+      return toast.error("Please fill in all required fields");
+
     try {
       setLoading(true);
+
       const payload = {
-        userId: newUser.userId,
-        courseInstanceId: id,
+        courseInstanceId: parseInt(id, 10),
+        userId: parseInt(newUser.userId, 10),
+        studentCode: newUser.studentCode,
+        status: newUser.status || "Active",
+        finalGrade: parseFloat(newUser.finalGrade) || 0,
+        isPassed: newUser.isPassed,
         changedByUserId,
       };
+
+      console.log("📤 Sending payload:", payload);
       await createCourseStudent(payload);
 
-
+      // Reload danh sách sinh viên
       const updated = await getCourseStudentsByCourseInstance(id);
-      setUsers(Array.isArray(updated?.data?.data) ? updated.data.data : []);
+      setUsers(Array.isArray(updated?.data) ? updated.data : []);
 
       toast.success("✅ User added successfully!");
       setShowAddUser(false);
-      setNewUser({ userId: "", name: "", studentId: "", email: "" });
+      setNewUser({
+        userId: "",
+        studentCode: "",
+        status: "Active",
+        finalGrade: 0,
+        isPassed: true,
+      });
     } catch (err) {
       console.error("❌ Error adding user:", err);
       toast.error("Failed to add user");
     } finally {
       setLoading(false);
     }
-
-
   };
 
   // 📌 Xoá user khỏi lớp
@@ -243,9 +258,10 @@ export default function AdminClassDetailsManagement() {
     {showAddUser && (
       <div className="fixed inset-0 flex items-center justify-center bg-black/40">
         <div className="bg-white p-6 rounded-xl w-96 shadow-lg space-y-4">
-          <h3 className="text-lg font-semibold">Add User</h3>
+          <h3 className="text-lg font-semibold text-center">➕ Add Student to Class</h3>
+
           <input
-            type="text"
+            type="number"
             placeholder="User ID"
             className="border rounded w-full p-2"
             value={newUser.userId}
@@ -253,34 +269,50 @@ export default function AdminClassDetailsManagement() {
               setNewUser({ ...newUser, userId: e.target.value })
             }
           />
+
           <input
             type="text"
-            placeholder="Full Name"
+            placeholder="Student Code"
             className="border rounded w-full p-2"
-            value={newUser.name}
+            value={newUser.studentCode}
             onChange={(e) =>
-              setNewUser({ ...newUser, name: e.target.value })
+              setNewUser({ ...newUser, studentCode: e.target.value })
             }
           />
+
+          <select
+            className="border rounded w-full p-2"
+            value={newUser.status}
+            onChange={(e) =>
+              setNewUser({ ...newUser, status: e.target.value })
+            }
+          >
+            <option value="Active">Active</option>
+            <option value="Inactive">Inactive</option>
+          </select>
+
           <input
-            type="text"
-            placeholder="Student ID"
+            type="number"
+            placeholder="Final Grade"
             className="border rounded w-full p-2"
-            value={newUser.studentId}
+            value={newUser.finalGrade}
             onChange={(e) =>
-              setNewUser({ ...newUser, studentId: e.target.value })
+              setNewUser({ ...newUser, finalGrade: e.target.value })
             }
           />
-          <input
-            type="email"
-            placeholder="Email"
-            className="border rounded w-full p-2"
-            value={newUser.email}
-            onChange={(e) =>
-              setNewUser({ ...newUser, email: e.target.value })
-            }
-          />
-          <div className="flex justify-end space-x-2">
+
+          <div className="flex items-center space-x-2">
+            <input
+              type="checkbox"
+              checked={newUser.isPassed}
+              onChange={(e) =>
+                setNewUser({ ...newUser, isPassed: e.target.checked })
+              }
+            />
+            <label className="text-sm text-gray-700">Passed</label>
+          </div>
+
+          <div className="flex justify-end space-x-2 pt-2">
             <button
               onClick={() => setShowAddUser(false)}
               className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300"
