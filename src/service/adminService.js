@@ -231,19 +231,6 @@ export const deleteCourseStudent = async (userId, courseInstanceId, courseStuden
 };
 
 // ===============================
-// 🔹 ASSIGNMENT API
-// ===============================
-
-
-
-
-// 🔹 Lấy toàn bộ assignment của 1 lớp học phần
-export const getAssignmentsByCourseInstance = async (courseInstanceId) => {
-  const res = await api.get(`/Assignment/course-instance/${courseInstanceId}`);
-  return res.data;
-};
-
-// ===============================
 // 🔹 MAJOR API (Ngành học)
 // ===============================
 
@@ -516,3 +503,149 @@ export const updateEnrollKey = async (courseInstanceId, data) => {
   return res.data;
 };
 
+// ===============================
+// 🔹 ASSIGNMENT API
+// ===============================
+
+// 🔹 Tạo bài tập mới
+export const createAssignment = async (formData) => {
+  const res = await api.post(`/Assignment`, formData, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+  return res.data;
+};
+
+// 🔹 Cập nhật bài tập
+export const updateAssignment = async (formData) => {
+  const res = await api.put(`/Assignment`, formData, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+  return res.data;
+};
+
+// 🔹 Xóa bài tập
+export const deleteAssignment = async (id) => {
+  const res = await api.delete(`/Assignment/${id}`);
+  return res.data;
+};
+
+// 🔹 Lấy thông tin bài tập theo ID
+export const getAssignmentById = async (id) => {
+  const res = await api.get(`/Assignment/${id}`);
+  return res.data;
+};
+
+// 🔹 Lấy chi tiết bài tập kèm rubric
+export const getAssignmentWithDetails = async (id) => {
+  const res = await api.get(`/Assignment/${id}/details`);
+  return res.data;
+};
+
+// 🔹 Lấy danh sách bài tập theo lớp học phần
+export const getAssignmentsByCourseInstance = async (courseInstanceId) => {
+  const res = await api.get(`/Assignment/course-instance/${courseInstanceId}`);
+  return res.data;
+};
+
+// 🔹 Lấy danh sách bài tập theo giảng viên
+export const getAssignmentsByInstructor = async (instructorId) => {
+  const res = await api.get(`/Assignment/instructor/${instructorId}`);
+  return res.data;
+};
+
+// 🔹 Lấy danh sách bài tập theo sinh viên
+export const getAssignmentsByStudent = async (studentId) => {
+  const res = await api.get(`/Assignment/student/${studentId}`);
+  return res.data;
+};
+
+// 🔹 Lấy danh sách bài tập đang active
+export const getActiveAssignments = async () => {
+  const res = await api.get(`/Assignment/active`);
+  return res.data;
+};
+
+// 🔹 Lấy danh sách bài tập quá hạn
+export const getOverdueAssignments = async () => {
+  const res = await api.get(`/Assignment/overdue`);
+  return res.data;
+};
+
+// 🔹 Publish bài tập
+export const publishAssignment = async (assignmentId) => {
+  const res = await api.put(`/Assignment/${assignmentId}/publish`);
+  return res.data;
+};
+
+// 🔹 Gia hạn deadline
+export const extendAssignmentDeadline = async (id, newDeadline) => {
+  const res = await api.put(`/Assignment/${id}/extend-deadline`, JSON.stringify(newDeadline), {
+    headers: { "Content-Type": "application/json" },
+  });
+  return res.data;
+};
+
+// 🔹 Cập nhật rubric cho bài tập
+export const updateAssignmentRubric = async (assignmentId, rubricId) => {
+  const res = await api.put(`/Assignment/${assignmentId}/update-rubric/${rubricId}`);
+  return res.data;
+};
+
+// 🔹 Lấy danh sách assignment đang dùng rubric template
+export const getAssignmentsByRubricTemplate = async (templateId) => {
+  const res = await api.get(`/Assignment/template/${templateId}/assignments`);
+  return res.data;
+};
+
+// 🔹 Lấy thống kê bài tập
+export const getAssignmentStatistics = async (id) => {
+  const res = await api.get(`/Assignment/${id}/stats`);
+  return res.data;
+};
+
+// 🔹 Lấy rubric bài tập để review
+export const getAssignmentRubricForReview = async (id) => {
+  const res = await api.get(`/Assignment/${id}/rubric-for-review`);
+  return res.data;
+};
+
+// 🔹 Lấy danh sách bài tập cơ bản theo lớp học phần
+export const getAssignmentsByCourseInstanceBasic = async (courseInstanceId) => {
+  const res = await api.get(`/Assignment/course-instance/${courseInstanceId}/basic`);
+  return res.data;
+};
+
+// 🔹 Lấy danh sách bài tập đang active trong lớp học phần
+export const getActiveAssignmentsByCourseInstance = async (courseInstanceId, studentId = null) => {
+  const res = await api.get(
+    `/Assignment/course-instance/${courseInstanceId}/active${studentId ? `?studentId=${studentId}` : ""}`
+  );
+  return res.data;
+};
+
+// 🔹 Clone bài tập sang lớp khác
+export const cloneAssignment = async (sourceAssignmentId, targetCourseInstanceId, requestData) => {
+  const res = await api.post(
+    `/Assignment/${sourceAssignmentId}/clone/${targetCourseInstanceId}`,
+    requestData
+  );
+  return res.data;
+};
+
+// 🔹 Cập nhật timeline bài tập
+export const updateAssignmentTimeline = async (assignmentId, requestData) => {
+  const res = await api.put(`/Assignment/${assignmentId}/timeline`, requestData);
+  return res.data;
+};
+
+// 🔹 Lấy tổng hợp trạng thái bài tập trong lớp học phần
+export const getAssignmentStatusSummary = async (courseInstanceId) => {
+  const res = await api.get(`/Assignment/course-instance/${courseInstanceId}/status-summary`);
+  return res.data;
+};
+
+// 🔹 Lấy tiến độ review/nộp bài của bài tập
+export const getAssignmentTracking = async (assignmentId) => {
+  const res = await api.get(`/Assignment/${assignmentId}/tracking`);
+  return res.data;
+};
