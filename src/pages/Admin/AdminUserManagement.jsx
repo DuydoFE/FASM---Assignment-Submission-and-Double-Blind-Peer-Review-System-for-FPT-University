@@ -25,10 +25,7 @@ export default function AdminUserManagement() {
   const [selectedUser, setSelectedUser] = useState(null);
   const [isUpdating, setIsUpdating] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-
-  // ➕ Thêm state cho form tạo user
   const [showAddForm, setShowAddForm] = useState(false);
-  // ✅ Đặt ở ngoài cùng component (trên useState)
   const defaultUser = {
     campusId: 0,
     majorId: 0,
@@ -43,17 +40,14 @@ export default function AdminUserManagement() {
     isActive: true,
   };
 
-  // ✅ useState khởi tạo
   const [newUser, setNewUser] = useState(defaultUser);
 
-  // ✅ Mỗi khi mở form "Add User" thì reset lại dữ liệu
   useEffect(() => {
     if (showAddForm) {
       setNewUser(defaultUser);
     }
   }, [showAddForm]);
 
-  // ✅ Load campus
   useEffect(() => {
     const fetchCampuses = async () => {
       try {
@@ -68,7 +62,6 @@ export default function AdminUserManagement() {
     fetchCampuses();
   }, []);
 
-  // ✅ Load majors
   useEffect(() => {
     const fetchMajors = async () => {
       try {
@@ -83,7 +76,6 @@ export default function AdminUserManagement() {
     fetchMajors();
   }, []);
 
-  // ✅ Load users khi chọn campus
   const fetchUsers = async () => {
     try {
       setIsLoading(true);
@@ -153,7 +145,6 @@ export default function AdminUserManagement() {
     fetchUsers();
   }, [selectedCampus]);
 
-  // ✅ Filter user
   useEffect(() => {
     let result = users;
     if (filters.major) {
@@ -172,7 +163,6 @@ export default function AdminUserManagement() {
     setFilteredUsers(result);
   }, [filters, users]);
 
-  // ✅ Toggle Active/Deactive
   const toggleUserStatus = async (user) => {
     try {
       if (user.isActive) await deactivateUser(user.id);
@@ -187,7 +177,6 @@ export default function AdminUserManagement() {
     }
   };
 
-  // ✅ Save user (role không thay đổi)
   const handleSaveUser = async () => {
     if (!selectedUser) return;
 
@@ -225,7 +214,6 @@ export default function AdminUserManagement() {
     }
   };
 
-  // ✅ Hàm tạo user mới
   const handleCreateUser = async () => {
     try {
       if (!newUser.email || !newUser.password || !newUser.role) {
@@ -233,7 +221,6 @@ export default function AdminUserManagement() {
         return;
       }
 
-      // ✅ Kiểm tra độ mạnh của mật khẩu
       const isStrongPassword = (password) => {
         const regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\W).{8,}$/;
         return regex.test(password);
@@ -259,12 +246,10 @@ export default function AdminUserManagement() {
       await createUser(payload);
       toast.success("✅ Tạo user mới thành công!");
 
-      await fetchUsers(); // reload danh sách user
+      await fetchUsers();
 
-      // 🔹 Reset lại form sau khi tạo xong
       setNewUser(defaultUser);
 
-      // 🔹 Ẩn form sau khi tạo
       setShowAddForm(false);
     } catch (err) {
       console.error("❌ Create user failed:", err);
@@ -275,7 +260,6 @@ export default function AdminUserManagement() {
     }
   };
 
-  // ✅ Import danh sách user từ file Excel
   const handleImportUsers = async (event) => {
     try {
       const file = event.target.files[0];
@@ -289,7 +273,7 @@ export default function AdminUserManagement() {
       await importStudentsFromMultipleSheets(campusId, file, userId);
       toast.dismiss();
       toast.success("✅ Import danh sách user thành công!");
-      await fetchUsers(); // reload lại danh sách user
+      await fetchUsers();
     } catch (err) {
       toast.dismiss();
       console.error("❌ Import failed:", err);

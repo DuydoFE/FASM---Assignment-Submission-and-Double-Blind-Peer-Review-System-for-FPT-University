@@ -10,21 +10,17 @@ import toast from "react-hot-toast";
 export default function AdminClassManagement() {
   const navigate = useNavigate();
 
-  // Data
   const [classes, setClasses] = useState([]);
 
-  // Filters
   const [filters, setFilters] = useState({
     campus: "",
     search: "",
   });
 
-  // UI states
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
   const [importFile, setImportFile] = useState(null);
 
-  // Form create class
   const [newClass, setNewClass] = useState({
     courseId: "",
     semesterId: "",
@@ -34,7 +30,6 @@ export default function AdminClassManagement() {
     requiresApproval: true,
   });
 
-  // 🧠 Load lớp học theo campus khi campus được chọn
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -64,11 +59,9 @@ export default function AdminClassManagement() {
     navigate(`/admin/classes/${id}`);
   };
 
-  // ✅ Tạo lớp học mới (FE)
   const handleCreateClass = async (e) => {
     e.preventDefault();
 
-    // Validate
     if (!newClass.courseId || !newClass.semesterId || !newClass.campusId) {
       toast.error("Please select campus, course, and semester.");
       return;
@@ -86,9 +79,9 @@ export default function AdminClassManagement() {
       courseId: Number(newClass.courseId),
       semesterId: Number(newClass.semesterId),
       campusId: Number(newClass.campusId),
-      sectionCode: newClass.sectionCode.trim(),           // 🔹 Thay className bằng sectionCode
-      enrollmentPassword: newClass.enrollmentPassword.trim(), // 🔹 Thêm enrollmentPassword
-      requiresApproval: Boolean(newClass.requiresApproval),    // 🔹 Thêm requiresApproval
+      sectionCode: newClass.sectionCode.trim(),
+      enrollmentPassword: newClass.enrollmentPassword.trim(),
+      requiresApproval: Boolean(newClass.requiresApproval),
     };
 
     console.log("🚀 Payload gửi lên BE:", payload);
@@ -153,7 +146,6 @@ export default function AdminClassManagement() {
 
       setShowImportModal(false);
 
-      // Reload danh sách lớp sau khi import
       const updated = await getCourseInstancesByCampusId(Number(filters.campus));
       setClasses(Array.isArray(updated?.data) ? updated.data : []);
     } catch (err) {

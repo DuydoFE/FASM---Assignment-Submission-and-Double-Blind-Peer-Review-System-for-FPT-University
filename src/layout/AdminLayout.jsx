@@ -1,5 +1,5 @@
 import { Outlet, NavLink, useNavigate } from "react-router-dom";
-import { Settings, User, Users, ClipboardList, BarChart3 } from "lucide-react";
+import { Settings, User, Users, ClipboardList, BarChart3, FileText } from "lucide-react"; // Thêm FileText cho Rubric
 import React from "react";
 
 export default function AdminLayout() {
@@ -51,6 +51,19 @@ export default function AdminLayout() {
           >
             <ClipboardList size={18} />
             Class Management
+          </NavLink>
+
+          {/* Rubric Management */}
+          <NavLink
+            to="/admin/rubrics"
+            className={({ isActive }) =>
+              `flex items-center gap-2 px-4 py-2 rounded-lg ${
+                isActive ? "bg-orange-500 text-white" : "hover:bg-gray-200"
+              }`
+            }
+          >
+            <FileText size={18} />
+            Rubric Management
           </NavLink>
 
           {/* System Setting */}
