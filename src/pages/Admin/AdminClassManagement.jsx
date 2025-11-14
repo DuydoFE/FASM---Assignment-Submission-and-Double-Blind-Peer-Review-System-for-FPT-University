@@ -10,10 +10,10 @@ import toast from "react-hot-toast";
 export default function AdminClassManagement() {
   const navigate = useNavigate();
 
-  // data
+  // Data
   const [classes, setClasses] = useState([]);
 
-  // cascading filters state
+  // Filters
   const [filters, setFilters] = useState({
     campus: "",
     search: "",
@@ -24,68 +24,115 @@ export default function AdminClassManagement() {
   const [showImportModal, setShowImportModal] = useState(false);
   const [importFile, setImportFile] = useState(null);
 
-  // create form
+  // Form create class
   const [newClass, setNewClass] = useState({
     courseId: "",
     semesterId: "",
     campusId: "",
-    name: "",
-    startDate: "",
-    endDate: "",
+    sectionCode: "",
+    enrollmentPassword: "",
+    requiresApproval: true,
   });
 
-  // load danh sách lớp theo campus
+  // 🧠 Load lớp học theo campus khi campus được chọn
   useEffect(() => {
-    if (!filters.campus) {
-      setClasses([]);
-      return;
-    }
-
     const fetchData = async () => {
       try {
-        const res = await getCourseInstancesByCampusId(filters.campus);
-        setClasses(res);
+        if (!filters.campus) {
+          setClasses([]);
+          return;
+        }
+        const res = await getCourseInstancesByCampusId(Number(filters.campus));
+        setClasses(Array.isArray(res?.data) ? res.data : []);
       } catch (err) {
-        console.error(err);
+        console.error("❌ Fetch classes error:", err);
         toast.error("Failed to load classes");
       }
     };
     fetchData();
   }, [filters.campus]);
 
-  // handlers
   const handleCampusChange = (e) => {
-    setFilters({ campus: e.target.value, search: "" });
+    setFilters({ ...filters, campus: e.target.value });
   };
 
-  const handleSearchChange = (e) => setFilters({ ...filters, search: e.target.value });
+  const handleSearchChange = (e) => {
+    setFilters({ ...filters, search: e.target.value });
+  };
 
   const handleViewDetail = (id) => {
-    navigate(`/admin/classes/${id}/users`);
+    navigate(`/admin/classes/${id}`);
   };
 
+  // ✅ Tạo lớp học mới (FE)
   const handleCreateClass = async (e) => {
     e.preventDefault();
+
+    // Validate
+    if (!newClass.courseId || !newClass.semesterId || !newClass.campusId) {
+      toast.error("Please select campus, course, and semester.");
+      return;
+    }
+    if (!newClass.sectionCode.trim()) {
+      toast.error("Please enter section code.");
+      return;
+    }
+    if (!newClass.enrollmentPassword.trim()) {
+      toast.error("Please enter enrollment password.");
+      return;
+    }
+
+    const payload = {
+      courseId: Number(newClass.courseId),
+      semesterId: Number(newClass.semesterId),
+      campusId: Number(newClass.campusId),
+      sectionCode: newClass.sectionCode.trim(),           // 🔹 Thay className bằng sectionCode
+      enrollmentPassword: newClass.enrollmentPassword.trim(), // 🔹 Thêm enrollmentPassword
+      requiresApproval: Boolean(newClass.requiresApproval),    // 🔹 Thêm requiresApproval
+    };
+
+    console.log("🚀 Payload gửi lên BE:", payload);
+
     try {
-      await createCourseInstance(newClass);
-      toast.success("Class created successfully!");
+      const token = localStorage.getItem("token");
+      if (!token) {
+        toast.error("Missing token. Please log in again.");
+        return;
+      }
+
+      const res = await createCourseInstance(payload);
+      console.log("📥 Response từ BE sau khi tạo class:", res);
+
+      if (res?.statusCode === 100 || res?.status === 201) {
+        toast.success("Class created successfully!");
+      } else {
+        console.warn("⚠️ Unexpected response từ BE:", res);
+        toast.error(res?.message || "Unexpected response from server.");
+      }
+
       setShowCreateModal(false);
       setNewClass({
         courseId: "",
         semesterId: "",
         campusId: "",
-        name: "",
-        startDate: "",
-        endDate: "",
+        sectionCode: "",
+        enrollmentPassword: "",
+        requiresApproval: true,
       });
 
       if (filters.campus) {
-        const res = await getCourseInstancesByCampusId(filters.campus);
-        setClasses(res);
+        const updated = await getCourseInstancesByCampusId(
+          Number(filters.campus)
+        );
+        setClasses(Array.isArray(updated?.data) ? updated.data : []);
       }
     } catch (err) {
-      console.error(err);
-      toast.error("Failed to create class");
+      console.error("❌ Create class error:", err);
+      const errorMsg =
+        err?.response?.data?.message ||
+        err?.message ||
+        "Failed to create class. Please check the server logs.";
+      toast.error(errorMsg);
     }
   };
 
@@ -94,21 +141,33 @@ export default function AdminClassManagement() {
     if (!importFile) return toast.error("Please select a file first");
 
     try {
-      await importStudentsFromMultipleSheets(filters.campus, importFile, 1); // 1 là userId tạm
-      toast.success("Import successfully!");
+      console.log("🚀 Importing students for campus:", filters.campus);
+      const res = await importStudentsFromMultipleSheets(filters.campus, importFile, 1);
+      console.log("📥 Response từ BE khi import:", res);
+
+      if (res?.statusCode === 200 || res?.success === true) {
+        toast.success("Import successfully!");
+      } else {
+        toast.error(res?.message || "Import failed!");
+      }
+
       setShowImportModal(false);
-      const res = await getCourseInstancesByCampusId(filters.campus);
-      setClasses(res);
+
+      // Reload danh sách lớp sau khi import
+      const updated = await getCourseInstancesByCampusId(Number(filters.campus));
+      setClasses(Array.isArray(updated?.data) ? updated.data : []);
     } catch (err) {
-      console.error(err);
-      toast.error("Import failed");
+      console.error("❌ Import class list error:", err);
+      toast.error(err?.response?.data?.message || "Import failed. Please check the file or server.");
     }
   };
 
-  // filtered classes by search
-  const filteredClasses = classes.filter((c) =>
-    c.name?.toLowerCase().includes(filters.search.toLowerCase())
-  );
+  const displayedClasses = classes.filter((c) => {
+    const matchSearch =
+      c.courseName?.toLowerCase().includes(filters.search.toLowerCase()) ||
+      c.sectionCode?.toLowerCase().includes(filters.search.toLowerCase());
+    return matchSearch;
+  });
 
   return (
     <div className="space-y-6">
@@ -116,7 +175,11 @@ export default function AdminClassManagement() {
 
       {/* Filter & Actions */}
       <div className="bg-white p-4 rounded-xl shadow-md flex flex-wrap gap-4 items-center">
-        <select className="border rounded p-2" value={filters.campus} onChange={handleCampusChange}>
+        <select
+          className="border rounded p-2"
+          value={filters.campus}
+          onChange={handleCampusChange}
+        >
           <option value="">Select Campus</option>
           <option value="1">Hồ Chí Minh</option>
           <option value="2">Hà Nội</option>
@@ -149,41 +212,50 @@ export default function AdminClassManagement() {
 
       {/* Table */}
       <div className="bg-white rounded-xl shadow-md overflow-x-auto">
-        {filteredClasses.length > 0 ? (
-          <table className="w-full text-sm">
-            <thead className="bg-orange-500 text-white">
-              <tr>
-                <th className="p-2 text-left">Class Name</th>
-                <th className="p-2 text-left">Course</th>
-                <th className="p-2 text-left">Semester</th>
-                <th className="p-2 text-left">Campus</th>
-                <th className="p-2 text-left">Status</th>
-                <th className="p-2 text-left">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredClasses.map((c) => (
-                <tr key={c.id} className="border-b hover:bg-gray-50">
-                  <td className="p-2">{c.name}</td>
-                  <td className="p-2">{c.courseName}</td>
-                  <td className="p-2">{c.semesterName}</td>
-                  <td className="p-2">{c.campusName}</td>
-                  <td className="p-2">{c.status}</td>
-                  <td className="p-2 space-x-2">
-                    <button
-                      className="text-orange-500 hover:underline"
-                      onClick={() => handleViewDetail(c.id)}
-                    >
-                      View Detail
-                    </button>
-                  </td>
+        {filters.campus ? (
+          displayedClasses.length > 0 ? (
+            <table className="w-full text-sm">
+              <thead className="bg-orange-500 text-white">
+                <tr>
+                  <th className="p-2 text-left">Class Name</th>
+                  <th className="p-2 text-left">Course</th>
+                  <th className="p-2 text-left">Semester</th>
+                  <th className="p-2 text-left">Campus</th>
+                  <th className="p-2 text-left">Students</th>
+                  <th className="p-2 text-left">Assignments</th>
+                  <th className="p-2 text-left">Actions</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {displayedClasses.map((c) => (
+                  <tr
+                    key={c.courseInstanceId}
+                    className="border-b hover:bg-gray-50"
+                  >
+                    <td className="p-2">{c.sectionCode || c.courseName}</td>
+                    <td className="p-2">{c.courseName}</td>
+                    <td className="p-2">{c.semesterName}</td>
+                    <td className="p-2">{c.campusName}</td>
+                    <td className="p-2">{c.studentCount}</td>
+                    <td className="p-2">{c.assignmentCount}</td>
+                    <td className="p-2 space-x-2">
+                      <button
+                        className="text-orange-500 hover:underline"
+                        onClick={() => handleViewDetail(c.courseInstanceId)}
+                      >
+                        View Detail
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          ) : (
+            <p className="p-4 text-center text-gray-500">No classes found</p>
+          )
         ) : (
           <p className="p-4 text-center text-gray-500">
-            {filters.campus ? "No classes found" : "Please select a campus to start filtering classes"}
+            Please select a campus first
           </p>
         )}
       </div>
@@ -192,10 +264,19 @@ export default function AdminClassManagement() {
       {showImportModal && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center">
           <div className="bg-white rounded-xl p-6 w-full max-w-md">
-            <h3 className="text-lg font-semibold mb-4">Import Class List (Excel)</h3>
-            <input type="file" accept=".xlsx,.xls" onChange={(e) => setImportFile(e.target.files[0])} />
+            <h3 className="text-lg font-semibold mb-4">
+              Import Class List (Excel)
+            </h3>
+            <input
+              type="file"
+              accept=".xlsx,.xls"
+              onChange={(e) => setImportFile(e.target.files[0])}
+            />
             <div className="mt-4 flex justify-end gap-2">
-              <button onClick={() => setShowImportModal(false)} className="px-4 py-2 border rounded">
+              <button
+                onClick={() => setShowImportModal(false)}
+                className="px-4 py-2 border rounded"
+              >
                 Cancel
               </button>
               <button
@@ -219,7 +300,9 @@ export default function AdminClassManagement() {
                 <select
                   required
                   value={newClass.campusId}
-                  onChange={(e) => setNewClass({ ...newClass, campusId: e.target.value })}
+                  onChange={(e) =>
+                    setNewClass({ ...newClass, campusId: e.target.value })
+                  }
                   className="border rounded p-2"
                 >
                   <option value="">Select Campus</option>
@@ -227,50 +310,73 @@ export default function AdminClassManagement() {
                   <option value="2">Hà Nội</option>
                 </select>
 
-                <input
-                  required
-                  value={newClass.name}
-                  onChange={(e) => setNewClass({ ...newClass, name: e.target.value })}
-                  placeholder="Class name"
-                  className="border rounded p-2"
-                />
-
-                <input
-                  type="text"
+                <select
                   required
                   value={newClass.courseId}
-                  onChange={(e) => setNewClass({ ...newClass, courseId: e.target.value })}
-                  placeholder="Course ID"
+                  onChange={(e) =>
+                    setNewClass({ ...newClass, courseId: e.target.value })
+                  }
+                  className="border rounded p-2"
+                >
+                  <option value="">Select Course</option>
+                  <option value="1">Object-Oriented Programming</option>
+                  <option value="2">Data Structures and Algorithms</option>
+                </select>
+
+                <select
+                  required
+                  value={newClass.semesterId}
+                  onChange={(e) =>
+                    setNewClass({ ...newClass, semesterId: e.target.value })
+                  }
+                  className="border rounded p-2"
+                >
+                  <option value="">Select Semester</option>
+                  <option value="1">Fall 2025</option>
+                  <option value="2">Spring 2026</option>
+                </select>
+
+                <input
+                  type="text"
+                  required
+                  value={newClass.sectionCode}
+                  onChange={(e) =>
+                    setNewClass({ ...newClass, sectionCode: e.target.value })
+                  }
+                  placeholder="Section Code"
                   className="border rounded p-2"
                 />
 
                 <input
                   type="text"
                   required
-                  value={newClass.semesterId}
-                  onChange={(e) => setNewClass({ ...newClass, semesterId: e.target.value })}
-                  placeholder="Semester ID"
-                  className="border rounded p-2"
-                />
-
-                <input
-                  type="date"
-                  required
-                  value={newClass.startDate}
-                  onChange={(e) => setNewClass({ ...newClass, startDate: e.target.value })}
-                  className="border rounded p-2"
-                />
-
-                <input
-                  type="date"
-                  required
-                  value={newClass.endDate}
-                  onChange={(e) => setNewClass({ ...newClass, endDate: e.target.value })}
+                  value={newClass.enrollmentPassword}
+                  onChange={(e) =>
+                    setNewClass({
+                      ...newClass,
+                      enrollmentPassword: e.target.value,
+                    })
+                  }
+                  placeholder="Enrollment Password"
                   className="border rounded p-2"
                 />
               </div>
 
-              <div className="flex justify-end gap-2">
+              <div className="flex items-center gap-2 mt-2">
+                <input
+                  type="checkbox"
+                  checked={newClass.requiresApproval}
+                  onChange={(e) =>
+                    setNewClass({
+                      ...newClass,
+                      requiresApproval: e.target.checked,
+                    })
+                  }
+                />
+                <label>Requires Approval</label>
+              </div>
+
+              <div className="flex justify-end gap-2 mt-4">
                 <button
                   type="button"
                   onClick={() => setShowCreateModal(false)}
@@ -278,7 +384,10 @@ export default function AdminClassManagement() {
                 >
                   Cancel
                 </button>
-                <button type="submit" className="px-4 py-2 bg-orange-500 text-white rounded">
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-orange-500 text-white rounded"
+                >
                   Create
                 </button>
               </div>

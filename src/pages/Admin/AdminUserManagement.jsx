@@ -2,77 +2,158 @@ import React, { useState, useEffect } from "react";
 import * as XLSX from "xlsx";
 import {
   getUsersByCampus,
+  getAllUsers,
   updateUser,
   createUser,
   activateUser,
   deactivateUser,
+  getMajorById,
+  getAllMajors,
+  getAllCampuses,
+  importStudentsFromMultipleSheets,
 } from "../../service/adminService";
+import toast from "react-hot-toast";
 
 export default function AdminUserManagement() {
+  const [campuses, setCampuses] = useState([]);
+  const [selectedCampus, setSelectedCampus] = useState("");
   const [users, setUsers] = useState([]);
   const [filteredUsers, setFilteredUsers] = useState([]);
-  const [filters, setFilters] = useState({
-    campus: "",
-    major: "",
-    search: "",
-  });
+  const [filters, setFilters] = useState({ campus: "", major: "", search: "" });
   const [majors, setMajors] = useState([]);
+  const [majorNames, setMajorNames] = useState([]);
   const [selectedUser, setSelectedUser] = useState(null);
   const [isUpdating, setIsUpdating] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  // ✅ Load users theo campus
-  const handleCampusChange = async (e) => {
-    const campusId = e.target.value;
-    setFilters({ campus: campusId, major: "", search: "" });
+  // ➕ Thêm state cho form tạo user
+  const [showAddForm, setShowAddForm] = useState(false);
+  // ✅ Đặt ở ngoài cùng component (trên useState)
+  const defaultUser = {
+    campusId: 0,
+    majorId: 0,
+    username: "",
+    password: "",
+    email: "",
+    firstName: "",
+    lastName: "",
+    studentCode: "",
+    avatarUrl: "",
+    role: "",
+    isActive: true,
+  };
 
-    if (!campusId) {
-      setUsers([]);
-      setMajors([]);
-      return;
+  // ✅ useState khởi tạo
+  const [newUser, setNewUser] = useState(defaultUser);
+
+  // ✅ Mỗi khi mở form "Add User" thì reset lại dữ liệu
+  useEffect(() => {
+    if (showAddForm) {
+      setNewUser(defaultUser);
     }
+  }, [showAddForm]);
 
+  // ✅ Load campus
+  useEffect(() => {
+    const fetchCampuses = async () => {
+      try {
+        const res = await getAllCampuses();
+        const data = Array.isArray(res) ? res : res.data || [];
+        setCampuses(data);
+      } catch (err) {
+        console.error("Error fetching campuses:", err);
+        setCampuses([]);
+      }
+    };
+    fetchCampuses();
+  }, []);
+
+  // ✅ Load majors
+  useEffect(() => {
+    const fetchMajors = async () => {
+      try {
+        const res = await getAllMajors();
+        const data = Array.isArray(res) ? res : res.data || [];
+        setMajors(data);
+      } catch (err) {
+        console.error("Error fetching majors:", err);
+        setMajors([]);
+      }
+    };
+    fetchMajors();
+  }, []);
+
+  // ✅ Load users khi chọn campus
+  const fetchUsers = async () => {
     try {
       setIsLoading(true);
-      const data = await getUsersByCampus(campusId);
-      const formattedUsers = data.map((u) => ({
-        id: u.id,
-        studentCode: u.studentCode || "-",
-        fullName:
-          u.fullName || `${u.firstName || ""} ${u.lastName || ""}`.trim(),
-        email: u.email || "-",
-        roleName: Array.isArray(u.roles)
-          ? u.roles.map((r) => r.roleName || r.name || "-").join(", ")
-          : u.roleName || u.role || "-",
-        campusName:
-          u.campus?.campusName ||
-          (u.campusId === 1 ? "Hồ Chí Minh" : "Hà Nội"),
-        campusId: u.campusId || 0,
-        majorName: u.major?.majorName || "Chưa có chuyên ngành",
-        majorId: u.majorId || null,
-        isActive:
-          typeof u.isActive === "boolean"
-            ? u.isActive
-            : u.status?.toLowerCase() === "active",
-      }));
+      if (selectedCampus) {
+        const res = await getUsersByCampus(selectedCampus);
+        const usersArray = Array.isArray(res) ? res : res.data || [];
 
-      setUsers(formattedUsers);
+        const majorCache = {};
+        const formattedUsers = await Promise.all(
+          usersArray.map(async (u) => {
+            let majorName = "Không xác định";
+            if (u.majorId && u.majorId !== 0) {
+              if (!majorCache[u.majorId]) {
+                try {
+                  const res = await getMajorById(u.majorId);
+                  majorCache[u.majorId] =
+                    res.majorName || res.data?.majorName || "Không rõ";
+                } catch {
+                  majorCache[u.majorId] = "Không xác định";
+                }
+              }
+              majorName = majorCache[u.majorId];
+            }
 
-      const majorsSet = [
-        ...new Set(formattedUsers.map((u) => u.majorName).filter(Boolean)),
-      ];
-      setMajors(majorsSet);
-    } catch (error) {
-      console.error("❌ Fetch users failed:", error);
-      alert("❌ Không thể tải danh sách user.");
-      setUsers([]);
-      setMajors([]);
+            return {
+              id: u.id || u.userId,
+              studentCode: u.studentCode || "-",
+              firstName: u.firstName || "",
+              lastName: u.lastName || "",
+              username: u.username || "",
+              email: u.email || "-",
+              roles: Array.isArray(u.roles)
+                ? u.roles
+                : [u.roleName || "Student"],
+              campusId: u.campusId || 0,
+              campusName:
+                u.campus?.campusName ||
+                (u.campusId === 1 ? "Hồ Chí Minh" : "Hà Nội"),
+              majorId: u.majorId || 0,
+              majorName,
+              isActive:
+                typeof u.isActive === "boolean"
+                  ? u.isActive
+                  : u.status?.toLowerCase() === "active",
+            };
+          })
+        );
+
+        setUsers(formattedUsers);
+
+        const majorsSet = [
+          ...new Set(formattedUsers.map((u) => u.majorName).filter(Boolean)),
+        ];
+        setMajorNames(majorsSet);
+      } else {
+        const res = await getAllUsers();
+        setUsers(res);
+      }
+    } catch (err) {
+      console.error("Error fetching users:", err);
     } finally {
       setIsLoading(false);
     }
   };
 
-  // ✅ Lọc theo major + search
+  useEffect(() => {
+    fetchUsers();
+  }, [selectedCampus]);
+
+  // ✅ Filter user
   useEffect(() => {
     let result = users;
     if (filters.major) {
@@ -82,135 +163,190 @@ export default function AdminUserManagement() {
       const keyword = filters.search.toLowerCase();
       result = result.filter(
         (u) =>
-          u.fullName.toLowerCase().includes(keyword) ||
+          u.firstName.toLowerCase().includes(keyword) ||
+          u.lastName.toLowerCase().includes(keyword) ||
           u.email.toLowerCase().includes(keyword) ||
-          u.campusName.toLowerCase().includes(keyword) ||
-          u.majorName.toLowerCase().includes(keyword) ||
-          (u.studentCode && u.studentCode.toLowerCase().includes(keyword))
+          u.studentCode.toLowerCase().includes(keyword)
       );
     }
     setFilteredUsers(result);
   }, [filters, users]);
 
-  // ✅ Import file Excel
-  const handleImportFile = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = async (event) => {
-      const data = new Uint8Array(event.target.result);
-      const workbook = XLSX.read(data, { type: "array" });
-      const sheet = workbook.SheetNames[0];
-      const rows = XLSX.utils.sheet_to_json(workbook.Sheets[sheet]);
-
-      const importedUsers = rows.map((r, i) => ({
-        id: Date.now() + i,
-        studentCode: r.studentCode || "-",
-        fullName: r.fullName || r.name || "",
-        email: r.email || "-",
-        roleName: r.role || "student",
-        campusName: r.campus || "Không rõ",
-        majorName: r.major || "Không rõ",
-        isActive: r.status?.toLowerCase() === "active",
-      }));
-
-      setUsers((prev) => [...prev, ...importedUsers]);
-      alert(`✅ Imported ${importedUsers.length} users successfully`);
-    };
-    reader.readAsArrayBuffer(file);
-  };
-
-  // ✅ Thêm user thủ công
-  const handleAddUser = async () => {
-    if (!filters.campus) {
-      alert("⚠️ Vui lòng chọn campus trước khi thêm user.");
-      return;
-    }
-
-    const newUser = {
-      fullName: "New User",
-      email: "newuser@example.com",
-      studentCode: "MSSV" + Math.floor(Math.random() * 99999),
-      roleName: "student",
-      campusId: Number(filters.campus),
-      majorName: filters.major || "Chưa có chuyên ngành",
-      isActive: true,
-    };
-
-    try {
-      const res = await createUser(newUser);
-      alert("✅ User created successfully!");
-      // Reload lại danh sách
-      handleCampusChange({ target: { value: filters.campus } });
-    } catch (error) {
-      console.error("❌ Create user failed:", error);
-      alert("❌ Không thể tạo user mới.");
-    }
-  };
-
-  // ✅ Bật/tắt tài khoản
+  // ✅ Toggle Active/Deactive
   const toggleUserStatus = async (user) => {
     try {
       if (user.isActive) await deactivateUser(user.id);
       else await activateUser(user.id);
-      alert(`🔁 ${user.isActive ? "Deactivated" : "Activated"} successfully`);
-      // Cập nhật lại danh sách
-      handleCampusChange({ target: { value: filters.campus } });
+      toast.success(
+        `${user.isActive ? "Deactivated" : "Activated"} successfully!`
+      );
+      await fetchUsers();
     } catch (err) {
       console.error("❌ Update status failed:", err);
-      alert("❌ Không thể thay đổi trạng thái user.");
+      toast.error("Không thể thay đổi trạng thái user.");
     }
   };
 
-  // ✅ Cập nhật thông tin user
+  // ✅ Save user (role không thay đổi)
   const handleSaveUser = async () => {
+    if (!selectedUser) return;
+
+    const userId = Number(selectedUser.id);
+    const payload = {
+      userId,
+      username:
+        selectedUser.username ||
+        selectedUser.email?.split("@")[0] ||
+        "unknown",
+      email: selectedUser.email || "",
+      firstName: selectedUser.firstName || "",
+      lastName: selectedUser.lastName || "",
+      studentCode: selectedUser.studentCode || "",
+      avatarUrl: selectedUser.avatarUrl || "",
+      campusId: selectedUser.campusId || 0,
+      majorId: selectedUser.majorId || 0,
+      isActive:
+        typeof selectedUser.isActive === "boolean"
+          ? selectedUser.isActive
+          : true,
+    };
+
     try {
       setIsUpdating(true);
-      const payload = {
-        email: selectedUser.email,
-        fullName: selectedUser.fullName,
-        studentCode: selectedUser.studentCode,
-        roleName: selectedUser.roleName,
-        campusId: selectedUser.campusId,
-        majorId: selectedUser.majorId,
-        isActive: selectedUser.isActive,
-      };
-      await updateUser(selectedUser.id, payload);
-      alert("✅ User updated successfully!");
+      await updateUser(userId, payload);
+      toast.success("✅ Cập nhật user thành công!");
+      await fetchUsers();
       setSelectedUser(null);
-      handleCampusChange({ target: { value: filters.campus } });
     } catch (err) {
       console.error("❌ Update failed:", err);
-      alert("❌ Update failed.");
+      toast.error("Cập nhật thất bại!");
     } finally {
       setIsUpdating(false);
     }
   };
 
+  // ✅ Hàm tạo user mới
+  const handleCreateUser = async () => {
+    try {
+      if (!newUser.email || !newUser.password || !newUser.role) {
+        toast.error("Vui lòng điền đủ Email, Password và Role!");
+        return;
+      }
+
+      // ✅ Kiểm tra độ mạnh của mật khẩu
+      const isStrongPassword = (password) => {
+        const regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\W).{8,}$/;
+        return regex.test(password);
+      };
+
+      if (!isStrongPassword(newUser.password)) {
+        toast.error(
+          "Mật khẩu phải có ít nhất 1 chữ hoa, 1 chữ thường, 1 ký tự đặc biệt và dài tối thiểu 8 ký tự!"
+        );
+        return;
+      }
+
+      setIsUpdating(true);
+
+      const payload = {
+        ...newUser,
+        campusId: parseInt(newUser.campusId),
+        majorId: parseInt(newUser.majorId),
+      };
+
+      console.log("📦 Payload gửi lên:", payload);
+
+      await createUser(payload);
+      toast.success("✅ Tạo user mới thành công!");
+
+      await fetchUsers(); // reload danh sách user
+
+      // 🔹 Reset lại form sau khi tạo xong
+      setNewUser(defaultUser);
+
+      // 🔹 Ẩn form sau khi tạo
+      setShowAddForm(false);
+    } catch (err) {
+      console.error("❌ Create user failed:", err);
+      if (err.response) console.error("📨 BE Response:", err.response.data);
+      toast.error("Không thể tạo user!");
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  // ✅ Import danh sách user từ file Excel
+  const handleImportUsers = async (event) => {
+    try {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const formData = new FormData();
+      formData.append("file", file);
+
+      toast.loading("Đang import danh sách user...");
+
+      await importStudentsFromMultipleSheets(campusId, file, userId);
+      toast.dismiss();
+      toast.success("✅ Import danh sách user thành công!");
+      await fetchUsers(); // reload lại danh sách user
+    } catch (err) {
+      toast.dismiss();
+      console.error("❌ Import failed:", err);
+      toast.error("Import thất bại! Vui lòng kiểm tra lại file.");
+    }
+  };
+
   return (
     <div className="space-y-6">
-      <h2 className="text-2xl font-bold text-orange-500">👥 User Management</h2>
+      <div className="flex justify-between items-center">
+        <h2 className="text-2xl font-bold text-orange-500">
+          👥 User Management
+        </h2>
+        <div className="flex gap-2">
+          <button
+            onClick={() => setShowAddForm(true)}
+            className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded"
+          >
+            + Add New User
+          </button>
+          <label className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded cursor-pointer">
+            📥 Import User List
+            <input
+              type="file"
+              accept=".xlsx, .xls"
+              onChange={handleImportUsers}
+              className="hidden"
+            />
+          </label>
+        </div>
+      </div>
 
-      {/* Filter bar */}
-      <div className="bg-white p-4 rounded-xl shadow-md flex flex-wrap gap-4 items-center">
+      {/* 🔍 Bộ lọc */}
+      <div className="flex justify-between items-center mb-4">
         <select
-          className="border rounded p-2"
-          value={filters.campus}
-          onChange={handleCampusChange}
+          className="border p-2 rounded"
+          value={selectedCampus}
+          onChange={(e) => setSelectedCampus(e.target.value)}
         >
-          <option value="">Select Campus</option>
-          <option value="1">Hồ Chí Minh</option>
-          <option value="2">Hà Nội</option>
+          <option value="">Tất cả campus</option>
+          {campuses.map((c) => (
+            <option key={c.campusId || c.id} value={c.campusId || c.id}>
+              {c.campusName || c.name}
+            </option>
+          ))}
         </select>
 
-        {filters.campus && majors.length > 0 && (
+        {selectedCampus && majorNames.length > 0 && (
           <select
-            className="border rounded p-2"
+            className="border p-2 rounded"
             value={filters.major}
-            onChange={(e) => setFilters({ ...filters, major: e.target.value })}
+            onChange={(e) =>
+              setFilters({ ...filters, major: e.target.value })
+            }
           >
-            <option value="">All Majors</option>
-            {majors.map((m, i) => (
+            <option value="">Tất cả chuyên ngành</option>
+            {majorNames.map((m, i) => (
               <option key={i} value={m}>
                 {m}
               </option>
@@ -218,44 +354,24 @@ export default function AdminUserManagement() {
           </select>
         )}
 
-        {filters.campus && (
+        {selectedCampus && (
           <input
             type="text"
-            placeholder="Search by name, email, MSSV..."
-            className="border rounded p-2 flex-1"
+            placeholder="Tìm kiếm..."
+            className="border p-2 rounded flex-1 ml-4"
             value={filters.search}
             onChange={(e) =>
               setFilters({ ...filters, search: e.target.value })
             }
           />
         )}
-
-        {filters.campus && (
-          <div className="ml-auto flex gap-2">
-            <label className="px-4 py-2 bg-orange-500 text-white rounded hover:bg-orange-600 cursor-pointer">
-              📁 Import
-              <input
-                type="file"
-                accept=".xlsx,.xls,.csv"
-                onChange={handleImportFile}
-                className="hidden"
-              />
-            </label>
-            <button
-              onClick={handleAddUser}
-              className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
-            >
-              ➕ Add User
-            </button>
-          </div>
-        )}
       </div>
 
-      {/* Table */}
+      {/* 🧾 Table */}
       <div className="bg-white rounded-xl shadow-md overflow-x-auto">
         {isLoading ? (
           <p className="p-4 text-center text-gray-500">Loading...</p>
-        ) : filters.campus ? (
+        ) : selectedCampus ? (
           filteredUsers.length > 0 ? (
             <table className="w-full text-sm">
               <thead className="bg-orange-500 text-white">
@@ -273,19 +389,20 @@ export default function AdminUserManagement() {
               <tbody>
                 {filteredUsers.map((u) => (
                   <tr key={u.id} className="border-b hover:bg-gray-50">
-                    <td className="p-2">{u.fullName}</td>
+                    <td className="p-2">
+                      {u.firstName} {u.lastName}
+                    </td>
                     <td className="p-2">{u.studentCode}</td>
                     <td className="p-2">{u.email}</td>
-                    <td className="p-2 capitalize">{u.roleName}</td>
+                    <td className="p-2 capitalize">{u.roles.join(", ")}</td>
                     <td className="p-2">{u.campusName}</td>
-                    <td className="p-2">{u.majorName}</td>
+                    <td className="p-2">{u.majorName || "Chưa có"}</td>
                     <td className="p-2">
                       <span
-                        className={`px-2 py-1 rounded text-xs ${
-                          u.isActive
-                            ? "bg-green-100 text-green-700"
-                            : "bg-red-100 text-red-700"
-                        }`}
+                        className={`px-2 py-1 rounded text-xs ${u.isActive
+                          ? "bg-green-100 text-green-700"
+                          : "bg-red-100 text-red-700"
+                          }`}
                       >
                         {u.isActive ? "active" : "deactive"}
                       </span>
@@ -309,16 +426,16 @@ export default function AdminUserManagement() {
               </tbody>
             </table>
           ) : (
-            <p className="p-4 text-center text-gray-500">No users found</p>
+            <p className="p-4 text-center text-gray-500">Không có user nào</p>
           )
         ) : (
           <p className="p-4 text-center text-gray-500">
-            Please select a campus to view users
+            Hãy chọn campus để xem user
           </p>
         )}
       </div>
 
-      {/* Modal Edit */}
+      {/* 🧩 Modal Edit */}
       {selectedUser && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-30">
           <div className="bg-white p-6 rounded-xl w-96 space-y-4 shadow-lg">
@@ -327,10 +444,20 @@ export default function AdminUserManagement() {
             <input
               type="text"
               className="border rounded w-full p-2"
-              placeholder="Full Name"
-              value={selectedUser.fullName}
+              placeholder="First Name"
+              value={selectedUser.firstName || ""}
               onChange={(e) =>
-                setSelectedUser({ ...selectedUser, fullName: e.target.value })
+                setSelectedUser({ ...selectedUser, firstName: e.target.value })
+              }
+            />
+
+            <input
+              type="text"
+              className="border rounded w-full p-2"
+              placeholder="Last Name"
+              value={selectedUser.lastName || ""}
+              onChange={(e) =>
+                setSelectedUser({ ...selectedUser, lastName: e.target.value })
               }
             />
 
@@ -338,9 +465,12 @@ export default function AdminUserManagement() {
               type="text"
               className="border rounded w-full p-2"
               placeholder="Student Code"
-              value={selectedUser.studentCode}
+              value={selectedUser.studentCode || ""}
               onChange={(e) =>
-                setSelectedUser({ ...selectedUser, studentCode: e.target.value })
+                setSelectedUser({
+                  ...selectedUser,
+                  studentCode: e.target.value,
+                })
               }
             />
 
@@ -348,35 +478,49 @@ export default function AdminUserManagement() {
               type="text"
               className="border rounded w-full p-2"
               placeholder="Email"
-              value={selectedUser.email}
+              value={selectedUser.email || ""}
               onChange={(e) =>
                 setSelectedUser({ ...selectedUser, email: e.target.value })
               }
             />
 
-            <input
-              type="text"
-              className="border rounded w-full p-2"
-              placeholder="Major"
-              value={selectedUser.majorName}
-              onChange={(e) =>
-                setSelectedUser({ ...selectedUser, majorName: e.target.value })
-              }
-            />
-
             <select
               className="border rounded w-full p-2"
-              value={selectedUser.isActive ? "active" : "deactive"}
+              value={selectedUser.campusId || ""}
               onChange={(e) =>
                 setSelectedUser({
                   ...selectedUser,
-                  isActive: e.target.value === "active",
+                  campusId: parseInt(e.target.value),
                 })
               }
             >
-              <option value="active">Active</option>
-              <option value="deactive">Deactive</option>
+              <option value="">Chọn campus</option>
+              {campuses.map((c) => (
+                <option key={c.campusId || c.id} value={c.campusId || c.id}>
+                  {c.campusName || c.name}
+                </option>
+              ))}
             </select>
+
+            <select
+              className="border rounded w-full p-2"
+              value={selectedUser.majorId || ""}
+              onChange={(e) =>
+                setSelectedUser({
+                  ...selectedUser,
+                  majorId: parseInt(e.target.value),
+                })
+              }
+            >
+              <option value="">Chọn chuyên ngành</option>
+              {majors.map((m) => (
+                <option key={m.majorId} value={m.majorId}>
+                  {m.majorName}
+                </option>
+              ))}
+            </select>
+
+            {/* ⚠️ Phần Role đã bị loại bỏ */}
 
             <div className="flex justify-end gap-2">
               <button
@@ -392,6 +536,167 @@ export default function AdminUserManagement() {
                 disabled={isUpdating}
               >
                 {isUpdating ? "Saving..." : "Save"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 🧩 Modal Add User */}
+      {showAddForm && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-30">
+          <div className="bg-white p-6 rounded-xl w-96 space-y-4 shadow-lg">
+            <h3 className="text-lg font-semibold text-orange-500">
+              Add New User
+            </h3>
+
+            {/* ✅ Select Campus */}
+            <select
+              className="border rounded w-full p-2"
+              value={newUser.campusId || ""}
+              onChange={(e) =>
+                setNewUser({ ...newUser, campusId: parseInt(e.target.value) })
+              }
+            >
+              <option value="">Select Campus</option>
+              {campuses.map((c) => (
+                <option key={c.campusId || c.id} value={c.campusId || c.id}>
+                  {c.campusName || c.name}
+                </option>
+              ))}
+            </select>
+
+            {/* ✅ Select Major */}
+            <select
+              className="border rounded w-full p-2"
+              value={newUser.majorId || ""}
+              onChange={(e) =>
+                setNewUser({ ...newUser, majorId: parseInt(e.target.value) })
+              }
+            >
+              <option value="">Select Major</option>
+              {majors.map((m) => (
+                <option key={m.majorId} value={m.majorId}>
+                  {m.majorName}
+                </option>
+              ))}
+            </select>
+
+            {/* ✅ Username */}
+            <input
+              type="text"
+              className="border rounded w-full p-2"
+              placeholder="Username"
+              value={newUser.username}
+              onChange={(e) =>
+                setNewUser({ ...newUser, username: e.target.value })
+              }
+            />
+
+            {/* ✅ Password */}
+            <input
+              type="password"
+              className="border rounded w-full p-2"
+              placeholder="Password"
+              value={newUser.password}
+              onChange={(e) =>
+                setNewUser({ ...newUser, password: e.target.value })
+              }
+            />
+
+            {/* ✅ Email */}
+            <input
+              type="text"
+              className="border rounded w-full p-2"
+              placeholder="Email"
+              value={newUser.email}
+              onChange={(e) =>
+                setNewUser({ ...newUser, email: e.target.value })
+              }
+            />
+
+            {/* ✅ First Name */}
+            <input
+              type="text"
+              className="border rounded w-full p-2"
+              placeholder="First Name"
+              value={newUser.firstName}
+              onChange={(e) =>
+                setNewUser({ ...newUser, firstName: e.target.value })
+              }
+            />
+
+            {/* ✅ Last Name */}
+            <input
+              type="text"
+              className="border rounded w-full p-2"
+              placeholder="Last Name"
+              value={newUser.lastName}
+              onChange={(e) =>
+                setNewUser({ ...newUser, lastName: e.target.value })
+              }
+            />
+
+            {/* ✅ Student Code */}
+            <input
+              type="text"
+              className="border rounded w-full p-2"
+              placeholder="Student Code"
+              value={newUser.studentCode}
+              onChange={(e) =>
+                setNewUser({ ...newUser, studentCode: e.target.value })
+              }
+            />
+
+            {/* ✅ Avatar */}
+            <input
+              type="text"
+              className="border rounded w-full p-2"
+              placeholder="Avatar URL"
+              value={newUser.avatarUrl}
+              onChange={(e) =>
+                setNewUser({ ...newUser, avatarUrl: e.target.value })
+              }
+            />
+
+            {/* ✅ Role */}
+            <select
+              className="border rounded w-full p-2"
+              value={newUser.role}
+              onChange={(e) => setNewUser({ ...newUser, role: e.target.value })}
+            >
+              <option value="">Select Role</option>
+              <option value="Student">Student</option>
+              <option value="Instructor">Instructor</option>
+              <option value="Admin">Admin</option>
+            </select>
+
+            {/* ✅ Status */}
+            <select
+              className="border rounded w-full p-2"
+              value={newUser.isActive ? "active" : "inactive"}
+              onChange={(e) =>
+                setNewUser({ ...newUser, isActive: e.target.value === "active" })
+              }
+            >
+              <option value="active">Active</option>
+              <option value="inactive">Inactive</option>
+            </select>
+
+            {/* ✅ Buttons */}
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={() => setShowAddForm(false)}
+                className="px-4 py-2 rounded bg-gray-200 hover:bg-gray-300"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleCreateUser}
+                className="px-4 py-2 rounded bg-orange-500 text-white hover:bg-orange-600"
+                disabled={isUpdating}
+              >
+                {isUpdating ? "Creating..." : "Create"}
               </button>
             </div>
           </div>
