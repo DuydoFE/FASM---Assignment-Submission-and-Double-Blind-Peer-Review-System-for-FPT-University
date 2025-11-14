@@ -19,13 +19,11 @@ export default function AdminClassAssignments() {
       try {
         setLoading(true);
 
-        // 🔹 Gọi song song 2 API
         const [assignmentRes, classRes] = await Promise.all([
           getAssignmentsByCourseInstance(id),
           getCourseInstanceById(id),
         ]);
 
-        // ✅ Xử lý assignments
         if (
           assignmentRes?.statusCode === 200 &&
           Array.isArray(assignmentRes.data)
@@ -35,7 +33,6 @@ export default function AdminClassAssignments() {
           throw new Error(assignmentRes?.message || "Failed to fetch assignments");
         }
 
-        // ✅ Xử lý class info
         if (classRes?.statusCode === 200 && classRes.data) {
           setClassInfo(classRes.data);
         } else {
@@ -139,7 +136,7 @@ export default function AdminClassAssignments() {
                   <td className="p-2">
                     <button
                       onClick={() =>
-                        navigate(`/admin/classes/${id}/assignments/${a.id}`)
+                        navigate(`/admin/classes/${id}/assignments/${a.assignmentId}`)
                       }
                       className="text-orange-500 hover:underline"
                     >

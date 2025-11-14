@@ -26,9 +26,8 @@ export default function AdminClassDetailsManagement() {
   });
 
   const [file, setFile] = useState(null);
-  const changedByUserId = 1; // ✅ tạm hardcode userId admin
+  const changedByUserId = 1;
 
-  // 📌 Load thông tin lớp & danh sách user khi vào trang
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -58,7 +57,6 @@ export default function AdminClassDetailsManagement() {
 
   }, [id]);
 
-  // 📌 Thêm user vào lớp
   const handleAddUser = async () => {
     if (!newUser.userId || !newUser.studentCode)
       return toast.error("Please fill in all required fields");
@@ -79,7 +77,6 @@ export default function AdminClassDetailsManagement() {
       console.log("📤 Sending payload:", payload);
       await createCourseStudent(payload);
 
-      // Reload danh sách sinh viên
       const updated = await getCourseStudentsByCourseInstance(id);
       setUsers(Array.isArray(updated?.data) ? updated.data : []);
 
@@ -100,7 +97,6 @@ export default function AdminClassDetailsManagement() {
     }
   };
 
-  // 📌 Xoá user khỏi lớp
   const handleRemoveUser = async (u) => {
     if (!window.confirm(`Remove ${u.fullName || u.name}?`)) return;
     try {
@@ -121,7 +117,6 @@ export default function AdminClassDetailsManagement() {
 
   };
 
-  // 📌 Import file Excel
   const handleImportFile = async () => {
     if (!file) return toast.error("Please choose a file first!");
     try {

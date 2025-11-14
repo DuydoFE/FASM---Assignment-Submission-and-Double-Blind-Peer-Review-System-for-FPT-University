@@ -48,7 +48,9 @@ import AdminUserManagement from "../pages/Admin/AdminUserManagement";
 import AdminClassManagement from "../pages/Admin/AdminClassManagement";
 import AdminClassDetailsManagement from "../pages/Admin/AdminClassDetailsManagement";
 import AdminClassAssignments from "../pages/Admin/AdminClassAssignments";
-import AdminAssignmentSubmissions from "../pages/Admin/AdminAssignmentSubmissions";
+import AdminAssignmentDetails from "../pages/Admin/AdminAssignmentDetails";
+import AdminSubmissionDetails from "../pages/Admin/AdminSubmissionDetails";
+import AdminRubricManagement from "../pages/Admin/AdminRubricManagement";
 import AdminAccountSettings from "../pages/Admin/AdminAccountSettings";
 import AdminSystemSetting from "../pages/Admin/AdminSystemSetting";
 
@@ -97,7 +99,7 @@ export const router = createBrowserRouter([
         path: "assignment/:courseId/:assignmentId/scores",
         element: <ViewScorePage />,
       },
-       {
+      {
         path: "regrade-request",
         element: <ViewRequestHistoryPage />,
       },
@@ -214,9 +216,11 @@ export const router = createBrowserRouter([
       { path: "dashboard", element: <AdminDashboard /> },
       { path: "users", element: <AdminUserManagement /> },
       { path: "classes", element: <AdminClassManagement /> },
-      { path: "classes/:id", element: <AdminClassDetailsManagement /> },
+      { path: "classes/:id/assignments/:assignmentId", element: <AdminAssignmentDetails /> },
       { path: "classes/:id/assignments", element: <AdminClassAssignments /> },
-      { path: "classes/:id/assignments/:assignmentId", element: <AdminAssignmentSubmissions /> },
+      { path: "classes/:id", element: <AdminClassDetailsManagement /> },
+      { path: "classes/:id/assignments/:assignmentId/submissions/:submissionId", element: <AdminSubmissionDetails /> },
+      { path: "rubrics", element: <AdminRubricManagement /> },
       { path: "settings", element: <AdminAccountSettings /> },
       { path: "systemSetting", element: <AdminSystemSetting /> },
     ],

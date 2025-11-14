@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 
 export default function AdminSystemSetting() {
-  // State cho các cấu hình
   const [settings, setSettings] = useState({
     aiTokenLimit: 5000,
     aiResponseWordLimit: 300,
@@ -14,7 +13,6 @@ export default function AdminSystemSetting() {
   };
 
   const handleSave = () => {
-    // sau này thay bằng API call
     alert("✅ Cấu hình đã được lưu thành công!");
   };
 
