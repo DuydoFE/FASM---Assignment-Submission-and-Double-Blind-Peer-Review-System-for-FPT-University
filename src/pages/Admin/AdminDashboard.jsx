@@ -2,7 +2,6 @@ import React from "react";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
 
 export default function AdminDashboard() {
-  // Mock data for demonstration
   const stats = {
     activeUsers: 1085,
     totalClasses: 92,
@@ -16,19 +15,17 @@ export default function AdminDashboard() {
     reviewsPending: 30,
   };
 
-  // Pie chart: submission status
   const submissionData = [
     { name: "On Time", value: stats.onTimeSubmissions },
     { name: "Late", value: stats.lateSubmissions },
   ];
 
-  // Pie chart: review progress
   const reviewData = [
     { name: "Completed", value: stats.reviewsCompleted },
     { name: "Pending", value: stats.reviewsPending },
   ];
 
-  const COLORS = ["#F37021", "#FF8C42"]; // FPT orange shades
+  const COLORS = ["#F37021", "#FF8C42"];
 
   return (
     <div className="space-y-6">
