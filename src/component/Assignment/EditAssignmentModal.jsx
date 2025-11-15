@@ -201,11 +201,9 @@ const EditAssignmentModal = ({ isOpen, onClose, onSubmit, assignment }) => {
       console.log('Updating assignment:', submitData);
 
       await onSubmit(submitData);
-      toast.success('Assignment updated successfully');
       onClose();
     } catch (error) {
       console.error('Error updating assignment:', error);
-      toast.error('Failed to update assignment. Please try again.');
     }
   };
 
