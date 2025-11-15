@@ -85,7 +85,7 @@ const LoginPage = () => {
         try {
           console.log("Detected Google callback, fetching user info...");
 
-          const res = await axios.get("https://localhost:7104/api/account/me", {
+          const res = await api.get("/account/me", {
             withCredentials: true
           });
           localStorage.setItem("token", accessToken);

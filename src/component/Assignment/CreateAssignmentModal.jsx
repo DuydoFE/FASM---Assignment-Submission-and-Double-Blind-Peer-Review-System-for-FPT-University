@@ -237,7 +237,6 @@ const CreateAssignmentModal = ({ isOpen, onClose, onSubmit, courseInstanceId }) 
       console.log('Submitting data:', submitData);
 
       await onSubmit(submitData, selectedFile);
-      toast.success('Assignment created successfully');
 
       // Reset form
       setFormData({

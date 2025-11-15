@@ -12,10 +12,16 @@ export const publishGrades = async (assignmentId) => {
         });
         return response.data;
     } catch (error) {
-        console.error("Publish Grades Failed:", error);
-        throw error;
+        const message =
+            error?.response?.data?.message ||
+            error?.response?.data ||
+            "Publish Grades Failed";
+
+        console.error("Publish Grades Failed:", message);
+        throw new Error(message);
     }
 };
+
 
 
 export const gradeSubmission = async ({ 
