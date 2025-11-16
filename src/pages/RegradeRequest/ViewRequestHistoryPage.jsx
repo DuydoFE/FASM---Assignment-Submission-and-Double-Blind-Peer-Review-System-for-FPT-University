@@ -12,11 +12,8 @@ import {
   Edit,
   Eye,
   EyeOff,
-  User,
-  Star,
-  FileSearch, // <-- Imported new icon
 } from "lucide-react";
-import { Tag, Spin, Alert, Empty, Pagination, Card, Modal, Button } from "antd";
+import { Tag, Spin, Alert, Empty, Pagination, Card } from "antd";
 import { toast } from "react-toastify";
 
 import { selectUser } from "../../redux/features/userSlice";
@@ -75,9 +72,8 @@ const ViewRequestHistoryPage = () => {
     pageSize: 10,
     totalCount: 0,
   });
+
   const [visibilityState, setVisibilityState] = useState({});
-  const [isModalVisible, setIsModalVisible] = useState(false);
-  const [selectedRequest, setSelectedRequest] = useState(null);
 
   const fetchRequests = async (studentId, page = 1, size = 10) => {
     setLoading(true);
@@ -131,7 +127,6 @@ const ViewRequestHistoryPage = () => {
     if (!dateString) return "N/A";
     return new Date(dateString).toLocaleString();
   };
-
   const toggleVisibility = (requestId, field) => {
     setVisibilityState((prev) => {
       const currentVisibility = prev[requestId] || {
@@ -146,16 +141,6 @@ const ViewRequestHistoryPage = () => {
         },
       };
     });
-  };
-
-  const showDetailModal = (request) => {
-    setSelectedRequest(request);
-    setIsModalVisible(true);
-  };
-
-  const handleCancelModal = () => {
-    setIsModalVisible(false);
-    setSelectedRequest(null);
   };
 
   const renderContent = () => {
@@ -224,6 +209,7 @@ const ViewRequestHistoryPage = () => {
                         )}
                       </button>
                     </div>
+
                     <div className="flex items-center text-sm text-gray-500">
                       <Calendar className="w-4 h-4 mr-2" />
                       <span>
@@ -231,17 +217,8 @@ const ViewRequestHistoryPage = () => {
                       </span>
                     </div>
                   </div>
-                  <div className="mt-4 md:mt-0 flex items-center space-x-4">
+                  <div className="mt-4 md:mt-0">
                     <StatusTag status={request.status} />
-                    {/* MODIFIED: Enhanced button styling */}
-                    <Button
-                      type="primary"
-                      icon={<FileSearch className="w-4 h-4" />}
-                      onClick={() => showDetailModal(request)}
-                      className="flex items-center justify-center font-semibold"
-                    >
-                      View Details
-                    </Button>
                   </div>
                 </div>
                 <div className="mt-4 pt-4 border-t border-gray-200 space-y-3">
@@ -277,6 +254,7 @@ const ViewRequestHistoryPage = () => {
                         : "••••••••••••••••••••••••••••••"}
                     </p>
                   </div>
+
                   {request.resolutionNotes && (
                     <div>
                       <h4 className="font-semibold text-gray-700 flex items-center">
@@ -302,66 +280,6 @@ const ViewRequestHistoryPage = () => {
             showSizeChanger
           />
         </div>
-
-        {selectedRequest && (
-          <Modal
-            title="Regrade Request Details"
-            visible={isModalVisible}
-            onCancel={handleCancelModal}
-            footer={[
-              <Button key="close" type="primary" onClick={handleCancelModal}>
-                Close
-              </Button>,
-            ]}
-          >
-            <div className="space-y-4 py-4">
-              <div className="flex items-start">
-                <FileText className="w-5 h-5 mr-3 mt-1 text-gray-600" />
-                <div>
-                  <p className="font-semibold text-gray-800">File Name</p>
-                  <p className="text-gray-700">
-                    {selectedRequest.submission?.fileName}
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-start">
-                <Edit className="w-5 h-5 mr-3 mt-1 text-gray-600" />
-                <div>
-                  <p className="font-semibold text-gray-800">Your Reason</p>
-                  <p className="text-gray-700">{selectedRequest.reason}</p>
-                </div>
-              </div>
-              <div className="flex items-start">
-                <User className="w-5 h-5 mr-3 mt-1 text-gray-600" />
-                <div>
-                  <p className="font-semibold text-gray-800">
-                    Reviewed By Instructor
-                  </p>
-                  <p className="text-gray-700">SangNm</p>
-                </div>
-              </div>
-              <div className="flex items-start">
-                <Star className="w-5 h-5 mr-3 mt-1 text-gray-600" />
-                <div>
-                  <p className="font-semibold text-gray-800">
-                    Score After Regrade
-                  </p>
-                  <p className="text-gray-700 font-bold text-green-600">9</p>
-                </div>
-              </div>
-              <div className="flex items-start">
-                <MessageSquare className="w-5 h-5 mr-3 mt-1 text-gray-600" />
-                <div>
-                  <p className="font-semibold text-gray-800">Comment</p>
-                  <p className="text-gray-700 italic">
-                    "There are some errors that cause the score to be
-                    incorrect."
-                  </p>
-                </div>
-              </div>
-            </div>
-          </Modal>
-        )}
       </>
     );
   };
