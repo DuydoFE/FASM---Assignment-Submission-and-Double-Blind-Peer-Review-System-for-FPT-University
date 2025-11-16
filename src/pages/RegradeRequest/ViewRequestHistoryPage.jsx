@@ -1,5 +1,3 @@
-// ViewRequestHistoryPage.js
-
 import { useState, useEffect } from "react";
 import { useSelector } from "react-redux";
 import {
@@ -21,7 +19,8 @@ import { toast } from "react-toastify";
 
 import { selectUser } from "../../redux/features/userSlice";
 import { getRegradeRequestsByStudentId } from "../../service/regradeService";
-import RequestDetailModal from "../../component/Assignment/RequestDetailModal.jsx";
+
+import RequestRegradeDetailModal from "../../component/Assignment/RequestRegradeDetailModal";
 
 export const StatusTag = ({ status }) => {
   switch (status) {
@@ -305,7 +304,8 @@ const ViewRequestHistoryPage = () => {
           />
         </div>
 
-        <RequestDetailModal
+        {/* MODIFIED: Using the new component name here */}
+        <RequestRegradeDetailModal
           visible={isModalVisible}
           onClose={handleCancelModal}
           request={selectedRequest}
