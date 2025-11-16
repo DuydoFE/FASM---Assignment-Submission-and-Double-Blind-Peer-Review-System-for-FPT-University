@@ -12,14 +12,17 @@ import {
   Edit,
   Eye,
   EyeOff,
+  FileSearch,
 } from "lucide-react";
-import { Tag, Spin, Alert, Empty, Pagination, Card } from "antd";
+import { Tag, Spin, Alert, Empty, Pagination, Card, Button } from "antd";
 import { toast } from "react-toastify";
 
 import { selectUser } from "../../redux/features/userSlice";
 import { getRegradeRequestsByStudentId } from "../../service/regradeService";
 
-const StatusTag = ({ status }) => {
+import RequestRegradeDetailModal from "../../component/Assignment/RequestRegradeDetailModal";
+
+export const StatusTag = ({ status }) => {
   switch (status) {
     case "Approved":
       return (
@@ -72,8 +75,9 @@ const ViewRequestHistoryPage = () => {
     pageSize: 10,
     totalCount: 0,
   });
-
   const [visibilityState, setVisibilityState] = useState({});
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [selectedRequest, setSelectedRequest] = useState(null);
 
   const fetchRequests = async (studentId, page = 1, size = 10) => {
     setLoading(true);
@@ -127,6 +131,7 @@ const ViewRequestHistoryPage = () => {
     if (!dateString) return "N/A";
     return new Date(dateString).toLocaleString();
   };
+
   const toggleVisibility = (requestId, field) => {
     setVisibilityState((prev) => {
       const currentVisibility = prev[requestId] || {
@@ -141,6 +146,16 @@ const ViewRequestHistoryPage = () => {
         },
       };
     });
+  };
+
+  const showDetailModal = (request) => {
+    setSelectedRequest(request);
+    setIsModalVisible(true);
+  };
+
+  const handleCancelModal = () => {
+    setIsModalVisible(false);
+    setSelectedRequest(null);
   };
 
   const renderContent = () => {
@@ -217,8 +232,16 @@ const ViewRequestHistoryPage = () => {
                       </span>
                     </div>
                   </div>
-                  <div className="mt-4 md:mt-0">
+                  <div className="mt-4 md:mt-0 flex items-center space-x-4">
                     <StatusTag status={request.status} />
+                    <Button
+                      type="primary"
+                      icon={<FileSearch className="w-4 h-4" />}
+                      onClick={() => showDetailModal(request)}
+                      className="flex items-center justify-center font-semibold"
+                    >
+                      View Details
+                    </Button>
                   </div>
                 </div>
                 <div className="mt-4 pt-4 border-t border-gray-200 space-y-3">
@@ -280,6 +303,13 @@ const ViewRequestHistoryPage = () => {
             showSizeChanger
           />
         </div>
+
+        {/* MODIFIED: Using the new component name here */}
+        <RequestRegradeDetailModal
+          visible={isModalVisible}
+          onClose={handleCancelModal}
+          request={selectedRequest}
+        />
       </>
     );
   };
