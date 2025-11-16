@@ -1,114 +1,164 @@
-import React, { useState } from 'react';
-import { Search, Eye, ChevronDown } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Search, Eye, MoreVertical, Loader2, Check, X, CheckCircle } from 'lucide-react';
+import { Dropdown } from 'antd';
+import { getRegradeRequestsForInstructor } from '../../service/regradeService';
+import { getCurrentAccount } from '../../utils/accountUtils';
+
 
 const InstructorRegradeRequest = () => {
+    const currentUser = getCurrentAccount();
     const [searchTerm, setSearchTerm] = useState('');
     const [statusFilter, setStatusFilter] = useState('All');
+    const [reviewRequests, setReviewRequests] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
 
-    const [reviewRequests, setReviewRequests] = useState([
-        {
-            id: 1,
-            name: 'Nguyen Van An',
-            mssv: '2021001',
-            class: 'IT01',
-            assignment: 'Lab 1: Figma Basics',
-            currentGrade: 7.5,
-            reason: 'Missing UI evaluation criteria...',
-            submissionTime: '22/12/2024 09:15',
-            status: 'Pending'
-        },
-        {
-            id: 2,
-            name: 'Tran Thi Binh',
-            mssv: '2021002',
-            class: 'IT02',
-            assignment: 'Assignment 1: Prototype',
-            currentGrade: 8.0,
-            reason: 'Prototype performed better...',
-            submissionTime: '21/12/2024 16:30',
-            status: 'Processed'
-        },
-        {
-            id: 3,
-            name: 'Le Minh Cuong',
-            mssv: '2021003',
-            class: 'IT01',
-            assignment: 'Lab 2: User Research',
-            currentGrade: 6.5,
-            reason: 'Persona included all details...',
-            submissionTime: '20/12/2024 14:20',
-            status: 'Pending'
-        },
-        {
-            id: 4,
-            name: 'Pham Thu Duyen',
-            mssv: '2021004',
-            class: 'IT03',
-            assignment: 'Final Project',
-            currentGrade: 8.5,
-            reason: 'App design is very creative and...',
-            submissionTime: '19/12/2024 11:45',
-            status: 'Processed'
-        },
-        {
-            id: 5,
-            name: 'Hoang Viet Em',
-            mssv: '2021005',
-            class: 'IT02',
-            assignment: 'Lab 1: Figma Basics',
-            currentGrade: 7.0,
-            reason: 'Wireframe has many details...',
-            submissionTime: '18/12/2024 08:30',
-            status: 'Pending'
+    useEffect(() => {
+        fetchRegradeRequests();
+    }, []);
+
+    const fetchRegradeRequests = async () => {
+        try {
+            setLoading(true);
+            const response = await getRegradeRequestsForInstructor(currentUser?.id);
+
+            const transformedData = response.data.requests.map(req => ({
+                id: req.requestId,
+                requestId: req.requestId,
+                submissionId: req.submissionId,
+                name: req.requestedByStudent.fullName,
+                mssv: req.requestedByStudent.userId.toString(),
+                email: req.requestedByStudent.email,
+                class: 'N/A',
+                assignment: req.submission.fileName,
+                currentGrade: 'N/A',
+                reason: req.reason,
+                requestTime: new Date(req.requestedAt).toLocaleString('vi-VN'),
+                status: req.status,
+                reviewedByInstructorId: req.reviewedByInstructorId,
+                resolutionNotes: req.resolutionNotes,
+                submittedAt: req.submission.submittedAt,
+                submissionStatus: req.submission.status
+            }));
+
+            setReviewRequests(transformedData);
+            setError(null);
+        } catch (err) {
+            console.error('Error fetching regrade requests:', err);
+            setError('Không thể tải danh sách yêu cầu chấm lại');
+        } finally {
+            setLoading(false);
         }
-    ]);
+    };
 
     const totalRequests = reviewRequests.length;
     const pendingRequests = reviewRequests.filter(req => req.status === 'Pending').length;
+    const approvedRequests = reviewRequests.filter(req => req.status === 'Approved').length;
     const processedRequests = reviewRequests.filter(req => req.status === 'Processed').length;
 
-    // Toggle cycle All -> Pending -> Processed -> All
     const handleStatusClick = () => {
         if (statusFilter === 'All') setStatusFilter('Pending');
         else if (statusFilter === 'Pending') setStatusFilter('Processed');
         else setStatusFilter('All');
     };
 
-    const getGradeColor = (grade) => {
-        if (grade >= 8.5) return 'text-green-600 font-semibold';
-        if (grade >= 7.0) return 'text-yellow-600 font-semibold';
-        return 'text-red-600 font-semibold';
-    };
-
     const getStatusStyle = (status) => {
-        return status === 'Processed'
-            ? 'bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium'
-            : 'bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-sm font-medium';
+        if (status === 'Processed') {
+            return 'bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium';
+        } else if (status === 'Approved') {
+            return 'bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium';
+        } else {
+            return 'bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-sm font-medium';
+        }
     };
 
-    const getActionButtonStyle = (status) => {
-        return status === 'Processed'
-            ? 'bg-gray-100 text-gray-600 px-4 py-2 rounded-md text-sm font-medium cursor-not-allowed'
-            : 'bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors duration-200';
-    };
-
-    const handleStatusUpdate = (requestId, newStatus) => {
+    const handleActionSelect = async (requestId, action) => {
+        // TODO: Call API to update with specific action
+        console.log(`Action ${action} selected for request ${requestId}`);
+        
+        // Update local state based on action
         setReviewRequests(prev => prev.map(req =>
-            req.id === requestId
-                ? { ...req, status: newStatus }
+            req.requestId === requestId
+                ? { ...req, status: action === 'Complete' ? 'Processed' : req.status }
                 : req
         ));
+    };
+
+    const getMenuItems = (requestId, status) => {
+        if (status === 'Pending') {
+            return [
+                {
+                    label: (
+                        <span className="flex items-center gap-2 text-green-600">
+                            <Check className="w-4 h-4" />
+                            Approve
+                        </span>
+                    ),
+                    onClick: () => handleActionSelect(requestId, 'Approve'),
+                },
+                {
+                    label: (
+                        <span className="flex items-center gap-2 text-red-600">
+                            <X className="w-4 h-4" />
+                            Reject
+                        </span>
+                    ),
+                    onClick: () => handleActionSelect(requestId, 'Reject'),
+                },
+            ];
+        }
+        else if (status === 'Approved') {
+            return [
+                {
+                    label: (
+                        <span className="flex items-center gap-2 text-blue-600">
+                            <CheckCircle className="w-4 h-4" />
+                            Complete
+                        </span>
+                    ),
+                    onClick: () => handleActionSelect(requestId, 'Complete'),
+                },
+            ];
+        }
+        return [];
     };
 
     const filteredRequests = reviewRequests.filter(req => {
         const matchesSearch = req.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
             req.mssv.includes(searchTerm) ||
-            req.class.toLowerCase().includes(searchTerm.toLowerCase());
+            req.email.toLowerCase().includes(searchTerm.toLowerCase());
 
         const matchesStatus = statusFilter === 'All' || req.status === statusFilter;
 
         return matchesSearch && matchesStatus;
     });
+
+    if (loading) {
+        return (
+            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+                <div className="text-center">
+                    <Loader2 className="w-8 h-8 animate-spin text-blue-600 mx-auto mb-4" />
+                    <p className="text-gray-600">Đang tải dữ liệu...</p>
+                </div>
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+                <div className="text-center">
+                    <p className="text-red-600 mb-4">{error}</p>
+                    <button
+                        onClick={fetchRegradeRequests}
+                        className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
+                    >
+                        Thử lại
+                    </button>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen bg-gray-50 p-6">
@@ -120,7 +170,7 @@ const InstructorRegradeRequest = () => {
                         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                         <input
                             type="text"
-                            placeholder="Search by name, class..."
+                            placeholder="Search by name, email..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                             className="pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-64"
@@ -131,7 +181,7 @@ const InstructorRegradeRequest = () => {
                 {/* Stats Cards */}
                 <div className="mb-6">
                     <h2 className="text-lg font-semibold text-gray-900 mb-4">Overview</h2>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                         <div className="bg-blue-50 rounded-lg shadow-sm p-6 border-blue-500">
                             <div className="text-sm text-gray-600 mb-1">Total Requests</div>
                             <div className="text-3xl font-bold text-gray-900">{totalRequests}</div>
@@ -139,6 +189,10 @@ const InstructorRegradeRequest = () => {
                         <div className="bg-yellow-50 rounded-lg shadow-sm p-6 border-yellow-500">
                             <div className="text-sm text-yellow-700 mb-1">Pending</div>
                             <div className="text-3xl font-bold text-yellow-800">{pendingRequests}</div>
+                        </div>
+                        <div className="bg-blue-100 rounded-lg shadow-sm p-6 border-blue-600">
+                            <div className="text-sm text-blue-700 mb-1">Approved</div>
+                            <div className="text-3xl font-bold text-blue-800">{approvedRequests}</div>
                         </div>
                         <div className="bg-green-50 rounded-lg shadow-sm p-6 border-green-500">
                             <div className="text-sm text-green-700 mb-1">Processed</div>
@@ -148,52 +202,50 @@ const InstructorRegradeRequest = () => {
                 </div>
 
                 {/* Review Requests Table */}
-                <div className="bg-white rounded-lg shadow-sm overflow-hidden">
+                <div className="bg-white rounded-xl shadow-sm overflow-hidden">
                     <div className="overflow-x-auto">
                         <table className="w-full">
                             <thead className="bg-gray-50 border-b border-gray-200">
                                 <tr>
-                                    <th className="px-6 py-4 text-left text-sm font-medium text-gray-500">Member</th>
-                                    <th className="px-6 py-4 text-left text-sm font-medium text-gray-500">Full Name</th>
-                                    <th className="px-6 py-4 text-left text-sm font-medium text-gray-500">Class</th>
-                                    <th className="px-6 py-4 text-left text-sm font-medium text-gray-500">Assignment</th>
-                                    <th className="px-6 py-4 text-center text-sm font-medium text-gray-500">Current Grade</th>
-                                    <th className="px-6 py-4 text-left text-sm font-medium text-gray-500">Reason</th>
-                                    <th className="px-6 py-4 text-center text-sm font-medium text-gray-500">Submission Time</th>
-                                    <th
-                                        onClick={handleStatusClick}
-                                        className="px-6 py-4 text-center text-sm font-medium text-gray-500 cursor-pointer select-none hover:text-orange-600 transition flex items-center gap-1 justify-center"
-                                    >
-                                        Status
-                                        <ChevronDown size={16} />
-                                    </th>
-                                    <th className="px-6 py-4 text-center text-sm font-medium text-gray-500">Actions</th>
+                                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Student</th>
+                                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Assignment</th>
+                                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Reason</th>
+                                    <th className="px-6 py-4 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">Request Time</th>
+                                    <th className="px-6 py-4 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">Status</th>
+                                    <th className="px-6 py-4 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">Actions</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-200">
                                 {filteredRequests.map((request) => (
-                                    <tr key={request.id} className="hover:bg-gray-50 transition-colors duration-150">
-                                        <td className="px-6 py-4 text-sm text-gray-600">{request.mssv}</td>
-                                        <td className="px-6 py-4 text-sm font-medium text-gray-900">{request.name}</td>
-                                        <td className="px-6 py-4 text-sm text-gray-600">{request.class}</td>
-                                        <td className="px-6 py-4 text-sm text-gray-600">{request.assignment}</td>
-                                        <td className="px-6 py-4 text-center">
-                                            <span className={`text-sm ${getGradeColor(request.currentGrade)}`}>
-                                                {request.currentGrade}
-                                            </span>
-                                        </td>
-                                        <td className="px-6 py-4 text-sm text-gray-600 max-w-xs">
-                                            <div className="flex items-center space-x-2">
-                                                <span>
-                                                    {request.reason.length > 25
-                                                        ? request.reason.substring(0, 25) + "..."
-                                                        : request.reason}
-                                                </span>
-                                                <Eye className="w-4 h-4 text-blue-500 cursor-pointer hover:text-blue-700 flex-shrink-0" />
+                                    <tr key={request.requestId} className="hover:bg-gray-50 transition-colors">
+                                        <td className="px-6 py-4">
+                                            <div className="flex flex-col">
+                                                <span className="text-sm font-medium text-gray-900">{request.name}</span>
+                                                <span className="text-xs text-gray-500">{request.mssv}</span>
+                                                <span className="text-xs text-gray-400">{request.email}</span>
                                             </div>
                                         </td>
-                                        <td className="px-6 py-4 text-sm text-gray-600 text-center whitespace-nowrap">
-                                            {request.submissionTime}
+                                        <td className="px-6 py-4">
+                                            <span className="text-sm text-gray-900 max-w-xs truncate block">
+                                                {request.assignment}
+                                            </span>
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-sm text-gray-600 max-w-xs truncate">
+                                                    {request.reason.length > 40
+                                                        ? request.reason.substring(0, 40) + "..."
+                                                        : request.reason}
+                                                </span>
+                                                <button className="flex-shrink-0 text-blue-600 hover:text-blue-700 transition-colors">
+                                                    <Eye className="w-4 h-4" />
+                                                </button>
+                                            </div>
+                                        </td>
+                                        <td className="px-6 py-4 text-center">
+                                            <span className="text-sm text-gray-600 whitespace-nowrap">
+                                                {request.requestTime}
+                                            </span>
                                         </td>
                                         <td className="px-6 py-4 text-center">
                                             <span className={getStatusStyle(request.status)}>
@@ -202,16 +254,22 @@ const InstructorRegradeRequest = () => {
                                         </td>
                                         <td className="px-6 py-4 text-center">
                                             {request.status === 'Processed' ? (
-                                                <button className={getActionButtonStyle(request.status)} disabled>
+                                                <button 
+                                                    className="bg-gray-100 text-gray-600 px-4 py-2 rounded-md text-sm font-medium cursor-not-allowed" 
+                                                    disabled
+                                                >
                                                     View
                                                 </button>
                                             ) : (
-                                                <button
-                                                    className={getActionButtonStyle(request.status)}
-                                                    onClick={() => handleStatusUpdate(request.id, 'Processed')}
+                                                <Dropdown
+                                                    menu={{ items: getMenuItems(request.requestId, request.status) }}
+                                                    trigger={['click']}
+                                                    placement="bottomRight"
                                                 >
-                                                    Process
-                                                </button>
+                                                    <button className="p-2 hover:bg-gray-100 rounded-md transition-colors duration-200">
+                                                        <MoreVertical className="w-5 h-5 text-gray-600" />
+                                                    </button>
+                                                </Dropdown>
                                             )}
                                         </td>
                                     </tr>

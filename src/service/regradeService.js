@@ -21,3 +21,16 @@ export const getRegradeRequestsByStudentId = async (
     throw error;
   }
 };
+
+export const getRegradeRequestsForInstructor = async (userId) => {
+  try {
+    const response = await api.get(`/instructor/regrade-requests/${userId}`);
+    return response.data;
+  } catch (error) {
+    console.error(
+      `Lỗi khi lấy danh sách yêu cầu chấm lại cho giảng viên ID ${userId}:`,
+      error
+    );
+    throw error;
+  }
+};
