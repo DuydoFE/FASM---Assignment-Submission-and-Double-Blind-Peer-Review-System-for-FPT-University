@@ -7,7 +7,7 @@ import {
   MessageSquare,
   Tag as TagIcon, 
 } from "lucide-react";
-import { StatusTag } from "./ViewRequestHistoryPage";
+import { StatusTag } from "../../pages/RegradeRequest/ViewRequestHistoryPage";
 
 const RequestRegradeDetailModal = ({ visible, request, onClose }) => {
   if (!request) {
