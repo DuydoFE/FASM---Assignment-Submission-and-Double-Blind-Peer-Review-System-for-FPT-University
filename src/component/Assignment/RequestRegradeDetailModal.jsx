@@ -5,12 +5,11 @@ import {
   User,
   Star,
   MessageSquare,
-  Tag as TagIcon,
+  Tag as TagIcon, 
 } from "lucide-react";
-
 import { StatusTag } from "./ViewRequestHistoryPage";
 
-const RequestDetailModal = ({ visible, request, onClose }) => {
+const RequestRegradeDetailModal = ({ visible, request, onClose }) => {
   if (!request) {
     return null;
   }
@@ -27,6 +26,7 @@ const RequestDetailModal = ({ visible, request, onClose }) => {
       ]}
     >
       <div className="space-y-4 py-4">
+        {/* ADDED: Status Section */}
         <div className="flex items-start">
           <TagIcon className="w-5 h-5 mr-3 mt-1 text-gray-600 flex-shrink-0" />
           <div>
@@ -83,4 +83,4 @@ const RequestDetailModal = ({ visible, request, onClose }) => {
   );
 };
 
-export default RequestDetailModal;
+export default RequestRegradeDetailModal;
