@@ -90,8 +90,6 @@ export const createAssignment = async (assignmentData, file = null) => {
     formData.append('PassThreshold', assignmentData.passThreshold);
     
     formData.append('AllowCrossClass', assignmentData.allowCrossClass);
-    formData.append('IsBlindReview', assignmentData.isBlindReview);
-    formData.append('IncludeAIScore', assignmentData.includeAIScore);
     
     formData.append('GradingScale', assignmentData.gradingScale);
     

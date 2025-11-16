@@ -36,7 +36,6 @@ const InstructorManageAssignment = () => {
   const [editingAssignment, setEditingAssignment] = useState(null);
   const [openDropdownId, setOpenDropdownId] = useState(null);
   const dropdownRef = useRef(null);
-  const toastShownRef = useRef(false);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
