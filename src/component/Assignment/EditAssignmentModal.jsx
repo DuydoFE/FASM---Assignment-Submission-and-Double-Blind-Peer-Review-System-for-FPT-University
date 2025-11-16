@@ -16,7 +16,8 @@ const EditAssignmentModal = ({ isOpen, onClose, onSubmit, assignment }) => {
     reviewDeadline: '',
     finalDeadline: '',
     numPeerReviewsRequired: '',
-    missingReviewPenalty: 0,
+    // changed to empty string so input initial is blank
+    missingReviewPenalty: '',
     allowCrossClass: false,
     isBlindReview: false,
     instructorWeight: '',
@@ -29,6 +30,7 @@ const EditAssignmentModal = ({ isOpen, onClose, onSubmit, assignment }) => {
   const [errors, setErrors] = useState({});
   const [rubrics, setRubrics] = useState([]);
   const [loadingRubrics, setLoadingRubrics] = useState(false);
+  const [uploadedFile, setUploadedFile] = useState(null);
   const currentUser = getCurrentAccount();
 
   const formatDateTimeLocal = (dateString) => {
@@ -73,20 +75,35 @@ const EditAssignmentModal = ({ isOpen, onClose, onSubmit, assignment }) => {
         deadline: assignment.deadline ? formatDateTimeLocal(assignment.deadline) : '',
         reviewDeadline: assignment.reviewDeadline ? formatDateTimeLocal(assignment.reviewDeadline) : '',
         finalDeadline: assignment.finalDeadline ? formatDateTimeLocal(assignment.finalDeadline) : '',
-        numPeerReviewsRequired: assignment.numPeerReviewsRequired || '',
-        missingReviewPenalty: assignment.missingReviewPenalty || 0,
+        numPeerReviewsRequired: assignment.numPeerReviewsRequired !== undefined && assignment.numPeerReviewsRequired !== null
+          ? String(assignment.numPeerReviewsRequired)
+          : '',
+        // keep "0" as "0" if backend gives 0; otherwise string or empty
+        missingReviewPenalty:
+          assignment.missingReviewPenalty === 0
+            ? '0'
+            : assignment.missingReviewPenalty
+              ? String(assignment.missingReviewPenalty)
+              : '',
         allowCrossClass: assignment.allowCrossClass || false,
         isBlindReview: assignment.isBlindReview || false,
-        instructorWeight: assignment.instructorWeight || '',
-        peerWeight: assignment.peerWeight || '',
+        instructorWeight: assignment.instructorWeight !== undefined && assignment.instructorWeight !== null
+          ? String(assignment.instructorWeight)
+          : '',
+        peerWeight: assignment.peerWeight !== undefined && assignment.peerWeight !== null
+          ? String(assignment.peerWeight)
+          : '',
         gradingScale: assignment.gradingScale || 'Scale10',
-        passThreshold: assignment.passThreshold ? String(assignment.passThreshold) : '',
+        passThreshold: assignment.passThreshold !== undefined && assignment.passThreshold !== null
+          ? String(assignment.passThreshold)
+          : '',
         includeAIScore: assignment.includeAIScore || false
       });
       fetchRubrics();
     }
   }, [isOpen, assignment]);
 
+  // REPLACED handleChange — same behavior as Create version:
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
 
@@ -94,18 +111,63 @@ const EditAssignmentModal = ({ isOpen, onClose, onSubmit, assignment }) => {
 
     if (type === 'checkbox') {
       newValue = checked;
-    } else if (type === 'number') {
-      newValue = value === '' ? '' : Number(value);
-    } else if (name === 'rubricTemplateId') {
+    }
+
+    else if (type === 'number') {
+
+      // Number of Peer Reviews Required: 1–10
+      if (name === "numPeerReviewsRequired") {
+        if (value === "") {
+          newValue = "";
+        } else {
+          let num = Number(value);
+          if (isNaN(num)) {
+            newValue = "";
+          } else {
+            if (num < 1) num = 1;
+            if (num > 10) num = 10;
+            num = Math.floor(num);
+            newValue = String(num);
+          }
+        }
+      }
+
+      // Missing Review Penalty: 0–10
+      else if (name === "missingReviewPenalty") {
+        if (value === "") {
+          newValue = "";
+        } else {
+          let num = Number(value);
+          if (isNaN(num)) {
+            newValue = "";
+          } else {
+            if (num < 0) num = 0;
+            if (num > 10) num = 10;
+            num = Math.floor(num);
+            newValue = String(num);
+          }
+        }
+      }
+
+      // Other numeric inputs
+      else {
+        newValue = value === "" ? "" : String(Number(value));
+      }
+    }
+
+    else if (name === 'rubricTemplateId') {
       newValue = value;
-    } else if (name === 'passThreshold') {
+    } 
+    
+    else if (name === 'passThreshold') {
       newValue = value;
-    } else if (name === 'gradingScale') {
-      // Reset passThreshold when changing grading scale
+    }
+
+    else if (name === 'gradingScale') {
       setFormData(prev => ({
         ...prev,
         gradingScale: value,
-        passThreshold: '' // Clear passThreshold when switching
+        passThreshold: ''
       }));
       if (errors.passThreshold) {
         setErrors(prev => ({ ...prev, passThreshold: '' }));
@@ -120,6 +182,13 @@ const EditAssignmentModal = ({ isOpen, onClose, onSubmit, assignment }) => {
 
     if (errors[name]) {
       setErrors(prev => ({ ...prev, [name]: '' }));
+    }
+  };
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setUploadedFile(file);
     }
   };
 
@@ -144,6 +213,12 @@ const EditAssignmentModal = ({ isOpen, onClose, onSubmit, assignment }) => {
 
     if (!formData.numPeerReviewsRequired || formData.numPeerReviewsRequired === '') {
       newErrors.numPeerReviewsRequired = 'Number of peer reviews is required';
+    } else {
+      // ensure it's within 1-10
+      const num = Number(formData.numPeerReviewsRequired);
+      if (isNaN(num) || num < 1 || num > 10) {
+        newErrors.numPeerReviewsRequired = 'Number of peer reviews must be between 1 and 10';
+      }
     }
 
     // Only validate passThreshold if gradingScale is PassFail
@@ -157,6 +232,14 @@ const EditAssignmentModal = ({ isOpen, onClose, onSubmit, assignment }) => {
     if (totalWeight !== 100) {
       newErrors.instructorWeight = 'Instructor and Peer weights must add up to 100%';
       newErrors.peerWeight = 'Instructor and Peer weights must add up to 100%';
+    }
+
+    // missingReviewPenalty validation (optional)
+    if (formData.missingReviewPenalty !== '' && formData.missingReviewPenalty !== undefined) {
+      const mp = Number(formData.missingReviewPenalty);
+      if (isNaN(mp) || mp < 0 || mp > 10) {
+        newErrors.missingReviewPenalty = 'Missing review penalty must be between 0 and 10';
+      }
     }
 
     setErrors(newErrors);
@@ -182,6 +265,7 @@ const EditAssignmentModal = ({ isOpen, onClose, onSubmit, assignment }) => {
         reviewDeadline: new Date(formData.reviewDeadline).toISOString(),
         finalDeadline: new Date(formData.finalDeadline).toISOString(),
         numPeerReviewsRequired: parseInt(formData.numPeerReviewsRequired),
+        // if blank -> parseInt('') => NaN -> || 0 => 0
         missingReviewPenalty: parseInt(formData.missingReviewPenalty) || 0,
         allowCrossClass: formData.allowCrossClass,
         isBlindReview: formData.isBlindReview,
@@ -200,7 +284,8 @@ const EditAssignmentModal = ({ isOpen, onClose, onSubmit, assignment }) => {
 
       console.log('Updating assignment:', submitData);
 
-      await onSubmit(submitData);
+      // Pass file as second parameter (optional)
+      await onSubmit(submitData, uploadedFile);
       onClose();
     } catch (error) {
       console.error('Error updating assignment:', error);
@@ -292,12 +377,41 @@ const EditAssignmentModal = ({ isOpen, onClose, onSubmit, assignment }) => {
                   </div>
                 ) : (
                   <div className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-700">
-                    {rubrics.find(r => String(r.templateId) === String(formData.rubricTemplateId))?.title || 
-                     `Rubric #${formData.rubricTemplateId}` || 
+                    {rubrics.find(r => String(r.templateId) === String(formData.rubricTemplateId))?.title ||
+                     `Rubric #${formData.rubricTemplateId}` ||
                      'No rubric selected'}
                   </div>
                 )}
                 <p className="text-xs text-gray-500 mt-1">The rubric cannot be changed after assignment creation</p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Upload File <span className="text-gray-400">(Optional)</span>
+                </label>
+                <div className="flex items-center justify-center w-full">
+                  <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100">
+                    <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                      <svg className="w-8 h-8 mb-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                      </svg>
+                      <p className="text-sm text-gray-500">
+                        {uploadedFile ? (
+                          <span className="font-medium text-blue-600">{uploadedFile.name}</span>
+                        ) : (
+                          <>
+                            <span className="font-medium">Click to upload</span> or drag and drop
+                          </>
+                        )}
+                      </p>
+                    </div>
+                    <input
+                      type="file"
+                      onChange={handleFileChange}
+                      className="hidden"
+                    />
+                  </label>
+                </div>
               </div>
             </div>
 
@@ -500,6 +614,7 @@ const EditAssignmentModal = ({ isOpen, onClose, onSubmit, assignment }) => {
                     value={formData.numPeerReviewsRequired}
                     onChange={handleChange}
                     min="1"
+                    max="10"
                     className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none ${
                       errors.numPeerReviewsRequired ? 'border-red-500' : 'border-gray-300'
                     }`}
@@ -522,8 +637,15 @@ const EditAssignmentModal = ({ isOpen, onClose, onSubmit, assignment }) => {
                     value={formData.missingReviewPenalty}
                     onChange={handleChange}
                     min="0"
+                    max="10"
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
                   />
+                  {errors.missingReviewPenalty && (
+                    <div className="flex items-center gap-1 mt-1 text-red-500 text-sm">
+                      <AlertCircle className="w-4 h-4" />
+                      <span>{errors.missingReviewPenalty}</span>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -540,35 +662,7 @@ const EditAssignmentModal = ({ isOpen, onClose, onSubmit, assignment }) => {
                     <span className="text-sm font-medium text-gray-900 group-hover:text-blue-600">Allow Cross-Class Review</span>
                     <p className="text-xs text-gray-500">Students can review submissions from other classes</p>
                   </div>
-                </label>
-
-                <label className="flex items-center space-x-3 cursor-pointer group">
-                  <input
-                    type="checkbox"
-                    name="isBlindReview"
-                    checked={formData.isBlindReview}
-                    onChange={handleChange}
-                    className="w-5 h-5 text-blue-500 border-gray-300 rounded focus:ring-blue-500"
-                  />
-                  <div>
-                    <span className="text-sm font-medium text-gray-900 group-hover:text-blue-600">Blind Review</span>
-                    <p className="text-xs text-gray-500">Hide student identities during peer review</p>
-                  </div>
-                </label>
-
-                <label className="flex items-center space-x-3 cursor-pointer group">
-                  <input
-                    type="checkbox"
-                    name="includeAIScore"
-                    checked={formData.includeAIScore}
-                    onChange={handleChange}
-                    className="w-5 h-5 text-blue-500 border-gray-300 rounded focus:ring-blue-500"
-                  />
-                  <div>
-                    <span className="text-sm font-medium text-gray-900 group-hover:text-blue-600">Include AI Score</span>
-                    <p className="text-xs text-gray-500">Use AI-assisted grading in final score calculation</p>
-                  </div>
-                </label>
+                </label>              
               </div>
             </div>
           </div>

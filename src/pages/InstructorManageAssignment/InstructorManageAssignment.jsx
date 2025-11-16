@@ -184,9 +184,9 @@ const InstructorManageAssignment = () => {
     }
   };
 
-  const handleUpdateAssignment = async (updatedData) => {
+  const handleUpdateAssignment = async (updatedData, file) => {
     try {
-      const response = await updateAssignment(updatedData);
+      const response = await updateAssignment(updatedData, file);
       if (response) {
         toast.success('Assignment updated successfully!');
         setShowEditModal(false);
