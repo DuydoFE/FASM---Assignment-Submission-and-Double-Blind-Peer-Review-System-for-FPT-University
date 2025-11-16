@@ -16,7 +16,6 @@ const EditAssignmentModal = ({ isOpen, onClose, onSubmit, assignment }) => {
     reviewDeadline: '',
     finalDeadline: '',
     numPeerReviewsRequired: '',
-    // changed to empty string so input initial is blank
     missingReviewPenalty: '',
     allowCrossClass: false,
     isBlindReview: false,
@@ -31,6 +30,7 @@ const EditAssignmentModal = ({ isOpen, onClose, onSubmit, assignment }) => {
   const [rubrics, setRubrics] = useState([]);
   const [loadingRubrics, setLoadingRubrics] = useState(false);
   const [uploadedFile, setUploadedFile] = useState(null);
+  const [initialFormData, setInitialFormData] = useState(null);
   const currentUser = getCurrentAccount();
 
   const formatDateTimeLocal = (dateString) => {
@@ -65,7 +65,7 @@ const EditAssignmentModal = ({ isOpen, onClose, onSubmit, assignment }) => {
   useEffect(() => {
     if (isOpen && assignment) {
       // Populate form with existing assignment data
-      setFormData({
+      const initialData = {
         assignmentId: assignment.assignmentId || 0,
         rubricTemplateId: assignment.rubricTemplateId || assignment.rubricId || '',
         title: assignment.title || '',
@@ -78,7 +78,6 @@ const EditAssignmentModal = ({ isOpen, onClose, onSubmit, assignment }) => {
         numPeerReviewsRequired: assignment.numPeerReviewsRequired !== undefined && assignment.numPeerReviewsRequired !== null
           ? String(assignment.numPeerReviewsRequired)
           : '',
-        // keep "0" as "0" if backend gives 0; otherwise string or empty
         missingReviewPenalty:
           assignment.missingReviewPenalty === 0
             ? '0'
@@ -98,12 +97,15 @@ const EditAssignmentModal = ({ isOpen, onClose, onSubmit, assignment }) => {
           ? String(assignment.passThreshold)
           : '',
         includeAIScore: assignment.includeAIScore || false
-      });
+      };
+      setFormData(initialData);
+      setInitialFormData(initialData);
+      setUploadedFile(null);
       fetchRubrics();
     }
   }, [isOpen, assignment]);
 
-  // REPLACED handleChange — same behavior as Create version:
+  // REPLACED handleChange – same behavior as Create version:
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
 
@@ -115,7 +117,6 @@ const EditAssignmentModal = ({ isOpen, onClose, onSubmit, assignment }) => {
 
     else if (type === 'number') {
 
-      // Number of Peer Reviews Required: 1–10
       if (name === "numPeerReviewsRequired") {
         if (value === "") {
           newValue = "";
@@ -132,7 +133,6 @@ const EditAssignmentModal = ({ isOpen, onClose, onSubmit, assignment }) => {
         }
       }
 
-      // Missing Review Penalty: 0–10
       else if (name === "missingReviewPenalty") {
         if (value === "") {
           newValue = "";
@@ -149,7 +149,6 @@ const EditAssignmentModal = ({ isOpen, onClose, onSubmit, assignment }) => {
         }
       }
 
-      // Other numeric inputs
       else {
         newValue = value === "" ? "" : String(Number(value));
       }
@@ -192,6 +191,15 @@ const EditAssignmentModal = ({ isOpen, onClose, onSubmit, assignment }) => {
     }
   };
 
+  // Check if form data has changed
+  const hasFormChanged = () => {
+    if (!initialFormData) return false;
+    if (uploadedFile) return true; // If file is uploaded, consider as changed
+    
+    // Compare all form fields
+    return JSON.stringify(formData) !== JSON.stringify(initialFormData);
+  };
+
   const validateForm = () => {
     const newErrors = {};
 
@@ -214,14 +222,12 @@ const EditAssignmentModal = ({ isOpen, onClose, onSubmit, assignment }) => {
     if (!formData.numPeerReviewsRequired || formData.numPeerReviewsRequired === '') {
       newErrors.numPeerReviewsRequired = 'Number of peer reviews is required';
     } else {
-      // ensure it's within 1-10
       const num = Number(formData.numPeerReviewsRequired);
       if (isNaN(num) || num < 1 || num > 10) {
         newErrors.numPeerReviewsRequired = 'Number of peer reviews must be between 1 and 10';
       }
     }
 
-    // Only validate passThreshold if gradingScale is PassFail
     if (formData.gradingScale === 'PassFail') {
       if (formData.passThreshold === '' || !formData.passThreshold) {
         newErrors.passThreshold = 'Please select a pass threshold';
@@ -265,7 +271,6 @@ const EditAssignmentModal = ({ isOpen, onClose, onSubmit, assignment }) => {
         reviewDeadline: new Date(formData.reviewDeadline).toISOString(),
         finalDeadline: new Date(formData.finalDeadline).toISOString(),
         numPeerReviewsRequired: parseInt(formData.numPeerReviewsRequired),
-        // if blank -> parseInt('') => NaN -> || 0 => 0
         missingReviewPenalty: parseInt(formData.missingReviewPenalty) || 0,
         allowCrossClass: formData.allowCrossClass,
         isBlindReview: formData.isBlindReview,
@@ -275,7 +280,6 @@ const EditAssignmentModal = ({ isOpen, onClose, onSubmit, assignment }) => {
         includeAIScore: formData.includeAIScore
       };
 
-      // Always include passThreshold
       if (formData.gradingScale === 'PassFail') {
         submitData.passThreshold = parseFloat(formData.passThreshold);
       } else {
@@ -284,7 +288,6 @@ const EditAssignmentModal = ({ isOpen, onClose, onSubmit, assignment }) => {
 
       console.log('Updating assignment:', submitData);
 
-      // Pass file as second parameter (optional)
       await onSubmit(submitData, uploadedFile);
       onClose();
     } catch (error) {
@@ -679,7 +682,12 @@ const EditAssignmentModal = ({ isOpen, onClose, onSubmit, assignment }) => {
           <button
             type="button"
             onClick={handleSubmit}
-            className="px-6 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium flex items-center gap-2 transition-colors"
+            disabled={!hasFormChanged()}
+            className={`px-6 py-2.5 rounded-lg font-medium flex items-center gap-2 transition-colors ${
+              hasFormChanged()
+                ? 'bg-blue-600 text-white hover:bg-blue-700 cursor-pointer'
+                : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+            }`}
           >
             <Save className="w-5 h-5" />
             Save Changes
@@ -690,4 +698,4 @@ const EditAssignmentModal = ({ isOpen, onClose, onSubmit, assignment }) => {
   );
 };
 
-export default EditAssignmentModal;
+export default EditAssignmentModal
