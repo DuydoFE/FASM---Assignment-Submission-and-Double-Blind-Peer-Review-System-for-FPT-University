@@ -14,6 +14,7 @@ import {
   EyeOff,
   User,
   Star,
+  FileSearch, // <-- Imported new icon
 } from "lucide-react";
 import { Tag, Spin, Alert, Empty, Pagination, Card, Modal, Button } from "antd";
 import { toast } from "react-toastify";
@@ -75,7 +76,6 @@ const ViewRequestHistoryPage = () => {
     totalCount: 0,
   });
   const [visibilityState, setVisibilityState] = useState({});
-  // State for modal
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState(null);
 
@@ -147,7 +147,7 @@ const ViewRequestHistoryPage = () => {
       };
     });
   };
-  // Handlers for modal
+
   const showDetailModal = (request) => {
     setSelectedRequest(request);
     setIsModalVisible(true);
@@ -231,11 +231,16 @@ const ViewRequestHistoryPage = () => {
                       </span>
                     </div>
                   </div>
-                  {/* MODIFIED: Added a wrapper and Detail button */}
                   <div className="mt-4 md:mt-0 flex items-center space-x-4">
                     <StatusTag status={request.status} />
-                    <Button onClick={() => showDetailModal(request)}>
-                      Detail
+                    {/* MODIFIED: Enhanced button styling */}
+                    <Button
+                      type="primary"
+                      icon={<FileSearch className="w-4 h-4" />}
+                      onClick={() => showDetailModal(request)}
+                      className="flex items-center justify-center font-semibold"
+                    >
+                      View Details
                     </Button>
                   </div>
                 </div>
@@ -298,7 +303,6 @@ const ViewRequestHistoryPage = () => {
           />
         </div>
 
-        {/* ADDED: Modal for showing request details */}
         {selectedRequest && (
           <Modal
             title="Regrade Request Details"
