@@ -1,3 +1,5 @@
+// ViewRequestHistoryPage.js
+
 import { useState, useEffect } from "react";
 import { useSelector } from "react-redux";
 import {
@@ -12,12 +14,14 @@ import {
   Edit,
   Eye,
   EyeOff,
+  FileSearch, 
 } from "lucide-react";
-import { Tag, Spin, Alert, Empty, Pagination, Card } from "antd";
+import { Tag, Spin, Alert, Empty, Pagination, Card, Button } from "antd"; 
 import { toast } from "react-toastify";
 
 import { selectUser } from "../../redux/features/userSlice";
 import { getRegradeRequestsByStudentId } from "../../service/regradeService";
+import RequestDetailModal from "../../component/Assignment/RequestDetailModal.jsX";
 
 const StatusTag = ({ status }) => {
   switch (status) {
@@ -72,8 +76,11 @@ const ViewRequestHistoryPage = () => {
     pageSize: 10,
     totalCount: 0,
   });
-
   const [visibilityState, setVisibilityState] = useState({});
+
+  // ADDED: State for managing the modal
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [selectedRequest, setSelectedRequest] = useState(null);
 
   const fetchRequests = async (studentId, page = 1, size = 10) => {
     setLoading(true);
@@ -127,6 +134,7 @@ const ViewRequestHistoryPage = () => {
     if (!dateString) return "N/A";
     return new Date(dateString).toLocaleString();
   };
+
   const toggleVisibility = (requestId, field) => {
     setVisibilityState((prev) => {
       const currentVisibility = prev[requestId] || {
@@ -141,6 +149,17 @@ const ViewRequestHistoryPage = () => {
         },
       };
     });
+  };
+
+  // ADDED: Handlers to show/hide the modal
+  const showDetailModal = (request) => {
+    setSelectedRequest(request);
+    setIsModalVisible(true);
+  };
+
+  const handleCancelModal = () => {
+    setIsModalVisible(false);
+    setSelectedRequest(null);
   };
 
   const renderContent = () => {
@@ -177,6 +196,7 @@ const ViewRequestHistoryPage = () => {
               >
                 <div className="flex flex-col md:flex-row justify-between items-start">
                   <div className="flex-1">
+                    {/* File Name Section */}
                     <div className="flex items-center mb-2">
                       <FileText className="w-5 h-5 mr-2 text-gray-500" />
                       <p className="text-lg font-semibold text-gray-800 mr-2">
@@ -210,6 +230,7 @@ const ViewRequestHistoryPage = () => {
                       </button>
                     </div>
 
+                    {/* Requested Date Section */}
                     <div className="flex items-center text-sm text-gray-500">
                       <Calendar className="w-4 h-4 mr-2" />
                       <span>
@@ -217,11 +238,23 @@ const ViewRequestHistoryPage = () => {
                       </span>
                     </div>
                   </div>
-                  <div className="mt-4 md:mt-0">
+
+                  {/* MODIFIED: Added Detail button */}
+                  <div className="mt-4 md:mt-0 flex items-center space-x-4">
                     <StatusTag status={request.status} />
+                    <Button
+                      type="primary"
+                      icon={<FileSearch className="w-4 h-4" />}
+                      onClick={() => showDetailModal(request)}
+                      className="flex items-center justify-center font-semibold"
+                    >
+                      View Details
+                    </Button>
                   </div>
                 </div>
+
                 <div className="mt-4 pt-4 border-t border-gray-200 space-y-3">
+                  {/* Reason Section */}
                   <div>
                     <div className="flex items-center">
                       <h4 className="font-semibold text-gray-700 flex items-center mr-2">
@@ -255,6 +288,7 @@ const ViewRequestHistoryPage = () => {
                     </p>
                   </div>
 
+                  {/* Instructor Response Section */}
                   {request.resolutionNotes && (
                     <div>
                       <h4 className="font-semibold text-gray-700 flex items-center">
@@ -271,6 +305,8 @@ const ViewRequestHistoryPage = () => {
             );
           })}
         </div>
+        
+        {/* Pagination */}
         <div className="mt-8 flex justify-center">
           <Pagination
             current={pagination.pageNumber}
@@ -280,6 +316,13 @@ const ViewRequestHistoryPage = () => {
             showSizeChanger
           />
         </div>
+
+        {/* ADDED: Calling the external modal component */}
+        <RequestDetailModal
+          visible={isModalVisible}
+          onClose={handleCancelModal}
+          request={selectedRequest}
+        />
       </>
     );
   };
