@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Eye, MoreVertical, Loader2, Check, X, CheckCircle } from 'lucide-react';
-import { Dropdown } from 'antd';
+import { Search, Eye, Loader2 } from 'lucide-react';
 import { getRegradeRequestsForInstructor } from '../../service/regradeService';
 import { getCurrentAccount } from '../../utils/accountUtils';
-
+import SolveRegradeRequestModal from '../../component/RegradeRequest/SolveRegradeRequestModal';
 
 const InstructorRegradeRequest = () => {
     const currentUser = getCurrentAccount();
@@ -12,6 +11,8 @@ const InstructorRegradeRequest = () => {
     const [reviewRequests, setReviewRequests] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [selectedRequest, setSelectedRequest] = useState(null);
+    const [isModalOpen, setIsModalOpen] = useState(false);
 
     useEffect(() => {
         fetchRegradeRequests();
@@ -30,7 +31,7 @@ const InstructorRegradeRequest = () => {
                 mssv: req.requestedByStudent.userId.toString(),
                 email: req.requestedByStudent.email,
                 class: 'N/A',
-                assignment: req.submission.fileName,
+                file: req.submission.fileName,
                 currentGrade: 'N/A',
                 reason: req.reason,
                 requestTime: new Date(req.requestedAt).toLocaleString('vi-VN'),
@@ -38,7 +39,9 @@ const InstructorRegradeRequest = () => {
                 reviewedByInstructorId: req.reviewedByInstructorId,
                 resolutionNotes: req.resolutionNotes,
                 submittedAt: req.submission.submittedAt,
-                submissionStatus: req.submission.status
+                submissionStatus: req.submission.status,
+                assignmentTitle: req.assignment.title,
+
             }));
 
             setReviewRequests(transformedData);
@@ -53,74 +56,43 @@ const InstructorRegradeRequest = () => {
 
     const totalRequests = reviewRequests.length;
     const pendingRequests = reviewRequests.filter(req => req.status === 'Pending').length;
-    const approvedRequests = reviewRequests.filter(req => req.status === 'Approved').length;
     const processedRequests = reviewRequests.filter(req => req.status === 'Processed').length;
-
-    const handleStatusClick = () => {
-        if (statusFilter === 'All') setStatusFilter('Pending');
-        else if (statusFilter === 'Pending') setStatusFilter('Processed');
-        else setStatusFilter('All');
-    };
 
     const getStatusStyle = (status) => {
         if (status === 'Processed') {
             return 'bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium';
         } else if (status === 'Approved') {
             return 'bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium';
-        } else {
+        } else if (status === 'Rejected') {
+            return 'bg-red-100 text-red-800 px-3 py-1 rounded-full text-sm font-medium';
+        } else if (status === 'Pending') {
             return 'bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-sm font-medium';
         }
+        return 'bg-gray-100 text-gray-800 px-3 py-1 rounded-full text-sm font-medium';
     };
 
-    const handleActionSelect = async (requestId, action) => {
-        // TODO: Call API to update with specific action
-        console.log(`Action ${action} selected for request ${requestId}`);
-        
-        // Update local state based on action
+    const handleSolveClick = (request) => {
+        setSelectedRequest(request);
+        setIsModalOpen(true);
+    };
+
+    const handleModalClose = () => {
+        setIsModalOpen(false);
+        setSelectedRequest(null);
+    };
+
+    const handleModalSubmit = (decision, feedback) => {
+        // TODO: Call API to update request
+        console.log('Decision:', decision, 'Feedback:', feedback);
+
+        // Update local state
         setReviewRequests(prev => prev.map(req =>
-            req.requestId === requestId
-                ? { ...req, status: action === 'Complete' ? 'Processed' : req.status }
+            req.requestId === selectedRequest.requestId
+                ? { ...req, status: decision === 'approve' ? 'Processed' : 'Rejected', resolutionNotes: feedback }
                 : req
         ));
-    };
 
-    const getMenuItems = (requestId, status) => {
-        if (status === 'Pending') {
-            return [
-                {
-                    label: (
-                        <span className="flex items-center gap-2 text-green-600">
-                            <Check className="w-4 h-4" />
-                            Approve
-                        </span>
-                    ),
-                    onClick: () => handleActionSelect(requestId, 'Approve'),
-                },
-                {
-                    label: (
-                        <span className="flex items-center gap-2 text-red-600">
-                            <X className="w-4 h-4" />
-                            Reject
-                        </span>
-                    ),
-                    onClick: () => handleActionSelect(requestId, 'Reject'),
-                },
-            ];
-        }
-        else if (status === 'Approved') {
-            return [
-                {
-                    label: (
-                        <span className="flex items-center gap-2 text-blue-600">
-                            <CheckCircle className="w-4 h-4" />
-                            Complete
-                        </span>
-                    ),
-                    onClick: () => handleActionSelect(requestId, 'Complete'),
-                },
-            ];
-        }
-        return [];
+        handleModalClose();
     };
 
     const filteredRequests = reviewRequests.filter(req => {
@@ -181,7 +153,7 @@ const InstructorRegradeRequest = () => {
                 {/* Stats Cards */}
                 <div className="mb-6">
                     <h2 className="text-lg font-semibold text-gray-900 mb-4">Overview</h2>
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                         <div className="bg-blue-50 rounded-lg shadow-sm p-6 border-blue-500">
                             <div className="text-sm text-gray-600 mb-1">Total Requests</div>
                             <div className="text-3xl font-bold text-gray-900">{totalRequests}</div>
@@ -189,10 +161,6 @@ const InstructorRegradeRequest = () => {
                         <div className="bg-yellow-50 rounded-lg shadow-sm p-6 border-yellow-500">
                             <div className="text-sm text-yellow-700 mb-1">Pending</div>
                             <div className="text-3xl font-bold text-yellow-800">{pendingRequests}</div>
-                        </div>
-                        <div className="bg-blue-100 rounded-lg shadow-sm p-6 border-blue-600">
-                            <div className="text-sm text-blue-700 mb-1">Approved</div>
-                            <div className="text-3xl font-bold text-blue-800">{approvedRequests}</div>
                         </div>
                         <div className="bg-green-50 rounded-lg shadow-sm p-6 border-green-500">
                             <div className="text-sm text-green-700 mb-1">Processed</div>
@@ -227,7 +195,7 @@ const InstructorRegradeRequest = () => {
                                         </td>
                                         <td className="px-6 py-4">
                                             <span className="text-sm text-gray-900 max-w-xs truncate block">
-                                                {request.assignment}
+                                                {request.assignmentTitle}
                                             </span>
                                         </td>
                                         <td className="px-6 py-4">
@@ -253,23 +221,20 @@ const InstructorRegradeRequest = () => {
                                             </span>
                                         </td>
                                         <td className="px-6 py-4 text-center">
-                                            {request.status === 'Processed' ? (
-                                                <button 
-                                                    className="bg-gray-100 text-gray-600 px-4 py-2 rounded-md text-sm font-medium cursor-not-allowed" 
+                                            {request.status === 'Pending' ? (
+                                                <button
+                                                    onClick={() => handleSolveClick(request)}
+                                                    className="bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-700 transition-colors"
+                                                >
+                                                    Solve
+                                                </button>
+                                            ) : (
+                                                <button
+                                                    className="bg-gray-100 text-gray-600 px-4 py-2 rounded-md text-sm font-medium cursor-not-allowed"
                                                     disabled
                                                 >
                                                     View
                                                 </button>
-                                            ) : (
-                                                <Dropdown
-                                                    menu={{ items: getMenuItems(request.requestId, request.status) }}
-                                                    trigger={['click']}
-                                                    placement="bottomRight"
-                                                >
-                                                    <button className="p-2 hover:bg-gray-100 rounded-md transition-colors duration-200">
-                                                        <MoreVertical className="w-5 h-5 text-gray-600" />
-                                                    </button>
-                                                </Dropdown>
                                             )}
                                         </td>
                                     </tr>
@@ -287,6 +252,15 @@ const InstructorRegradeRequest = () => {
                     </div>
                 )}
             </div>
+
+            {/* Modal */}
+            {isModalOpen && selectedRequest && (
+                <SolveRegradeRequestModal
+                    request={selectedRequest}
+                    onClose={handleModalClose}
+                    onSubmit={handleModalSubmit}
+                />
+            )}
         </div>
     );
 };

@@ -34,3 +34,13 @@ export const getRegradeRequestsForInstructor = async (userId) => {
     throw error;
   }
 };
+
+export const reviewRegradeRequest = async (data) => {
+  try {
+    const response = await api.put(`/instructor/regrade-requests/review`, data);
+    return response.data;
+  } catch (error) {
+    console.error("Lỗi khi review yêu cầu chấm lại:", error);
+    throw error;
+  }
+};
