@@ -327,7 +327,7 @@ const PeerReviewPage = () => {
           <div className="bg-white p-6 rounded-lg border">
             <div className="flex justify-between items-center bg-blue-50 p-4 rounded-lg">
               <span className="text-xl font-bold text-blue-800">Total Score</span>
-              <span className="text-3xl font-extrabold text-blue-600">{rawTotalScore}/100</span>
+              <span className="text-3xl font-extrabold text-blue-600">{rawTotalScore}/{totalMaxScore}</span>
             </div>
             <div className="mt-6">
               <label className="font-bold text-gray-800 mb-2 block">Comment</label>
