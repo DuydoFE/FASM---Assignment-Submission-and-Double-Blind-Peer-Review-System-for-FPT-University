@@ -6,7 +6,7 @@ import { Outlet } from "react-router-dom";
 function Layout() {
   return (
     // Nền tối cho toàn bộ ứng dụng
-    <div className="bg-[#0a0a0a] text-white">
+    <div className="bg-orange-50 text-zinc-800">
       <Header />
       <main>
         <Outlet />
