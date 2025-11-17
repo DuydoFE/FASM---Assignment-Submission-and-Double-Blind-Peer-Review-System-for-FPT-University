@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, CheckCircle, Info } from 'lucide-react';
+import { X, CheckCircle, Info, AlertCircle } from 'lucide-react';
 import { reviewRegradeRequest } from '../../service/regradeService';
 import { getCurrentAccount } from '../../utils/accountUtils';
 
@@ -28,7 +28,7 @@ const SolveRegradeRequestModal = ({ request, onClose, onSubmit }) => {
             };
 
             await reviewRegradeRequest(data);
-            
+
             // Gọi callback để update UI
             onSubmit(decision, feedback);
         } catch (error) {
@@ -47,7 +47,7 @@ const SolveRegradeRequestModal = ({ request, onClose, onSubmit }) => {
                     <div>
                         <h2 className="text-xl font-bold text-gray-900">Handle Regrade Request</h2>
                         <p className="text-sm text-gray-600 mt-1">
-                            {request.name} - {request.assignment}
+                            {request.name} - {request.courseName} - {request.className} - {request.assignmentTitle}
                         </p>
                     </div>
                     <button
@@ -67,20 +67,20 @@ const SolveRegradeRequestModal = ({ request, onClose, onSubmit }) => {
                             <Info className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
                             <div className="flex-1">
                                 <h3 className="font-semibold text-gray-900 mb-2">Request Details</h3>
-                                
+
                                 <div className="space-y-2 text-sm">
                                     <div className="flex justify-between">
                                         <span className="text-gray-600">Current Score:</span>
                                         <span className="font-semibold text-red-600">{request.currentGrade || 'N/A'}</span>
                                     </div>
-                                    
+
                                     <div>
                                         <span className="text-gray-600 font-medium">Student's Reason:</span>
                                         <p className="text-gray-800 mt-1 leading-relaxed">
                                             {request.reason}
                                         </p>
                                     </div>
-                                    
+
                                     <div className="flex justify-between pt-2 border-t border-blue-200">
                                         <span className="text-gray-600">Request Time:</span>
                                         <span className="text-gray-800">{request.requestTime}</span>
@@ -98,17 +98,15 @@ const SolveRegradeRequestModal = ({ request, onClose, onSubmit }) => {
                             <button
                                 onClick={() => setDecision('approve')}
                                 disabled={isSubmitting}
-                                className={`flex items-center gap-3 p-4 rounded-lg border-2 transition-all ${
-                                    decision === 'approve'
-                                        ? 'bg-green-50 border-green-500 shadow-sm'
-                                        : 'bg-white border-gray-200 hover:border-green-300'
-                                } ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                className={`flex items-center gap-3 p-4 rounded-lg border-2 transition-all ${decision === 'approve'
+                                    ? 'bg-green-50 border-green-500 shadow-sm'
+                                    : 'bg-white border-gray-200 hover:border-green-300'
+                                    } ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}`}
                             >
-                                <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
-                                    decision === 'approve'
-                                        ? 'border-green-500 bg-green-500'
-                                        : 'border-gray-300'
-                                }`}>
+                                <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${decision === 'approve'
+                                    ? 'border-green-500 bg-green-500'
+                                    : 'border-gray-300'
+                                    }`}>
                                     {decision === 'approve' && (
                                         <div className="w-2 h-2 bg-white rounded-full"></div>
                                     )}
@@ -123,17 +121,15 @@ const SolveRegradeRequestModal = ({ request, onClose, onSubmit }) => {
                             <button
                                 onClick={() => setDecision('reject')}
                                 disabled={isSubmitting}
-                                className={`flex items-center gap-3 p-4 rounded-lg border-2 transition-all ${
-                                    decision === 'reject'
-                                        ? 'bg-red-50 border-red-500 shadow-sm'
-                                        : 'bg-white border-gray-200 hover:border-red-300'
-                                } ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                className={`flex items-center gap-3 p-4 rounded-lg border-2 transition-all ${decision === 'reject'
+                                    ? 'bg-red-50 border-red-500 shadow-sm'
+                                    : 'bg-white border-gray-200 hover:border-red-300'
+                                    } ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}`}
                             >
-                                <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
-                                    decision === 'reject'
-                                        ? 'border-red-500 bg-red-500'
-                                        : 'border-gray-300'
-                                }`}>
+                                <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${decision === 'reject'
+                                    ? 'border-red-500 bg-red-500'
+                                    : 'border-gray-300'
+                                    }`}>
                                     {decision === 'reject' && (
                                         <div className="w-2 h-2 bg-white rounded-full"></div>
                                     )}
@@ -159,13 +155,12 @@ const SolveRegradeRequestModal = ({ request, onClose, onSubmit }) => {
                             }}
                             disabled={isSubmitting}
                             placeholder="Enter detailed reason for the student about your decision..."
-                            className={`w-full h-32 p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none text-sm disabled:bg-gray-100 disabled:cursor-not-allowed ${
-                                showError ? 'border-red-500' : 'border-gray-300'
-                            }`}
+                            className={`w-full h-32 p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none text-sm disabled:bg-gray-100 disabled:cursor-not-allowed ${showError ? 'border-red-500' : 'border-gray-300'
+                                }`}
                         />
                         {showError && (
                             <p className="text-red-600 text-sm mt-2 flex items-center gap-1">
-                                <span>⚠️</span>
+                                <AlertCircle className="w-4 h-4" />
                                 <span>Please enter feedback for the student</span>
                             </p>
                         )}
