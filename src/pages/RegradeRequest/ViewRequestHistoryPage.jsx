@@ -18,7 +18,7 @@ import { Tag, Spin, Alert, Empty, Pagination, Card, Button } from "antd";
 import { toast } from "react-toastify";
 
 import { selectUser } from "../../redux/features/userSlice";
-import { getRegradeRequestsByStudentId } from "../../service/regradeService";
+import { getRegradeRequestsByStudentId, getRegradeRequestById } from "../../service/regradeService";
 
 import RequestRegradeDetailModal from "../../component/Assignment/RequestRegradeDetailModal";
 
@@ -76,8 +76,10 @@ const ViewRequestHistoryPage = () => {
     totalCount: 0,
   });
   const [visibilityState, setVisibilityState] = useState({});
+
   const [isModalVisible, setIsModalVisible] = useState(false);
-  const [selectedRequest, setSelectedRequest] = useState(null);
+  const [requestDetails, setRequestDetails] = useState(null);
+  const [isDetailLoading, setIsDetailLoading] = useState(false);
 
   const fetchRequests = async (studentId, page = 1, size = 10) => {
     setLoading(true);
@@ -147,10 +149,28 @@ const ViewRequestHistoryPage = () => {
       };
     });
   };
-
-  const showDetailModal = (request) => {
-    setSelectedRequest(request);
+const showDetailModal = async (requestId) => {
     setIsModalVisible(true);
+    setIsDetailLoading(true);
+    setRequestDetails(null); // Clear previous details
+    try {
+      const apiResponse = await getRegradeRequestById(requestId);
+      if (apiResponse && apiResponse.data) {
+        setRequestDetails(apiResponse.data);
+      } else {
+        toast.error("Could not retrieve request details.");
+        setIsModalVisible(false);
+      }
+    } catch (err) {
+      const errorMessage =
+        err.response?.data?.message ||
+        err.message ||
+        "An unexpected error occurred.";
+      toast.error(errorMessage);
+      setIsModalVisible(false); // Close modal on error
+    } finally {
+      setIsDetailLoading(false);
+    }
   };
 
   const handleCancelModal = () => {
@@ -305,10 +325,11 @@ const ViewRequestHistoryPage = () => {
         </div>
 
         {/* MODIFIED: Using the new component name here */}
-        <RequestRegradeDetailModal
+         <RequestRegradeDetailModal
           visible={isModalVisible}
           onClose={handleCancelModal}
-          request={selectedRequest}
+          details={requestDetails}
+          loading={isDetailLoading}
         />
       </>
     );
