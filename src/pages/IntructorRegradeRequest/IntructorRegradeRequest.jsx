@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Search, Eye, Loader2 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
 import { getRegradeRequestsForInstructor } from '../../service/regradeService';
 import { getCurrentAccount } from '../../utils/accountUtils';
 import SolveRegradeRequestModal from '../../component/RegradeRequest/SolveRegradeRequestModal';
 
 const InstructorRegradeRequest = () => {
+    const navigate = useNavigate();
     const currentUser = getCurrentAccount();
     const [searchTerm, setSearchTerm] = useState('');
     const [statusFilter, setStatusFilter] = useState('All');
@@ -82,10 +85,8 @@ const InstructorRegradeRequest = () => {
     };
 
     const handleModalSubmit = (decision, feedback) => {
-        // TODO: Call API to update request
         console.log('Decision:', decision, 'Feedback:', feedback);
 
-        // Update local state
         setReviewRequests(prev => prev.map(req =>
             req.requestId === selectedRequest.requestId
                 ? { ...req, status: decision === 'approve' ? 'Processed' : 'Rejected', resolutionNotes: feedback }
@@ -94,6 +95,23 @@ const InstructorRegradeRequest = () => {
 
         handleModalClose();
     };
+
+    const handleRegradeClick = (request) => {
+        if (request.submissionStatus === 'Not Submitted') {
+            toast.warning('Cannot regrade a submission that has not been submitted');
+            return;
+        }
+
+        navigate(`/instructor/grading-detail/${request.submissionId}`, {
+            state: {
+                regradeRequestId: request.requestId,
+                studentName: request.name,
+                originalReason: request.reason,
+                assignmentTitle: request.assignmentTitle
+            }
+        });
+    };
+
 
     const filteredRequests = reviewRequests.filter(req => {
         const matchesSearch = req.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -221,20 +239,22 @@ const InstructorRegradeRequest = () => {
                                             </span>
                                         </td>
                                         <td className="px-6 py-4 text-center">
-                                            {request.status === 'Pending' ? (
+                                            {request.status === "Pending" ? (
                                                 <button
                                                     onClick={() => handleSolveClick(request)}
                                                     className="bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-700 transition-colors"
                                                 >
                                                     Solve
                                                 </button>
-                                            ) : (
+                                            ) : request.status === "Approved" ? (
                                                 <button
-                                                    className="bg-gray-100 text-gray-600 px-4 py-2 rounded-md text-sm font-medium cursor-not-allowed"
-                                                    disabled
+                                                    onClick={() => handleRegradeClick(request)}
+                                                    className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors text-sm font-medium"
                                                 >
-                                                    View
+                                                    Regrade
                                                 </button>
+                                            ) : (
+                                                null
                                             )}
                                         </td>
                                     </tr>

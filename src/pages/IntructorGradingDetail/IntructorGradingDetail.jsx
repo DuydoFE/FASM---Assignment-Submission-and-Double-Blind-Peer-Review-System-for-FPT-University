@@ -70,7 +70,19 @@ const InstructorGradingDetail = () => {
                 order: index + 1
             }));
 
-            if (details.criteriaGrades) {
+            // Check for criteriaFeedbacks first (new API structure)
+            if (details.criteriaFeedbacks && Array.isArray(details.criteriaFeedbacks)) {
+                details.criteriaFeedbacks.forEach(saved => {
+                    const idx = formatted.findIndex(f => f.criteriaId === saved.criteriaId);
+                    if (idx >= 0) {
+                        // scoreAwarded is already in scale 0-10
+                        formatted[idx].score = typeof saved.scoreAwarded === 'number' ? saved.scoreAwarded : parseFloat(saved.scoreAwarded) || 0;
+                        formatted[idx].feedback = saved.feedback ?? '';
+                    }
+                });
+            }
+            // Fallback to old criteriaGrades structure
+            else if (details.criteriaGrades) {
                 if (Array.isArray(details.criteriaGrades)) {
                     details.criteriaGrades.forEach(saved => {
                         const idx = formatted.findIndex(f => f.criteriaId === (saved.criteriaId ?? saved.id));
