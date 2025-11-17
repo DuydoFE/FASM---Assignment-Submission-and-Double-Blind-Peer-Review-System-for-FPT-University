@@ -1,13 +1,5 @@
 import api from "../config/axios";
-import axios from "axios";
 
-const API_BASE_URL = "https://localhost:7104";
-
-// ===============================
-// 🔹 USER API
-// ===============================
-
-// Lấy thông tin user theo ID
 export const getUserById = async (id) => {
   const res = await api.get(`/Users/${id}`);
   return res.data;
@@ -58,9 +50,16 @@ export const getAccountStatistics = async () => {
 };
 
 // Tạo instructor qua email
-export const addInstructorByEmail = async (email, firstName, lastName, campusId) => {
+export const addInstructorByEmail = async (
+  email,
+  firstName,
+  lastName,
+  campusId
+) => {
   const res = await api.post(
-    `/Users/instructor-email?firstName=${encodeURIComponent(firstName)}&LastName=${encodeURIComponent(lastName)}&campus=${campusId}`,
+    `/Users/instructor-email?firstName=${encodeURIComponent(
+      firstName
+    )}&LastName=${encodeURIComponent(lastName)}&campus=${campusId}`,
     JSON.stringify(email),
     { headers: { "Content-Type": "application/json" } }
   );
@@ -69,14 +68,20 @@ export const addInstructorByEmail = async (email, firstName, lastName, campusId)
 
 // Gán vai trò cho user
 export const assignUserRoles = async (userId, roles) => {
-  const roleIds = roles.map((r) => {
-    switch (r) {
-      case "Admin": return 1;
-      case "Student": return 2;
-      case "Instructor": return 3;
-      default: return null;
-    }
-  }).filter((id) => id !== null);
+  const roleIds = roles
+    .map((r) => {
+      switch (r) {
+        case "Admin":
+          return 1;
+        case "Student":
+          return 2;
+        case "Instructor":
+          return 3;
+        default:
+          return null;
+      }
+    })
+    .filter((id) => id !== null);
 
   const res = await api.post(`/Users/${userId}/roles`, { userId, roleIds });
   return res.data;
@@ -220,9 +225,7 @@ export const getCourseInstancesByCampusId = async (campusId) => {
 
 // Tạo lớp học mới
 export const createCourseInstance = async (payload) => {
-  const res = await axios.post(`${API_BASE_URL}/api/CourseInstance`, payload, {
-    headers: { "Content-Type": "application/json", Authorization: `Bearer ${localStorage.getItem("token")}` },
-  });
+  const res = await api.post("/CourseInstance", payload);
   return res.data;
 };
 
@@ -240,23 +243,26 @@ export const deleteCourseInstance = async (id) => {
 
 // Cập nhật Enroll Key cho lớp học
 export const updateEnrollKey = async (courseInstanceId, data) => {
-  const res = await api.put(`/CourseInstance/${courseInstanceId}/enroll-key`, data);
+  const res = await api.put(
+    `/CourseInstance/${courseInstanceId}/enroll-key`,
+    data
+  );
   return res.data;
 };
 
-// ===============================
-// 🔹 ASSIGNMENT API
-// ===============================
-
 // Tạo bài tập mới
 export const createAssignment = async (formData) => {
-  const res = await api.post(`/Assignment`, formData, { headers: { "Content-Type": "multipart/form-data" } });
+  const res = await api.post(`/Assignment`, formData, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
   return res.data;
 };
 
 // Cập nhật bài tập
 export const updateAssignment = async (formData) => {
-  const res = await api.put(`/Assignment`, formData, { headers: { "Content-Type": "multipart/form-data" } });
+  const res = await api.put(`/Assignment`, formData, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
   return res.data;
 };
 
@@ -316,21 +322,23 @@ export const publishAssignment = async (assignmentId) => {
 
 // Gia hạn deadline bài tập
 export const extendAssignmentDeadline = async (id, newDeadline) => {
-  const res = await api.put(`/Assignment/${id}/extend-deadline`, JSON.stringify(newDeadline), {
-    headers: { "Content-Type": "application/json" },
-  });
+  const res = await api.put(
+    `/Assignment/${id}/extend-deadline`,
+    JSON.stringify(newDeadline),
+    {
+      headers: { "Content-Type": "application/json" },
+    }
+  );
   return res.data;
 };
 
 // Cập nhật rubric cho bài tập
 export const updateAssignmentRubric = async (assignmentId, rubricId) => {
-  const res = await api.put(`/Assignment/${assignmentId}/update-rubric/${rubricId}`);
+  const res = await api.put(
+    `/Assignment/${assignmentId}/update-rubric/${rubricId}`
+  );
   return res.data;
 };
-
-// ===============================
-// 🔹 RUBRIC TEMPLATE API
-// ===============================
 
 // Lấy Rubric Template theo ID
 export const getRubricTemplateById = async (id) => {
@@ -376,13 +384,11 @@ export const deleteRubricTemplate = async (id) => {
 
 // Tìm kiếm Rubric Template theo từ khóa
 export const searchRubricTemplates = async (searchTerm) => {
-  const res = await api.get(`/RubricTemplate/search?searchTerm=${encodeURIComponent(searchTerm)}`);
+  const res = await api.get(
+    `/RubricTemplate/search?searchTerm=${encodeURIComponent(searchTerm)}`
+  );
   return res.data;
 };
-
-// ===============================
-// 🔹 MAJOR API
-// ===============================
 
 // Lấy danh sách tất cả ngành học
 export const getAllMajors = async () => {
@@ -414,10 +420,6 @@ export const deleteMajor = async (id) => {
   return res.data;
 };
 
-// ===============================
-// 🔹 CAMPUS API
-// ===============================
-
 // Lấy danh sách tất cả campus
 export const getAllCampuses = async () => {
   const res = await api.get("/Campus");
@@ -448,12 +450,12 @@ export const deleteCampus = async (id) => {
   return res.data;
 };
 
-// ===============================
-// 🔹 STUDENT IMPORT API
-// ===============================
-
 //Import nhiều sinh viên vào nhiều lớp từ file Excel
-export const importStudentsFromMultipleSheets = async (campusId, file, changedByUserId = null) => {
+export const importStudentsFromMultipleSheets = async (
+  campusId,
+  file,
+  changedByUserId = null
+) => {
   if (!file) throw new Error("File is required");
   if (!campusId || campusId <= 0) throw new Error("CampusId is required");
 
@@ -464,9 +466,13 @@ export const importStudentsFromMultipleSheets = async (campusId, file, changedBy
   params.append("campusId", campusId);
   if (changedByUserId) params.append("changedByUserId", changedByUserId);
 
-  const res = await api.post(`/CourseStudent/import-multiple?${params.toString()}`, formData, {
-    headers: { "Content-Type": "multipart/form-data" },
-  });
+  const res = await api.post(
+    `/CourseStudent/import-multiple?${params.toString()}`,
+    formData,
+    {
+      headers: { "Content-Type": "multipart/form-data" },
+    }
+  );
   return res.data;
 };
 
@@ -479,7 +485,11 @@ export const createCourseStudent = async (requestData) => {
 };
 
 //Xóa sinh viên khỏi lớp học
-export const deleteCourseStudent = async (userId, courseInstanceId, courseStudentId) => {
+export const deleteCourseStudent = async (
+  userId,
+  courseInstanceId,
+  courseStudentId
+) => {
   if (!userId || !courseInstanceId || !courseStudentId) {
     throw new Error("userId, courseInstanceId và courseStudentId là bắt buộc");
   }
@@ -496,34 +506,45 @@ export const getCourseStudentsByCourseInstance = async (courseInstanceId) => {
     throw new Error("courseInstanceId là bắt buộc");
   }
 
-  const res = await api.get(`/CourseStudent/course-instance/${courseInstanceId}`);
+  const res = await api.get(
+    `/CourseStudent/course-instance/${courseInstanceId}`
+  );
   return res.data;
 };
 
 //Import sinh viên vào lớp học từ file Excel
-export const importStudentsFromExcel = async (courseInstanceId, file, changedByUserId) => {
+export const importStudentsFromExcel = async (
+  courseInstanceId,
+  file,
+  changedByUserId
+) => {
   const formData = new FormData();
   formData.append("file", file);
   if (changedByUserId) formData.append("changedByUserId", changedByUserId);
 
-  const res = await api.post(`/CourseStudent/${courseInstanceId}/import`, formData, {
-    headers: { "Content-Type": "multipart/form-data" },
-  });
+  const res = await api.post(
+    `/CourseStudent/${courseInstanceId}/import`,
+    formData,
+    {
+      headers: { "Content-Type": "multipart/form-data" },
+    }
+  );
   return res.data;
 };
 
-// ===============================
-// 🔹 SUBMISSION API
-// ===============================
 
 //Lấy chi tiết một submission (bao gồm review, AI summaries và regrade requests nếu có)
 export const getSubmissionDetails = async (submissionId) => {
-  const res = await api.get(`/instructor/InstructorSubmission/${submissionId}/details`);
+  const res = await api.get(
+    `/instructor/InstructorSubmission/${submissionId}/details`
+  );
   return res.data;
 };
 
 //Xem danh sách bài nộp trong Assignment
 export const getSubmissionsByAssignmentSimple = async (assignmentId) => {
-  const res = await api.get(`/instructor/InstructorSubmission/assignment/${assignmentId}/submissions`);
+  const res = await api.get(
+    `/instructor/InstructorSubmission/assignment/${assignmentId}/submissions`
+  );
   return res.data;
 };
