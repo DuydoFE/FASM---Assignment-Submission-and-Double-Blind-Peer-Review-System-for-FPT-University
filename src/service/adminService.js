@@ -541,7 +541,6 @@ export const getSubmissionDetails = async (submissionId) => {
   return res.data;
 };
 
-//Xem danh sách bài nộp trong Assignment
 export const getSubmissionsByAssignmentSimple = async (assignmentId) => {
   const res = await api.get(
     `/instructor/InstructorSubmission/assignment/${assignmentId}/submissions`
