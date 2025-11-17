@@ -3,7 +3,7 @@ import { ArrowLeft, Loader2 } from 'lucide-react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { submissionService } from '../../service/submissionService';
-import { getPeerReviewsBySubmissionId } from '../../service/instructorSubmission';
+import { instructorService } from '../../service/instructorSubmission';
 import { gradeSubmission } from '../../service/instructorGrading';
 import { getCurrentAccount } from '../../utils/accountUtils';
 import { getCriteriaByAssignmentId } from '../../service/criteriaService';
@@ -24,6 +24,9 @@ const InstructorGradingDetail = () => {
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState(null);
     const [generalFeedback, setGeneralFeedback] = useState('');
+    const [isAiLoading, setIsAiLoading] = useState(false);
+    const [aiError, setAiError] = useState(null);
+
 
     useEffect(() => {
         if (submissionId) {
@@ -43,7 +46,9 @@ const InstructorGradingDetail = () => {
 
             const details = detailsResponse.data;
             setSubmissionDetails(details);
-            const reviewsPromise = getPeerReviewsBySubmissionId(submissionId);
+
+            const reviewsPromise = instructorService.getPeerReviewsBySubmissionId(submissionId);
+
             const criteriaResponse = await getCriteriaByAssignmentId(details.assignmentId);
             let criteriaArray = [];
             if (Array.isArray(criteriaResponse)) {
@@ -67,7 +72,8 @@ const InstructorGradingDetail = () => {
                 weight: typeof c.weight === 'number' ? c.weight : parseFloat(c.weight) || 0,
                 score: 0,
                 feedback: '',
-                order: index + 1
+                order: index + 1,
+                aiSummary: null
             }));
 
             if (details.criteriaFeedbacks && Array.isArray(details.criteriaFeedbacks)) {
@@ -124,6 +130,53 @@ const InstructorGradingDetail = () => {
             setLoading(false);
         }
     };
+    
+    const handleAiSummary = async () => {
+        setIsAiLoading(true);
+        setAiError(null); // Xóa lỗi cũ trước mỗi lần gọi mới
+        toast.info('Generating AI summary, please wait...');
+        try {
+            const response = await instructorService.generateAiCriteriaFeedback(submissionId);
+
+            // Kiểm tra nếu API trả về lỗi nghiệp vụ (ví dụ: statusCode 400)
+            if (response.statusCode >= 400 && response.message) {
+                setAiError(response.message); // Lưu lại message lỗi chung
+            }
+            
+            const responseData = response.data;
+            if (responseData && Array.isArray(responseData.feedbacks)) {
+                const aiFeedbacks = responseData.feedbacks;
+
+                setCriteriaList(prevList =>
+                    prevList.map(criterion => {
+                        const matchingAiFeedback = aiFeedbacks.find(
+                            aiItem => aiItem.criteriaId === criterion.criteriaId
+                        );
+
+                        if (matchingAiFeedback) {
+                            return { ...criterion, aiSummary: matchingAiFeedback.summary };
+                        }
+                        return criterion;
+                    })
+                );
+                
+                // Vẫn thông báo thành công vì đã nhận được phân tích, dù là phân tích lỗi
+                toast.success('AI analysis completed!'); 
+
+            } else if (!response.statusCode) { 
+                // Ném lỗi nếu response không có cấu trúc như mong đợi VÀ không phải là lỗi nghiệp vụ đã xử lý
+                throw new Error('Invalid response format from AI service.');
+            }
+
+        } catch (error) {
+            console.error('Error generating AI Summary:', error);
+            const errorMessage = error.response?.data?.message || error.message || 'Failed to generate AI summary.';
+            setAiError(errorMessage); // Hiển thị lỗi mạng hoặc lỗi khác lên UI
+            toast.error(errorMessage);
+        } finally {
+            setIsAiLoading(false);
+        }
+    };
 
     const calculateTotalScore = () => {
         const total = criteriaList.reduce((acc, c) => {
@@ -166,10 +219,9 @@ const InstructorGradingDetail = () => {
         try {
             const totalScore = calculateTotalScore();
             
-            // Map to match API structure: criteriaFeedbacks
             const criteriaFeedbacksPayload = criteriaList.map(c => ({
                 criteriaId: c.criteriaId,
-                score: Number(c.score) || 0, // API expects 0-10 scale
+                score: Number(c.score) || 0, 
                 feedback: c.feedback
             }));
 
@@ -281,7 +333,7 @@ const InstructorGradingDetail = () => {
 
     const assignment = submissionDetails.assignment || {};
 
-    return (
+      return (
         <div className="min-h-screen bg-gray-50">
             {/* Header */}
             <div className="bg-white border-b border-gray-200 px-4 md:px-8 py-4 sticky top-0 z-10">
@@ -324,6 +376,9 @@ const InstructorGradingDetail = () => {
                         submitButtonText={submitButtonText}
                         generalFeedback={generalFeedback}
                         setGeneralFeedback={setGeneralFeedback}
+                        handleAiSummary={handleAiSummary}
+                        isAiLoading={isAiLoading}
+                        aiError={aiError}
                     />
                 </div>
             </div>
