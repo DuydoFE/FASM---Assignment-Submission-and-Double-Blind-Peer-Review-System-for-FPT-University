@@ -59,12 +59,10 @@ const InstructorRegradeRequest = () => {
 
     const totalRequests = reviewRequests.length;
     const pendingRequests = reviewRequests.filter(req => req.status === 'Pending').length;
-    const processedRequests = reviewRequests.filter(req => req.status === 'Processed').length;
+    const approvedRequests = reviewRequests.filter(req => req.status === 'Approved').length;
 
     const getStatusStyle = (status) => {
-        if (status === 'Processed') {
-            return 'bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium';
-        } else if (status === 'Approved') {
+        if (status === 'Approved') {
             return 'bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium';
         } else if (status === 'Rejected') {
             return 'bg-red-100 text-red-800 px-3 py-1 rounded-full text-sm font-medium';
@@ -89,7 +87,7 @@ const InstructorRegradeRequest = () => {
 
         setReviewRequests(prev => prev.map(req =>
             req.requestId === selectedRequest.requestId
-                ? { ...req, status: decision === 'approve' ? 'Processed' : 'Rejected', resolutionNotes: feedback }
+                ? { ...req, status: decision === 'approve' ? 'Approved' : 'Rejected', resolutionNotes: feedback }
                 : req
         ));
 
@@ -180,9 +178,9 @@ const InstructorRegradeRequest = () => {
                             <div className="text-sm text-yellow-700 mb-1">Pending</div>
                             <div className="text-3xl font-bold text-yellow-800">{pendingRequests}</div>
                         </div>
-                        <div className="bg-green-50 rounded-lg shadow-sm p-6 border-green-500">
-                            <div className="text-sm text-green-700 mb-1">Processed</div>
-                            <div className="text-3xl font-bold text-green-800">{processedRequests}</div>
+                        <div className="bg-blue-50 rounded-lg shadow-sm p-6 border-blue-500">
+                            <div className="text-sm text-blue-700 mb-1">Approved</div>
+                            <div className="text-3xl font-bold text-blue-800">{approvedRequests}</div>
                         </div>
                     </div>
                 </div>
