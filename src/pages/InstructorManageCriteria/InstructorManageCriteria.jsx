@@ -16,6 +16,7 @@ function InstructorManageCriteria() {
     const [criteria, setCriteria] = useState([]);
     const [rubricTitle, setRubricTitle] = useState('');
     const [assignmentStatus, setAssignmentStatus] = useState('');
+    const [assignmentTitle, setAssignmentTitle] = useState('');
     const [courseName, setCourseName] = useState('');
     const [className, setClassName] = useState('');
     const [deleteConfirm, setDeleteConfirm] = useState({ show: false, criterionId: null, criterionTitle: '' });
@@ -37,13 +38,15 @@ function InstructorManageCriteria() {
                     setRubricTitle(data[0].rubricTitle || 'Rubric Details');
                     setCourseName(data[0].courseName || '');
                     setClassName(data[0].className || '');
-                    setAssignmentStatus(data[0].assignmentStatus || ''); // THÊM DÒNG NÀY
+                    setAssignmentTitle(data[0].assignmentTitle || '');
+                    setAssignmentStatus(data[0].assignmentStatus || '');
                 } else {
                     setCriteria([]);
                     setRubricTitle('Rubric Details');
                     setCourseName('');
                     setClassName('');
-                    setAssignmentStatus(''); // THÊM DÒNG NÀY
+                    setAssignmentTitle('');
+                    setAssignmentStatus('');
                 }
             } catch (error) {
                 console.error('Failed to fetch criteria:', error);
@@ -52,6 +55,7 @@ function InstructorManageCriteria() {
                 setRubricTitle('Rubric Details');
                 setCourseName('');
                 setClassName('');
+                setAssignmentTitle('');
                 setAssignmentStatus('');
             } finally {
                 setLoading(false);
@@ -230,10 +234,10 @@ function InstructorManageCriteria() {
                     </div>
                 </div>
 
-                {/* Course and Class Information Card */}
-                {(courseName || className) && (
+                {/* Course, Class and Assignment Information Card */}
+                {(courseName || className || assignmentTitle) && (
                     <div className="bg-gradient-to-r from-indigo-50 to-blue-50 border border-indigo-200 rounded-lg p-4 mb-6">
-                        <div className="flex items-center gap-6">
+                        <div className="flex items-center gap-6 flex-wrap">
                             {courseName && (
                                 <div className="flex items-center gap-2">
                                     <span className="text-sm font-medium text-gray-600">Course:</span>
@@ -244,6 +248,12 @@ function InstructorManageCriteria() {
                                 <div className="flex items-center gap-2">
                                     <span className="text-sm font-medium text-gray-600">Class:</span>
                                     <span className="text-base font-semibold text-indigo-700">{className}</span>
+                                </div>
+                            )}
+                            {assignmentTitle && (
+                                <div className="flex items-center gap-2">
+                                    <span className="text-sm font-medium text-gray-600">Assignment:</span>
+                                    <span className="text-base font-semibold text-indigo-700">{assignmentTitle}</span>
                                 </div>
                             )}
                         </div>

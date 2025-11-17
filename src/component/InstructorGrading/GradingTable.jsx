@@ -52,11 +52,6 @@ const GradingTable = ({
               </h2>
               <p className="text-gray-600">{assignmentInfo.description}</p>
             </div>
-            <div className="text-right">
-              <p className="text-red-600 font-medium mb-1">
-                Deadline: {formatDateTime(assignmentInfo.deadline).date} - {formatDateTime(assignmentInfo.deadline).time}
-              </p>
-            </div>
           </div>
           <div className="flex gap-6">
             <div className="flex items-center gap-2">
@@ -122,8 +117,8 @@ const GradingTable = ({
                       <td className="px-6 py-4 text-sm text-gray-800">{student.studentName}</td>
                       <td className="px-6 py-4">
                         <span className={`inline-flex items-center justify-center w-20 h-10 border-2 rounded-lg font-semibold ${getScoreStyle(student.instructorScore)}`}>
-                          {student.instructorScore !== null && student.instructorScore !== undefined 
-                            ? `${(student.instructorScore / 10).toFixed(1)}` 
+                          {student.instructorScore !== null && student.instructorScore !== undefined
+                            ? `${(student.instructorScore / 10).toFixed(1)}`
                             : '--'} / {(assignmentInfo?.maxScore || 10)}
                         </span>
                       </td>
@@ -146,21 +141,30 @@ const GradingTable = ({
                         </span>
                       </td>
                       <td className="px-6 py-4">
-                        {student.status === 'Submitted' ? (
-                          <button 
+                        {(
+                          student.status === 'Submitted' &&
+                          student.assignmentStatus === 'Closed'
+                        ) ? (
+                          <button
                             onClick={() => onGradeClick(student.submissionId, student.status)}
                             className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm font-medium"
                           >
                             Grade
                           </button>
-                        ) : student.status === 'Graded' ? (
-                          <button 
-                            onClick={() => onGradeClick(student.submissionId, student.status)}
-                            className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors text-sm font-medium"
-                          >
-                            Re-grade
-                          </button>
-                        ) : null}
+
+                        ) : (
+                          (
+                            (student.status === 'Graded' && student.assignmentStatus === 'Closed') ||
+                            (student.assignmentStatus === 'GradesPublished' && student.regradeRequestStatus === 'Approved')
+                          ) ? (
+                            <button
+                              onClick={() => onGradeClick(student.submissionId, student.status)}
+                              className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors text-sm font-medium"
+                            >
+                              Re-grade
+                            </button>
+                          ) : null
+                        )}
                       </td>
                     </tr>
                   );
