@@ -52,11 +52,6 @@ const GradingTable = ({
               </h2>
               <p className="text-gray-600">{assignmentInfo.description}</p>
             </div>
-            <div className="text-right">
-              <p className="text-red-600 font-medium mb-1">
-                Deadline: {formatDateTime(assignmentInfo.deadline).date} - {formatDateTime(assignmentInfo.deadline).time}
-              </p>
-            </div>
           </div>
           <div className="flex gap-6">
             <div className="flex items-center gap-2">
