@@ -37,7 +37,7 @@ const InstructorManageAssignment = () => {
   const [editingAssignment, setEditingAssignment] = useState(null);
 
   // Hàm để lấy màu dựa trên trạng thái
-  const getStatusColor = (status) => {
+ const getStatusColor = (status) => {
     switch (status) {
       case 'Upcoming':
         return "bg-blue-100 text-blue-800";
@@ -46,6 +46,10 @@ const InstructorManageAssignment = () => {
       case 'GradesPublished':
         return "bg-green-100 text-green-800";
       case 'Cancelled':
+        return "bg-gray-100 text-gray-800";
+      case 'InReview':
+        return "bg-yellow-100 text-yellow-800";
+      case 'Closed':
         return "bg-red-100 text-red-800";
       default:
         return "bg-gray-100 text-gray-800";
