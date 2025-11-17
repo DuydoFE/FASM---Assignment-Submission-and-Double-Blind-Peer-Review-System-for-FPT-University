@@ -348,9 +348,8 @@ const InstructorManageAssignment = () => {
           <div className="col-span-3">Assignment Name</div>
           <div className="col-span-2 text-center">Deadline</div>
           <div className="col-span-2 text-center">Review Deadline</div>
-          <div className="col-span-2 text-center">Submissions</div>
           <div className="col-span-2 text-center">Status</div>
-          <div className="col-span-1 text-center">Actions</div>
+          <div className="col-span-2 text-center">Actions</div>
         </div>
 
         {filteredAssignments.map((assignment) => (
@@ -373,14 +372,6 @@ const InstructorManageAssignment = () => {
               </div>
               <div className="text-sm text-gray-500">{assignment.time}</div>
             </div>
-            <div className="col-span-2 text-center">
-              <div className="font-bold text-lg text-gray-900">
-                {assignment.submitted}/{assignment.total}
-              </div>
-              <div className="text-xs text-gray-500 mt-1">
-                {Math.round((assignment.submitted / assignment.total) * 100)}% completed
-              </div>
-            </div>
             <div className="col-span-2 flex justify-center">
               <span
                 className={`px-2 py-1 rounded-full text-xs font-medium ${assignment.statusColor}`}
@@ -388,7 +379,7 @@ const InstructorManageAssignment = () => {
                 <span>{assignment.status}</span>
               </span>
             </div>
-            <div className="col-span-1 flex justify-center items-center">
+            <div className="col-span-2 flex justify-center items-center">
               <Dropdown
                 menu={{ items: getDropdownItems(assignment) }}
                 trigger={['click']}

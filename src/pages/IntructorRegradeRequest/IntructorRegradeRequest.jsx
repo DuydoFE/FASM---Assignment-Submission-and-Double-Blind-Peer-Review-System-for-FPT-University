@@ -35,11 +35,14 @@ const InstructorRegradeRequest = () => {
                 requestId: req.requestId,
                 submissionId: req.submissionId,
                 name: req.requestedByStudent.fullName,
-                mssv: req.requestedByStudent.userId.toString(),
+                mssv: req.requestedByStudent.studentCode,
                 email: req.requestedByStudent.email,
-                class: 'N/A',
+                class: req.className || 'N/A',
+                courseName: req.courseName || 'N/A',
+                className: req.className || 'N/A',
                 file: req.submission.fileName,
-                currentGrade: 'N/A',
+                currentGrade: req.gradeInfo?.instructorScore || 'N/A',
+                instructorScore: req.gradeInfo?.instructorScore || 'N/A',
                 reason: req.reason,
                 requestTime: new Date(req.requestedAt).toLocaleString('vi-VN'),
                 status: req.status,
@@ -48,7 +51,6 @@ const InstructorRegradeRequest = () => {
                 submittedAt: req.submission.submittedAt,
                 submissionStatus: req.submission.status,
                 assignmentTitle: req.assignment.title,
-
             }));
 
             setReviewRequests(transformedData);
@@ -250,8 +252,10 @@ const InstructorRegradeRequest = () => {
                             <thead className="bg-gray-50 border-b border-gray-200">
                                 <tr>
                                     <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Student</th>
+                                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Course</th>
+                                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Class</th>
                                     <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Assignment</th>
-                                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Reason</th>
+                                    <th className="px-6 py-4 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">Current Score</th>
                                     <th className="px-6 py-4 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">Request Time</th>
                                     <th className="px-6 py-4 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">Status</th>
                                     <th className="px-6 py-4 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">Actions</th>
@@ -268,21 +272,24 @@ const InstructorRegradeRequest = () => {
                                             </div>
                                         </td>
                                         <td className="px-6 py-4">
+                                            <span className="text-sm text-gray-900">
+                                                {request.courseName}
+                                            </span>
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            <span className="text-sm text-gray-900">
+                                                {request.className}
+                                            </span>
+                                        </td>
+                                        <td className="px-6 py-4">
                                             <span className="text-sm text-gray-900 max-w-xs truncate block">
                                                 {request.assignmentTitle}
                                             </span>
                                         </td>
-                                        <td className="px-6 py-4">
-                                            <div className="flex items-center gap-2">
-                                                <span className="text-sm text-gray-600 max-w-xs truncate">
-                                                    {request.reason.length > 40
-                                                        ? request.reason.substring(0, 40) + "..."
-                                                        : request.reason}
-                                                </span>
-                                                <button className="flex-shrink-0 text-blue-600 hover:text-blue-700 transition-colors">
-                                                    <Eye className="w-4 h-4" />
-                                                </button>
-                                            </div>
+                                        <td className="px-6 py-4 text-center">
+                                            <span className="text-sm font-semibold text-indigo-600">
+                                                {request.instructorScore !== 'N/A' ? `${request.instructorScore}/10` : 'N/A'}
+                                            </span>
                                         </td>
                                         <td className="px-6 py-4 text-center">
                                             <span className="text-sm text-gray-600 whitespace-nowrap">

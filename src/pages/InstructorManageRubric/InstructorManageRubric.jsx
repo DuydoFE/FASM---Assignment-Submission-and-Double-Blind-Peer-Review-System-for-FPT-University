@@ -268,7 +268,7 @@ const InstructorManageRubric = () => {
                             <div className="col-span-3">Rubric Title</div>
                             <div className="col-span-3">Course - Class</div>
                             <div className="col-span-2">Assignment</div>
-                            <div className="col-span-1 text-center">Total</div>
+                            <div className="col-span-1 text-center">Total Criteria</div>
                             <div className="col-span-1 text-center">Actions</div>
                         </div>
 
