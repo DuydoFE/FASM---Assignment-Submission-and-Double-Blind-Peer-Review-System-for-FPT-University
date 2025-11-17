@@ -25,6 +25,8 @@ const InstructorGradingDetail = () => {
     const [error, setError] = useState(null);
     const [generalFeedback, setGeneralFeedback] = useState('');
     const [isAiLoading, setIsAiLoading] = useState(false);
+    const [aiError, setAiError] = useState(null);
+
 
     useEffect(() => {
         if (submissionId) {
@@ -45,7 +47,6 @@ const InstructorGradingDetail = () => {
             const details = detailsResponse.data;
             setSubmissionDetails(details);
 
-            // SỬ DỤNG SERVICE ĐÃ IMPORT
             const reviewsPromise = instructorService.getPeerReviewsBySubmissionId(submissionId);
 
             const criteriaResponse = await getCriteriaByAssignmentId(details.assignmentId);
@@ -130,17 +131,19 @@ const InstructorGradingDetail = () => {
         }
     };
     
-    // CẬP NHẬT HÀM handleAiSummary ĐỂ GỌI API THEO CHUẨN MỚI
     const handleAiSummary = async () => {
         setIsAiLoading(true);
+        setAiError(null); // Xóa lỗi cũ trước mỗi lần gọi mới
         toast.info('Generating AI summary, please wait...');
         try {
-            // SỬ DỤNG SERVICE ĐÃ IMPORT
             const response = await instructorService.generateAiCriteriaFeedback(submissionId);
-            
-            // Vì service trả về response.data, chúng ta truy cập payload bên trong `response.data`
-            const responseData = response.data; 
 
+            // Kiểm tra nếu API trả về lỗi nghiệp vụ (ví dụ: statusCode 400)
+            if (response.statusCode >= 400 && response.message) {
+                setAiError(response.message); // Lưu lại message lỗi chung
+            }
+            
+            const responseData = response.data;
             if (responseData && Array.isArray(responseData.feedbacks)) {
                 const aiFeedbacks = responseData.feedbacks;
 
@@ -157,23 +160,18 @@ const InstructorGradingDetail = () => {
                     })
                 );
                 
-                toast.success('AI Summary generated successfully!');
+                // Vẫn thông báo thành công vì đã nhận được phân tích, dù là phân tích lỗi
+                toast.success('AI analysis completed!'); 
 
-                if (responseData.isRelevant === false && responseData.errorMessage) {
-                    toast.warn(responseData.errorMessage, { autoClose: 8000 });
-                }
-
-            } else {
-                // Xử lý trường hợp API trả về lỗi nghiệp vụ có cấu trúc
-                if(response.message) {
-                    throw new Error(response.message);
-                }
+            } else if (!response.statusCode) { 
+                // Ném lỗi nếu response không có cấu trúc như mong đợi VÀ không phải là lỗi nghiệp vụ đã xử lý
                 throw new Error('Invalid response format from AI service.');
             }
 
         } catch (error) {
             console.error('Error generating AI Summary:', error);
             const errorMessage = error.response?.data?.message || error.message || 'Failed to generate AI summary.';
+            setAiError(errorMessage); // Hiển thị lỗi mạng hoặc lỗi khác lên UI
             toast.error(errorMessage);
         } finally {
             setIsAiLoading(false);
@@ -221,10 +219,9 @@ const InstructorGradingDetail = () => {
         try {
             const totalScore = calculateTotalScore();
             
-            // Map to match API structure: criteriaFeedbacks
             const criteriaFeedbacksPayload = criteriaList.map(c => ({
                 criteriaId: c.criteriaId,
-                score: Number(c.score) || 0, // API expects 0-10 scale
+                score: Number(c.score) || 0, 
                 feedback: c.feedback
             }));
 
@@ -381,6 +378,7 @@ const InstructorGradingDetail = () => {
                         setGeneralFeedback={setGeneralFeedback}
                         handleAiSummary={handleAiSummary}
                         isAiLoading={isAiLoading}
+                        aiError={aiError}
                     />
                 </div>
             </div>

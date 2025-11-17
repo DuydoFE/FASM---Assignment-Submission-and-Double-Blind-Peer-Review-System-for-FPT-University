@@ -1,6 +1,5 @@
 import React from 'react';
-import { Loader2, Sparkles, Zap } from 'lucide-react'; // Thêm icon Sparkles và Zap
-
+import { Loader2, Sparkles, Zap } from 'lucide-react'; 
 const GradingRightColumn = ({
     criteriaList,
     updateCriteriaScore,
@@ -10,12 +9,10 @@ const GradingRightColumn = ({
     submitButtonText,
     generalFeedback,
     setGeneralFeedback,
-    // Thêm props mới từ component cha
     handleAiSummary,
     isAiLoading 
 }) => {
-    // Không cần mergedCriteria nữa vì component cha sẽ quản lý trạng thái aiSummary
-    // trực tiếp trong criteriaList
+    
 
     return (
         <div className="lg:col-span-2 space-y-6">
