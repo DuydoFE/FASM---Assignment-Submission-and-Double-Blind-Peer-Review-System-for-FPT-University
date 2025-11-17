@@ -93,7 +93,8 @@ const GradingTable = ({
           <table className="w-full">
             <thead className="bg-gray-50 border-b border-gray-200">
               <tr>
-                <th className="px-6 py-3 text-left text-sm font-medium text-gray-600">Member</th>
+                <th className="px-6 py-3 text-left text-sm font-medium text-gray-600">No.</th>
+                <th className="px-6 py-3 text-left text-sm font-medium text-gray-600">Student Code</th>
                 <th className="px-6 py-3 text-left text-sm font-medium text-gray-600">Full Name</th>
                 <th className="px-6 py-3 text-left text-sm font-medium text-gray-600">Score</th>
                 <th className="px-6 py-3 text-left text-sm font-medium text-gray-600">Feedback</th>
@@ -109,16 +110,17 @@ const GradingTable = ({
             </thead>
             <tbody className="divide-y divide-gray-200">
               {filteredStudents.length > 0 ? (
-                filteredStudents.map((student) => {
+                filteredStudents.map((student, index) => {
                   const submissionTime = formatDateTime(student.submittedAt);
                   return (
                     <tr key={student.studentId} className="hover:bg-gray-50">
+                      <td className="px-6 py-4 text-sm text-gray-600">{index + 1}</td>
                       <td className="px-6 py-4 text-sm text-gray-600">{student.studentCode}</td>
                       <td className="px-6 py-4 text-sm text-gray-800">{student.studentName}</td>
                       <td className="px-6 py-4">
                         <span className={`inline-flex items-center justify-center w-20 h-10 border-2 rounded-lg font-semibold ${getScoreStyle(student.instructorScore)}`}>
                           {student.instructorScore !== null && student.instructorScore !== undefined
-                            ? `${(student.instructorScore / 10).toFixed(1)}`
+                            ? `${(student.instructorScore).toFixed(1)}`
                             : '--'} / {(assignmentInfo?.maxScore || 10)}
                         </span>
                       </td>
