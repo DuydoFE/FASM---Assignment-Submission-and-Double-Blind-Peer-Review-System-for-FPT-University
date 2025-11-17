@@ -14,8 +14,8 @@ import CourseListItem from "../../component/Assignment/CourseListItem";
 import EnrolledCourseCard from "../../component/Assignment/EnrolledCourseCard";
 import JoinClassModal from "../../component/Assignment/JoinClassModal";
 
-import { useQuery, useQueryClient } from '@tanstack/react-query'; 
-import { toast } from "react-toastify"; 
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "react-toastify";
 
 import { courseService } from "../../service/courseService";
 import { selectUser } from "../../redux/features/userSlice";
@@ -35,7 +35,7 @@ const StudentAssignmentPage = () => {
   const studentId = currentUser?.userId;
   console.log("Current User from Redux:", currentUser);
 
-const queryClient = useQueryClient();
+  const queryClient = useQueryClient();
 
   const [enrolledCourses, setEnrolledCourses] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -44,7 +44,7 @@ const queryClient = useQueryClient();
   const [selectedCourse, setSelectedCourse] = useState(null);
 
   useEffect(() => {
-     if (currentUser && currentUser.userId) {
+    if (currentUser && currentUser.userId) {
       const fetchEnrolledCourses = async () => {
         try {
           setIsLoading(true);
@@ -68,16 +68,16 @@ const queryClient = useQueryClient();
     }
   }, [currentUser]);
 
-  const { 
-      data: registrationsData, 
-      isLoading: isLoadingRegistrations, 
-      isError: isErrorRegistrations 
-    } = useQuery({
-      queryKey: ['studentCourseRegistrations', studentId],
-      queryFn: () => courseService.getStudentCourseRegistrations(studentId),
-      enabled: !!studentId,
-    });
-    const availableCourses = registrationsData?.data || [];
+  const {
+    data: registrationsData,
+    isLoading: isLoadingRegistrations,
+    isError: isErrorRegistrations,
+  } = useQuery({
+    queryKey: ["studentCourseRegistrations", studentId],
+    queryFn: () => courseService.getStudentCourseRegistrations(studentId),
+    enabled: !!studentId,
+  });
+  const availableCourses = registrationsData?.data || [];
 
   const handleOpenModal = (course) => {
     setSelectedCourse(course);
@@ -89,10 +89,11 @@ const queryClient = useQueryClient();
     setSelectedCourse(null);
   };
 
-const handleEnrollSuccess = () => {
-    
-    queryClient.invalidateQueries({ queryKey: ['studentCourseRegistrations', studentId] });
-    
+  const handleEnrollSuccess = () => {
+    queryClient.invalidateQueries({
+      queryKey: ["studentCourseRegistrations", studentId],
+    });
+
     toast.success("Ghi danh vào lớp học thành công!");
   };
 
@@ -127,11 +128,17 @@ const handleEnrollSuccess = () => {
         subjectCode={course.courseCode}
         title={`${course.courseName} - ${course.courseCode}`}
         classCode={course.courseInstanceId}
-        lecturer="N/A"
-        studentCount={0}
+        lecturer={
+          course.instructorNames && course.instructorNames.length > 0
+            ? course.instructorNames.join(", ")
+            : "N/A"
+        }
+        studentCount={course.studentCount}
         schedule="N/A"
         assignmentCount={0}
-        status={course.status} 
+        status={course.status}
+        instructorNames={course.instructorNames}
+        enrolledAt={course.enrolledAt}
       />
     ));
   };
@@ -243,7 +250,7 @@ const handleEnrollSuccess = () => {
           isOpen={isModalOpen}
           onClose={handleCloseModal}
           course={selectedCourse}
-           onEnrollSuccess={handleEnrollSuccess} 
+          onEnrollSuccess={handleEnrollSuccess}
         />
       </div>
     </div>

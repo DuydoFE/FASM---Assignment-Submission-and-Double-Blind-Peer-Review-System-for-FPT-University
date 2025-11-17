@@ -7,12 +7,12 @@ const EnrolledCourseCard = ({
   title,
   classCode,
   lecturer,
-  studentCount, // 👉 Nhận studentCount
+  studentCount, 
   schedule,
   assignmentCount,
   status,
-  instructorNames, // 👉 Nhận instructorNames
-  enrolledAt, // 👉 Nhận enrolledAt
+  instructorNames, 
+  enrolledAt, 
 }) => {
   const navigate = useNavigate();
 
