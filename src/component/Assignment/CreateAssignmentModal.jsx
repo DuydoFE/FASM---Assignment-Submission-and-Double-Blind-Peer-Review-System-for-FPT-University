@@ -3,6 +3,8 @@ import { X, Plus, FileText, AlertCircle, Upload, File } from 'lucide-react';
 import { getRubricTemplatesByUserId } from '../../service/rubricService';
 import { toast } from 'react-toastify';
 import { getCurrentAccount } from '../../utils/accountUtils';
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
 
 const CreateAssignmentModal = ({ isOpen, onClose, onSubmit, courseInstanceId }) => {
   const [formData, setFormData] = useState({
@@ -100,8 +102,8 @@ const CreateAssignmentModal = ({ isOpen, onClose, onSubmit, courseInstanceId }) 
 
     else if (name === 'rubricTemplateId') {
       newValue = value;
-    } 
-    
+    }
+
     else if (name === 'passThreshold') {
       newValue = value;
     }
@@ -140,6 +142,36 @@ const CreateAssignmentModal = ({ isOpen, onClose, onSubmit, courseInstanceId }) 
     setSelectedFile(null);
     setFormData(prev => ({ ...prev, files: null }));
   };
+
+  // Get current time to prevent past dates/times
+  const now = new Date();
+
+  const handleDateTimeChange = (name, date) => {
+    if (date) {
+      // Format without UTC conversion to preserve local time
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      const hours = String(date.getHours()).padStart(2, '0');
+      const minutes = String(date.getMinutes()).padStart(2, '0');
+      const isoString = `${year}-${month}-${day}T${hours}:${minutes}`;
+      
+      setFormData(prev => ({
+        ...prev,
+        [name]: isoString
+      }));
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        [name]: ''
+      }));
+    }
+    
+    if (errors[name]) {
+      setErrors(prev => ({ ...prev, [name]: '' }));
+    }
+  };
+
 
   const validateForm = () => {
     const newErrors = {};
@@ -313,7 +345,7 @@ const CreateAssignmentModal = ({ isOpen, onClose, onSubmit, courseInstanceId }) 
 
         <div className="flex-1 overflow-y-auto">
           <div className="p-6 space-y-6">
-            
+
             {/* BASIC INFORMATION */}
             <div className="space-y-4">
               <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
@@ -454,12 +486,15 @@ const CreateAssignmentModal = ({ isOpen, onClose, onSubmit, courseInstanceId }) 
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Start Date <span className="text-gray-400">(Optional)</span>
                   </label>
-                  <input
-                    type="datetime-local"
-                    name="startDate"
-                    value={formData.startDate}
-                    onChange={handleChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none"
+                  <DatePicker
+                    selected={formData.startDate ? new Date(formData.startDate) : null}
+                    onChange={(date) => handleDateTimeChange('startDate', date)}
+                    showTimeSelect
+                    timeIntervals={1}
+                    dateFormat="MMM d, yyyy h:mm aa"
+                    minDate={now}
+                    className={`w-full px-10 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none ${errors.startDate ? 'border-red-500' : 'border-gray-300'}`}
+                    placeholderText="Select start date and time"
                   />
                   {errors.startDate && (
                     <div className="flex items-center gap-1 mt-1 text-red-500 text-sm">
@@ -473,13 +508,15 @@ const CreateAssignmentModal = ({ isOpen, onClose, onSubmit, courseInstanceId }) 
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Deadline <span className="text-red-500">*</span>
                   </label>
-                  <input
-                    type="datetime-local"
-                    name="deadline"
-                    value={formData.deadline}
-                    onChange={handleChange}
-                    className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none ${errors.deadline ? 'border-red-500' : 'border-gray-300'
-                      }`}
+                  <DatePicker
+                    selected={formData.deadline ? new Date(formData.deadline) : null}
+                    onChange={(date) => handleDateTimeChange('deadline', date)}
+                    showTimeSelect
+                    timeIntervals={1}
+                    dateFormat="MMM d, yyyy h:mm aa"
+                    minDate={now}
+                    className={`w-full px-10 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none ${errors.deadline ? 'border-red-500' : 'border-gray-300'}`}
+                    placeholderText="Select deadline and time"
                   />
                   {errors.deadline && (
                     <div className="flex items-center gap-1 mt-1 text-red-500 text-sm">
@@ -493,13 +530,15 @@ const CreateAssignmentModal = ({ isOpen, onClose, onSubmit, courseInstanceId }) 
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Review Deadline <span className="text-red-500">*</span>
                   </label>
-                  <input
-                    type="datetime-local"
-                    name="reviewDeadline"
-                    value={formData.reviewDeadline}
-                    onChange={handleChange}
-                    className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none ${errors.reviewDeadline ? 'border-red-500' : 'border-gray-300'
-                      }`}
+                  <DatePicker
+                    selected={formData.reviewDeadline ? new Date(formData.reviewDeadline) : null}
+                    onChange={(date) => handleDateTimeChange('reviewDeadline', date)}
+                    showTimeSelect
+                    timeIntervals={1}
+                    dateFormat="MMM d, yyyy h:mm aa"
+                    minDate={now}
+                    className={`w-full px-10 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none ${errors.reviewDeadline ? 'border-red-500' : 'border-gray-300'}`}
+                    placeholderText="Select review deadline and time"
                   />
                   {errors.reviewDeadline && (
                     <div className="flex items-center gap-1 mt-1 text-red-500 text-sm">
@@ -513,13 +552,15 @@ const CreateAssignmentModal = ({ isOpen, onClose, onSubmit, courseInstanceId }) 
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Final Deadline <span className="text-red-500">*</span>
                   </label>
-                  <input
-                    type="datetime-local"
-                    name="finalDeadline"
-                    value={formData.finalDeadline}
-                    onChange={handleChange}
-                    className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none ${errors.finalDeadline ? 'border-red-500' : 'border-gray-300'
-                      }`}
+                  <DatePicker
+                    selected={formData.finalDeadline ? new Date(formData.finalDeadline) : null}
+                    onChange={(date) => handleDateTimeChange('finalDeadline', date)}
+                    showTimeSelect
+                    timeIntervals={1}
+                    dateFormat="MMM d, yyyy h:mm aa"
+                    minDate={now}
+                    className={`w-full px-10 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none ${errors.finalDeadline ? 'border-red-500' : 'border-gray-300'}`}
+                    placeholderText="Select final deadline and time"
                   />
                   {errors.finalDeadline && (
                     <div className="flex items-center gap-1 mt-1 text-red-500 text-sm">
