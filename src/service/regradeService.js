@@ -21,3 +21,36 @@ export const getRegradeRequestsByStudentId = async (
     throw error;
   }
 };
+
+export const getRegradeRequestsForInstructor = async (userId) => {
+  try {
+    const response = await api.get(`/instructor/regrade-requests/${userId}`);
+    return response.data;
+  } catch (error) {
+    console.error(
+      `Lỗi khi lấy danh sách yêu cầu chấm lại cho giảng viên ID ${userId}:`,
+      error
+    );
+    throw error;
+  }
+};
+
+export const reviewRegradeRequest = async (data) => {
+  try {
+    const response = await api.put(`/instructor/regrade-requests/review`, data);
+    return response.data;
+  } catch (error) {
+    console.error("Lỗi khi review yêu cầu chấm lại:", error);
+    throw error;
+  }
+};
+
+export const completeRegradeRequest = async (data) => {
+  try {
+    const response = await api.put(`/instructor/regrade-requests/complete`, data);
+    return response.data;
+  } catch (error) {
+    console.error("Lỗi khi complete regrade request:", error);
+    throw error;
+  }
+};

@@ -90,8 +90,6 @@ export const createAssignment = async (assignmentData, file = null) => {
     formData.append('PassThreshold', assignmentData.passThreshold);
     
     formData.append('AllowCrossClass', assignmentData.allowCrossClass);
-    formData.append('IsBlindReview', assignmentData.isBlindReview);
-    formData.append('IncludeAIScore', assignmentData.includeAIScore);
     
     formData.append('GradingScale', assignmentData.gradingScale);
     
@@ -128,9 +126,52 @@ export const deleteAssignment = async (assignmentId) => {
   }
 };
 
-export const updateAssignment = async (assignmentData) => {
+export const updateAssignment = async (assignmentData, file = null) => {
   try {
-    const response = await api.put('/Assignment', assignmentData);
+    const formData = new FormData();
+    
+    formData.append('AssignmentId', assignmentData.assignmentId);
+    formData.append('RubricTemplateId', assignmentData.rubricTemplateId);
+    formData.append('Title', assignmentData.title);
+    
+    if (assignmentData.description) {
+      formData.append('Description', assignmentData.description);
+    }
+    if (assignmentData.guidelines) {
+      formData.append('Guidelines', assignmentData.guidelines);
+    }
+    if (assignmentData.startDate) {
+      formData.append('StartDate', assignmentData.startDate);
+    }
+    
+    formData.append('Deadline', assignmentData.deadline);
+    formData.append('ReviewDeadline', assignmentData.reviewDeadline);
+    formData.append('FinalDeadline', assignmentData.finalDeadline);
+    
+    formData.append('NumPeerReviewsRequired', assignmentData.numPeerReviewsRequired);
+    formData.append('MissingReviewPenalty', assignmentData.missingReviewPenalty);
+    formData.append('InstructorWeight', assignmentData.instructorWeight);
+    formData.append('PeerWeight', assignmentData.peerWeight);
+    formData.append('PassThreshold', assignmentData.passThreshold);
+    
+    formData.append('AllowCrossClass', assignmentData.allowCrossClass);
+    formData.append('GradingScale', assignmentData.gradingScale);
+    
+    if (file) {
+      formData.append('File', file);
+    }
+
+    console.log('Update FormData contents:');
+    for (let pair of formData.entries()) {
+      console.log(pair[0] + ': ' + pair[1]);
+    }
+
+    const response = await api.put('/Assignment', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    });
+    
     return response.data;
   } catch (error) {
     console.error('Lỗi khi cập nhật assignment:', error);

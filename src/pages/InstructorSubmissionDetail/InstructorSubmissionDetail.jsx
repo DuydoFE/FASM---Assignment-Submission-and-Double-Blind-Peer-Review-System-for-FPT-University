@@ -287,16 +287,6 @@ const InstructorSubmissionDetail = () => {
               <div className="flex items-center gap-2">
                 <a
                   href={submissionData.fileUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-2 px-3 py-2 text-sm text-gray-600 hover:bg-gray-50 rounded-lg"
-                >
-                  <Eye className="w-4 h-4" />
-                  Preview
-                </a>
-
-                <a
-                  href={submissionData.fileUrl}
                   download
                   className="flex items-center gap-2 px-4 py-2 text-sm bg-blue-500 text-white rounded-lg hover:bg-blue-600"
                 >

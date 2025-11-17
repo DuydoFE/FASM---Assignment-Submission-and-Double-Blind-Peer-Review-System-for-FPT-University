@@ -71,18 +71,9 @@ const SubmissionLeftColumn = ({
                             </div>
                             <div>
                                 <p className="font-medium text-sm text-gray-900">{submissionDetails.fileName || getFileNameFromUrl(submissionDetails.fileUrl)}</p>
-                                <p className="text-xs text-gray-500">PDF File</p>
                             </div>
                         </div>
                         <div className="flex gap-2">
-                            <a
-                                href={submissionDetails.fileUrl}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="p-2 hover:bg-gray-200 rounded"
-                            >
-                                <Eye className="w-4 h-4 text-gray-600" />
-                            </a>
                             <a
                                 href={submissionDetails.fileUrl}
                                 download

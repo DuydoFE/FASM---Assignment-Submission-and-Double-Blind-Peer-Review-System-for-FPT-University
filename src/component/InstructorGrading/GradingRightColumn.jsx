@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Loader2 } from 'lucide-react';
 
 const GradingRightColumn = ({
     criteriaList,
+    criteriaFeedbacks, 
     updateCriteriaScore,
     calculateTotalScore,
     handleSubmitGrade,
@@ -11,6 +12,15 @@ const GradingRightColumn = ({
     generalFeedback,
     setGeneralFeedback
 }) => {
+    const mergedCriteria = criteriaList.map(criteria => {
+        const feedback = criteriaFeedbacks?.find(f => f.criteriaId === criteria.criteriaId);
+        return {
+            ...criteria,
+            score: feedback?.scoreAwarded || criteria.score || 0,
+            feedback: feedback?.feedback || criteria.feedback || ''
+        };
+    });
+
     return (
         <div className="lg:col-span-2 space-y-6">
             {/* Grading Criteria */}
@@ -21,7 +31,7 @@ const GradingRightColumn = ({
                 </div>
 
                 <div className="space-y-6">
-                    {criteriaList.map((c) => (
+                    {mergedCriteria.map((c) => (
                         <div key={c.criteriaId} className="border border-gray-300 rounded-lg p-5">
                             <div className="mb-4">
                                 <h3 className="font-semibold text-lg text-gray-900">
@@ -49,7 +59,7 @@ const GradingRightColumn = ({
                                         onChange={(e) => {
                                             let value = parseFloat(e.target.value);
                                             if (isNaN(value)) value = 0;
-                                            value = Math.round(value * 10) / 10;
+                                            value = Math.round(value);
                                             updateCriteriaScore(c.criteriaId, 'score', Math.min(10, Math.max(0, value)));
                                         }}
                                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
@@ -82,11 +92,11 @@ const GradingRightColumn = ({
                 </div>
 
                 <div className="space-y-2 text-sm mb-4">
-                    {criteriaList.map((c) => (
+                    {mergedCriteria.map((c) => (
                         <div key={c.criteriaId} className="flex justify-between text-gray-700">
                             <span>{c.order}. {c.name} ({c.weight}%):</span>
                             <span className="font-medium">
-                                {c.score} × {(c.weight / 100).toFixed(2)} = {((Number(c.score) || 0) * (Number(c.weight) || 0) / 100).toFixed(2)}
+                                {((Number(c.score) || 0) * (Number(c.weight) || 0) / 100).toFixed(1)}
                             </span>
                         </div>
                     ))}

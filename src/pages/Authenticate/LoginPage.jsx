@@ -10,7 +10,6 @@ import { loginRedux } from "../../redux/features/userSlice";
 import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import api from "../../config/axios";
-import axios from "axios";
 
 const GoogleIcon = (props) => (
   <svg
@@ -76,8 +75,8 @@ const LoginPage = () => {
   useEffect(() => {
     const handleGoogleCallback = async () => {
       const fullUrl = window.location.href;
-       const query = fullUrl.split('?').slice(1).join('&')
-       const params = new URLSearchParams(query);
+      const query = fullUrl.split('?').slice(1).join('&')
+      const params = new URLSearchParams(query);
       const isGoogleCallback = params.get("google"); // check param
       const accessToken = params.get("accessToken"); // check param
       const refreshToken = params.get("refreshToken"); // check param
@@ -85,7 +84,7 @@ const LoginPage = () => {
         try {
           console.log("Detected Google callback, fetching user info...");
 
-          const res = await api.get("/account/me", {
+          const res = await api.get('/account/me', {
             withCredentials: true
           });
           localStorage.setItem("token", accessToken);
@@ -96,7 +95,7 @@ const LoginPage = () => {
         } catch (err) {
           console.error("Failed to fetch user after Google callback:", err);
           toast.error("Google Login failed.");
-          navigate("/login"); 
+          navigate("/login");
         }
       }
     };

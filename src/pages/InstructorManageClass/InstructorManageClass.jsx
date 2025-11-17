@@ -229,7 +229,7 @@ const InstructorManageClass = () => {
           <div>
             <div className="grid grid-cols-5 gap-4 px-6 py-4 bg-gray-50 text-sm font-medium text-gray-700">
               <div>Image</div>
-              <div>Member</div>
+              <div>Student Code</div>
               <div>Full Name</div>
               <div>Email</div>
               <div>Action</div>

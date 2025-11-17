@@ -1,7 +1,8 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Plus, FileText, Calendar, X, Trash2, Edit, MoreVertical, Upload } from 'lucide-react';
 import { toast } from "react-toastify";
 import { useNavigate, useLocation } from 'react-router-dom';
+import { Dropdown } from 'antd';
 import { getAssignmentsByCourseInstanceId, createAssignment, deleteAssignment, updateAssignment, assignmentService } from '../../service/assignmentService';
 import { submissionService } from '../../service/submissionService';
 import CreateAssignmentModal from '../../component/Assignment/CreateAssignmentModal';
@@ -34,20 +35,6 @@ const InstructorManageAssignment = () => {
   const [showModal, setShowModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingAssignment, setEditingAssignment] = useState(null);
-  const [openDropdownId, setOpenDropdownId] = useState(null);
-  const dropdownRef = useRef(null);
-  const toastShownRef = useRef(false);
-
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setOpenDropdownId(null);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
 
   const fetchAssignments = async () => {
     try {
@@ -104,7 +91,6 @@ const InstructorManageAssignment = () => {
     setNewTime(formattedTime);
 
     setShowUpdateDeadlineModal(true);
-    setOpenDropdownId(null);
   };
 
   const handleSaveDeadline = async () => {
@@ -152,7 +138,6 @@ const InstructorManageAssignment = () => {
   const handleDeleteClick = (assignment) => {
     setSelectedAssignment(assignment);
     setShowDeleteModal(true);
-    setOpenDropdownId(null);
   };
 
   const handleDeleteConfirm = async (assignmentId) => {
@@ -178,16 +163,15 @@ const InstructorManageAssignment = () => {
       const fullDetails = await assignmentService.getAssignmentDetailsById(assignment.assignmentId);
       setEditingAssignment(fullDetails);
       setShowEditModal(true);
-      setOpenDropdownId(null);
     } catch (error) {
       console.error('Failed to fetch assignment details:', error);
       toast.error('Failed to load assignment details. Please try again.');
     }
   };
 
-  const handleUpdateAssignment = async (updatedData) => {
+  const handleUpdateAssignment = async (updatedData, file) => {
     try {
-      const response = await updateAssignment(updatedData);
+      const response = await updateAssignment(updatedData, file);
       if (response) {
         toast.success('Assignment updated successfully!');
         setShowEditModal(false);
@@ -219,7 +203,6 @@ const InstructorManageAssignment = () => {
     try {
       await submissionService.getSubmissionsByAssignment(assignment.assignmentId);
       navigate(`/instructor/manage-submission/${assignment.assignmentId}`);
-      setOpenDropdownId(null);
     } catch (error) {
       console.error('Failed to fetch submissions:', error);
       toast.error('Failed to load submissions. Please try again.');
@@ -231,7 +214,6 @@ const InstructorManageAssignment = () => {
       // Use the id property (assignment.assignmentId) as other handlers do
       await assignmentService.publishAssignment(assignment.id || assignment.assignmentId);
       toast.success('Assignment published successfully!');
-      setOpenDropdownId(null);
       // Refresh the list to reflect new status
       await fetchAssignments();
     } catch (error) {
@@ -240,9 +222,55 @@ const InstructorManageAssignment = () => {
     }
   };
 
-  const toggleDropdown = (assignmentId) => {
-    setOpenDropdownId(openDropdownId === assignmentId ? null : assignmentId);
-  };
+  const getDropdownItems = (assignment) => [
+    ...(assignment.status === 'Draft' ? [{
+      label: (
+        <div className="flex items-center gap-2 px-2 py-1">
+          <Upload className="w-4 h-4 text-yellow-600" />
+          <span>Publish Assignment</span>
+        </div>
+      ),
+      onClick: () => handlePublishAssignment(assignment)
+    }] : []),
+    ...(assignment.status === 'Active' ? [{
+      label: (
+        <div className="flex items-center gap-2 px-2 py-1">
+          <Calendar className="w-4 h-4 text-blue-600" />
+          <span>Extend Deadline</span>
+        </div>
+      ),
+      onClick: () => handleUpdateDeadlineClick(assignment)
+    }] : []),
+    ...(assignment.status === 'Draft' || assignment.status === 'Upcoming' ? [{
+      label: (
+        <div className="flex items-center gap-2 px-2 py-1">
+          <Edit className="w-4 h-4 text-green-600" />
+          <span>Edit Assignment</span>
+        </div>
+      ),
+      onClick: () => handleEditClick(assignment)
+    }] : []),
+    {
+      label: (
+        <div className="flex items-center gap-2 px-2 py-1">
+          <FileText className="w-4 h-4 text-gray-600" />
+          <span>View Submissions</span>
+        </div>
+      ),
+      onClick: () => handleViewSubmissions(assignment)
+    },
+    ...(assignment.status === 'Draft' || assignment.status === 'Upcoming' ? [{
+      type: 'divider'
+    }, {
+      label: (
+        <div className="flex items-center gap-2 px-2 py-1">
+          <Trash2 className="w-4 h-4 text-red-600" />
+          <span>Delete Assignment</span>
+        </div>
+      ),
+      onClick: () => handleDeleteClick(assignment)
+    }] : [])
+  ];
 
   const filteredAssignments = assignments;
 
@@ -352,64 +380,15 @@ const InstructorManageAssignment = () => {
               </span>
             </div>
             <div className="col-span-1 flex justify-center items-center">
-              <div className="relative" ref={openDropdownId === assignment.id ? dropdownRef : null}>
-                <button
-                  onClick={() => toggleDropdown(assignment.id)}
-                  className="text-gray-600 hover:text-gray-800 p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                  title="More actions"
-                >
-                  <MoreVertical className="w-5 h-5" />
+              <Dropdown
+                menu={{ items: getDropdownItems(assignment) }}
+                trigger={['click']}
+                placement="bottomRight"
+              >
+                <button className="p-2 hover:bg-gray-100 rounded-md transition-colors">
+                  <MoreVertical className="w-5 h-5 text-gray-600" />
                 </button>
-
-                {openDropdownId === assignment.id && (
-                  <div className="absolute right-0 top-full mt-1 w-52 bg-white rounded-lg shadow-2xl border border-gray-200 z-[100] overflow-hidden">
-                    {(assignment.status === 'Draft') && (
-                      <button
-                        onClick={() => handlePublishAssignment(assignment)}
-                        className="w-full flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-yellow-50 transition-colors text-left"
-                      >
-                        <Upload className="w-4 h-4 text-yellow-600" />
-                        <span>Publish Assignment</span>
-                      </button>
-                    )}
-                    {(assignment.status === 'Active') && (
-                      <button
-                        onClick={() => handleUpdateDeadlineClick(assignment)}
-                        className="w-full flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-blue-50 transition-colors text-left"
-                      >
-                        <Calendar className="w-4 h-4 text-blue-600" />
-                        <span>Extend Deadline</span>
-                      </button>
-                    )}
-                    {(assignment.status === 'Draft' || assignment.status === 'Upcoming') && (
-                      <button
-                        onClick={() => handleEditClick(assignment)}
-                        className="w-full flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-green-50 transition-colors text-left"
-                      >
-                        <Edit className="w-4 h-4 text-green-600" />
-                        <span>Edit Assignment</span>
-                      </button>
-                    )}
-                    <button
-                      onClick={() => handleViewSubmissions(assignment)}
-                      className="w-full flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors text-left"
-                    >
-                      <FileText className="w-4 h-4 text-gray-600" />
-                      <span>View Submissions</span>
-                    </button>
-                    <div className="border-t border-gray-200 my-1"></div>
-                    {(assignment.status === 'Draft' || assignment.status === 'Upcoming') && (
-                      <button
-                        onClick={() => handleDeleteClick(assignment)}
-                        className="w-full flex items-center gap-3 px-4 py-3 text-sm text-red-600 hover:bg-red-50 transition-colors text-left"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                        <span>Delete Assignment</span>
-                      </button>
-                    )}
-                  </div>
-                )}
-              </div>
+              </Dropdown>
             </div>
           </div>
         ))}

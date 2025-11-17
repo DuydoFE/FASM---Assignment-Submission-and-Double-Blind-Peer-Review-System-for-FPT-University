@@ -3,6 +3,8 @@ import { X, Plus, FileText, AlertCircle, Upload, File } from 'lucide-react';
 import { getRubricTemplatesByUserId } from '../../service/rubricService';
 import { toast } from 'react-toastify';
 import { getCurrentAccount } from '../../utils/accountUtils';
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
 
 const CreateAssignmentModal = ({ isOpen, onClose, onSubmit, courseInstanceId }) => {
   const [formData, setFormData] = useState({
@@ -17,14 +19,12 @@ const CreateAssignmentModal = ({ isOpen, onClose, onSubmit, courseInstanceId }) 
     reviewDeadline: '',
     finalDeadline: '',
     numPeerReviewsRequired: '',
-    missingReviewPenalty: 0,
+    missingReviewPenalty: '',
     allowCrossClass: false,
-    isBlindReview: false,
     instructorWeight: '',
     peerWeight: '',
     gradingScale: 'Scale10',
     passThreshold: '',
-    includeAIScore: false
   });
 
   const [errors, setErrors] = useState({});
@@ -58,6 +58,7 @@ const CreateAssignmentModal = ({ isOpen, onClose, onSubmit, courseInstanceId }) 
     }
   }, [isOpen]);
 
+  // 🔥 FIXED HANDLECHANGE
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
 
@@ -65,18 +66,53 @@ const CreateAssignmentModal = ({ isOpen, onClose, onSubmit, courseInstanceId }) 
 
     if (type === 'checkbox') {
       newValue = checked;
-    } else if (type === 'number') {
-      newValue = value === '' ? '' : Number(value);
-    } else if (name === 'rubricTemplateId') {
+    }
+
+    else if (type === 'number') {
+
+      if (name === "numPeerReviewsRequired") {
+        if (value === "") {
+          newValue = "";
+        } else {
+          let num = Number(value);
+          if (num < 1) num = 1;
+          if (num > 10) num = 10;
+          num = Math.floor(num);
+          newValue = num;
+        }
+      }
+
+      else if (name === "missingReviewPenalty") {
+        if (value === "") {
+          newValue = "";
+        } else {
+          let num = Number(value);
+          if (num < 0) num = 0;
+          if (num > 10) num = 10;
+          num = Math.floor(num);
+          newValue = num;
+        }
+      }
+
+      // Other numeric inputs
+      else {
+        newValue = value === "" ? "" : Number(value);
+      }
+    }
+
+    else if (name === 'rubricTemplateId') {
       newValue = value;
-    } else if (name === 'passThreshold') {
+    }
+
+    else if (name === 'passThreshold') {
       newValue = value;
-    } else if (name === 'gradingScale') {
-      // Reset passThreshold when changing grading scale
+    }
+
+    else if (name === 'gradingScale') {
       setFormData(prev => ({
         ...prev,
         gradingScale: value,
-        passThreshold: '' // Clear passThreshold when switching
+        passThreshold: ''
       }));
       if (errors.passThreshold) {
         setErrors(prev => ({ ...prev, passThreshold: '' }));
@@ -107,6 +143,36 @@ const CreateAssignmentModal = ({ isOpen, onClose, onSubmit, courseInstanceId }) 
     setFormData(prev => ({ ...prev, files: null }));
   };
 
+  // Get current time to prevent past dates/times
+  const now = new Date();
+
+  const handleDateTimeChange = (name, date) => {
+    if (date) {
+      // Format without UTC conversion to preserve local time
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      const hours = String(date.getHours()).padStart(2, '0');
+      const minutes = String(date.getMinutes()).padStart(2, '0');
+      const isoString = `${year}-${month}-${day}T${hours}:${minutes}`;
+      
+      setFormData(prev => ({
+        ...prev,
+        [name]: isoString
+      }));
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        [name]: ''
+      }));
+    }
+    
+    if (errors[name]) {
+      setErrors(prev => ({ ...prev, [name]: '' }));
+    }
+  };
+
+
   const validateForm = () => {
     const newErrors = {};
     const now = new Date();
@@ -131,51 +197,43 @@ const CreateAssignmentModal = ({ isOpen, onClose, onSubmit, courseInstanceId }) 
       newErrors.finalDeadline = 'Final deadline is required';
     }
 
-    // Date sequence validation
-    const startDate = formData.startDate && formData.startDate.trim() !== '' ? new Date(formData.startDate) : null;
-    const deadline = formData.deadline && formData.deadline.trim() !== '' ? new Date(formData.deadline) : null;
-    const reviewDeadline = formData.reviewDeadline && formData.reviewDeadline.trim() !== '' ? new Date(formData.reviewDeadline) : null;
-    const finalDeadline = formData.finalDeadline && formData.finalDeadline.trim() !== '' ? new Date(formData.finalDeadline) : null;
+    const startDate = formData.startDate ? new Date(formData.startDate) : null;
+    const deadline = formData.deadline ? new Date(formData.deadline) : null;
+    const reviewDeadline = formData.reviewDeadline ? new Date(formData.reviewDeadline) : null;
+    const finalDeadline = formData.finalDeadline ? new Date(formData.finalDeadline) : null;
 
-    // Check if start date is in the past
     if (startDate && !isNaN(startDate.getTime()) && startDate <= now) {
       newErrors.startDate = 'Start date must be in the future';
     }
 
-    // Check if deadline is in the past or before start date
     if (deadline && !isNaN(deadline.getTime())) {
       if (deadline <= now) {
         newErrors.deadline = 'Deadline must be in the future';
-      } else if (startDate && !isNaN(startDate.getTime()) && deadline <= startDate) {
+      } else if (startDate && deadline <= startDate) {
         newErrors.deadline = 'Deadline must be after start date';
       }
     }
 
-    // Check if review deadline is in the past or before deadline
     if (reviewDeadline && !isNaN(reviewDeadline.getTime())) {
       if (reviewDeadline <= now) {
         newErrors.reviewDeadline = 'Review deadline must be in the future';
-      } else if (deadline && !isNaN(deadline.getTime()) && reviewDeadline <= deadline) {
+      } else if (deadline && reviewDeadline <= deadline) {
         newErrors.reviewDeadline = 'Review deadline must be after submission deadline';
       }
     }
 
-    // Check if final deadline is in the past or before review deadline
     if (finalDeadline && !isNaN(finalDeadline.getTime())) {
       if (finalDeadline <= now) {
         newErrors.finalDeadline = 'Final deadline must be in the future';
-      } else if (reviewDeadline && !isNaN(reviewDeadline.getTime()) && finalDeadline <= reviewDeadline) {
+      } else if (reviewDeadline && finalDeadline <= reviewDeadline) {
         newErrors.finalDeadline = 'Final deadline must be after review deadline';
       }
     }
-
-    console.log('All validation errors:', newErrors);
 
     if (!formData.numPeerReviewsRequired || formData.numPeerReviewsRequired === '') {
       newErrors.numPeerReviewsRequired = 'Number of peer reviews is required';
     }
 
-    // Only validate passThreshold if gradingScale is PassFail
     if (formData.gradingScale === 'PassFail') {
       if (formData.passThreshold === '' || !formData.passThreshold) {
         newErrors.passThreshold = 'Please select a pass threshold';
@@ -227,18 +285,16 @@ const CreateAssignmentModal = ({ isOpen, onClose, onSubmit, courseInstanceId }) 
         includeAIScore: formData.includeAIScore
       };
 
-      // Always include passThreshold
       if (formData.gradingScale === 'PassFail') {
-        submitData.passThreshold = parseFloat(formData.passThreshold); // Use parseFloat for double
+        submitData.passThreshold = parseFloat(formData.passThreshold);
       } else {
-        submitData.passThreshold = 0; // Send 0 for Scale10 instead of null
+        submitData.passThreshold = 0;
       }
 
       console.log('Submitting data:', submitData);
 
       await onSubmit(submitData, selectedFile);
 
-      // Reset form
       setFormData({
         courseInstanceId: courseInstanceId || 0,
         rubricTemplateId: '',
@@ -289,6 +345,8 @@ const CreateAssignmentModal = ({ isOpen, onClose, onSubmit, courseInstanceId }) 
 
         <div className="flex-1 overflow-y-auto">
           <div className="p-6 space-y-6">
+
+            {/* BASIC INFORMATION */}
             <div className="space-y-4">
               <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
                 <div className="w-1 h-5 bg-orange-500 rounded"></div>
@@ -376,6 +434,7 @@ const CreateAssignmentModal = ({ isOpen, onClose, onSubmit, courseInstanceId }) 
                 )}
               </div>
 
+              {/* FILE UPLOAD */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Document <span className="text-gray-400">(Optional)</span>
@@ -415,6 +474,7 @@ const CreateAssignmentModal = ({ isOpen, onClose, onSubmit, courseInstanceId }) 
               </div>
             </div>
 
+            {/* IMPORTANT DATES */}
             <div className="space-y-4">
               <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
                 <div className="w-1 h-5 bg-orange-500 rounded"></div>
@@ -426,12 +486,15 @@ const CreateAssignmentModal = ({ isOpen, onClose, onSubmit, courseInstanceId }) 
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Start Date <span className="text-gray-400">(Optional)</span>
                   </label>
-                  <input
-                    type="datetime-local"
-                    name="startDate"
-                    value={formData.startDate}
-                    onChange={handleChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none"
+                  <DatePicker
+                    selected={formData.startDate ? new Date(formData.startDate) : null}
+                    onChange={(date) => handleDateTimeChange('startDate', date)}
+                    showTimeSelect
+                    timeIntervals={1}
+                    dateFormat="MMM d, yyyy h:mm aa"
+                    minDate={now}
+                    className={`w-full px-10 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none ${errors.startDate ? 'border-red-500' : 'border-gray-300'}`}
+                    placeholderText="Select start date and time"
                   />
                   {errors.startDate && (
                     <div className="flex items-center gap-1 mt-1 text-red-500 text-sm">
@@ -445,13 +508,15 @@ const CreateAssignmentModal = ({ isOpen, onClose, onSubmit, courseInstanceId }) 
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Deadline <span className="text-red-500">*</span>
                   </label>
-                  <input
-                    type="datetime-local"
-                    name="deadline"
-                    value={formData.deadline}
-                    onChange={handleChange}
-                    className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none ${errors.deadline ? 'border-red-500' : 'border-gray-300'
-                      }`}
+                  <DatePicker
+                    selected={formData.deadline ? new Date(formData.deadline) : null}
+                    onChange={(date) => handleDateTimeChange('deadline', date)}
+                    showTimeSelect
+                    timeIntervals={1}
+                    dateFormat="MMM d, yyyy h:mm aa"
+                    minDate={now}
+                    className={`w-full px-10 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none ${errors.deadline ? 'border-red-500' : 'border-gray-300'}`}
+                    placeholderText="Select deadline and time"
                   />
                   {errors.deadline && (
                     <div className="flex items-center gap-1 mt-1 text-red-500 text-sm">
@@ -465,13 +530,15 @@ const CreateAssignmentModal = ({ isOpen, onClose, onSubmit, courseInstanceId }) 
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Review Deadline <span className="text-red-500">*</span>
                   </label>
-                  <input
-                    type="datetime-local"
-                    name="reviewDeadline"
-                    value={formData.reviewDeadline}
-                    onChange={handleChange}
-                    className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none ${errors.reviewDeadline ? 'border-red-500' : 'border-gray-300'
-                      }`}
+                  <DatePicker
+                    selected={formData.reviewDeadline ? new Date(formData.reviewDeadline) : null}
+                    onChange={(date) => handleDateTimeChange('reviewDeadline', date)}
+                    showTimeSelect
+                    timeIntervals={1}
+                    dateFormat="MMM d, yyyy h:mm aa"
+                    minDate={now}
+                    className={`w-full px-10 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none ${errors.reviewDeadline ? 'border-red-500' : 'border-gray-300'}`}
+                    placeholderText="Select review deadline and time"
                   />
                   {errors.reviewDeadline && (
                     <div className="flex items-center gap-1 mt-1 text-red-500 text-sm">
@@ -485,13 +552,15 @@ const CreateAssignmentModal = ({ isOpen, onClose, onSubmit, courseInstanceId }) 
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Final Deadline <span className="text-red-500">*</span>
                   </label>
-                  <input
-                    type="datetime-local"
-                    name="finalDeadline"
-                    value={formData.finalDeadline}
-                    onChange={handleChange}
-                    className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none ${errors.finalDeadline ? 'border-red-500' : 'border-gray-300'
-                      }`}
+                  <DatePicker
+                    selected={formData.finalDeadline ? new Date(formData.finalDeadline) : null}
+                    onChange={(date) => handleDateTimeChange('finalDeadline', date)}
+                    showTimeSelect
+                    timeIntervals={1}
+                    dateFormat="MMM d, yyyy h:mm aa"
+                    minDate={now}
+                    className={`w-full px-10 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none ${errors.finalDeadline ? 'border-red-500' : 'border-gray-300'}`}
+                    placeholderText="Select final deadline and time"
                   />
                   {errors.finalDeadline && (
                     <div className="flex items-center gap-1 mt-1 text-red-500 text-sm">
@@ -503,6 +572,7 @@ const CreateAssignmentModal = ({ isOpen, onClose, onSubmit, courseInstanceId }) 
               </div>
             </div>
 
+            {/* GRADING */}
             <div className="space-y-4">
               <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
                 <div className="w-1 h-5 bg-orange-500 rounded"></div>
@@ -539,8 +609,8 @@ const CreateAssignmentModal = ({ isOpen, onClose, onSubmit, courseInstanceId }) 
                     >
                       <option value="">Select pass threshold</option>
                       <option value="0">≥ 0.0</option>
-                      <option value="40">≥ 4.0</option>
-                      <option value="50">≥ 5.0</option>
+                      <option value="4">≥ 4.0</option>
+                      <option value="5">≥ 5.0</option>
                     </select>
                     {errors.passThreshold && (
                       <div className="flex items-center gap-1 mt-1 text-red-500 text-sm">
@@ -597,6 +667,7 @@ const CreateAssignmentModal = ({ isOpen, onClose, onSubmit, courseInstanceId }) 
               </div>
             </div>
 
+            {/* REVIEW SETTINGS */}
             <div className="space-y-4">
               <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
                 <div className="w-1 h-5 bg-orange-500 rounded"></div>
@@ -614,6 +685,7 @@ const CreateAssignmentModal = ({ isOpen, onClose, onSubmit, courseInstanceId }) 
                     value={formData.numPeerReviewsRequired}
                     onChange={handleChange}
                     min="1"
+                    max="10"
                     className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none ${errors.numPeerReviewsRequired ? 'border-red-500' : 'border-gray-300'
                       }`}
                   />
@@ -635,6 +707,7 @@ const CreateAssignmentModal = ({ isOpen, onClose, onSubmit, courseInstanceId }) 
                     value={formData.missingReviewPenalty}
                     onChange={handleChange}
                     min="0"
+                    max="10"
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none"
                   />
                 </div>
@@ -654,36 +727,9 @@ const CreateAssignmentModal = ({ isOpen, onClose, onSubmit, courseInstanceId }) 
                     <p className="text-xs text-gray-500">Students can review submissions from other classes</p>
                   </div>
                 </label>
-
-                <label className="flex items-center space-x-3 cursor-pointer group">
-                  <input
-                    type="checkbox"
-                    name="isBlindReview"
-                    checked={formData.isBlindReview}
-                    onChange={handleChange}
-                    className="w-5 h-5 text-orange-500 border-gray-300 rounded focus:ring-orange-500"
-                  />
-                  <div>
-                    <span className="text-sm font-medium text-gray-900 group-hover:text-orange-600">Blind Review</span>
-                    <p className="text-xs text-gray-500">Hide student identities during peer review</p>
-                  </div>
-                </label>
-
-                <label className="flex items-center space-x-3 cursor-pointer group">
-                  <input
-                    type="checkbox"
-                    name="includeAIScore"
-                    checked={formData.includeAIScore}
-                    onChange={handleChange}
-                    className="w-5 h-5 text-orange-500 border-gray-300 rounded focus:ring-orange-500"
-                  />
-                  <div>
-                    <span className="text-sm font-medium text-gray-900 group-hover:text-orange-600">Include AI Score</span>
-                    <p className="text-xs text-gray-500">Use AI-assisted grading in final score calculation</p>
-                  </div>
-                </label>
               </div>
             </div>
+
           </div>
         </div>
 
