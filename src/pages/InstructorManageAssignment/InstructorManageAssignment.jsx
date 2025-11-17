@@ -36,6 +36,22 @@ const InstructorManageAssignment = () => {
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingAssignment, setEditingAssignment] = useState(null);
 
+  // Hàm để lấy màu dựa trên trạng thái
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'Upcoming':
+        return "bg-blue-100 text-blue-800";
+      case 'Draft':
+        return "bg-gray-100 text-gray-800";
+      case 'GradesPublished':
+        return "bg-green-100 text-green-800";
+      case 'Cancelled':
+        return "bg-red-100 text-red-800";
+      default:
+        return "bg-gray-100 text-gray-800";
+    }
+  };
+
   const fetchAssignments = async () => {
     try {
       setLoading(true);
@@ -56,9 +72,7 @@ const InstructorManageAssignment = () => {
         courseCode: assignment.courseCode,
         sectionCode: assignment.sectionCode,
         status: assignment.status || 'Open',
-        statusColor: (assignment.status || 'Open') === 'Open'
-          ? "bg-green-100 text-green-800"
-          : "bg-red-100 text-red-800",
+        statusColor: getStatusColor(assignment.status),
         originalData: assignment
       }));
 
@@ -76,8 +90,6 @@ const InstructorManageAssignment = () => {
       fetchAssignments();
     }
   }, [courseInstanceId]);
-
-
 
   const handleUpdateDeadlineClick = (assignment) => {
     setSelectedAssignment(assignment);
@@ -198,7 +210,6 @@ const InstructorManageAssignment = () => {
     }
   };
 
-
   const handleViewSubmissions = async (assignment) => {
     try {
       await submissionService.getSubmissionsByAssignment(assignment.assignmentId);
@@ -211,10 +222,8 @@ const InstructorManageAssignment = () => {
 
   const handlePublishAssignment = async (assignment) => {
     try {
-      // Use the id property (assignment.assignmentId) as other handlers do
       await assignmentService.publishAssignment(assignment.id || assignment.assignmentId);
       toast.success('Assignment published successfully!');
-      // Refresh the list to reflect new status
       await fetchAssignments();
     } catch (error) {
       console.error('Failed to publish assignment:', error);

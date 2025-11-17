@@ -30,9 +30,8 @@ const PeerReviewPage = () => {
   const [validationError, setValidationError] = useState(null);
   const user = getCurrentAccount();
 
-  // === 1. State được chuyển từ AiAssistantCard vào đây ===
   const [isGeneratingAi, setIsGeneratingAi] = useState(false);
-  const [aiSummaryData, setAiSummaryData] = useState(null); // Sẽ chứa cả điểm và feedback từ AI
+  const [aiSummaryData, setAiSummaryData] = useState(null);
 
   useEffect(() => {
     const fetchReviewData = async () => {
@@ -82,30 +81,44 @@ const PeerReviewPage = () => {
     }
   };
 
-  const totalScore = useMemo(() => {
+
+  const weightedTotalScore = useMemo(() => {
     const criteria = reviewData?.rubric?.criteria;
     if (!criteria || Object.keys(scores).length === 0) return 0;
     const total = criteria.reduce((acc, criterion) => {
       const score = scores[criterion.criteriaId] || 0;
       const weightedScore =
-        (score / criterion.maxScore) * (criterion.weight / 100);
+        criterion.maxScore > 0
+          ? (score / criterion.maxScore) * (criterion.weight / 100)
+          : 0;
       return acc + weightedScore;
     }, 0);
     return Math.round(total * 100);
   }, [scores, reviewData]);
 
-  // === 2. Logic tạo tóm tắt AI được chuyển vào đây ===
+
+  const rawTotalScore = useMemo(() => {
+    return Object.values(scores).reduce((acc, score) => acc + (score || 0), 0);
+  }, [scores]);
+
+  const totalMaxScore = useMemo(() => {
+    const criteria = reviewData?.rubric?.criteria;
+    if (!criteria) return 100; 
+    return criteria.reduce((acc, criterion) => acc + criterion.maxScore, 0);
+  }, [reviewData]);
+
+
   const handleGenerateAiSummary = async () => {
     if (!reviewData?.submissionId) {
       toast.error("Không tìm thấy ID bài nộp để tạo phân tích.");
       return;
     }
     setIsGeneratingAi(true);
-    setAiSummaryData(null); // Reset dữ liệu cũ
+    setAiSummaryData(null);
     try {
       const response = await reviewService.generateAiReview(reviewData.submissionId);
       if (response.statusCode === 200 && response.data) {
-        setAiSummaryData(response.data); // Lưu toàn bộ data từ AI
+        setAiSummaryData(response.data);
         toast.success("AI đã phân tích và gợi ý điểm xong!");
       } else {
         throw new Error("Dữ liệu AI trả về không hợp lệ.");
@@ -142,10 +155,7 @@ const PeerReviewPage = () => {
         })),
       };
       await reviewService.submitPeerReview(payload);
-      const totalScoreValue = reviewData.rubric.criteria.reduce((acc, c) => {
-        const score = scores[c.criteriaId] || 0;
-        return acc + (score / c.maxScore) * (c.weight / 100);
-      }, 0);
+
       navigate("/review-success", {
         state: {
           assignmentTitle: reviewData.assignmentTitle,
@@ -156,7 +166,7 @@ const PeerReviewPage = () => {
             score: scores[c.criteriaId] || 0,
             maxScore: c.maxScore,
           })),
-          totalScore: Math.round(totalScoreValue * 100),
+          totalScore: weightedTotalScore, 
           generalFeedback: comment,
         },
       });
@@ -175,7 +185,7 @@ const PeerReviewPage = () => {
   return (
     <div className="bg-gray-50 min-h-screen p-8">
       <div className="max-w-7xl mx-auto">
-        {/* Header (Không đổi) */}
+        {/* Header */}
         <div className="mb-6">
           <div className="flex items-center text-sm text-gray-600 mb-4">
             <Link to={`/assignment/${courseId}/${assignmentId}`} className="hover:underline">
@@ -205,9 +215,7 @@ const PeerReviewPage = () => {
           </div>
         </div>
 
-        {/* === THAY ĐỔI: Bỏ đi grid layout, dùng container mới để nội dung rộng ra === */}
         <div className="space-y-8">
-          {/* Thông tin bài nộp */}
           <div className="bg-white p-4 rounded-lg border">
             <div className="flex justify-between items-center">
               <div className="flex items-center">
@@ -247,7 +255,6 @@ const PeerReviewPage = () => {
             )}
           </div>
 
-          {/* Bảng chấm điểm */}
           <div className="bg-white p-6 rounded-lg border">
             <div className="flex items-center space-x-2 mb-6 p-3 bg-gray-50 rounded-lg border">
               <button className="flex items-center px-4 py-2 border rounded-md font-semibold text-blue-600 border-blue-200 hover:bg-blue-50 text-sm">
@@ -307,7 +314,6 @@ const PeerReviewPage = () => {
             </div>
           </div>
           
-          {/* Gợi ý điểm từ AI */}
           {aiSummaryData && (
               <div className="bg-white p-6 rounded-lg border animate-fade-in">
                 <h3 className="text-lg font-bold text-gray-800 flex items-center mb-4"><Bot className="w-6 h-6 mr-3 text-blue-600" />Gợi ý chấm điểm từ AI</h3>
@@ -318,11 +324,10 @@ const PeerReviewPage = () => {
               </div>
           )}
 
-          {/* Total Score và Comment */}
           <div className="bg-white p-6 rounded-lg border">
             <div className="flex justify-between items-center bg-blue-50 p-4 rounded-lg">
               <span className="text-xl font-bold text-blue-800">Total Score</span>
-              <span className="text-3xl font-extrabold text-blue-600">{totalScore}/100</span>
+              <span className="text-3xl font-extrabold text-blue-600">{rawTotalScore}/{totalMaxScore}</span>
             </div>
             <div className="mt-6">
               <label className="font-bold text-gray-800 mb-2 block">Comment</label>
@@ -330,7 +335,6 @@ const PeerReviewPage = () => {
             </div>
           </div>
 
-          {/* Nút gửi bài */}
           <div className="flex justify-end">
             <button onClick={handleSubmitReview} className="flex items-center px-6 py-3 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700">
               <Send size={18} className="mr-2" />
