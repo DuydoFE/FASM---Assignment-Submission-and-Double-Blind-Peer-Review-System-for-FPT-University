@@ -70,18 +70,15 @@ const InstructorGradingDetail = () => {
                 order: index + 1
             }));
 
-            // Check for criteriaFeedbacks first (new API structure)
             if (details.criteriaFeedbacks && Array.isArray(details.criteriaFeedbacks)) {
                 details.criteriaFeedbacks.forEach(saved => {
                     const idx = formatted.findIndex(f => f.criteriaId === saved.criteriaId);
                     if (idx >= 0) {
-                        // scoreAwarded is already in scale 0-10
                         formatted[idx].score = typeof saved.scoreAwarded === 'number' ? saved.scoreAwarded : parseFloat(saved.scoreAwarded) || 0;
                         formatted[idx].feedback = saved.feedback ?? '';
                     }
                 });
             }
-            // Fallback to old criteriaGrades structure
             else if (details.criteriaGrades) {
                 if (Array.isArray(details.criteriaGrades)) {
                     details.criteriaGrades.forEach(saved => {
@@ -116,7 +113,6 @@ const InstructorGradingDetail = () => {
             const reviews = await reviewsPromise;
             if (reviews) setPeerReviews(reviews);
 
-            // Load general feedback if exists
             if (details.feedback) {
                 setGeneralFeedback(details.feedback);
             }
@@ -135,7 +131,7 @@ const InstructorGradingDetail = () => {
             const w = Number(c.weight) || 0;
             return acc + (s * w / 100);
         }, 0);
-        return total.toFixed(2);
+        return total.toFixed(1);
     };
 
     const updateCriteriaScore = (criteriaId, field, value) => {
@@ -173,7 +169,7 @@ const InstructorGradingDetail = () => {
             // Map to match API structure: criteriaFeedbacks
             const criteriaFeedbacksPayload = criteriaList.map(c => ({
                 criteriaId: c.criteriaId,
-                score: Math.round((Number(c.score) || 0) * 10), // Convert to 0-100 scale
+                score: Number(c.score) || 0, // API expects 0-10 scale
                 feedback: c.feedback
             }));
 

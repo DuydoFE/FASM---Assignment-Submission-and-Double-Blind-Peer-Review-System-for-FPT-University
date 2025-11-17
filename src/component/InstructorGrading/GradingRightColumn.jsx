@@ -12,7 +12,6 @@ const GradingRightColumn = ({
     generalFeedback,
     setGeneralFeedback
 }) => {
-    // Merge criteriaList với criteriaFeedbacks từ API
     const mergedCriteria = criteriaList.map(criteria => {
         const feedback = criteriaFeedbacks?.find(f => f.criteriaId === criteria.criteriaId);
         return {
@@ -60,7 +59,7 @@ const GradingRightColumn = ({
                                         onChange={(e) => {
                                             let value = parseFloat(e.target.value);
                                             if (isNaN(value)) value = 0;
-                                            value = Math.round(value * 10   ) / 10;
+                                            value = Math.round(value);
                                             updateCriteriaScore(c.criteriaId, 'score', Math.min(10, Math.max(0, value)));
                                         }}
                                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
@@ -97,7 +96,7 @@ const GradingRightColumn = ({
                         <div key={c.criteriaId} className="flex justify-between text-gray-700">
                             <span>{c.order}. {c.name} ({c.weight}%):</span>
                             <span className="font-medium">
-                                {c.score} × {(c.weight / 100).toFixed(2)} = {((Number(c.score) || 0) * (Number(c.weight) || 0) / 100).toFixed(2)}
+                                {((Number(c.score) || 0) * (Number(c.weight) || 0) / 100).toFixed(1)}
                             </span>
                         </div>
                     ))}
