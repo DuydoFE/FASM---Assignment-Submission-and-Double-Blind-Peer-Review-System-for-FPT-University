@@ -44,3 +44,13 @@ export const reviewRegradeRequest = async (data) => {
     throw error;
   }
 };
+
+export const completeRegradeRequest = async (data) => {
+  try {
+    const response = await api.put(`/instructor/regrade-requests/complete`, data);
+    return response.data;
+  } catch (error) {
+    console.error("Lỗi khi complete regrade request:", error);
+    throw error;
+  }
+};

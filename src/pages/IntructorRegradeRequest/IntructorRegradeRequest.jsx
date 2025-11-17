@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Eye, Loader2 } from 'lucide-react';
+import { Search, Eye, Loader2, MoreVertical, RefreshCw, CheckCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
+import { Dropdown } from 'antd';
 import { getRegradeRequestsForInstructor } from '../../service/regradeService';
 import { getCurrentAccount } from '../../utils/accountUtils';
 import SolveRegradeRequestModal from '../../component/RegradeRequest/SolveRegradeRequestModal';
+import CompleteRegradeRequestModal from '../../component/RegradeRequest/CompleteRegradeRequestModal';
 
 const InstructorRegradeRequest = () => {
     const navigate = useNavigate();
@@ -16,6 +18,8 @@ const InstructorRegradeRequest = () => {
     const [error, setError] = useState(null);
     const [selectedRequest, setSelectedRequest] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isCompleteModalOpen, setIsCompleteModalOpen] = useState(false);
+    const [selectedRequestForComplete, setSelectedRequestForComplete] = useState(null);
 
     useEffect(() => {
         fetchRegradeRequests();
@@ -60,6 +64,8 @@ const InstructorRegradeRequest = () => {
     const totalRequests = reviewRequests.length;
     const pendingRequests = reviewRequests.filter(req => req.status === 'Pending').length;
     const approvedRequests = reviewRequests.filter(req => req.status === 'Approved').length;
+    const completedRequests = reviewRequests.filter(req => req.status === 'Completed').length;
+    const rejectedRequests = reviewRequests.filter(req => req.status === 'Rejected').length;
 
     const getStatusStyle = (status) => {
         if (status === 'Approved') {
@@ -68,6 +74,8 @@ const InstructorRegradeRequest = () => {
             return 'bg-red-100 text-red-800 px-3 py-1 rounded-full text-sm font-medium';
         } else if (status === 'Pending') {
             return 'bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-sm font-medium';
+        } else if (status === 'Completed') {
+            return 'bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium';
         }
         return 'bg-gray-100 text-gray-800 px-3 py-1 rounded-full text-sm font-medium';
     };
@@ -110,6 +118,48 @@ const InstructorRegradeRequest = () => {
         });
     };
 
+    const handleMarkAsComplete = (request) => {
+        setSelectedRequestForComplete(request);
+        setIsCompleteModalOpen(true);
+    };
+
+    const handleCompleteModalClose = () => {
+        setIsCompleteModalOpen(false);
+        setSelectedRequestForComplete(null);
+    };
+
+    const handleCompleteModalSubmit = (completionReason) => {
+        if (selectedRequestForComplete) {
+            setReviewRequests(prev => prev.map(req =>
+                req.requestId === selectedRequestForComplete.requestId
+                    ? { ...req, status: 'Completed', resolutionNotes: completionReason }
+                    : req
+            ));
+            toast.success('Marked as complete successfully');
+        }
+        handleCompleteModalClose();
+    };
+
+    const getDropdownItems = (request) => [
+        {
+            label: (
+                <div className="flex items-center gap-2 px-2 py-1">
+                    <RefreshCw className="w-4 h-4 text-orange-500" />
+                    <span>Re-grade</span>
+                </div>
+            ),
+            onClick: () => handleRegradeClick(request)
+        },
+        {
+            label: (
+                <div className="flex items-center gap-2 px-2 py-1">
+                    <CheckCircle className="w-4 h-4 text-green-500" />
+                    <span>Mark As Complete</span>
+                </div>
+            ),
+            onClick: () => handleMarkAsComplete(request)
+        }
+    ];
 
     const filteredRequests = reviewRequests.filter(req => {
         const matchesSearch = req.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -169,7 +219,7 @@ const InstructorRegradeRequest = () => {
                 {/* Stats Cards */}
                 <div className="mb-6">
                     <h2 className="text-lg font-semibold text-gray-900 mb-4">Overview</h2>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
                         <div className="bg-blue-50 rounded-lg shadow-sm p-6 border-blue-500">
                             <div className="text-sm text-gray-600 mb-1">Total Requests</div>
                             <div className="text-3xl font-bold text-gray-900">{totalRequests}</div>
@@ -181,6 +231,14 @@ const InstructorRegradeRequest = () => {
                         <div className="bg-blue-50 rounded-lg shadow-sm p-6 border-blue-500">
                             <div className="text-sm text-blue-700 mb-1">Approved</div>
                             <div className="text-3xl font-bold text-blue-800">{approvedRequests}</div>
+                        </div>
+                        <div className="bg-green-50 rounded-lg shadow-sm p-6 border-green-500">
+                            <div className="text-sm text-green-700 mb-1">Completed</div>
+                            <div className="text-3xl font-bold text-green-800">{completedRequests}</div>
+                        </div>
+                        <div className="bg-red-50 rounded-lg shadow-sm p-6 border-red-500">
+                            <div className="text-sm text-red-700 mb-1">Rejected</div>
+                            <div className="text-3xl font-bold text-red-800">{rejectedRequests}</div>
                         </div>
                     </div>
                 </div>
@@ -245,12 +303,15 @@ const InstructorRegradeRequest = () => {
                                                     Solve
                                                 </button>
                                             ) : request.status === "Approved" ? (
-                                                <button
-                                                    onClick={() => handleRegradeClick(request)}
-                                                    className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors text-sm font-medium"
+                                                <Dropdown
+                                                    menu={{ items: getDropdownItems(request) }}
+                                                    trigger={['click']}
+                                                    placement="bottomRight"
                                                 >
-                                                    Regrade
-                                                </button>
+                                                    <button className="p-2 hover:bg-gray-100 rounded-md transition-colors">
+                                                        <MoreVertical className="w-5 h-5 text-gray-600" />
+                                                    </button>
+                                                </Dropdown>
                                             ) : (
                                                 null
                                             )}
@@ -277,6 +338,15 @@ const InstructorRegradeRequest = () => {
                     request={selectedRequest}
                     onClose={handleModalClose}
                     onSubmit={handleModalSubmit}
+                />
+            )}
+
+            {/* Complete Modal */}
+            {isCompleteModalOpen && selectedRequestForComplete && (
+                <CompleteRegradeRequestModal
+                    request={selectedRequestForComplete}
+                    onClose={handleCompleteModalClose}
+                    onSubmit={handleCompleteModalSubmit}
                 />
             )}
         </div>
