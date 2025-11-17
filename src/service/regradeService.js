@@ -54,3 +54,7 @@ export const completeRegradeRequest = async (data) => {
     throw error;
   }
 };
+export const getRegradeRequestById = async (requestId) => {
+  const response = await api.get(`/RegradeRequests/${requestId}`);
+  return response.data; 
+};
