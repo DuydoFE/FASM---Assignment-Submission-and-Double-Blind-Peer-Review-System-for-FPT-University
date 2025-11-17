@@ -1,38 +1,49 @@
-import React, { useState, useEffect } from 'react';
-import { Loader2 } from 'lucide-react';
+import React from 'react';
+import { Loader2, Sparkles, Zap } from 'lucide-react'; // Thêm icon Sparkles và Zap
 
 const GradingRightColumn = ({
     criteriaList,
-    criteriaFeedbacks, 
     updateCriteriaScore,
     calculateTotalScore,
     handleSubmitGrade,
     submitting,
     submitButtonText,
     generalFeedback,
-    setGeneralFeedback
+    setGeneralFeedback,
+    // Thêm props mới từ component cha
+    handleAiSummary,
+    isAiLoading 
 }) => {
-    const mergedCriteria = criteriaList.map(criteria => {
-        const feedback = criteriaFeedbacks?.find(f => f.criteriaId === criteria.criteriaId);
-        return {
-            ...criteria,
-            score: feedback?.scoreAwarded || criteria.score || 0,
-            feedback: feedback?.feedback || criteria.feedback || ''
-        };
-    });
+    // Không cần mergedCriteria nữa vì component cha sẽ quản lý trạng thái aiSummary
+    // trực tiếp trong criteriaList
 
     return (
         <div className="lg:col-span-2 space-y-6">
             {/* Grading Criteria */}
             <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
-                <div className="flex items-center mb-6">
-                    <span className="text-xl mr-2">📋</span>
-                    <h2 className="font-semibold text-gray-900 text-lg">Grading Criteria</h2>
+                <div className="flex items-center justify-between mb-6">
+                    <div className="flex items-center">
+                        <span className="text-xl mr-2">📋</span>
+                        <h2 className="font-semibold text-gray-900 text-lg">Grading Criteria</h2>
+                    </div>
+                    {/* NÚT SUMMARY BY AI MỚI */}
+                    <button
+                        onClick={handleAiSummary}
+                        disabled={isAiLoading}
+                        className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white font-semibold rounded-lg hover:bg-purple-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+                    >
+                        {isAiLoading ? (
+                            <Loader2 className="w-5 h-5 animate-spin" />
+                        ) : (
+                            <Sparkles className="w-5 h-5" />
+                        )}
+                        <span>Summary By AI</span>
+                    </button>
                 </div>
 
                 <div className="space-y-6">
-                    {mergedCriteria.map((c) => (
-                        <div key={c.criteriaId} className="border border-gray-300 rounded-lg p-5">
+                    {criteriaList.map((c) => (
+                        <div key={c.criteriaId} className="border border-gray-200 rounded-lg p-5">
                             <div className="mb-4">
                                 <h3 className="font-semibold text-lg text-gray-900">
                                     {c.order}. {c.name}
@@ -59,7 +70,6 @@ const GradingRightColumn = ({
                                         onChange={(e) => {
                                             let value = parseFloat(e.target.value);
                                             if (isNaN(value)) value = 0;
-                                            value = Math.round(value);
                                             updateCriteriaScore(c.criteriaId, 'score', Math.min(10, Math.max(0, value)));
                                         }}
                                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
@@ -79,6 +89,24 @@ const GradingRightColumn = ({
                                     />
                                 </div>
                             </div>
+                            
+                            {/* KHU VỰC HIỂN THỊ AI SUMMARY MỚI */}
+                            <div className="mt-4 p-4 bg-gray-50 border border-dashed border-gray-300 rounded-lg text-center">
+                                {isAiLoading ? (
+                                    <div className="flex items-center justify-center text-gray-600">
+                                        <Loader2 className="w-5 h-5 animate-spin mr-2" />
+                                        <span>Generating summary...</span>
+                                    </div>
+                                ) : c.aiSummary ? (
+                                    <p className="text-sm text-gray-800 text-left">{c.aiSummary}</p>
+                                ) : (
+                                    <div className="text-gray-500">
+                                        <Zap className="w-8 h-8 mx-auto text-gray-400 mb-2" />
+                                        <p className="font-semibold">Chưa có AI Summary</p>
+                                        <p className="text-xs mt-1">Nhấn nút 'Summary By AI' để tạo phân tích tự động</p>
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     ))}
                 </div>
@@ -92,7 +120,7 @@ const GradingRightColumn = ({
                 </div>
 
                 <div className="space-y-2 text-sm mb-4">
-                    {mergedCriteria.map((c) => (
+                    {criteriaList.map((c) => (
                         <div key={c.criteriaId} className="flex justify-between text-gray-700">
                             <span>{c.order}. {c.name} ({c.weight}%):</span>
                             <span className="font-medium">
