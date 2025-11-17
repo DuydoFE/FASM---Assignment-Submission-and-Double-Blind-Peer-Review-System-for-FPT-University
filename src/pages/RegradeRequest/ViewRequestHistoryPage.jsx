@@ -257,7 +257,7 @@ const showDetailModal = async (requestId) => {
                     <Button
                       type="primary"
                       icon={<FileSearch className="w-4 h-4" />}
-                      onClick={() => showDetailModal(request)}
+                      onClick={() => showDetailModal(request.requestId)}
                       className="flex items-center justify-center font-semibold"
                     >
                       View Details
@@ -324,8 +324,7 @@ const showDetailModal = async (requestId) => {
           />
         </div>
 
-        {/* MODIFIED: Using the new component name here */}
-         <RequestRegradeDetailModal
+        <RequestRegradeDetailModal
           visible={isModalVisible}
           onClose={handleCancelModal}
           details={requestDetails}

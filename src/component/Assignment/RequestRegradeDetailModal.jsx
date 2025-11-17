@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { StatusTag } from "../../pages/RegradeRequest/ViewRequestHistoryPage";
 
+// MODIFIED: Props now include 'details' and 'loading'
 const RequestRegradeDetailModal = ({ visible, details, loading, onClose }) => {
   return (
     <Modal
@@ -23,6 +24,7 @@ const RequestRegradeDetailModal = ({ visible, details, loading, onClose }) => {
         </Button>,
       ]}
     >
+      {/* MODIFIED: Handle loading and empty states */}
       {loading ? (
         <div className="text-center py-12">
           <Spin size="large" />
