@@ -1,6 +1,5 @@
 import React from 'react';
-import { Loader2, Sparkles, Zap } from 'lucide-react'; 
-const GradingRightColumn = ({
+import { Loader2, Sparkles, Zap, AlertTriangle } from 'lucide-react'; const GradingRightColumn = ({
     criteriaList,
     updateCriteriaScore,
     calculateTotalScore,
@@ -10,7 +9,8 @@ const GradingRightColumn = ({
     generalFeedback,
     setGeneralFeedback,
     handleAiSummary,
-    isAiLoading 
+    isAiLoading,
+    aiError
 }) => {
     
 
