@@ -25,9 +25,15 @@ const HomePage = () => {
       {/* Hero Section */}
       <section className="text-center py-20 lg:py-32">
         <div className="container mx-auto px-4">
-          <h1 className="text-4xl lg:text-5xl font-bold text-gray-800 mb-4">
-            Transparent marking
+           <h1 className="text-4xl lg:text-5xl font-bold text-gray-800 mb-4">
+            FASM
           </h1>
+          <h1 className="text-4xl lg:text-5xl font-bold text-gray-800 mb-4">
+            Transparent Grading
+          </h1>
+           <h2 className="text-4xl lg:text-5xl font-italic text-gray-800 mb-4">
+            Fair Assessments with Blind Peer Review
+          </h2>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto mb-8">
           </p>
           <div className="flex justify-center gap-4">
