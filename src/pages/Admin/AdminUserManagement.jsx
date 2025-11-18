@@ -10,7 +10,6 @@ import {
   getMajorById,
   getAllMajors,
   getAllCampuses,
-  importStudentsFromMultipleSheets,
 } from "../../service/adminService";
 import toast from "react-hot-toast";
 
@@ -77,69 +76,67 @@ export default function AdminUserManagement() {
   }, []);
 
   const fetchUsers = async () => {
-    try {
-      setIsLoading(true);
-      if (selectedCampus) {
-        const res = await getUsersByCampus(selectedCampus);
-        const usersArray = Array.isArray(res) ? res : res.data || [];
+  try {
+    setIsLoading(true);
+    let usersArray = [];
+    if (selectedCampus) {
+      const res = await getUsersByCampus(selectedCampus);
+      usersArray = Array.isArray(res) ? res : res.data || [];
 
-        const majorCache = {};
-        const formattedUsers = await Promise.all(
-          usersArray.map(async (u) => {
-            let majorName = "Không xác định";
-            if (u.majorId && u.majorId !== 0) {
-              if (!majorCache[u.majorId]) {
-                try {
-                  const res = await getMajorById(u.majorId);
-                  majorCache[u.majorId] =
-                    res.majorName || res.data?.majorName || "Không rõ";
-                } catch {
-                  majorCache[u.majorId] = "Không xác định";
-                }
+      const majorCache = {};
+      const formattedUsers = await Promise.all(
+        usersArray.map(async (u) => {
+          let majorName = "Instructor";
+          if (u.majorId && u.majorId !== 0) {
+            if (!majorCache[u.majorId]) {
+              try {
+                const res = await getMajorById(u.majorId);
+                majorCache[u.majorId] = res.majorName || res.data?.majorName || "Instructor";
+              } catch {
+                majorCache[u.majorId] = "Instructor";
               }
-              majorName = majorCache[u.majorId];
             }
+            majorName = majorCache[u.majorId];
+          }
 
-            return {
-              id: u.id || u.userId,
-              studentCode: u.studentCode || "-",
-              firstName: u.firstName || "",
-              lastName: u.lastName || "",
-              username: u.username || "",
-              email: u.email || "-",
-              roles: Array.isArray(u.roles)
-                ? u.roles
-                : [u.roleName || "Student"],
-              campusId: u.campusId || 0,
-              campusName:
-                u.campus?.campusName ||
-                (u.campusId === 1 ? "Hồ Chí Minh" : "Hà Nội"),
-              majorId: u.majorId || 0,
-              majorName,
-              isActive:
-                typeof u.isActive === "boolean"
-                  ? u.isActive
-                  : u.status?.toLowerCase() === "active",
-            };
-          })
-        );
+          return {
+            id: u.id || u.userId,
+            studentCode: u.studentCode || "-",
+            firstName: u.firstName || "",
+            lastName: u.lastName || "",
+            username: u.username || "",
+            email: u.email || "-",
+            roles: Array.isArray(u.roles) ? u.roles : [u.roleName || "Student"],
+            campusId: u.campusId || 0,
+            campusName: u.campus?.campusName || (u.campusId === 1 ? "Hồ Chí Minh" : "Hà Nội"),
+            majorId: u.majorId || 0,
+            majorName,
+            isActive: typeof u.isActive === "boolean" ? u.isActive : u.status?.toLowerCase() === "active",
+          };
+        })
+      );
 
-        setUsers(formattedUsers);
+      const formattedUsersWithoutAdmin = formattedUsers.filter(
+        (u) => !u.roles.includes("Admin")
+      );
 
-        const majorsSet = [
-          ...new Set(formattedUsers.map((u) => u.majorName).filter(Boolean)),
-        ];
-        setMajorNames(majorsSet);
-      } else {
-        const res = await getAllUsers();
-        setUsers(res);
-      }
-    } catch (err) {
-      console.error("Error fetching users:", err);
-    } finally {
-      setIsLoading(false);
+      setUsers(formattedUsersWithoutAdmin);
+
+      const majorsSet = [
+        ...new Set(formattedUsersWithoutAdmin.map((u) => u.majorName).filter(Boolean)),
+      ];
+      setMajorNames(majorsSet);
+    } else {
+      const res = await getAllUsers();
+      const usersArray = Array.isArray(res) ? res : res.data || [];
+      setUsers(usersArray.filter(u => !u.roles.includes("Admin")));
     }
-  };
+  } catch (err) {
+    console.error("Error fetching users:", err);
+  } finally {
+    setIsLoading(false);
+  }
+};
 
   useEffect(() => {
     fetchUsers();
@@ -260,27 +257,6 @@ export default function AdminUserManagement() {
     }
   };
 
-  const handleImportUsers = async (event) => {
-    try {
-      const file = event.target.files[0];
-      if (!file) return;
-
-      const formData = new FormData();
-      formData.append("file", file);
-
-      toast.loading("Đang import danh sách user...");
-
-      await importStudentsFromMultipleSheets(campusId, file, userId);
-      toast.dismiss();
-      toast.success("✅ Import danh sách user thành công!");
-      await fetchUsers();
-    } catch (err) {
-      toast.dismiss();
-      console.error("❌ Import failed:", err);
-      toast.error("Import thất bại! Vui lòng kiểm tra lại file.");
-    }
-  };
-
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -294,15 +270,6 @@ export default function AdminUserManagement() {
           >
             + Add New User
           </button>
-          <label className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded cursor-pointer">
-            📥 Import User List
-            <input
-              type="file"
-              accept=".xlsx, .xls"
-              onChange={handleImportUsers}
-              className="hidden"
-            />
-          </label>
         </div>
       </div>
 
@@ -313,7 +280,7 @@ export default function AdminUserManagement() {
           value={selectedCampus}
           onChange={(e) => setSelectedCampus(e.target.value)}
         >
-          <option value="">Tất cả campus</option>
+          <option value="">All campuses</option>
           {campuses.map((c) => (
             <option key={c.campusId || c.id} value={c.campusId || c.id}>
               {c.campusName || c.name}
@@ -329,7 +296,7 @@ export default function AdminUserManagement() {
               setFilters({ ...filters, major: e.target.value })
             }
           >
-            <option value="">Tất cả chuyên ngành</option>
+            <option value="">All majors</option>
             {majorNames.map((m, i) => (
               <option key={i} value={m}>
                 {m}
@@ -341,7 +308,7 @@ export default function AdminUserManagement() {
         {selectedCampus && (
           <input
             type="text"
-            placeholder="Tìm kiếm..."
+            placeholder="Search..."
             className="border p-2 rounded flex-1 ml-4"
             value={filters.search}
             onChange={(e) =>
@@ -360,13 +327,13 @@ export default function AdminUserManagement() {
             <table className="w-full text-sm">
               <thead className="bg-orange-500 text-white">
                 <tr>
-                  <th className="p-2 text-left">Tên</th>
-                  <th className="p-2 text-left">MSSV</th>
+                  <th className="p-2 text-left">Full name</th>
+                  <th className="p-2 text-left">User Code</th>
                   <th className="p-2 text-left">Email</th>
                   <th className="p-2 text-left">Role</th>
                   <th className="p-2 text-left">Campus</th>
-                  <th className="p-2 text-left">Chuyên ngành</th>
-                  <th className="p-2 text-left">Trạng thái</th>
+                  <th className="p-2 text-left">Major</th>
+                  <th className="p-2 text-left">Status</th>
                   <th className="p-2 text-left">Actions</th>
                 </tr>
               </thead>
@@ -410,7 +377,7 @@ export default function AdminUserManagement() {
               </tbody>
             </table>
           ) : (
-            <p className="p-4 text-center text-gray-500">Không có user nào</p>
+            <p className="p-4 text-center text-gray-500">User not found</p>
           )
         ) : (
           <p className="p-4 text-center text-gray-500">
@@ -478,7 +445,7 @@ export default function AdminUserManagement() {
                 })
               }
             >
-              <option value="">Chọn campus</option>
+              <option value="">Select campus</option>
               {campuses.map((c) => (
                 <option key={c.campusId || c.id} value={c.campusId || c.id}>
                   {c.campusName || c.name}
@@ -496,15 +463,13 @@ export default function AdminUserManagement() {
                 })
               }
             >
-              <option value="">Chọn chuyên ngành</option>
+              <option value="">Select major</option>
               {majors.map((m) => (
                 <option key={m.majorId} value={m.majorId}>
                   {m.majorName}
                 </option>
               ))}
             </select>
-
-            {/* ⚠️ Phần Role đã bị loại bỏ */}
 
             <div className="flex justify-end gap-2">
               <button

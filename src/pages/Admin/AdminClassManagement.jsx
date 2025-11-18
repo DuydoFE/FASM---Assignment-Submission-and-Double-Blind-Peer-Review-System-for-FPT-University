@@ -129,31 +129,6 @@ export default function AdminClassManagement() {
     }
   };
 
-  const handleImportClasses = async () => {
-    if (!filters.campus) return toast.error("Please select a campus first");
-    if (!importFile) return toast.error("Please select a file first");
-
-    try {
-      console.log("🚀 Importing students for campus:", filters.campus);
-      const res = await importStudentsFromMultipleSheets(filters.campus, importFile, 1);
-      console.log("📥 Response từ BE khi import:", res);
-
-      if (res?.statusCode === 200 || res?.success === true) {
-        toast.success("Import successfully!");
-      } else {
-        toast.error(res?.message || "Import failed!");
-      }
-
-      setShowImportModal(false);
-
-      const updated = await getCourseInstancesByCampusId(Number(filters.campus));
-      setClasses(Array.isArray(updated?.data) ? updated.data : []);
-    } catch (err) {
-      console.error("❌ Import class list error:", err);
-      toast.error(err?.response?.data?.message || "Import failed. Please check the file or server.");
-    }
-  };
-
   const displayedClasses = classes.filter((c) => {
     const matchSearch =
       c.courseName?.toLowerCase().includes(filters.search.toLowerCase()) ||
@@ -186,13 +161,6 @@ export default function AdminClassManagement() {
         />
 
         <div className="ml-auto flex flex-wrap gap-2">
-          <button
-            onClick={() => setShowImportModal(true)}
-            className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 font-medium"
-          >
-            📂 Import Class List
-          </button>
-
           <button
             onClick={() => setShowCreateModal(true)}
             className="px-4 py-2 border border-gray-400 text-gray-700 rounded hover:bg-gray-100"
@@ -251,36 +219,6 @@ export default function AdminClassManagement() {
           </p>
         )}
       </div>
-
-      {/* IMPORT Modal */}
-      {showImportModal && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center">
-          <div className="bg-white rounded-xl p-6 w-full max-w-md">
-            <h3 className="text-lg font-semibold mb-4">
-              Import Class List (Excel)
-            </h3>
-            <input
-              type="file"
-              accept=".xlsx,.xls"
-              onChange={(e) => setImportFile(e.target.files[0])}
-            />
-            <div className="mt-4 flex justify-end gap-2">
-              <button
-                onClick={() => setShowImportModal(false)}
-                className="px-4 py-2 border rounded"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleImportClasses}
-                className="px-4 py-2 bg-green-600 text-white rounded"
-              >
-                Upload
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* CREATE Modal */}
       {showCreateModal && (
