@@ -3,10 +3,6 @@ import axios from "axios";
 
 const API_BASE_URL = "https://localhost:7104";
 
-// ===============================
-// 🔹 USER API
-// ===============================
-
 // Lấy thông tin user theo ID
 export const getUserById = async (id) => {
   const res = await api.get(`/Users/${id}`);
@@ -126,10 +122,6 @@ export const createUser = async (userData) => {
   return res.data;
 };
 
-// ===============================
-// 🔹 COURSE API
-// ===============================
-
 // Lấy thông tin môn học theo ID
 export const getCourseById = async (id) => {
   const res = await api.get(`/Course/${id}`);
@@ -183,10 +175,6 @@ export const getCoursesByMajor = async (majorId) => {
   const res = await api.get(`/Course/major/${majorId}`);
   return res.data;
 };
-
-// ===============================
-// 🔹 COURSE INSTANCE API
-// ===============================
 
 // Lấy chi tiết lớp học theo ID
 export const getCourseInstanceById = async (id) => {
@@ -243,10 +231,6 @@ export const updateEnrollKey = async (courseInstanceId, data) => {
   const res = await api.put(`/CourseInstance/${courseInstanceId}/enroll-key`, data);
   return res.data;
 };
-
-// ===============================
-// 🔹 ASSIGNMENT API
-// ===============================
 
 // Tạo bài tập mới
 export const createAssignment = async (formData) => {
@@ -328,10 +312,6 @@ export const updateAssignmentRubric = async (assignmentId, rubricId) => {
   return res.data;
 };
 
-// ===============================
-// 🔹 RUBRIC TEMPLATE API
-// ===============================
-
 // Lấy Rubric Template theo ID
 export const getRubricTemplateById = async (id) => {
   const res = await api.get(`/RubricTemplate/${id}`);
@@ -380,10 +360,6 @@ export const searchRubricTemplates = async (searchTerm) => {
   return res.data;
 };
 
-// ===============================
-// 🔹 MAJOR API
-// ===============================
-
 // Lấy danh sách tất cả ngành học
 export const getAllMajors = async () => {
   const res = await api.get("/Major");
@@ -414,10 +390,6 @@ export const deleteMajor = async (id) => {
   return res.data;
 };
 
-// ===============================
-// 🔹 CAMPUS API
-// ===============================
-
 // Lấy danh sách tất cả campus
 export const getAllCampuses = async () => {
   const res = await api.get("/Campus");
@@ -447,10 +419,6 @@ export const deleteCampus = async (id) => {
   const res = await api.delete(`/Campus/${id}`);
   return res.data;
 };
-
-// ===============================
-// 🔹 STUDENT IMPORT API
-// ===============================
 
 //Import nhiều sinh viên vào nhiều lớp từ file Excel
 export const importStudentsFromMultipleSheets = async (campusId, file, changedByUserId = null) => {
@@ -512,10 +480,6 @@ export const importStudentsFromExcel = async (courseInstanceId, file, changedByU
   return res.data;
 };
 
-// ===============================
-// 🔹 SUBMISSION API
-// ===============================
-
 //Lấy chi tiết một submission (bao gồm review, AI summaries và regrade requests nếu có)
 export const getSubmissionDetails = async (submissionId) => {
   const res = await api.get(`/instructor/InstructorSubmission/${submissionId}/details`);
@@ -525,5 +489,83 @@ export const getSubmissionDetails = async (submissionId) => {
 //Xem danh sách bài nộp trong Assignment
 export const getSubmissionsByAssignmentSimple = async (assignmentId) => {
   const res = await api.get(`/instructor/InstructorSubmission/assignment/${assignmentId}/submissions`);
+  return res.data;
+};
+
+// Lấy chi tiết 1 CourseInstructor theo ID
+export const getCourseInstructorById = async (id) => {
+  const res = await api.get(`/CourseInstructor/${id}`);
+  return res.data;
+};
+
+// Lấy danh sách giảng viên trong một lớp học
+export const getCourseInstructorsByCourseInstance = async (courseInstanceId) => {
+  const res = await api.get(`/CourseInstructor/course-instance/${courseInstanceId}`);
+  return res.data;
+};
+
+// Lấy danh sách lớp học mà 1 giảng viên đang dạy
+export const getCourseInstructorsByInstructor = async (instructorId) => {
+  const res = await api.get(`/CourseInstructor/instructor/${instructorId}`);
+  return res.data;
+};
+
+// Gán 1 giảng viên vào lớp học
+export const createCourseInstructor = async (requestData) => {
+  const res = await api.post(`/CourseInstructor`, requestData);
+  return res.data;
+};
+
+// Gán nhiều giảng viên vào lớp học
+export const bulkAssignInstructors = async (requestData) => {
+  const res = await api.post(`/CourseInstructor/bulk-assign`, requestData);
+  return res.data;
+};
+
+// Cập nhật giảng viên chính
+export const updateMainInstructor = async (courseInstanceId, mainInstructorId) => {
+  const res = await api.put(`/CourseInstructor/${courseInstanceId}/main-instructor/${mainInstructorId}`);
+  return res.data;
+};
+
+// Xóa giảng viên khỏi lớp học
+export const deleteCourseInstructor = async (id) => {
+  const res = await api.delete(`/CourseInstructor/${id}`);
+  return res.data;
+};
+
+// 🧩 Lấy Criteria Template theo ID
+export const getCriteriaTemplateById = async (id) => {
+  const res = await api.get(`/CriteriaTemplate/${id}`);
+  return res.data;
+};
+
+// 📋 Lấy danh sách tất cả Criteria Template
+export const getAllCriteriaTemplates = async () => {
+  const res = await api.get(`/CriteriaTemplate`);
+  return res.data;
+};
+
+// 📂 Lấy danh sách Criteria Template theo TemplateId
+export const getCriteriaTemplatesByTemplateId = async (templateId) => {
+  const res = await api.get(`/CriteriaTemplate/template/${templateId}`);
+  return res.data;
+};
+
+// ✏️ Tạo Criteria Template mới
+export const createCriteriaTemplate = async (data) => {
+  const res = await api.post(`/CriteriaTemplate`, data);
+  return res.data;
+};
+
+// 🛠️ Cập nhật Criteria Template
+export const updateCriteriaTemplate = async (data) => {
+  const res = await api.put(`/CriteriaTemplate`, data);
+  return res.data;
+};
+
+// ❌ Xóa Criteria Template theo ID
+export const deleteCriteriaTemplate = async (id) => {
+  const res = await api.delete(`/CriteriaTemplate/${id}`);
   return res.data;
 };
