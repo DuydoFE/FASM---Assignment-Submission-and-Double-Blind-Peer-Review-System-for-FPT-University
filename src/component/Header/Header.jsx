@@ -1,4 +1,3 @@
-// src/component/Header/Header.jsx
 import { Link } from "react-router-dom";
 import { Search, Filter, User, LogOut, Home, LayoutDashboard, ClipboardList, History } from "lucide-react";
 import { getCurrentAccount } from "../../utils/accountUtils";
@@ -28,26 +27,25 @@ const Header = () => {
   );
 
   return (
-    // Đổi sang hiệu ứng glassmorphism màu KEM
-    <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-lg border-b border-orange-200/50">
+    
+    <header className="sticky top-0 z-50 bg-black/30 backdrop-blur-lg border-b border-white/10">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-20">
           <div className="flex items-center space-x-8">
             <Link to="/">
-              <span className="font-bold text-2xl text-zinc-900">FASM</span>
+              <span className="font-bold text-2xl text-white">FASM</span>
             </Link>
             <nav className="hidden md:flex items-center space-x-6">
-              {/* Đổi màu chữ sang xám ấm */}
-              <Link to="/" className="text-zinc-600 hover:text-orange-500 flex items-center transition-colors">
+              <Link to="/" className="text-zinc-300 hover:text-white flex items-center transition-colors">
                 <Home className="w-4 h-4 mr-1" /> Home
               </Link>
-              <Link to="/studentdashboard" className="text-zinc-600 hover:text-orange-500 flex items-center transition-colors">
+              <Link to="/studentdashboard" className="text-zinc-300 hover:text-white flex items-center transition-colors">
                 <LayoutDashboard className="w-4 h-4 mr-1" /> MiniDashBoard
               </Link>
-              <Link to="/my-assignments" className="text-zinc-600 hover:text-orange-500 flex items-center transition-colors">
+              <Link to="/my-assignments" className="text-zinc-300 hover:text-white flex items-center transition-colors">
                 <ClipboardList className="w-4 h-4 mr-1" /> My Assignments
               </Link>
-              <Link to="/regrade-request" className="text-zinc-600 hover:text-orange-500 flex items-center transition-colors">
+              <Link to="/regrade-request" className="text-zinc-300 hover:text-white flex items-center transition-colors">
                 <History className="w-4 h-4 mr-1" /> View Request History
               </Link>
             </nav>
@@ -61,7 +59,7 @@ const Header = () => {
               <input
                 type="text"
                 placeholder="Search..."
-                className="w-full pl-10 pr-16 py-2 border border-orange-200 rounded-lg bg-white text-zinc-900 focus:ring-orange-500 focus:border-orange-500"
+                className="w-full pl-10 pr-16 py-2 border border-white/20 rounded-lg bg-white/5 text-zinc-100 focus:ring-cyan-500 focus:border-cyan-500 placeholder:text-zinc-400"
               />
               <div className="absolute inset-y-0 right-0 pr-3 flex items-center space-x-2 text-zinc-400 text-sm">
                 <Filter className="h-4 w-4" />
@@ -73,13 +71,13 @@ const Header = () => {
               <Dropdown overlay={menu} trigger={["hover"]}>
                 <Button type="text" className="flex items-center space-x-2 !h-auto !p-0">
                   <Avatar src={user.avatar || `https://ui-avatars.com/api/?name=${user.username}&background=random`} />
-                  <span className="font-medium text-zinc-700 hover:text-zinc-900 transition-colors">
+                  <span className="font-medium text-zinc-200 hover:text-white transition-colors">
                     {user.username}
                   </span>
                 </Button>
               </Dropdown>
             ) : (
-              <Link to="/login" className="px-6 py-2 border border-orange-200 rounded-lg font-medium text-zinc-700 hover:bg-orange-100 transition-colors">
+              <Link to="/login" className="px-6 py-2 border border-white/20 rounded-lg font-medium text-zinc-200 hover:bg-white/10 transition-colors">
                 Log in
               </Link>
             )}
