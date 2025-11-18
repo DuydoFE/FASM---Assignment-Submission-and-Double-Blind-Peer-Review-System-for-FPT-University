@@ -51,6 +51,7 @@ import AdminClassAssignments from "../pages/Admin/AdminClassAssignments";
 import AdminAssignmentDetails from "../pages/Admin/AdminAssignmentDetails";
 import AdminSubmissionDetails from "../pages/Admin/AdminSubmissionDetails";
 import AdminRubricManagement from "../pages/Admin/AdminRubricManagement";
+import AdminRubricDetail from "../pages/Admin/AdminRubricDetail";
 import AdminAccountSettings from "../pages/Admin/AdminAccountSettings";
 import AdminSystemSetting from "../pages/Admin/AdminSystemSetting";
 
@@ -221,6 +222,7 @@ export const router = createBrowserRouter([
       { path: "classes/:id", element: <AdminClassDetailsManagement /> },
       { path: "classes/:id/assignments/:assignmentId/submissions/:submissionId", element: <AdminSubmissionDetails /> },
       { path: "rubrics", element: <AdminRubricManagement /> },
+      { path: "rubrics/:id", element: <AdminRubricDetail /> },
       { path: "settings", element: <AdminAccountSettings /> },
       { path: "systemSetting", element: <AdminSystemSetting /> },
     ],
