@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Search, ChevronDown, Loader2, AlertCircle } from 'lucide-react';
 
 const GradesTable = ({
@@ -21,7 +21,7 @@ const GradesTable = ({
   };
 
   const getStatusStyle = (status) => {
-    switch(status) {
+    switch (status) {
       case 'Graded':
         return 'bg-green-100 text-green-800';
       case 'Submitted':
@@ -30,6 +30,51 @@ const GradesTable = ({
         return 'bg-gray-100 text-gray-800';
       default:
         return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const assignmentStatus = assignmentInfo?.status ?? assignmentInfo?.assignmentStatus ?? (filteredStudents && filteredStudents.length > 0 ? filteredStudents[0].assignmentStatus : undefined);
+
+  // derive whether actions were already applied from assignmentInfo fields (common names)
+  const initiallyAutoGraded = Boolean(
+    assignmentInfo?.autoGraded ?? assignmentInfo?.autoGradeApplied ?? assignmentInfo?.isAutoGraded
+  );
+  const initiallyPublished = Boolean(
+    assignmentInfo?.isPublished ?? assignmentInfo?.gradesPublished ?? assignmentInfo?.publishedAt
+  );
+
+  const [autoGradedOnce, setAutoGradedOnce] = useState(initiallyAutoGraded);
+  const [publishedOnce, setPublishedOnce] = useState(initiallyPublished);
+
+  useEffect(() => {
+    setAutoGradedOnce(initiallyAutoGraded);
+    setPublishedOnce(initiallyPublished);
+  }, [initiallyAutoGraded, initiallyPublished, assignmentInfo]);
+
+  // wrappers: support both sync and promise-returning handlers
+  const handleAutoGradeZero = () => {
+    try {
+      const result = onAutoGradeZero && onAutoGradeZero();
+      if (result && typeof result.then === 'function') {
+        result.then(() => setAutoGradedOnce(true)).catch(() => {});
+      } else {
+        setAutoGradedOnce(true);
+      }
+    } catch (e) {
+      // ignore; do not set flag on error
+    }
+  };
+
+  const handlePublishGrades = () => {
+    try {
+      const result = onPublishGrades && onPublishGrades();
+      if (result && typeof result.then === 'function') {
+        result.then(() => setPublishedOnce(true)).catch(() => {});
+      } else {
+        setPublishedOnce(true);
+      }
+    } catch (e) {
+      // ignore
     }
   };
 
@@ -97,7 +142,7 @@ const GradesTable = ({
             <thead className="bg-gray-50 border-b border-gray-200">
               <tr>
                 <th className="px-6 py-3 text-left text-sm font-medium text-gray-600">No.</th>
-                <th className="px-6 py-3 text-left text-sm font-medium text-gray-600">Member</th>
+                <th className="px-6 py-3 text-left text-sm font-medium text-gray-600">Student Code</th>
                 <th className="px-6 py-3 text-left text-sm font-medium text-gray-600">Full Name</th>
                 <th className="px-6 py-3 text-center text-sm font-medium text-gray-600">Average Peer Review</th>
                 <th className="px-6 py-3 text-center text-sm font-medium text-gray-600">Instructor Grade</th>
@@ -121,22 +166,22 @@ const GradesTable = ({
                     <td className="px-6 py-4 text-sm text-gray-800">{student.studentName}</td>
                     <td className="px-6 py-4 text-center">
                       <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getGradeColor(student.peerReview)}`}>
-                        {student.peerReview !== null && student.peerReview !== undefined 
-                          ? (student.peerReview / 10).toFixed(1) 
+                        {student.peerReview !== null && student.peerReview !== undefined
+                          ? (student.peerReview).toFixed(1)
                           : '--'}
                       </span>
                     </td>
                     <td className="px-6 py-4 text-center">
                       <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getGradeColor(student.instructorGrade)}`}>
-                        {student.instructorGrade !== null && student.instructorGrade !== undefined 
-                          ? (student.instructorGrade / 10).toFixed(1) 
+                        {student.instructorGrade !== null && student.instructorGrade !== undefined
+                          ? (student.instructorGrade).toFixed(1)
                           : '--'}
                       </span>
                     </td>
                     <td className="px-6 py-4 text-center">
                       <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getGradeColor(student.finalGrade)}`}>
-                        {student.finalGrade !== null && student.finalGrade !== undefined 
-                          ? (student.finalGrade / 10).toFixed(1) 
+                        {student.finalGrade !== null && student.finalGrade !== undefined
+                          ? (student.finalGrade).toFixed(1)
                           : '--'}
                       </span>
                     </td>
@@ -159,40 +204,45 @@ const GradesTable = ({
         )}
       </div>
 
-      {/* Action Buttons */}
-      <div className="flex justify-end space-x-4 mt-6">
-        <button 
-          onClick={onAutoGradeZero}
-          disabled={loading.autoGrading || assignmentInfo?.notSubmitted === 0}
-          className="px-6 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors font-medium flex items-center disabled:bg-gray-300 disabled:cursor-not-allowed"
-        >
-          {loading.autoGrading ? (
-            <>
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              Grading...
-            </>
-          ) : (
-            <>
-              <AlertCircle className="w-4 h-4 mr-2" />
-              Auto Grade Zero
-            </>
-          )}
-        </button>
-        <button 
-          onClick={onPublishGrades}
-          disabled={loading.publishing}
-          className="px-6 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg transition-colors font-medium flex items-center disabled:bg-gray-300 disabled:cursor-not-allowed"
-        >
-          {loading.publishing ? (
-            <>
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              Publishing...
-            </>
-          ) : (
-            'Publish Grades'
-          )}
-        </button>
-      </div>
+      {/* Action Buttons: only show when assignment is Closed or Cancelled */}
+      {['Closed', 'Cancelled'].includes(assignmentStatus) && (
+        <div className="flex justify-end space-x-4 mt-6">
+          <button
+            onClick={onAutoGradeZero}
+            disabled={loading.autoGrading || assignmentInfo?.notSubmitted === 0}
+            title={'Assignment is closed or cancelled'}
+            className="px-6 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors font-medium flex items-center disabled:bg-gray-300 disabled:cursor-not-allowed"
+          >
+            {loading.autoGrading ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Grading...
+              </>
+            ) : (
+              <>
+                <AlertCircle className="w-4 h-4 mr-2" />
+                Auto Grade Zero
+              </>
+            )}
+          </button>
+
+          <button
+            onClick={onPublishGrades}
+            disabled={loading.publishing}
+            title={'Assignment is closed or cancelled'}
+            className="px-6 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg transition-colors font-medium flex items-center disabled:bg-gray-300 disabled:cursor-not-allowed"
+          >
+            {loading.publishing ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Publishing...
+              </>
+            ) : (
+              'Publish Grades'
+            )}
+          </button>
+        </div>
+      )}
     </>
   );
 };

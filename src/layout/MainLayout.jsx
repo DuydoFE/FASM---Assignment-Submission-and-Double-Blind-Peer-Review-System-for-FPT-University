@@ -1,22 +1,19 @@
+// src/pages/Layout.jsx
 import Header from "../component/Header/Header";
-import Footer from "../component/Footer/Footer";
+import Footer from "../component/Footer/Footer"; // Bạn có thể muốn tạo Footer theme tối
 import { Outlet } from "react-router-dom";
+
 function Layout() {
   return (
-    <div>
+    // Nền tối cho toàn bộ ứng dụng
+    <div className="bg-orange-50 text-zinc-800">
       <Header />
-      <div
-        className="main-content"
-        style={{
-        
-          width: "100%",
-          minHeight: "100vh",
-        }}
-      >
+      <main>
         <Outlet />
-      </div>
+      </main>
       <Footer />
     </div>
   );
 }
+
 export default Layout;
