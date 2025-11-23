@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, FileText, Calendar, X, Trash2, Edit, MoreVertical, Upload, FileSpreadsheet } from 'lucide-react';
+import { Plus, FileText, Calendar, Trash2, Edit, MoreVertical, Upload, FileSpreadsheet } from 'lucide-react';
 import { toast } from "react-toastify";
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Dropdown } from 'antd';
@@ -9,6 +9,7 @@ import CreateAssignmentModal from '../../component/Assignment/CreateAssignmentMo
 import EditAssignmentModal from '../../component/Assignment/EditAssignmentModal';
 import DeleteAssignmentModal from '../../component/Assignment/DeleteAssignmentModal';
 import ExportExcelModal from '../../component/Assignment/ExportExcelModal';
+import UpdateDeadlineModal from '../../component/Assignment/UpdateDeadlineModal';
 
 const InstructorManageAssignment = () => {
   const navigate = useNavigate();
@@ -31,8 +32,6 @@ const InstructorManageAssignment = () => {
   const [showUpdateDeadlineModal, setShowUpdateDeadlineModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedAssignment, setSelectedAssignment] = useState(null);
-  const [newDeadline, setNewDeadline] = useState('');
-  const [newTime, setNewTime] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingAssignment, setEditingAssignment] = useState(null);
@@ -98,24 +97,10 @@ const InstructorManageAssignment = () => {
 
   const handleUpdateDeadlineClick = (assignment) => {
     setSelectedAssignment(assignment);
-
-    const [day, month, year] = assignment.deadline.split('/');
-    const formattedDate = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
-    setNewDeadline(formattedDate);
-
-    const timeArr = assignment.time.split(':');
-    const formattedTime = `${timeArr[0].padStart(2, '0')}:${timeArr[1].padStart(2, '0')}`;
-    setNewTime(formattedTime);
-
     setShowUpdateDeadlineModal(true);
   };
 
-  const handleSaveDeadline = async () => {
-    if (!newDeadline || !newTime) {
-      alert('Please enter both date and time');
-      return;
-    }
-
+  const handleSaveDeadline = async (newDeadline, newTime) => {
     try {
       const [year, month, day] = newDeadline.split('-');
       const [hours, minutes] = newTime.split(':');
@@ -136,8 +121,6 @@ const InstructorManageAssignment = () => {
       );
       toast.success('Deadline extended successfully!');
       setShowUpdateDeadlineModal(false);
-      setNewDeadline('');
-      setNewTime('');
       setSelectedAssignment(null);
     } catch (error) {
       console.error('Failed to extend deadline:', error);
@@ -148,8 +131,6 @@ const InstructorManageAssignment = () => {
   const handleCloseDeadlineModal = () => {
     setShowUpdateDeadlineModal(false);
     setSelectedAssignment(null);
-    setNewDeadline('');
-    setNewTime('');
   };
 
   const handleDeleteClick = (assignment) => {
@@ -416,75 +397,12 @@ const InstructorManageAssignment = () => {
       </div>
 
       {/* Update Deadline Modal */}
-      {showUpdateDeadlineModal && selectedAssignment && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-xl font-bold text-gray-900">Extend Deadline</h2>
-              <button
-                onClick={handleCloseDeadlineModal}
-                className="text-gray-400 hover:text-gray-600"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <div className="space-y-4 mb-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Assignment: <span className="font-semibold text-gray-900">{selectedAssignment.title}</span>
-                </label>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  New Date <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="date"
-                  value={newDeadline}
-                  onChange={(e) => setNewDeadline(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  New Time <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="time"
-                  value={newTime}
-                  onChange={(e) => setNewTime(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none"
-                />
-              </div>
-
-              <div className="bg-gray-50 p-3 rounded-lg">
-                <p className="text-sm text-gray-600">
-                  <span className="font-medium">Current deadline:</span> {selectedAssignment.deadline} at {selectedAssignment.time}
-                </p>
-              </div>
-            </div>
-
-            <div className="flex gap-3 justify-end">
-              <button
-                onClick={handleCloseDeadlineModal}
-                className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleSaveDeadline}
-                className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 flex items-center gap-2"
-              >
-                <Calendar className="w-4 h-4" />
-                Extend
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <UpdateDeadlineModal
+        isOpen={showUpdateDeadlineModal}
+        onClose={handleCloseDeadlineModal}
+        onSave={handleSaveDeadline}
+        assignment={selectedAssignment}
+      />
 
       {/* Delete Assignment Modal */}
       <DeleteAssignmentModal
