@@ -45,6 +45,8 @@ const ProtectedRoute = ({ children, role }) => {
 import AdminLayout from "../layout/AdminLayout";
 import AdminDashboard from "../pages/Admin/AdminDashboard";
 import AdminUserManagement from "../pages/Admin/AdminUserManagement";
+import AdminUserDetailsManagement from "../pages/Admin/AdminUserDetailsManagement";
+import AdminCreateUser from "../pages/Admin/AdminCreateUser";
 import AdminAcademicYearManagement from "../pages/Admin/AdminAcademicYearManagement";
 import AdminSemesterManagement from "../pages/Admin/AdminSemesterManagement";
 import AdminClassManagement from "../pages/Admin/AdminClassManagement";
@@ -218,6 +220,8 @@ export const router = createBrowserRouter([
     children: [
       { path: "dashboard", element: <AdminDashboard /> },
       { path: "users", element: <AdminUserManagement /> },
+      { path: "users/add", element: <AdminCreateUser /> },
+      { path: "users/:id", element: <AdminUserDetailsManagement /> },
       { path: "academicYears", element: <AdminAcademicYearManagement /> },
       { path: "semesters", element: <AdminSemesterManagement /> },
       { path: "classes", element: <AdminClassManagement /> },

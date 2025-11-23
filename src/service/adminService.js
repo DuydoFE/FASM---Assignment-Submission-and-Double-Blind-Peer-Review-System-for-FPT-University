@@ -9,6 +9,12 @@ export const getUserById = async (id) => {
   return res.data;
 };
 
+// Lấy thông tin chi tiết user theo ID (bao gồm lịch sử lớp học, điểm số,...)
+export const getUserByIdDetail = async (id) => {
+  const res = await api.get(`/Users/${id}/detail`);
+  return res.data;
+};
+
 // Xóa người dùng (chỉ admin có quyền)
 export const deleteUser = async (id) => {
   const res = await api.delete(`/Users/${id}`);
@@ -567,5 +573,11 @@ export const updateCriteriaTemplate = async (data) => {
 // ❌ Xóa Criteria Template theo ID
 export const deleteCriteriaTemplate = async (id) => {
   const res = await api.delete(`/CriteriaTemplate/${id}`);
+  return res.data;
+};
+
+// Lấy danh sách tất cả học kỳ
+export const getAllSemesters = async () => {
+  const res = await api.get("/Semester");
   return res.data;
 };
