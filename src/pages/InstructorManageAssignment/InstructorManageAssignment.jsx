@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, FileText, Calendar, X, Trash2, Edit, MoreVertical, Upload } from 'lucide-react';
+import { Plus, FileText, Calendar, X, Trash2, Edit, MoreVertical, Upload, FileSpreadsheet } from 'lucide-react';
 import { toast } from "react-toastify";
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Dropdown } from 'antd';
@@ -8,6 +8,7 @@ import { submissionService } from '../../service/submissionService';
 import CreateAssignmentModal from '../../component/Assignment/CreateAssignmentModal';
 import EditAssignmentModal from '../../component/Assignment/EditAssignmentModal';
 import DeleteAssignmentModal from '../../component/Assignment/DeleteAssignmentModal';
+import ExportExcelModal from '../../component/Assignment/ExportExcelModal';
 
 const InstructorManageAssignment = () => {
   const navigate = useNavigate();
@@ -35,6 +36,7 @@ const InstructorManageAssignment = () => {
   const [showModal, setShowModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingAssignment, setEditingAssignment] = useState(null);
+  const [showExportModal, setShowExportModal] = useState(false);
 
  const getStatusColor = (status) => {
     switch (status) {
@@ -306,6 +308,12 @@ const InstructorManageAssignment = () => {
     return "text-gray-900";
   };
 
+  const courseInfo = assignments.length > 0 ? {
+    courseCode: assignments[0].courseCode,
+    sectionCode: assignments[0].sectionCode,
+    totalStudents: 35 // You can get this from API if available
+  } : null;
+
   return (
     <div className="p-8">
       {/* Header */}
@@ -321,13 +329,23 @@ const InstructorManageAssignment = () => {
             </span>
           </div>
         </div>
-        <button
-          onClick={() => setShowModal(true)}
-          className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-lg flex items-center space-x-2 font-medium transition-colors"
-        >
-          <Plus className="w-5 h-5" />
-          <span>Create Assignment</span>
-        </button>
+        <div className="flex gap-3">
+          <button
+            onClick={() => setShowExportModal(true)}
+            disabled={assignments.length === 0}
+            className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg flex items-center space-x-2 font-medium transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
+          >
+            <FileSpreadsheet className="w-5 h-5" />
+            <span>Export Excel</span>
+          </button>
+          <button
+            onClick={() => setShowModal(true)}
+            className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-lg flex items-center space-x-2 font-medium transition-colors"
+          >
+            <Plus className="w-5 h-5" />
+            <span>Create Assignment</span>
+          </button>
+        </div>
       </div>
 
       {/* Stats Cards */}
@@ -493,6 +511,14 @@ const InstructorManageAssignment = () => {
         }}
         onSubmit={handleUpdateAssignment}
         assignment={editingAssignment}
+      />
+
+      {/* Export Excel Modal */}
+      <ExportExcelModal
+        isOpen={showExportModal}
+        onClose={() => setShowExportModal(false)}
+        courseInfo={courseInfo}
+        assignments={assignments}
       />
     </div>
   );
