@@ -72,7 +72,7 @@ const Header = () => {
       setUnreadCount(prevCount => prevCount - 1);
 
     } catch (error) {
-      toast.error("Không thể đánh dấu thông báo là đã đọc.");
+      toast.error("Unable to mark notification as read.");
     }
   }, []);
 
@@ -100,7 +100,7 @@ const Header = () => {
           )}
         />
       ) : (
-        <Empty description={<span className="text-zinc-400">Không có thông báo nào</span>} />
+        <Empty description={<span className="text-zinc-400">No notification Yet</span>} />
       )}
     </div>
   );
@@ -162,7 +162,7 @@ const Header = () => {
               >
                  <Popover
                   content={notificationContent}
-                  title={<div className="p-4 border-b border-white/10 text-white font-semibold">Thông báo</div>}
+                  title={<div className="p-4 border-b border-white/10 text-white font-semibold">Notification</div>}
                   trigger="click"
                   visible={popoverVisible}
                   onVisibleChange={handlePopoverVisibleChange}
