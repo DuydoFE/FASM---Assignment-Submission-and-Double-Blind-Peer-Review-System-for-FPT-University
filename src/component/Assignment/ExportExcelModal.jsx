@@ -39,12 +39,12 @@ const ExportExcelModal = ({ isOpen, onClose, courseInfo, assignments, classId })
 
  const handleExport = async () => {
     if (!user || !user.id) {
-      toast.error("Không tìm thấy thông tin giảng viên.");
+      toast.error("No instructor information found. Please log in again.");
       return;
     }
 
     if (selectedAssignments.length === 0) {
-      toast.warning("Vui lòng chọn ít nhất một bài tập để xuất.");
+      toast.warning(" Please select at least one assignment to export.");
       return;
     }
 
@@ -62,7 +62,7 @@ const ExportExcelModal = ({ isOpen, onClose, courseInfo, assignments, classId })
       }
 
       if (allSubmissions.length === 0) {
-        toast.info("Không có dữ liệu bài nộp nào để xuất.");
+        toast.info("No submission data found for the selected assignments.");
         setIsExporting(false);
         return;
       }
@@ -94,12 +94,12 @@ const ExportExcelModal = ({ isOpen, onClose, courseInfo, assignments, classId })
       const fileName = `${courseInfo?.courseCode || 'Course'}_${courseInfo?.sectionCode || 'Class'}_Grades_${new Date().toLocaleDateString('en-GB').replace(/\//g, '')}.xlsx`;
       XLSX.writeFile(workbook, fileName);
 
-      toast.success("Xuất file Excel thành công!");
+      toast.success("Excel file exported successfully.");
       onClose();
 
     } catch (error) {
       console.error("Export error:", error);
-      toast.error("Có lỗi xảy ra khi xuất file Excel.");
+      toast.error(" An error occurred during export. Please try again.");
     } finally {
       setIsExporting(false);
     }
@@ -156,7 +156,7 @@ const ExportExcelModal = ({ isOpen, onClose, courseInfo, assignments, classId })
                 onChange={handleSelectAll}
                 className="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
               />
-              <span className="font-medium text-gray-900">Chọn tất cả</span>
+              <span className="font-medium text-gray-900"> Select All</span>
             </label>
           </div>
 
@@ -185,11 +185,11 @@ const ExportExcelModal = ({ isOpen, onClose, courseInfo, assignments, classId })
           <div className="mt-6 bg-green-50 rounded-lg p-4">
             <div className="flex items-center gap-2 mb-2">
               <FileSpreadsheet className="w-5 h-5 text-green-600" />
-              <h3 className="font-semibold text-gray-900">Thống kê xuất file</h3>
+              <h3 className="font-semibold text-gray-900">File export statistics</h3>
             </div>
             <div className="space-y-1 text-sm text-gray-700">
-              <p>Đã chọn: <span className="font-medium text-gray-900">{selectedCount}/{assignments.length} assignments</span></p>
-              <p>Dự kiến tên file: <span className="font-medium text-gray-900 break-all">{fileNameDisplay}</span></p>
+              <p>Selected: <span className="font-medium text-gray-900">{selectedCount}/{assignments.length} assignments</span></p>
+              <p>Expected file name: <span className="font-medium text-gray-900 break-all">{fileNameDisplay}</span></p>
             </div>
           </div>
         </div>
