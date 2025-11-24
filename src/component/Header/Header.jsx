@@ -3,7 +3,7 @@ import { Search, Filter, User, LogOut, Home, LayoutDashboard, ClipboardList, His
 import { getCurrentAccount } from "../../utils/accountUtils";
 import { useDispatch } from "react-redux";
 import { logout } from "../../redux/features/userSlice";
-import { Dropdown, Menu, Avatar, Button, Popover, Badge, List, Spin, Empty } from "antd";
+import { Dropdown, Menu, Avatar, Button, Popover, Badge, List, Spin, Empty, ConfigProvider } from "antd";
 import { toast } from "react-toastify";
 import { useState, useEffect, useCallback } from "react";
 import { getMyNotifications } from "../../service/notificationService";
@@ -12,21 +12,17 @@ const Header = () => {
   const user = getCurrentAccount();
   const dispatch = useDispatch();
 
-  // State cho chức năng notification
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const [popoverVisible, setPopoverVisible] = useState(false);
 
-
   const fetchNotifications = useCallback(async () => {
-    if (!user) return; // Không fetch nếu chưa đăng nhập
+    if (!user) return;
     setLoading(true);
     try {
-      // Lấy tất cả thông báo
       const allNotifications = await getMyNotifications(false);
       setNotifications(allNotifications);
-      // Đếm số thông báo chưa đọc
       const unread = allNotifications.filter(n => !n.isRead).length;
       setUnreadCount(unread);
     } catch (error) {
@@ -36,11 +32,11 @@ const Header = () => {
     }
   }, [user]);
 
-  // Fetch thông báo khi component được mount lần đầu nếu user tồn tại
   useEffect(() => {
-    fetchNotifications();
-  }, [fetchNotifications]);
-
+    if (user) {
+      fetchNotifications();
+    }
+  }, [user, fetchNotifications]);
 
   const handleLogout = () => {
     dispatch(logout());
@@ -48,7 +44,7 @@ const Header = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("refreshToken");
   };
-  
+
   const menu = (
     <Menu
       items={[
@@ -57,10 +53,9 @@ const Header = () => {
       ]}
     />
   );
-
-  // Nội dung sẽ hiển thị trong Popover
+  
   const notificationContent = (
-    <div style={{ width: 350 }}>
+    <div style={{ width: 350, maxHeight: 400, overflowY: 'auto' }}>
       {loading ? (
         <div className="flex justify-center p-4">
           <Spin />
@@ -70,28 +65,28 @@ const Header = () => {
           itemLayout="horizontal"
           dataSource={notifications}
           renderItem={(item) => (
-            <List.Item className={!item.isRead ? 'bg-blue-900/20' : ''}>
+            <List.Item 
+                className={`p-2 rounded-md transition-colors ${!item.isRead ? 'bg-white/10' : 'bg-transparent'}`}
+            >
               <List.Item.Meta
-                title={<a href="#">{item.title}</a>} // Bạn có thể thay đổi link sau
-                description={item.message}
+                title={<span className="font-semibold text-zinc-100">{item.title}</span>}
+                description={<p className="text-zinc-300 text-sm">{item.message}</p>}
               />
             </List.Item>
           )}
         />
       ) : (
-        <Empty description="Không có thông báo nào" />
+        <Empty description={<span className="text-zinc-400">Không có thông báo nào</span>} />
       )}
     </div>
   );
   
   const handlePopoverVisibleChange = (visible) => {
     setPopoverVisible(visible);
-    // Nếu mở popover, refresh lại danh sách thông báo
     if (visible) {
       fetchNotifications();
     }
   };
-
 
   return (
     
@@ -118,7 +113,46 @@ const Header = () => {
             </nav>
           </div>
 
-          <div className="flex items-center space-x-4">
+         <div className="flex items-center space-x-4">
+           
+            {user && (
+              
+              <ConfigProvider
+                theme={{
+                  components: {
+                    Popover: {
+                      
+                      colorBgElevated: 'transparent',
+                      colorTextHeading: 'white',
+                      padding: 0, 
+                    },
+                    Empty: {
+                      colorText: '#a1a1aa' 
+                    },
+                    Spin: {
+                      colorPrimary: '#22d3ee' 
+                    }
+                  },
+                }}
+              >
+                 <Popover
+                  content={notificationContent}
+                  title={<div className="p-4 border-b border-white/10 text-white font-semibold">Thông báo</div>}
+                  trigger="click"
+                  visible={popoverVisible}
+                  onVisibleChange={handlePopoverVisibleChange}
+                  placement="bottom"
+                  overlayClassName="!mt-2 !bg-black/50 !backdrop-blur-md !border !border-white/10 !rounded-lg !shadow-lg"
+                  arrow={false}
+                >
+                  <Badge count={unreadCount}>
+                    <Button shape="circle" icon={<Bell className="text-zinc-300 hover:text-white" />} type="text" />
+                  </Badge>
+                </Popover>
+              </ConfigProvider>
+            )}
+
+            {/* Thanh tìm kiếm */}
             <div className="relative w-80">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <Search className="h-5 w-5 text-zinc-400" />
