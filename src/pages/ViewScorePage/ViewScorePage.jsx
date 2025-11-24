@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 import RegradeRequestModal from "../../component/Assignment/RegradeRequestModal.jsx";
 import ViewRequestModal from "../../component/Assignment/ViewRequestModal.jsx";
+
 const formatDate = (dateString) => {
   if (!dateString) return "N/A";
   const options = {
@@ -85,11 +86,11 @@ const ViewScorePage = () => {
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [requestDetails, setRequestDetails] = useState(null);
   const [isFetchingDetails, setIsFetchingDetails] = useState(false);
- const {
+  const {
     data: responseData,
     isLoading,
     isError,
-    refetch, 
+    refetch,
   } = useQuery({
     queryKey: ["myScoreDetails", assignmentId],
     queryFn: () => reviewService.getMyScoreDetails(assignmentId),
@@ -99,7 +100,6 @@ const ViewScorePage = () => {
   const scoreData = responseData?.data;
 
   const handleRegradeSubmit = async ({ reason }) => {
-    // Kiểm tra dữ liệu đầu vào
     if (!scoreData?.submissionId) {
       toast.error("Submission ID not found. Cannot submit request.");
       return;
@@ -116,13 +116,12 @@ const ViewScorePage = () => {
         reason: reason,
         requestedByUserId: currentUser.userId,
       };
-      
+
       await reviewService.submitRegradeRequest(payload);
-      
+
       toast.success("Your regrade request has been sent successfully!");
       setIsModalOpen(false);
-      refetch(); 
-
+      refetch();
     } catch (error) {
       console.error("API call failed!", error);
       toast.error("Failed to send request. Please try again.");
@@ -131,25 +130,28 @@ const ViewScorePage = () => {
     }
   };
 
-const handleViewRequest = async () => {
-    // Không cần kiểm tra regradeRequestId nữa
-    console.log("Fetching details for hardcoded Request ID: 5"); // Thêm log để bạn biết đang dùng ID tạm
-    
+  const handleViewRequest = async () => {
+    // Kiểm tra xem regradeRequestId có tồn tại không
+    if (!scoreData?.regradeRequestId) {
+        toast.error("Regrade Request ID not found.");
+        return;
+    }
+
     setIsFetchingDetails(true);
-    setRequestDetails(null); // Xóa dữ liệu cũ trước khi gọi API mới
+    setRequestDetails(null); 
     setIsViewModalOpen(true);
-    
+
     try {
-        // Truyền thẳng số 5 vào hàm gọi API
-        const response = await reviewService.getRegradeRequestDetails(5); 
+        // Sử dụng regradeRequestId từ dữ liệu điểm
+        const response = await reviewService.getRegradeRequestDetails(scoreData.regradeRequestId);
         setRequestDetails(response.data);
     } catch (error) {
         toast.error("Failed to load request details.");
-        setIsViewModalOpen(false); // Đóng modal nếu có lỗi
+        setIsViewModalOpen(false);
     } finally {
         setIsFetchingDetails(false);
     }
-}
+  }
 
   if (isLoading) {
     return (
@@ -173,6 +175,7 @@ const handleViewRequest = async () => {
   return (
     <div className="bg-gray-50 min-h-screen p-8">
       <div className="max-w-4xl mx-auto">
+        {/* Breadcrumbs */}
         <div className="mb-6 flex items-center text-sm text-gray-600">
           <Link to="/my-assignments" className="hover:underline">
             My Assignments
@@ -228,6 +231,7 @@ const handleViewRequest = async () => {
 
         {/* Score Display */}
         <div className="bg-white p-8 rounded-lg shadow-md border text-center relative overflow-hidden">
+            {/* Decorative elements */}
           <div className="absolute -top-12 -right-12 w-36 h-36 bg-blue-50 rounded-full"></div>
           <div className="absolute -bottom-16 -left-10 w-40 h-40 bg-blue-50 rounded-full"></div>
 
@@ -244,6 +248,8 @@ const handleViewRequest = async () => {
             </div>
           </div>
         </div>
+        
+        {/* Submission Details */}
         {scoreData.fileUrl && (
           <div className="mt-8">
             <h3 className="font-bold text-xl mb-4 text-gray-800 flex items-center">
@@ -280,6 +286,7 @@ const handleViewRequest = async () => {
           </div>
         )}
 
+        {/* Score Breakdown */}
         <div className="mt-8">
           <h3 className="font-bold text-xl mb-4 text-gray-800">
             Score details
@@ -312,9 +319,8 @@ const handleViewRequest = async () => {
                 </p>
               </div>
             </div>
-
+            
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
-              {/* Card Điểm trung bình */}
               <div className="p-4 bg-gradient-to-br from-blue-100 to-purple-100 rounded-lg flex items-center transition-transform hover:scale-105">
                 <div className="p-3 bg-white/60 rounded-full mr-4 shadow-inner">
                   <TrendingUp className="w-6 h-6 text-purple-600" />
@@ -346,6 +352,7 @@ const handleViewRequest = async () => {
           </div>
         </div>
 
+        {/* Instructor Comments */}
         <div className="mt-8">
           <h3 className="font-bold text-xl mb-4 text-gray-800 flex items-center">
             <MessageSquare className="mr-2 text-green-500" /> Comments from
@@ -358,11 +365,14 @@ const handleViewRequest = async () => {
           </div>
         </div>
       </div>
+      
+      {/* Modals */}
       <RegradeRequestModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onSubmit={handleRegradeSubmit}
         isSubmitting={isSubmitting}
+        assignmentTitle={assignmentTitle}
       />
      <ViewRequestModal 
         isOpen={isViewModalOpen}
