@@ -1,21 +1,20 @@
 import React from 'react';
-import { Search, Users, FileText, BarChart3, Upload, LayoutDashboard} from 'lucide-react';
+import { Search, Users, FileText, BarChart3, Upload, LayoutDashboard, BookOpenText } from 'lucide-react';
 import { Link, useLocation, useParams } from 'react-router-dom';
 
 const InstructorSideBar = () => {
   const location = useLocation();
   const params = useParams();
 
-  // Try to get courseInstanceId from URL params, navigation state, or sessionStorage fallback
   const storedId = typeof window !== 'undefined' ? sessionStorage.getItem('currentCourseInstanceId') : null;
   const courseInstanceId = params?.id || location.state?.courseInstanceId || storedId || null;
 
   const menuItems = [
     {
       id: 'dashboard',
-      label: 'Dashboard',
+      label: 'Statistic',
       icon: LayoutDashboard,
-      path: '/instructor/class-dashboard',
+      path: `/instructor/class-statistic/${courseInstanceId}`,
     },
     {
       id: 'manage-class',
@@ -26,7 +25,7 @@ const InstructorSideBar = () => {
     {
       id: 'assignment',
       label: 'Assignment',
-      icon: FileText,
+      icon: BookOpenText,
       path: `/instructor/manage-assignment/${courseInstanceId}`,
     },
     {
