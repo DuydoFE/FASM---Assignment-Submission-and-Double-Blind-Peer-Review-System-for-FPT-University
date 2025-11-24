@@ -85,10 +85,11 @@ const ViewScorePage = () => {
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [requestDetails, setRequestDetails] = useState(null);
   const [isFetchingDetails, setIsFetchingDetails] = useState(false);
-  const {
+ const {
     data: responseData,
     isLoading,
     isError,
+    refetch, 
   } = useQuery({
     queryKey: ["myScoreDetails", assignmentId],
     queryFn: () => reviewService.getMyScoreDetails(assignmentId),
@@ -116,13 +117,11 @@ const ViewScorePage = () => {
         requestedByUserId: currentUser.userId,
       };
       
-      // Gọi API một lần duy nhất ở đây
       await reviewService.submitRegradeRequest(payload);
       
-      // Xử lý sau khi thành công
       toast.success("Your regrade request has been sent successfully!");
       setIsModalOpen(false);
-      refetch(); // Tải lại dữ liệu để cập nhật trạng thái trên giao diện
+      refetch(); 
 
     } catch (error) {
       console.error("API call failed!", error);
