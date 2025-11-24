@@ -6,13 +6,22 @@ import {
   ClipboardList,
   BarChart3,
   FileText,
-  CalendarRange, // Icon cho Academic Year
-  CalendarDays    // Icon cho Semester
+  CalendarRange,
+  CalendarDays,
+  LogOut   // import icon logout
 } from "lucide-react";
 import React from "react";
+import { useDispatch } from "react-redux";
+import { logout } from "../redux/features/userSlice";
 
 export default function AdminLayout() {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
+
+  const handleLogout = () => {
+    dispatch(logout());
+    navigate("/login"); // điều hướng về trang login
+  };
 
   return (
     <div className="flex h-screen bg-gray-100">
@@ -75,7 +84,7 @@ export default function AdminLayout() {
             Rubric Management
           </NavLink>
 
-          {/* Academic Year Management (NEW) */}
+          {/* Academic Year Management */}
           <NavLink
             to="/admin/academicYears"
             className={({ isActive }) =>
@@ -88,7 +97,7 @@ export default function AdminLayout() {
             Academic Year Management
           </NavLink>
 
-          {/* Semester Management (NEW) */}
+          {/* Semester Management */}
           <NavLink
             to="/admin/semesters"
             className={({ isActive }) =>
@@ -114,6 +123,17 @@ export default function AdminLayout() {
             System Setting
           </NavLink>
         </nav>
+
+        {/* Logout button ở cuối sidebar */}
+        <div className="p-4 border-t">
+          <button
+            onClick={handleLogout}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg text-red-500 hover:bg-gray-200"
+          >
+            <LogOut size={18} />
+            Logout
+          </button>
+        </div>
       </aside>
 
       {/* Main Content */}
