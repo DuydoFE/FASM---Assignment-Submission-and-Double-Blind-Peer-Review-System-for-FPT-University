@@ -1,14 +1,46 @@
 import { Link } from "react-router-dom";
-import { Search, Filter, User, LogOut, Home, LayoutDashboard, ClipboardList, History } from "lucide-react";
+import { Search, Filter, User, LogOut, Home, LayoutDashboard, ClipboardList, History, Bell } from "lucide-react";
 import { getCurrentAccount } from "../../utils/accountUtils";
 import { useDispatch } from "react-redux";
 import { logout } from "../../redux/features/userSlice";
-import { Dropdown, Menu, Avatar, Button } from "antd";
+import { Dropdown, Menu, Avatar, Button, Popover, Badge, List, Spin, Empty } from "antd";
 import { toast } from "react-toastify";
+import { useState, useEffect, useCallback } from "react";
+import { getMyNotifications } from "../../service/notificationService";
 
 const Header = () => {
   const user = getCurrentAccount();
   const dispatch = useDispatch();
+
+  // State cho chức năng notification
+  const [notifications, setNotifications] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [popoverVisible, setPopoverVisible] = useState(false);
+
+
+  const fetchNotifications = useCallback(async () => {
+    if (!user) return; // Không fetch nếu chưa đăng nhập
+    setLoading(true);
+    try {
+      // Lấy tất cả thông báo
+      const allNotifications = await getMyNotifications(false);
+      setNotifications(allNotifications);
+      // Đếm số thông báo chưa đọc
+      const unread = allNotifications.filter(n => !n.isRead).length;
+      setUnreadCount(unread);
+    } catch (error) {
+      toast.error("Failed to load notifications.");
+    } finally {
+      setLoading(false);
+    }
+  }, [user]);
+
+  // Fetch thông báo khi component được mount lần đầu nếu user tồn tại
+  useEffect(() => {
+    fetchNotifications();
+  }, [fetchNotifications]);
+
 
   const handleLogout = () => {
     dispatch(logout());
@@ -25,6 +57,41 @@ const Header = () => {
       ]}
     />
   );
+
+  // Nội dung sẽ hiển thị trong Popover
+  const notificationContent = (
+    <div style={{ width: 350 }}>
+      {loading ? (
+        <div className="flex justify-center p-4">
+          <Spin />
+        </div>
+      ) : notifications.length > 0 ? (
+        <List
+          itemLayout="horizontal"
+          dataSource={notifications}
+          renderItem={(item) => (
+            <List.Item className={!item.isRead ? 'bg-blue-900/20' : ''}>
+              <List.Item.Meta
+                title={<a href="#">{item.title}</a>} // Bạn có thể thay đổi link sau
+                description={item.message}
+              />
+            </List.Item>
+          )}
+        />
+      ) : (
+        <Empty description="Không có thông báo nào" />
+      )}
+    </div>
+  );
+  
+  const handlePopoverVisibleChange = (visible) => {
+    setPopoverVisible(visible);
+    // Nếu mở popover, refresh lại danh sách thông báo
+    if (visible) {
+      fetchNotifications();
+    }
+  };
+
 
   return (
     
