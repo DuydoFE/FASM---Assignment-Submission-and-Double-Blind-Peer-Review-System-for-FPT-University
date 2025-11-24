@@ -534,9 +534,15 @@ export const updateMainInstructor = async (courseInstanceId, mainInstructorId) =
   return res.data;
 };
 
-// Xóa giảng viên khỏi lớp học
-export const deleteCourseInstructor = async (id) => {
-  const res = await api.delete(`/CourseInstructor/${id}`);
+// 🔹 Xóa giảng viên khỏi lớp học (đúng theo API mới)
+export const deleteCourseInstructor = async (courseInstructorId, courseInstanceId, instructorId) => {
+  const res = await api.delete(`/CourseInstructor`, {
+    params: {
+      courseInstructorId,
+      courseInstanceId,
+      instructorId,
+    },
+  });
   return res.data;
 };
 
@@ -645,5 +651,29 @@ export const updateSemester = async (payload) => {
 // Xóa semester theo ID
 export const deleteSemester = async (id) => {
   const res = await api.delete(`/Semester/${id}`);
+  return res.data;
+};
+
+// Lấy tất cả cấu hình hệ thống
+export const getAllConfigs = async () => {
+  const res = await api.get("/SystemConfig");
+  return res.data;
+};
+
+// Lấy cấu hình theo key
+export const getConfigByKey = async (key) => {
+  const res = await api.get(`/SystemConfig/${key}`);
+  return res.data;
+};
+
+// Cập nhật cấu hình hệ thống
+export const updateConfig = async (request) => {
+  const res = await api.put("/SystemConfig", request);
+  return res.data;
+};
+
+// Lấy các cấu hình quan trọng
+export const getImportantConfigs = async () => {
+  const res = await api.get("/SystemConfig/important-configs");
   return res.data;
 };
