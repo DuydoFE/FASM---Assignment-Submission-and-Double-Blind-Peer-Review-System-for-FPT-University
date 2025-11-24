@@ -34,15 +34,12 @@ import { ROLE } from "../constant/roleEnum";
 const ProtectedRoute = ({ children, role }) => {
   const user = getCurrentAccount();
   if (!user || user?.roles[0] !== role) {
-    // User is not authenticated or doesn't have the required role
     toast.error("You don't have permission to access this page!");
     return <Navigate to="/" replace />;
   }
-  // User has the required role, render the children
   return children;
 };
 
-// 👉 Import layout + pages for Admin
 import AdminLayout from "../layout/AdminLayout";
 import AdminDashboard from "../pages/Admin/AdminDashboard";
 import AdminUserManagement from "../pages/Admin/AdminUserManagement";
@@ -218,7 +215,6 @@ export const router = createBrowserRouter([
       },
     ],
   },
-  // 👉 Admin routes
   {
     path: "/admin",
     element: <AdminLayout />,
