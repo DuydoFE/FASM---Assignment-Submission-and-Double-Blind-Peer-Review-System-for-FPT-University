@@ -47,7 +47,7 @@ const RegradeRequestModal = ({ isOpen, onClose, onSubmit, assignmentTitle, isSub
                                 id="reason"
                                 value={reason}
                                 onChange={(e) => setReason(e.target.value)}
-                                className="w-full p-2 border border-gray-300 rounded-md h-32 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                className="w-full p-2 border border-gray-300 rounded-md h-32 focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-800"
                                 placeholder="Explain why you believe the current score is inaccurate..."
                                 required
                             />

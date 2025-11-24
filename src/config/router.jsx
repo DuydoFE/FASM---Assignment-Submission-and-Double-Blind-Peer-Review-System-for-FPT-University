@@ -34,18 +34,19 @@ import { ROLE } from "../constant/roleEnum";
 const ProtectedRoute = ({ children, role }) => {
   const user = getCurrentAccount();
   if (!user || user?.roles[0] !== role) {
-    // User is not authenticated or doesn't have the required role
     toast.error("You don't have permission to access this page!");
     return <Navigate to="/" replace />;
   }
-  // User has the required role, render the children
   return children;
 };
 
-// 👉 Import layout + pages cho Admin
 import AdminLayout from "../layout/AdminLayout";
 import AdminDashboard from "../pages/Admin/AdminDashboard";
 import AdminUserManagement from "../pages/Admin/AdminUserManagement";
+import AdminUserDetailsManagement from "../pages/Admin/AdminUserDetailsManagement";
+import AdminCreateUser from "../pages/Admin/AdminCreateUser";
+import AdminAcademicYearManagement from "../pages/Admin/AdminAcademicYearManagement";
+import AdminSemesterManagement from "../pages/Admin/AdminSemesterManagement";
 import AdminClassManagement from "../pages/Admin/AdminClassManagement";
 import AdminClassDetailsManagement from "../pages/Admin/AdminClassDetailsManagement";
 import AdminClassAssignments from "../pages/Admin/AdminClassAssignments";
@@ -214,13 +215,16 @@ export const router = createBrowserRouter([
       },
     ],
   },
-  // 👉 Admin routes
   {
     path: "/admin",
     element: <AdminLayout />,
     children: [
       { path: "dashboard", element: <AdminDashboard /> },
       { path: "users", element: <AdminUserManagement /> },
+      { path: "users/add", element: <AdminCreateUser /> },
+      { path: "users/:id", element: <AdminUserDetailsManagement /> },
+      { path: "academicYears", element: <AdminAcademicYearManagement /> },
+      { path: "semesters", element: <AdminSemesterManagement /> },
       { path: "classes", element: <AdminClassManagement /> },
       { path: "classes/:id/assignments/:assignmentId", element: <AdminAssignmentDetails /> },
       { path: "classes/:id/assignments", element: <AdminClassAssignments /> },

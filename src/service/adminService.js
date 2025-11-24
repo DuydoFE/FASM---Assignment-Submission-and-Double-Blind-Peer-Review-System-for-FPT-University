@@ -9,6 +9,12 @@ export const getUserById = async (id) => {
   return res.data;
 };
 
+// Lấy thông tin chi tiết user theo ID (bao gồm lịch sử lớp học, điểm số,...)
+export const getUserByIdDetail = async (id) => {
+  const res = await api.get(`/Users/${id}/detail`);
+  return res.data;
+};
+
 // Xóa người dùng (chỉ admin có quyền)
 export const deleteUser = async (id) => {
   const res = await api.delete(`/Users/${id}`);
@@ -528,9 +534,15 @@ export const updateMainInstructor = async (courseInstanceId, mainInstructorId) =
   return res.data;
 };
 
-// Xóa giảng viên khỏi lớp học
-export const deleteCourseInstructor = async (id) => {
-  const res = await api.delete(`/CourseInstructor/${id}`);
+// 🔹 Xóa giảng viên khỏi lớp học (đúng theo API mới)
+export const deleteCourseInstructor = async (courseInstructorId, courseInstanceId, instructorId) => {
+  const res = await api.delete(`/CourseInstructor`, {
+    params: {
+      courseInstructorId,
+      courseInstanceId,
+      instructorId,
+    },
+  });
   return res.data;
 };
 
@@ -567,5 +579,101 @@ export const updateCriteriaTemplate = async (data) => {
 // ❌ Xóa Criteria Template theo ID
 export const deleteCriteriaTemplate = async (id) => {
   const res = await api.delete(`/CriteriaTemplate/${id}`);
+  return res.data;
+};
+
+// Lấy danh sách tất cả học kỳ
+export const getAllSemesters = async () => {
+  const res = await api.get("/Semester");
+  return res.data;
+};
+
+// Lấy thông tin năm học theo ID
+export const getAcademicYearById = async (id) => {
+  const res = await api.get(`/AcademicYear/${id}`);
+  return res.data;
+};
+
+// Lấy danh sách tất cả năm học
+export const getAllAcademicYears = async () => {
+  const res = await api.get("/AcademicYear");
+  return res.data;
+};
+
+// Tạo năm học mới
+export const createAcademicYear = async (payload) => {
+  const res = await api.post("/AcademicYear", payload);
+  return res.data;
+};
+
+// Cập nhật năm học
+export const updateAcademicYear = async (payload) => {
+  const res = await api.put("/AcademicYear", payload);
+  return res.data;
+};
+
+// Xóa năm học theo ID
+export const deleteAcademicYear = async (id) => {
+  const res = await api.delete(`/AcademicYear/${id}`);
+  return res.data;
+};
+
+// Lấy danh sách năm học theo campus
+export const getAcademicYearsByCampus = async (campusId) => {
+  const res = await api.get(`/AcademicYear/campus/${campusId}`);
+  return res.data;
+};
+
+// Lấy chi tiết một semester theo ID
+export const getSemesterById = async (id) => {
+  const res = await api.get(`/Semester/${id}`);
+  return res.data;
+};
+
+// Lấy danh sách semester theo AcademicYear
+export const getSemestersByAcademicYear = async (academicYearId) => {
+  const res = await api.get(`/Semester/academic-year/${academicYearId}`);
+  return res.data;
+};
+
+// Tạo một semester mới
+export const createSemester = async (payload) => {
+  const res = await api.post("/Semester", payload);
+  return res.data;
+};
+
+// Cập nhật thông tin semester
+export const updateSemester = async (payload) => {
+  const res = await api.put("/Semester", payload);
+  return res.data;
+};
+
+// Xóa semester theo ID
+export const deleteSemester = async (id) => {
+  const res = await api.delete(`/Semester/${id}`);
+  return res.data;
+};
+
+// Lấy tất cả cấu hình hệ thống
+export const getAllConfigs = async () => {
+  const res = await api.get("/SystemConfig");
+  return res.data;
+};
+
+// Lấy cấu hình theo key
+export const getConfigByKey = async (key) => {
+  const res = await api.get(`/SystemConfig/${key}`);
+  return res.data;
+};
+
+// Cập nhật cấu hình hệ thống
+export const updateConfig = async (request) => {
+  const res = await api.put("/SystemConfig", request);
+  return res.data;
+};
+
+// Lấy các cấu hình quan trọng
+export const getImportantConfigs = async () => {
+  const res = await api.get("/SystemConfig/important-configs");
   return res.data;
 };

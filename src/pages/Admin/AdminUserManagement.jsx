@@ -1,656 +1,200 @@
 import React, { useState, useEffect } from "react";
-import * as XLSX from "xlsx";
+import { useNavigate } from "react-router-dom";
+import { Plus, Eye, Search } from "lucide-react";
 import {
-  getUsersByCampus,
   getAllUsers,
-  updateUser,
-  createUser,
-  activateUser,
-  deactivateUser,
-  getMajorById,
-  getAllMajors,
   getAllCampuses,
+  getAllMajors,
 } from "../../service/adminService";
-import toast from "react-hot-toast";
 
 export default function AdminUserManagement() {
-  const [campuses, setCampuses] = useState([]);
-  const [selectedCampus, setSelectedCampus] = useState("");
-  const [users, setUsers] = useState([]);
-  const [filteredUsers, setFilteredUsers] = useState([]);
-  const [filters, setFilters] = useState({ campus: "", major: "", search: "" });
-  const [majors, setMajors] = useState([]);
-  const [majorNames, setMajorNames] = useState([]);
-  const [selectedUser, setSelectedUser] = useState(null);
-  const [isUpdating, setIsUpdating] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [showAddForm, setShowAddForm] = useState(false);
-  const defaultUser = {
-    campusId: 0,
-    majorId: 0,
-    username: "",
-    password: "",
-    email: "",
-    firstName: "",
-    lastName: "",
-    studentCode: "",
-    avatarUrl: "",
+  const navigate = useNavigate();
+
+  const [filters, setFilters] = useState({
+    campus: "",
     role: "",
-    isActive: true,
+    major: "",
+    search: "",
+  });
+
+  const [users, setUsers] = useState([]);
+  const [campuses, setCampuses] = useState([]);
+  const [majors, setMajors] = useState([]);
+
+  const roles = ["Student", "Instructor"];
+
+  useEffect(() => {
+    getAllUsers().then((res) => {
+      setUsers(Array.isArray(res?.data) ? res.data : []);
+    });
+
+    getAllCampuses().then((res) => {
+      setCampuses(Array.isArray(res?.data) ? res.data : []);
+    });
+
+    getAllMajors().then((res) => {
+      setMajors(Array.isArray(res?.data) ? res.data : []);
+    });
+  }, []);
+
+  const handleFilterChange = (e) => {
+    setFilters({ ...filters, [e.target.name]: e.target.value });
   };
 
-  const [newUser, setNewUser] = useState(defaultUser);
+  const isAnyFilterSelected =
+    filters.campus || filters.role || filters.major || filters.search;
 
-  useEffect(() => {
-    if (showAddForm) {
-      setNewUser(defaultUser);
-    }
-  }, [showAddForm]);
-
-  useEffect(() => {
-    const fetchCampuses = async () => {
-      try {
-        const res = await getAllCampuses();
-        const data = Array.isArray(res) ? res : res.data || [];
-        setCampuses(data);
-      } catch (err) {
-        console.error("Error fetching campuses:", err);
-        setCampuses([]);
-      }
-    };
-    fetchCampuses();
-  }, []);
-
-  useEffect(() => {
-    const fetchMajors = async () => {
-      try {
-        const res = await getAllMajors();
-        const data = Array.isArray(res) ? res : res.data || [];
-        setMajors(data);
-      } catch (err) {
-        console.error("Error fetching majors:", err);
-        setMajors([]);
-      }
-    };
-    fetchMajors();
-  }, []);
-
-  const fetchUsers = async () => {
-  try {
-    setIsLoading(true);
-    let usersArray = [];
-    if (selectedCampus) {
-      const res = await getUsersByCampus(selectedCampus);
-      usersArray = Array.isArray(res) ? res : res.data || [];
-
-      const majorCache = {};
-      const formattedUsers = await Promise.all(
-        usersArray.map(async (u) => {
-          let majorName = "Instructor";
-          if (u.majorId && u.majorId !== 0) {
-            if (!majorCache[u.majorId]) {
-              try {
-                const res = await getMajorById(u.majorId);
-                majorCache[u.majorId] = res.majorName || res.data?.majorName || "Instructor";
-              } catch {
-                majorCache[u.majorId] = "Instructor";
-              }
-            }
-            majorName = majorCache[u.majorId];
-          }
-
-          return {
-            id: u.id || u.userId,
-            studentCode: u.studentCode || "-",
-            firstName: u.firstName || "",
-            lastName: u.lastName || "",
-            username: u.username || "",
-            email: u.email || "-",
-            roles: Array.isArray(u.roles) ? u.roles : [u.roleName || "Student"],
-            campusId: u.campusId || 0,
-            campusName: u.campus?.campusName || (u.campusId === 1 ? "Hồ Chí Minh" : "Hà Nội"),
-            majorId: u.majorId || 0,
-            majorName,
-            isActive: typeof u.isActive === "boolean" ? u.isActive : u.status?.toLowerCase() === "active",
-          };
+  const filteredUsers = isAnyFilterSelected
+    ? users
+        .filter((u) => !u.roles?.includes("Admin"))
+        .filter((u) => {
+          return (
+            (filters.campus ? u.campusName === filters.campus : true) &&
+            (filters.role ? u.roles?.includes(filters.role) : true) &&
+            (filters.major ? u.majorName === filters.major : true) &&
+            (filters.search
+              ? Object.values(u)
+                  .join(" ")
+                  .toLowerCase()
+                  .includes(filters.search.toLowerCase())
+              : true)
+          );
         })
-      );
-
-      const formattedUsersWithoutAdmin = formattedUsers.filter(
-        (u) => !u.roles.includes("Admin")
-      );
-
-      setUsers(formattedUsersWithoutAdmin);
-
-      const majorsSet = [
-        ...new Set(formattedUsersWithoutAdmin.map((u) => u.majorName).filter(Boolean)),
-      ];
-      setMajorNames(majorsSet);
-    } else {
-      const res = await getAllUsers();
-      const usersArray = Array.isArray(res) ? res : res.data || [];
-      setUsers(usersArray.filter(u => !u.roles.includes("Admin")));
-    }
-  } catch (err) {
-    console.error("Error fetching users:", err);
-  } finally {
-    setIsLoading(false);
-  }
-};
-
-  useEffect(() => {
-    fetchUsers();
-  }, [selectedCampus]);
-
-  useEffect(() => {
-    let result = users;
-    if (filters.major) {
-      result = result.filter((u) => u.majorName === filters.major);
-    }
-    if (filters.search) {
-      const keyword = filters.search.toLowerCase();
-      result = result.filter(
-        (u) =>
-          u.firstName.toLowerCase().includes(keyword) ||
-          u.lastName.toLowerCase().includes(keyword) ||
-          u.email.toLowerCase().includes(keyword) ||
-          u.studentCode.toLowerCase().includes(keyword)
-      );
-    }
-    setFilteredUsers(result);
-  }, [filters, users]);
-
-  const toggleUserStatus = async (user) => {
-    try {
-      if (user.isActive) await deactivateUser(user.id);
-      else await activateUser(user.id);
-      toast.success(
-        `${user.isActive ? "Deactivated" : "Activated"} successfully!`
-      );
-      await fetchUsers();
-    } catch (err) {
-      console.error("❌ Update status failed:", err);
-      toast.error("Không thể thay đổi trạng thái user.");
-    }
-  };
-
-  const handleSaveUser = async () => {
-    if (!selectedUser) return;
-
-    const userId = Number(selectedUser.id);
-    const payload = {
-      userId,
-      username:
-        selectedUser.username ||
-        selectedUser.email?.split("@")[0] ||
-        "unknown",
-      email: selectedUser.email || "",
-      firstName: selectedUser.firstName || "",
-      lastName: selectedUser.lastName || "",
-      studentCode: selectedUser.studentCode || "",
-      avatarUrl: selectedUser.avatarUrl || "",
-      campusId: selectedUser.campusId || 0,
-      majorId: selectedUser.majorId || 0,
-      isActive:
-        typeof selectedUser.isActive === "boolean"
-          ? selectedUser.isActive
-          : true,
-    };
-
-    try {
-      setIsUpdating(true);
-      await updateUser(userId, payload);
-      toast.success("✅ Cập nhật user thành công!");
-      await fetchUsers();
-      setSelectedUser(null);
-    } catch (err) {
-      console.error("❌ Update failed:", err);
-      toast.error("Cập nhật thất bại!");
-    } finally {
-      setIsUpdating(false);
-    }
-  };
-
-  const handleCreateUser = async () => {
-    try {
-      if (!newUser.email || !newUser.password || !newUser.role) {
-        toast.error("Vui lòng điền đủ Email, Password và Role!");
-        return;
-      }
-
-      const isStrongPassword = (password) => {
-        const regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\W).{8,}$/;
-        return regex.test(password);
-      };
-
-      if (!isStrongPassword(newUser.password)) {
-        toast.error(
-          "Mật khẩu phải có ít nhất 1 chữ hoa, 1 chữ thường, 1 ký tự đặc biệt và dài tối thiểu 8 ký tự!"
-        );
-        return;
-      }
-
-      setIsUpdating(true);
-
-      const payload = {
-        ...newUser,
-        campusId: parseInt(newUser.campusId),
-        majorId: parseInt(newUser.majorId),
-      };
-
-      console.log("📦 Payload gửi lên:", payload);
-
-      await createUser(payload);
-      toast.success("✅ Tạo user mới thành công!");
-
-      await fetchUsers();
-
-      setNewUser(defaultUser);
-
-      setShowAddForm(false);
-    } catch (err) {
-      console.error("❌ Create user failed:", err);
-      if (err.response) console.error("📨 BE Response:", err.response.data);
-      toast.error("Không thể tạo user!");
-    } finally {
-      setIsUpdating(false);
-    }
-  };
+    : [];
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold text-orange-500">
-          👥 User Management
-        </h2>
-        <div className="flex gap-2">
-          <button
-            onClick={() => setShowAddForm(true)}
-            className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded"
-          >
-            + Add New User
-          </button>
-        </div>
+    <div className="p-8 bg-white min-h-screen">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
+        <h2 className="text-4xl font-bold text-orange-600">User Management</h2>
+        <button
+          onClick={() => navigate("/admin/users/add")}
+          className="flex items-center gap-2 bg-orange-600 text-white px-6 py-3 rounded-lg shadow-lg hover:bg-orange-700 transition"
+        >
+          <Plus size={20} /> Add User
+        </button>
       </div>
 
-      {/* 🔍 Bộ lọc */}
-      <div className="flex justify-between items-center mb-4">
+      {/* Filters */}
+      <div className="bg-white p-6 shadow-lg rounded-xl grid grid-cols-1 md:grid-cols-4 gap-5 mb-8">
         <select
-          className="border p-2 rounded"
-          value={selectedCampus}
-          onChange={(e) => setSelectedCampus(e.target.value)}
+          name="campus"
+          value={filters.campus}
+          onChange={handleFilterChange}
+          className="border border-orange-300 p-3 rounded-lg shadow-sm focus:ring-2 focus:ring-orange-400 outline-none"
         >
-          <option value="">All campuses</option>
-          {campuses.map((c) => (
-            <option key={c.campusId || c.id} value={c.campusId || c.id}>
-              {c.campusName || c.name}
+          <option value="">Select Campus</option>
+          {Array.isArray(campuses) &&
+            campuses.map((c) => (
+              <option key={c.id || c.campusId} value={c.name || c.campusName}>
+                {c.name || c.campusName}
+              </option>
+            ))}
+        </select>
+
+        <select
+          name="role"
+          value={filters.role}
+          onChange={handleFilterChange}
+          className="border border-orange-300 p-3 rounded-lg shadow-sm focus:ring-2 focus:ring-orange-400 outline-none"
+        >
+          <option value="">Select Role</option>
+          {roles.map((r) => (
+            <option key={r} value={r}>
+              {r}
             </option>
           ))}
         </select>
 
-        {selectedCampus && majorNames.length > 0 && (
-          <select
-            className="border p-2 rounded"
-            value={filters.major}
-            onChange={(e) =>
-              setFilters({ ...filters, major: e.target.value })
-            }
-          >
-            <option value="">All majors</option>
-            {majorNames.map((m, i) => (
-              <option key={i} value={m}>
-                {m}
+        <select
+          name="major"
+          value={filters.major}
+          onChange={handleFilterChange}
+          className="border border-orange-300 p-3 rounded-lg shadow-sm focus:ring-2 focus:ring-orange-400 outline-none"
+        >
+          <option value="">Select Major</option>
+          {Array.isArray(majors) &&
+            majors.map((m) => (
+              <option key={m.majorId} value={m.majorName}>
+                {m.majorName}
               </option>
             ))}
-          </select>
-        )}
+        </select>
 
-        {selectedCampus && (
+        <div className="flex items-center border border-orange-300 rounded-lg overflow-hidden shadow-sm">
           <input
             type="text"
-            placeholder="Search..."
-            className="border p-2 rounded flex-1 ml-4"
+            name="search"
             value={filters.search}
-            onChange={(e) =>
-              setFilters({ ...filters, search: e.target.value })
-            }
+            onChange={handleFilterChange}
+            placeholder="Search users..."
+            className="p-3 flex-1 outline-none"
           />
-        )}
+          <button className="px-4 bg-orange-100 border-l hover:bg-orange-200 transition">
+            <Search size={18} />
+          </button>
+        </div>
       </div>
 
-      {/* 🧾 Table */}
-      <div className="bg-white rounded-xl shadow-md overflow-x-auto">
-        {isLoading ? (
-          <p className="p-4 text-center text-gray-500">Loading...</p>
-        ) : selectedCampus ? (
-          filteredUsers.length > 0 ? (
-            <table className="w-full text-sm">
-              <thead className="bg-orange-500 text-white">
-                <tr>
-                  <th className="p-2 text-left">Full name</th>
-                  <th className="p-2 text-left">User Code</th>
-                  <th className="p-2 text-left">Email</th>
-                  <th className="p-2 text-left">Role</th>
-                  <th className="p-2 text-left">Campus</th>
-                  <th className="p-2 text-left">Major</th>
-                  <th className="p-2 text-left">Status</th>
-                  <th className="p-2 text-left">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredUsers.map((u) => (
-                  <tr key={u.id} className="border-b hover:bg-gray-50">
-                    <td className="p-2">
-                      {u.firstName} {u.lastName}
-                    </td>
-                    <td className="p-2">{u.studentCode}</td>
-                    <td className="p-2">{u.email}</td>
-                    <td className="p-2 capitalize">{u.roles.join(", ")}</td>
-                    <td className="p-2">{u.campusName}</td>
-                    <td className="p-2">{u.majorName || "Chưa có"}</td>
-                    <td className="p-2">
-                      <span
-                        className={`px-2 py-1 rounded text-xs ${u.isActive
-                          ? "bg-green-100 text-green-700"
-                          : "bg-red-100 text-red-700"
-                          }`}
-                      >
-                        {u.isActive ? "active" : "deactive"}
-                      </span>
-                    </td>
-                    <td className="p-2 flex gap-2">
-                      <button
-                        onClick={() => setSelectedUser(u)}
-                        className="text-orange-500 hover:underline"
-                      >
-                        Edit
-                      </button>
-                      <button
-                        onClick={() => toggleUserStatus(u)}
-                        className="text-blue-500 hover:underline"
-                      >
-                        {u.isActive ? "Deactivate" : "Activate"}
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          ) : (
-            <p className="p-4 text-center text-gray-500">User not found</p>
-          )
-        ) : (
-          <p className="p-4 text-center text-gray-500">
-            Hãy chọn campus để xem user
-          </p>
-        )}
+      {/* User Table */}
+      <div className="bg-white shadow-lg rounded-xl overflow-hidden">
+        <table className="w-full border-collapse">
+          <thead className="bg-orange-100 text-orange-800 font-semibold">
+            <tr>
+              <th className="p-3 text-left">Full Name</th>
+              <th className="p-3 text-left">User Code</th>
+              <th className="p-3 text-left">Email</th>
+              <th className="p-3 text-left">Role</th>
+              <th className="p-3 text-left">Campus</th>
+              <th className="p-3 text-left">Major</th>
+              <th className="p-3 text-left">Status</th>
+              <th className="p-3 text-center">Detail</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filteredUsers.map((user) => (
+              <tr
+                key={user.id}
+                className="border-b hover:bg-orange-50 transition-colors duration-150"
+              >
+                <td className="p-3 font-medium text-gray-800">{`${user.firstName} ${user.lastName}`}</td>
+                <td className="p-3 text-gray-600">{user.studentCode}</td>
+                <td className="p-3 text-gray-600">{user.email}</td>
+                <td className="p-3 text-gray-600">{user.roles?.join(", ")}</td>
+                <td className="p-3 text-gray-600">{user.campusName}</td>
+                <td className="p-3 text-gray-600">{user.majorName}</td>
+                <td
+                  className={`p-3 font-semibold ${
+                    user.isActive ? "text-green-600" : "text-red-600"
+                  }`}
+                >
+                  {user.isActive ? "Active" : "Inactive"}
+                </td>
+                <td className="p-3 text-center">
+                  <button
+                    className="text-orange-600 hover:text-orange-800"
+                    onClick={() => navigate(`/admin/users/${user.id}`)}
+                  >
+                    <Eye size={18} />
+                  </button>
+                </td>
+              </tr>
+            ))}
+
+            {/* Khi chưa có user nào */}
+            {filteredUsers.length === 0 && isAnyFilterSelected && (
+              <tr>
+                <td
+                  colSpan={8}
+                  className="p-4 text-center text-gray-500 font-medium"
+                >
+                  No users found for selected filters.
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
       </div>
-
-      {/* 🧩 Modal Edit */}
-      {selectedUser && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-30">
-          <div className="bg-white p-6 rounded-xl w-96 space-y-4 shadow-lg">
-            <h3 className="text-lg font-semibold text-orange-500">Edit User</h3>
-
-            <input
-              type="text"
-              className="border rounded w-full p-2"
-              placeholder="First Name"
-              value={selectedUser.firstName || ""}
-              onChange={(e) =>
-                setSelectedUser({ ...selectedUser, firstName: e.target.value })
-              }
-            />
-
-            <input
-              type="text"
-              className="border rounded w-full p-2"
-              placeholder="Last Name"
-              value={selectedUser.lastName || ""}
-              onChange={(e) =>
-                setSelectedUser({ ...selectedUser, lastName: e.target.value })
-              }
-            />
-
-            <input
-              type="text"
-              className="border rounded w-full p-2"
-              placeholder="Student Code"
-              value={selectedUser.studentCode || ""}
-              onChange={(e) =>
-                setSelectedUser({
-                  ...selectedUser,
-                  studentCode: e.target.value,
-                })
-              }
-            />
-
-            <input
-              type="text"
-              className="border rounded w-full p-2"
-              placeholder="Email"
-              value={selectedUser.email || ""}
-              onChange={(e) =>
-                setSelectedUser({ ...selectedUser, email: e.target.value })
-              }
-            />
-
-            <select
-              className="border rounded w-full p-2"
-              value={selectedUser.campusId || ""}
-              onChange={(e) =>
-                setSelectedUser({
-                  ...selectedUser,
-                  campusId: parseInt(e.target.value),
-                })
-              }
-            >
-              <option value="">Select campus</option>
-              {campuses.map((c) => (
-                <option key={c.campusId || c.id} value={c.campusId || c.id}>
-                  {c.campusName || c.name}
-                </option>
-              ))}
-            </select>
-
-            <select
-              className="border rounded w-full p-2"
-              value={selectedUser.majorId || ""}
-              onChange={(e) =>
-                setSelectedUser({
-                  ...selectedUser,
-                  majorId: parseInt(e.target.value),
-                })
-              }
-            >
-              <option value="">Select major</option>
-              {majors.map((m) => (
-                <option key={m.majorId} value={m.majorId}>
-                  {m.majorName}
-                </option>
-              ))}
-            </select>
-
-            <div className="flex justify-end gap-2">
-              <button
-                onClick={() => setSelectedUser(null)}
-                className="px-4 py-2 rounded bg-gray-200 hover:bg-gray-300"
-                disabled={isUpdating}
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleSaveUser}
-                className="px-4 py-2 rounded bg-orange-500 text-white hover:bg-orange-600"
-                disabled={isUpdating}
-              >
-                {isUpdating ? "Saving..." : "Save"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* 🧩 Modal Add User */}
-      {showAddForm && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-30">
-          <div className="bg-white p-6 rounded-xl w-96 space-y-4 shadow-lg">
-            <h3 className="text-lg font-semibold text-orange-500">
-              Add New User
-            </h3>
-
-            {/* ✅ Select Campus */}
-            <select
-              className="border rounded w-full p-2"
-              value={newUser.campusId || ""}
-              onChange={(e) =>
-                setNewUser({ ...newUser, campusId: parseInt(e.target.value) })
-              }
-            >
-              <option value="">Select Campus</option>
-              {campuses.map((c) => (
-                <option key={c.campusId || c.id} value={c.campusId || c.id}>
-                  {c.campusName || c.name}
-                </option>
-              ))}
-            </select>
-
-            {/* ✅ Select Major */}
-            <select
-              className="border rounded w-full p-2"
-              value={newUser.majorId || ""}
-              onChange={(e) =>
-                setNewUser({ ...newUser, majorId: parseInt(e.target.value) })
-              }
-            >
-              <option value="">Select Major</option>
-              {majors.map((m) => (
-                <option key={m.majorId} value={m.majorId}>
-                  {m.majorName}
-                </option>
-              ))}
-            </select>
-
-            {/* ✅ Username */}
-            <input
-              type="text"
-              className="border rounded w-full p-2"
-              placeholder="Username"
-              value={newUser.username}
-              onChange={(e) =>
-                setNewUser({ ...newUser, username: e.target.value })
-              }
-            />
-
-            {/* ✅ Password */}
-            <input
-              type="password"
-              className="border rounded w-full p-2"
-              placeholder="Password"
-              value={newUser.password}
-              onChange={(e) =>
-                setNewUser({ ...newUser, password: e.target.value })
-              }
-            />
-
-            {/* ✅ Email */}
-            <input
-              type="text"
-              className="border rounded w-full p-2"
-              placeholder="Email"
-              value={newUser.email}
-              onChange={(e) =>
-                setNewUser({ ...newUser, email: e.target.value })
-              }
-            />
-
-            {/* ✅ First Name */}
-            <input
-              type="text"
-              className="border rounded w-full p-2"
-              placeholder="First Name"
-              value={newUser.firstName}
-              onChange={(e) =>
-                setNewUser({ ...newUser, firstName: e.target.value })
-              }
-            />
-
-            {/* ✅ Last Name */}
-            <input
-              type="text"
-              className="border rounded w-full p-2"
-              placeholder="Last Name"
-              value={newUser.lastName}
-              onChange={(e) =>
-                setNewUser({ ...newUser, lastName: e.target.value })
-              }
-            />
-
-            {/* ✅ Student Code */}
-            <input
-              type="text"
-              className="border rounded w-full p-2"
-              placeholder="Student Code"
-              value={newUser.studentCode}
-              onChange={(e) =>
-                setNewUser({ ...newUser, studentCode: e.target.value })
-              }
-            />
-
-            {/* ✅ Avatar */}
-            <input
-              type="text"
-              className="border rounded w-full p-2"
-              placeholder="Avatar URL"
-              value={newUser.avatarUrl}
-              onChange={(e) =>
-                setNewUser({ ...newUser, avatarUrl: e.target.value })
-              }
-            />
-
-            {/* ✅ Role */}
-            <select
-              className="border rounded w-full p-2"
-              value={newUser.role}
-              onChange={(e) => setNewUser({ ...newUser, role: e.target.value })}
-            >
-              <option value="">Select Role</option>
-              <option value="Student">Student</option>
-              <option value="Instructor">Instructor</option>
-              <option value="Admin">Admin</option>
-            </select>
-
-            {/* ✅ Status */}
-            <select
-              className="border rounded w-full p-2"
-              value={newUser.isActive ? "active" : "inactive"}
-              onChange={(e) =>
-                setNewUser({ ...newUser, isActive: e.target.value === "active" })
-              }
-            >
-              <option value="active">Active</option>
-              <option value="inactive">Inactive</option>
-            </select>
-
-            {/* ✅ Buttons */}
-            <div className="flex justify-end gap-2">
-              <button
-                onClick={() => setShowAddForm(false)}
-                className="px-4 py-2 rounded bg-gray-200 hover:bg-gray-300"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleCreateUser}
-                className="px-4 py-2 rounded bg-orange-500 text-white hover:bg-orange-600"
-                disabled={isUpdating}
-              >
-                {isUpdating ? "Creating..." : "Create"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
