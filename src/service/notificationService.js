@@ -15,3 +15,12 @@ export const getMyNotifications = async (unreadOnly = false) => {
     throw error;
   }
 };
+export const markNotificationAsRead = async (notificationId) => {
+  try {
+    const response = await api.put(`/Notifications/${notificationId}/mark-as-read`);
+    return response.data;
+  } catch (error) {
+    console.error(`Lỗi khi đánh dấu đã đọc cho thông báo ID ${notificationId}:`, error);
+    throw error;
+  }
+};

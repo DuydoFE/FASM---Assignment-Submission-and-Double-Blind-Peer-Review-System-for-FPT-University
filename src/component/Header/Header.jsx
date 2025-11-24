@@ -6,7 +6,7 @@ import { logout } from "../../redux/features/userSlice";
 import { Dropdown, Menu, Avatar, Button, Popover, Badge, List, Spin, Empty, ConfigProvider } from "antd";
 import { toast } from "react-toastify";
 import { useState, useEffect, useCallback } from "react";
-import { getMyNotifications } from "../../service/notificationService";
+import { getMyNotifications, markNotificationAsRead } from "../../service/notificationService";
 
 const Header = () => {
   const user = getCurrentAccount();
@@ -53,8 +53,31 @@ const Header = () => {
       ]}
     />
   );
+
+   const handleNotificationClick = useCallback(async (item) => {
+    if (item.isRead) {
+      console.log("Navigating for notification:", item);
+      return;
+    }
+
+    try {
+      await markNotificationAsRead(item.notificationId);
+
+      setNotifications(currentNotifications =>
+        currentNotifications.map(n =>
+          n.notificationId === item.notificationId ? { ...n, isRead: true } : n
+        )
+      );
+
+      setUnreadCount(prevCount => prevCount - 1);
+
+    } catch (error) {
+      toast.error("Không thể đánh dấu thông báo là đã đọc.");
+    }
+  }, []);
+
   
-  const notificationContent = (
+ const notificationContent = (
     <div style={{ width: 350, maxHeight: 400, overflowY: 'auto' }}>
       {loading ? (
         <div className="flex justify-center p-4">
@@ -66,7 +89,8 @@ const Header = () => {
           dataSource={notifications}
           renderItem={(item) => (
             <List.Item 
-                className={`p-2 rounded-md transition-colors ${!item.isRead ? 'bg-white/10' : 'bg-transparent'}`}
+              onClick={() => handleNotificationClick(item)}
+              className={`p-2 rounded-md transition-colors cursor-pointer ${!item.isRead ? 'bg-white/10 hover:bg-white/20' : 'hover:bg-white/5'}`}
             >
               <List.Item.Meta
                 title={<span className="font-semibold text-zinc-100">{item.title}</span>}
@@ -87,6 +111,7 @@ const Header = () => {
       fetchNotifications();
     }
   };
+
 
   return (
     
