@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { ToastContainer, toast } from "react-toastify";
+
 import {
   getCourseInstancesByCampusId,
   getAllCampuses,
@@ -7,7 +9,6 @@ import {
   getAllSemesters,
   createCourseInstance,
 } from "../../service/adminService";
-import toast from "react-hot-toast";
 
 export default function AdminClassManagement() {
   const navigate = useNavigate();
@@ -32,7 +33,14 @@ export default function AdminClassManagement() {
     sectionCode: "",
   });
 
-  // Lấy dữ liệu filter: campuses, semesters, courses
+  const contextClass = {
+    success: "bg-green-50 text-green-600 border border-green-200",
+    error: "bg-red-50 text-red-600 border border-red-200",
+    info: "bg-blue-50 text-blue-600 border border-blue-200",
+    warning: "bg-orange-50 text-orange-600 border border-orange-200",
+    default: "bg-white text-gray-600 border border-gray-200",
+  };
+
   useEffect(() => {
     const fetchFiltersData = async () => {
       try {
@@ -45,14 +53,13 @@ export default function AdminClassManagement() {
         const coursesRes = await getAllCourses();
         setCourses(Array.isArray(coursesRes?.data) ? coursesRes.data : []);
       } catch (err) {
-        console.error("❌ Fetch filter data error:", err);
-        toast.error("Failed to load campuses, semesters, or courses");
+        console.error(err);
+        toast.error("Lỗi tải dữ liệu hệ thống!");
       }
     };
     fetchFiltersData();
   }, []);
 
-  // Lấy danh sách lớp theo campus
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -63,26 +70,24 @@ export default function AdminClassManagement() {
         const res = await getCourseInstancesByCampusId(Number(filters.campus));
         setClasses(Array.isArray(res?.data) ? res.data : []);
       } catch (err) {
-        console.error("❌ Fetch classes error:", err);
-        toast.error("Failed to load classes");
+        console.error(err);
+        toast.error("Không thể tải danh sách lớp!");
       }
     };
     fetchData();
   }, [filters.campus]);
 
   const handleFilterChange = (e) => {
-    const { name, value } = e.target;
-    setFilters({ ...filters, [name]: value });
+    setFilters({ ...filters, [e.target.name]: e.target.value });
   };
 
   const handleNewClassChange = (e) => {
-    const { name, value } = e.target;
-    setNewClass({ ...newClass, [name]: value });
+    setNewClass({ ...newClass, [e.target.name]: e.target.value });
   };
 
   const handleAddClass = async () => {
     if (!newClass.campusId || !newClass.semesterId || !newClass.courseId || !newClass.sectionCode.trim()) {
-      toast.error("Please fill all required fields");
+      toast.warn("Vui lòng điền đầy đủ thông tin!");
       return;
     }
 
@@ -92,24 +97,25 @@ export default function AdminClassManagement() {
         campusId: Number(newClass.campusId),
         semesterId: Number(newClass.semesterId),
         sectionCode: newClass.sectionCode.trim(),
-        enrollmentPassword: "", // gửi chuỗi rỗng nếu không dùng
+        enrollmentPassword: "",
         requiresApproval: true,
       };
 
       await createCourseInstance(requestPayload);
-      toast.success("Class created successfully");
+
+      toast.success("Tạo lớp thành công!");
 
       setShowAddForm(false);
       setNewClass({ campusId: "", semesterId: "", courseId: "", sectionCode: "" });
 
-      // refresh danh sách lớp
       if (filters.campus) {
         const res = await getCourseInstancesByCampusId(Number(filters.campus));
         setClasses(Array.isArray(res?.data) ? res.data : []);
       }
     } catch (err) {
-      console.error("❌ Create class error details:", err.response?.data || err);
-      toast.error("Failed to create class");
+      console.error(err);
+      const msg = err.response?.data?.message || "Tạo lớp thất bại!";
+      toast.error(msg);
     }
   };
 
@@ -124,11 +130,24 @@ export default function AdminClassManagement() {
     return matchSearch && matchCourse && matchSemester;
   });
 
-  return (
-    <div className="space-y-6 p-6">
+   return (
+    <div className="space-y-6 p-6 relative">
+      
+      <ToastContainer
+        toastClassName={({ type }) =>
+          `${
+            contextClass[type || "default"]
+          } relative flex p-3 min-h-[50px] rounded-lg justify-between overflow-hidden cursor-pointer shadow-lg mb-4 transform transition-all hover:scale-105 font-medium`
+        }
+        bodyClassName={() => "flex items-center text-sm px-2"}
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={true} 
+        closeButton={false} 
+      />
+
       <h2 className="text-3xl font-bold text-orange-500 mb-4">🏫 Class Management</h2>
 
-      {/* Filter & Actions */}
       <div className="bg-white p-5 rounded-2xl shadow-md flex flex-wrap gap-4 items-center">
         <select
           name="campus"
@@ -138,40 +157,18 @@ export default function AdminClassManagement() {
         >
           <option value="">Select Campus</option>
           {campuses.map((c) => (
-            <option key={c.campusId} value={c.campusId}>
-              {c.name || c.campusName}
-            </option>
+            <option key={c.campusId} value={c.campusId}>{c.name || c.campusName}</option>
           ))}
         </select>
 
-        <select
-          name="semester"
-          value={filters.semester}
-          onChange={handleFilterChange}
-          className="border rounded-lg p-3 text-gray-700 hover:border-orange-400 transition flex-1 min-w-[150px]"
-        >
-          <option value="">All Semesters</option>
-          {semesters.map((s) => (
-            <option key={s.semesterId} value={s.semesterId}>
-              {s.name || s.semesterName}
-            </option>
-          ))}
+       <select name="semester" value={filters.semester} onChange={handleFilterChange} className="border rounded-lg p-3 text-gray-700 hover:border-orange-400 transition flex-1 min-w-[150px]">
+           <option value="">All Semesters</option>
+           {semesters.map((s) => (<option key={s.semesterId} value={s.semesterId}>{s.name || s.semesterName}</option>))}
         </select>
-
-        <select
-          name="course"
-          value={filters.course}
-          onChange={handleFilterChange}
-          className="border rounded-lg p-3 text-gray-700 hover:border-orange-400 transition flex-1 min-w-[150px]"
-        >
-          <option value="">All Courses</option>
-          {courses.map((course) => (
-            <option key={course.courseId} value={course.courseId}>
-              {course.name || course.courseName}
-            </option>
-          ))}
+        <select name="course" value={filters.course} onChange={handleFilterChange} className="border rounded-lg p-3 text-gray-700 hover:border-orange-400 transition flex-1 min-w-[150px]">
+           <option value="">All Courses</option>
+           {courses.map((course) => (<option key={course.courseId} value={course.courseId}>{course.name || course.courseName}</option>))}
         </select>
-
         <input
           type="text"
           name="search"
@@ -189,81 +186,37 @@ export default function AdminClassManagement() {
         </button>
       </div>
 
-      {/* Add Class Form */}
       {showAddForm && (
-        <div className="bg-white p-5 rounded-2xl shadow-md mt-4 space-y-4">
+        <div className="bg-white p-5 rounded-2xl shadow-md mt-4 space-y-4 animate-fade-in-down">
           <h3 className="text-xl font-semibold text-gray-700">Create New Class</h3>
           <div className="flex flex-wrap gap-4">
-            <select
-              name="campusId"
-              value={newClass.campusId}
-              onChange={handleNewClassChange}
-              className="border rounded-lg p-3 flex-1 min-w-[150px]"
-            >
+            <select name="campusId" value={newClass.campusId} onChange={handleNewClassChange} className="border rounded-lg p-3 flex-1 min-w-[150px]">
               <option value="">Select Campus</option>
-              {campuses.map((c) => (
-                <option key={c.campusId} value={c.campusId}>
-                  {c.name || c.campusName}
-                </option>
-              ))}
+              {campuses.map((c) => (<option key={c.campusId} value={c.campusId}>{c.name || c.campusName}</option>))}
             </select>
-
-            <select
-              name="semesterId"
-              value={newClass.semesterId}
-              onChange={handleNewClassChange}
-              className="border rounded-lg p-3 flex-1 min-w-[150px]"
-            >
+            <select name="semesterId" value={newClass.semesterId} onChange={handleNewClassChange} className="border rounded-lg p-3 flex-1 min-w-[150px]">
               <option value="">Select Semester</option>
-              {semesters.map((s) => (
-                <option key={s.semesterId} value={s.semesterId}>
-                  {s.name || s.semesterName}
-                </option>
-              ))}
+              {semesters.map((s) => (<option key={s.semesterId} value={s.semesterId}>{s.name || s.semesterName}</option>))}
             </select>
-
-            <select
-              name="courseId"
-              value={newClass.courseId || ""}
-              onChange={handleNewClassChange}
-              className="border rounded-lg p-3 flex-1 min-w-[150px]"
-            >
+            <select name="courseId" value={newClass.courseId || ""} onChange={handleNewClassChange} className="border rounded-lg p-3 flex-1 min-w-[150px]">
               <option value="">Select Course</option>
-              {courses.map((course) => (
-                <option key={course.courseId} value={course.courseId}>
-                  {course.name || course.courseName}
-                </option>
-              ))}
+              {courses.map((course) => (<option key={course.courseId} value={course.courseId}>{course.name || course.courseName}</option>))}
             </select>
-
-            <input
-              type="text"
-              name="sectionCode"
-              value={newClass.sectionCode}
-              onChange={handleNewClassChange}
-              placeholder="Section Code"
-              className="border rounded-lg p-3 flex-1 min-w-[150px]"
-            />
+            <input type="text" name="sectionCode" value={newClass.sectionCode} onChange={handleNewClassChange} placeholder="ClassName" className="border rounded-lg p-3 flex-1 min-w-[150px]" />
           </div>
 
           <div className="flex gap-4">
-            <button
-              onClick={handleAddClass}
-              className="px-6 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition"
-            >
+            <button onClick={handleAddClass} className="px-6 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition font-semibold shadow-sm">
               Create
             </button>
-            <button
-              onClick={() => setShowAddForm(false)}
-              className="px-6 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition"
-            >
+            <button onClick={() => setShowAddForm(false)} className="px-6 py-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 transition font-semibold">
               Cancel
             </button>
           </div>
         </div>
       )}
 
-      {/* Table */}
+      {/* --- TABLE --- */}
       <div className="bg-white rounded-2xl shadow overflow-x-auto">
         {filters.campus ? (
           displayedClasses.length > 0 ? (
@@ -282,7 +235,7 @@ export default function AdminClassManagement() {
               <tbody>
                 {displayedClasses.map((c) => (
                   <tr key={c.courseInstanceId} className="border-b hover:bg-gray-50 transition">
-                    <td className="p-3 font-medium">{c.sectionCode || c.courseName}</td>
+                    <td className="p-3 font-medium text-gray-800">{c.sectionCode || c.courseName}</td>
                     <td className="p-3">{c.courseName}</td>
                     <td className="p-3">{c.semesterName}</td>
                     <td className="p-3">{c.campusName}</td>
@@ -290,7 +243,7 @@ export default function AdminClassManagement() {
                     <td className="p-3">{c.assignmentCount}</td>
                     <td className="p-3">
                       <button
-                        className="text-orange-500 hover:underline font-semibold"
+                        className="text-orange-500 hover:text-orange-700 font-semibold"
                         onClick={() => handleViewDetail(c.courseInstanceId)}
                       >
                         View Detail
@@ -300,12 +253,8 @@ export default function AdminClassManagement() {
                 ))}
               </tbody>
             </table>
-          ) : (
-            <p className="p-6 text-center text-gray-500 font-medium">No classes found</p>
-          )
-        ) : (
-          <p className="p-6 text-center text-gray-500 font-medium">Please select a campus first</p>
-        )}
+          ) : (<p className="p-6 text-center text-gray-500 font-medium">No classes found</p>)
+        ) : (<p className="p-6 text-center text-gray-500 font-medium">Please select a campus first</p>)}
       </div>
     </div>
   );
