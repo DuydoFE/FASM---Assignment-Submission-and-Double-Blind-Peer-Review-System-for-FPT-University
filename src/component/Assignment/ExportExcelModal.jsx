@@ -1,17 +1,17 @@
 import React, { useState } from "react";
 import { X, FileSpreadsheet, Download, Loader2 } from "lucide-react";
-import * as XLSX from 'xlsx'; // Import thư viện Excel
+import * as XLSX from 'xlsx'; 
 import { toast } from "react-toastify";
-import { getCurrentAccount } from "../../utils/accountUtils"; // Import hook lấy user
+import { getCurrentAccount } from "../../utils/accountUtils"; 
 import { getExportSubmissions } from "../../service/submissionService";
 
 const ExportExcelModal = ({ isOpen, onClose, courseInfo, assignments, classId }) => {
-  const user = getCurrentAccount(); // Lấy thông tin user hiện tại từ Redux
+  const user = getCurrentAccount(); 
   const [selectAll, setSelectAll] = useState(true);
   const [selectedAssignments, setSelectedAssignments] = useState(
     assignments.map(a => a.assignmentId)
   );
-  const [isExporting, setIsExporting] = useState(false); // State loading khi đang export
+  const [isExporting, setIsExporting] = useState(false); 
 
   if (!isOpen) return null;
 
@@ -37,7 +37,7 @@ const ExportExcelModal = ({ isOpen, onClose, courseInfo, assignments, classId })
     }
   };
 
-  const handleExport = async () => {
+ const handleExport = async () => {
     if (!user || !user.id) {
       toast.error("Không tìm thấy thông tin giảng viên.");
       return;
@@ -50,22 +50,16 @@ const ExportExcelModal = ({ isOpen, onClose, courseInfo, assignments, classId })
 
     setIsExporting(true);
     try {
-      // 1. Gọi API cho tất cả các assignment được chọn (chạy song song dùng Promise.all)
-      const promises = selectedAssignments.map(assignmentId => 
-        getExportSubmissions(user.id, classId, assignmentId)
-      );
-
-      const responses = await Promise.all(promises);
-
-      // 2. Gộp dữ liệu từ các response lại thành 1 mảng duy nhất
-      // Giả sử response trả về là mảng các submission trực tiếp (response.data hoặc response)
-      // Tùy vào axios config của bạn trả về data hay full response
       let allSubmissions = [];
-      responses.forEach(res => {
-        // Kiểm tra cấu trúc data trả về. Ví dụ nếu axios trả về res.data thì dùng res.data
-        const data = Array.isArray(res) ? res : (res.data || []); 
+      // vòng lặp for...of để chạy tuần tự từng cái một
+      for (const assignmentId of selectedAssignments) {
+        // Await từng request xong mới chạy cái tiếp theo
+        const response = await getExportSubmissions(user.id, classId, assignmentId);
+        
+        // Xử lý dữ liệu gộp vào mảng tổng ngay sau khi nhận response
+        const data = Array.isArray(response) ? response : (response.data || []);
         allSubmissions = [...allSubmissions, ...data];
-      });
+      }
 
       if (allSubmissions.length === 0) {
         toast.info("Không có dữ liệu bài nộp nào để xuất.");
@@ -73,7 +67,6 @@ const ExportExcelModal = ({ isOpen, onClose, courseInfo, assignments, classId })
         return;
       }
 
-      // 3. Format dữ liệu theo đúng cột yêu cầu
       const exportData = allSubmissions.map(item => ({
         "Username": item.username,
         "Student Code": item.studentCode,
@@ -83,10 +76,8 @@ const ExportExcelModal = ({ isOpen, onClose, courseInfo, assignments, classId })
         "Final Score": item.finalScore
       }));
 
-      // 4. Tạo file Excel bằng XLSX
       const worksheet = XLSX.utils.json_to_sheet(exportData);
       
-      // Tùy chỉnh độ rộng cột (Optional)
       const wscols = [
         { wch: 20 }, // Username
         { wch: 15 }, // Student Code
@@ -100,7 +91,6 @@ const ExportExcelModal = ({ isOpen, onClose, courseInfo, assignments, classId })
       const workbook = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(workbook, worksheet, "Grades");
 
-      // 5. Tải file xuống
       const fileName = `${courseInfo?.courseCode || 'Course'}_${courseInfo?.sectionCode || 'Class'}_Grades_${new Date().toLocaleDateString('en-GB').replace(/\//g, '')}.xlsx`;
       XLSX.writeFile(workbook, fileName);
 
