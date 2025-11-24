@@ -228,7 +228,7 @@ const StudentSubmitAssignmentPage = () => {
 
               {/* Card Details */}
               <div className="mt-4 ml-10 pt-4 border-t border-gray-300">
-                <p className="font-semibold mb-2">Detail:</p>
+                <p className="font-semibold mb-2 text-gray-800">Detail:</p>
                 <p className="text-sm text-gray-700 mb-4 whitespace-pre-wrap">
                   {assignment.guidelines}
                 </p>
