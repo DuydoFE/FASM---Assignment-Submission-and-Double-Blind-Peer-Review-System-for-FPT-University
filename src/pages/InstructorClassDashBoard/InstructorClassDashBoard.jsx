@@ -22,6 +22,19 @@ const InstructorClassDashboard = () => {
     { value: 0, name: "Submitted" },
     { value: 0, name: "Graded" },
   ]);
+  const [distributionBins, setDistributionBins] = useState([
+    "0-1",
+    "1-2",
+    "2-3",
+    "3-4",
+    "4-5",
+    "5-6",
+    "6-7",
+    "7-8",
+    "8-9",
+    "9-10",
+  ]);
+  const [distributionCounts, setDistributionCounts] = useState(new Array(10).fill(0));
 
   useEffect(() => {
     const fetchOverview = async () => {
@@ -63,6 +76,25 @@ const InstructorClassDashboard = () => {
           }
         } catch (err) {
           console.error("Failed to load submission statistics:", err);
+        }
+
+        // Fetch assignment score distribution and map to bins/counts
+        try {
+          const resDist = await getAssignmentsDistribution(currentUser.id, courseInstanceId);
+          const distItem = resDist && resDist.data && resDist.data.length > 0 ? resDist.data[0] : null;
+          if (distItem && Array.isArray(distItem.distribution)) {
+            const bins = [];
+            const counts = [];
+            distItem.distribution.forEach((d) => {
+              // normalize range label, use as-is
+              bins.push(typeof d.range === 'string' ? d.range.trim() : String(d.range));
+              counts.push(Number(d.count) || 0);
+            });
+            if (bins.length > 0) setDistributionBins(bins);
+            if (counts.length > 0) setDistributionCounts(counts);
+          }
+        } catch (err) {
+          console.error("Failed to load assignments distribution:", err);
         }
       } catch (error) {
         console.error("Failed to load assignments overview:", error);
@@ -118,48 +150,17 @@ const InstructorClassDashboard = () => {
     ],
   };
 
-  function processScoreData(studentCount) {
-    const rawScores = [];
-    for (let i = 0; i < studentCount; i++) {
-      rawScores.push(+(Math.random() * 10).toFixed(2));
-    }
-    const bins = [
-      "0-1",
-      "1-2",
-      "2-3",
-      "3-4",
-      "4-5",
-      "5-6",
-      "6-7",
-      "7-8",
-      "8-9",
-      "9-10",
-    ];
-    const counts = new Array(10).fill(0);
-    rawScores.forEach((score) => {
-      if (score === 10) {
-        counts[9]++;
-      } else {
-        const binIndex = Math.floor(score);
-        counts[binIndex]++;
-      }
-    });
-    return { bins, counts };
-  }
-
-  const { bins: scoreBins, counts: scoreCounts } = processScoreData(35);
-
   const studentScoreChartOption = {
     xAxis: {
       type: "category",
-      data: scoreBins,
+      data: distributionBins,
     },
     yAxis: {
       type: "value",
     },
     series: [
       {
-        data: scoreCounts,
+        data: distributionCounts,
         type: "bar",
       },
     ],
