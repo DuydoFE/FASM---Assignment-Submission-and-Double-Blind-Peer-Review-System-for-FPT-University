@@ -1,8 +1,9 @@
-
 import React from 'react';
-import { X, ShieldQuestion, Hash, AlertCircle, MessageSquare, Calendar } from 'lucide-react';
+import { 
+    X, ShieldQuestion, Hash, AlertCircle, MessageSquare, Calendar, 
+    User, FileText, GraduationCap, Award 
+} from 'lucide-react';
 
-// Hàm helper để định dạng ngày tháng
 const formatFullDateTime = (dateString) => {
   if (!dateString) return "N/A";
   const options = {
@@ -12,7 +13,6 @@ const formatFullDateTime = (dateString) => {
   return new Date(dateString).toLocaleString('vi-VN', options);
 };
 
-// Component con để hiển thị từng dòng chi tiết
 const DetailRow = ({ icon, label, children }) => (
     <div className="py-3 sm:grid sm:grid-cols-3 sm:gap-4">
         <dt className="text-sm font-medium text-gray-500 flex items-center">
@@ -44,13 +44,25 @@ const ViewRequestModal = ({ isOpen, onClose, details }) => {
                 </div>
                 
                 {/* Body */}
-                <div className="p-6">
+                <div className="p-6 max-h-[70vh] overflow-y-auto">
                     {!details ? (
                         <div className="text-center p-8">Loading details...</div>
                     ) : (
                         <dl className="divide-y divide-gray-200">
                             <DetailRow icon={<Hash size={16} />} label="Request ID">
                                 <span className="font-mono bg-gray-100 px-2 py-1 rounded">{details.requestId}</span>
+                            </DetailRow>
+
+                            <DetailRow icon={<FileText size={16} />} label="Assignment">
+                                {details.assignment?.title || 'N/A'}
+                            </DetailRow>
+
+                            <DetailRow icon={<User size={16} />} label="Requested By">
+                                {details.requestedByStudent?.fullName || 'N/A'}
+                            </DetailRow>
+                            
+                            <DetailRow icon={<Calendar size={16} />} label="Date Requested">
+                                {formatFullDateTime(details.requestedAt)}
                             </DetailRow>
 
                             <DetailRow icon={<AlertCircle size={16} />} label="Status">
@@ -61,19 +73,31 @@ const ViewRequestModal = ({ isOpen, onClose, details }) => {
                                 </span>
                             </DetailRow>
 
-                             <DetailRow icon={<Calendar size={16} />} label="Date Requested">
-                                {formatFullDateTime(details.requestedAt)}
-                            </DetailRow>
+                            {details.gradeInfo?.instructorScore != null && (
+                                <DetailRow icon={<GraduationCap size={16} />} label="Instructor Score">
+                                    <span className="font-semibold text-lg text-blue-600">
+                                        {details.gradeInfo.instructorScore.toFixed(2)}
+                                    </span>
+                                </DetailRow>
+                            )}
+
+                            {details.status === 'Approved' && details.gradeInfo?.finalScoreAfterRegrade != null && (
+                                 <DetailRow icon={<Award size={16} />} label="Score After Regrade">
+                                    <span className="font-bold text-2xl text-green-600">
+                                        {details.gradeInfo.finalScoreAfterRegrade.toFixed(2)}
+                                    </span>
+                                </DetailRow>
+                            )}
 
                             <DetailRow icon={<MessageSquare size={16} />} label="Reason">
-                                <p className="whitespace-pre-wrap bg-gray-50 p-3 rounded-md border">{details.reason}</p>
+                                <p className="whitespace-pre-wrap bg-gray-50 p-3 rounded-md border mt-2">{details.reason}</p>
                             </DetailRow>
                         </dl>
                     )}
                 </div>
 
                 {/* Footer */}
-                 <div className="px-6 py-4 bg-gray-50 flex justify-end rounded-b-lg">
+                 <div className="px-6 py-4 bg-gray-50 flex justify-end rounded-b-lg border-t">
                     <button type="button" onClick={onClose} className="px-5 py-2 bg-white border rounded-md text-gray-700 hover:bg-gray-100 font-semibold">
                         Close
                     </button>
