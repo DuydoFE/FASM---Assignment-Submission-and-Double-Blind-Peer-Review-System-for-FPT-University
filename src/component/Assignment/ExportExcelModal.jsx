@@ -36,7 +36,6 @@ const ExportExcelModal = ({ isOpen, onClose, courseInfo, assignments }) => {
     onClose();
   };
 
-  const totalStudents = courseInfo?.totalStudents || 35;
   const selectedCount = selectedAssignments.length;
   const fileName = `${courseInfo?.courseCode}_${courseInfo?.sectionCode}_Assignments_${new Date().toLocaleDateString('en-GB').replace(/\//g, '')}.xlsx`;
 
@@ -70,10 +69,7 @@ const ExportExcelModal = ({ isOpen, onClose, courseInfo, assignments }) => {
                 <span className="text-sm text-gray-600">Course:</span>
                 <span className="ml-2 font-medium text-blue-600">{courseInfo?.courseCode || 'N/A'}</span>
               </div>
-              <div className="text-right">
-                <span className="text-sm text-gray-600">Total Students:</span>
-                <span className="ml-2 font-medium text-gray-900">{totalStudents}</span>
-              </div>
+              
               <div>
                 <span className="text-sm text-gray-600">Class:</span>
                 <span className="ml-2 font-medium text-green-600">{courseInfo?.sectionCode || 'N/A'}</span>
@@ -124,7 +120,6 @@ const ExportExcelModal = ({ isOpen, onClose, courseInfo, assignments }) => {
             </div>
             <div className="space-y-1 text-sm text-gray-700">
               <p>Đã chọn: <span className="font-medium text-gray-900">{selectedCount}/{assignments.length} assignments</span></p>
-              <p>Tổng sinh viên: <span className="font-medium text-gray-900">{totalStudents}</span></p>
               <p>Dự kiến tên file: <span className="font-medium text-gray-900 break-all">{fileName}</span></p>
             </div>
           </div>
