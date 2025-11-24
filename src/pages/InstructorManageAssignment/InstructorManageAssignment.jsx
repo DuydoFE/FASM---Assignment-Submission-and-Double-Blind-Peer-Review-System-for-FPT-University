@@ -1,15 +1,30 @@
-import React, { useState, useEffect } from 'react';
-import { Plus, FileText, Calendar, Trash2, Edit, MoreVertical, Upload, FileSpreadsheet } from 'lucide-react';
+import React, { useState, useEffect } from "react";
+import {
+  Plus,
+  FileText,
+  Calendar,
+  Trash2,
+  Edit,
+  MoreVertical,
+  Upload,
+  FileSpreadsheet,
+} from "lucide-react";
 import { toast } from "react-toastify";
-import { useNavigate, useLocation } from 'react-router-dom';
-import { Dropdown } from 'antd';
-import { getAssignmentsByCourseInstanceId, createAssignment, deleteAssignment, updateAssignment, assignmentService } from '../../service/assignmentService';
-import { submissionService } from '../../service/submissionService';
-import CreateAssignmentModal from '../../component/Assignment/CreateAssignmentModal';
-import EditAssignmentModal from '../../component/Assignment/EditAssignmentModal';
-import DeleteAssignmentModal from '../../component/Assignment/DeleteAssignmentModal';
-import ExportExcelModal from '../../component/Assignment/ExportExcelModal';
-import UpdateDeadlineModal from '../../component/Assignment/UpdateDeadlineModal';
+import { useNavigate, useLocation } from "react-router-dom";
+import { Dropdown } from "antd";
+import {
+  getAssignmentsByCourseInstanceId,
+  createAssignment,
+  deleteAssignment,
+  updateAssignment,
+  assignmentService,
+} from "../../service/assignmentService";
+import { submissionService } from "../../service/submissionService";
+import CreateAssignmentModal from "../../component/Assignment/CreateAssignmentModal";
+import EditAssignmentModal from "../../component/Assignment/EditAssignmentModal";
+import DeleteAssignmentModal from "../../component/Assignment/DeleteAssignmentModal";
+import ExportExcelModal from "../../component/Assignment/ExportExcelModal";
+import UpdateDeadlineModal from "../../component/Assignment/UpdateDeadlineModal";
 
 const InstructorManageAssignment = () => {
   const navigate = useNavigate();
@@ -18,12 +33,15 @@ const InstructorManageAssignment = () => {
   const [courseInstanceId, setCourseInstanceId] = useState(() => {
     try {
       const fromState = location?.state?.courseInstanceId;
-      const fromStorage = sessionStorage.getItem('currentCourseInstanceId');
-      if (fromState !== undefined && fromState !== null) return String(fromState);
+      const fromStorage = sessionStorage.getItem("currentCourseInstanceId");
+      if (fromState !== undefined && fromState !== null)
+        return String(fromState);
       if (fromStorage) return String(fromStorage);
       return null;
     } catch (e) {
-      return location?.state?.courseInstanceId ? String(location.state.courseInstanceId) : null;
+      return location?.state?.courseInstanceId
+        ? String(location.state.courseInstanceId)
+        : null;
     }
   });
 
@@ -37,19 +55,19 @@ const InstructorManageAssignment = () => {
   const [editingAssignment, setEditingAssignment] = useState(null);
   const [showExportModal, setShowExportModal] = useState(false);
 
- const getStatusColor = (status) => {
+  const getStatusColor = (status) => {
     switch (status) {
-      case 'Upcoming':
+      case "Upcoming":
         return "bg-blue-100 text-blue-800";
-      case 'Draft':
+      case "Draft":
         return "bg-gray-100 text-gray-800";
-      case 'GradesPublished':
+      case "GradesPublished":
         return "bg-green-100 text-green-800";
-      case 'Cancelled':
+      case "Cancelled":
         return "bg-gray-100 text-gray-800";
-      case 'InReview':
+      case "InReview":
         return "bg-yellow-100 text-yellow-800";
-      case 'Closed':
+      case "Closed":
         return "bg-red-100 text-red-800";
       default:
         return "bg-gray-100 text-gray-800";
@@ -61,14 +79,16 @@ const InstructorManageAssignment = () => {
       setLoading(true);
       const response = await getAssignmentsByCourseInstanceId(courseInstanceId);
 
-      const mappedAssignments = response.map(assignment => ({
+      const mappedAssignments = response.map((assignment) => ({
         id: assignment.assignmentId,
         assignmentId: assignment.assignmentId,
         title: assignment.title,
         description: assignment.description,
         guidelines: assignment.guidelines,
         deadline: new Date(assignment.deadline).toLocaleDateString(),
-        reviewDeadline: new Date(assignment.reviewDeadline).toLocaleDateString(),
+        reviewDeadline: new Date(
+          assignment.reviewDeadline
+        ).toLocaleDateString(),
         finalDeadline: new Date(assignment.finalDeadline).toLocaleDateString(),
         time: new Date(assignment.deadline).toLocaleTimeString(),
         submitted: assignment.reviewCount,
@@ -77,13 +97,13 @@ const InstructorManageAssignment = () => {
         sectionCode: assignment.sectionCode,
         status: assignment.status,
         statusColor: getStatusColor(assignment.status),
-        originalData: assignment
+        originalData: assignment,
       }));
 
       setAssignments(mappedAssignments);
     } catch (error) {
       console.error("Failed to fetch assignments:", error);
-      toast.error('Failed to load assignments');
+      toast.error("Failed to load assignments");
     } finally {
       setLoading(false);
     }
@@ -102,29 +122,32 @@ const InstructorManageAssignment = () => {
 
   const handleSaveDeadline = async (newDeadline, newTime) => {
     try {
-      const [year, month, day] = newDeadline.split('-');
-      const [hours, minutes] = newTime.split(':');
+      const [year, month, day] = newDeadline.split("-");
+      const [hours, minutes] = newTime.split(":");
       const deadlineDate = new Date(year, month - 1, day, hours, minutes);
 
-      await assignmentService.extendDeadline(selectedAssignment.id, deadlineDate.toISOString());
+      await assignmentService.extendDeadline(
+        selectedAssignment.id,
+        deadlineDate.toISOString()
+      );
 
-      setAssignments(prev =>
-        prev.map(a =>
+      setAssignments((prev) =>
+        prev.map((a) =>
           a.id === selectedAssignment.id
             ? {
-              ...a,
-              deadline: deadlineDate.toLocaleDateString(),
-              time: deadlineDate.toLocaleTimeString()
-            }
+                ...a,
+                deadline: deadlineDate.toLocaleDateString(),
+                time: deadlineDate.toLocaleTimeString(),
+              }
             : a
         )
       );
-      toast.success('Deadline extended successfully!');
+      toast.success("Deadline extended successfully!");
       setShowUpdateDeadlineModal(false);
       setSelectedAssignment(null);
     } catch (error) {
-      console.error('Failed to extend deadline:', error);
-      toast.error('Failed to extend deadline. Please try again.');
+      console.error("Failed to extend deadline:", error);
+      toast.error("Failed to extend deadline. Please try again.");
     }
   };
 
@@ -141,13 +164,16 @@ const InstructorManageAssignment = () => {
   const handleDeleteConfirm = async (assignmentId) => {
     try {
       await deleteAssignment(assignmentId);
-      toast.success('Assignment deleted successfully!');
+      toast.success("Assignment deleted successfully!");
       setShowDeleteModal(false);
       setSelectedAssignment(null);
       await fetchAssignments();
     } catch (error) {
-      console.error('Failed to delete assignment:', error);
-      toast.error(error.response?.data?.message || 'Failed to delete assignment. Please try again.');
+      console.error("Failed to delete assignment:", error);
+      toast.error(
+        error.response?.data?.message ||
+          "Failed to delete assignment. Please try again."
+      );
     }
   };
 
@@ -158,12 +184,14 @@ const InstructorManageAssignment = () => {
 
   const handleEditClick = async (assignment) => {
     try {
-      const fullDetails = await assignmentService.getAssignmentDetailsById(assignment.assignmentId);
+      const fullDetails = await assignmentService.getAssignmentDetailsById(
+        assignment.assignmentId
+      );
       setEditingAssignment(fullDetails);
       setShowEditModal(true);
     } catch (error) {
-      console.error('Failed to fetch assignment details:', error);
-      toast.error('Failed to load assignment details. Please try again.');
+      console.error("Failed to fetch assignment details:", error);
+      toast.error("Failed to load assignment details. Please try again.");
     }
   };
 
@@ -171,16 +199,19 @@ const InstructorManageAssignment = () => {
     try {
       const response = await updateAssignment(updatedData, file);
       if (response) {
-        toast.success('Assignment updated successfully!');
+        toast.success("Assignment updated successfully!");
         setShowEditModal(false);
         setEditingAssignment(null);
         await fetchAssignments();
       } else {
-        throw new Error('Failed to update assignment');
+        throw new Error("Failed to update assignment");
       }
     } catch (error) {
-      console.error('Failed to update assignment:', error);
-      toast.error(error.response?.data?.message || 'Failed to update assignment. Please try again.');
+      console.error("Failed to update assignment:", error);
+      toast.error(
+        error.response?.data?.message ||
+          "Failed to update assignment. Please try again."
+      );
     }
   };
 
@@ -188,63 +219,83 @@ const InstructorManageAssignment = () => {
     try {
       await createAssignment(assignmentData, file);
       await fetchAssignments();
-      toast.success('Assignment created successfully!');
+      toast.success("Assignment created successfully!");
       setShowModal(false);
     } catch (error) {
-      const message = error?.response?.data?.message || 'Failed to create assignment';
+      const message =
+        error?.response?.data?.message || "Failed to create assignment";
       toast.error(message);
     }
   };
 
   const handleViewSubmissions = async (assignment) => {
     try {
-      await submissionService.getSubmissionsByAssignment(assignment.assignmentId);
+      await submissionService.getSubmissionsByAssignment(
+        assignment.assignmentId
+      );
       navigate(`/instructor/manage-submission/${assignment.assignmentId}`);
     } catch (error) {
-      console.error('Failed to fetch submissions:', error);
-      toast.error('Failed to load submissions. Please try again.');
+      console.error("Failed to fetch submissions:", error);
+      toast.error("Failed to load submissions. Please try again.");
     }
   };
 
   const handlePublishAssignment = async (assignment) => {
     try {
-      await assignmentService.publishAssignment(assignment.id || assignment.assignmentId);
-      toast.success('Assignment published successfully!');
+      await assignmentService.publishAssignment(
+        assignment.id || assignment.assignmentId
+      );
+      toast.success("Assignment published successfully!");
       await fetchAssignments();
     } catch (error) {
-      console.error('Failed to publish assignment:', error);
-      toast.error(error.response?.data?.message || 'Failed to publish assignment. Please try again.');
+      console.error("Failed to publish assignment:", error);
+      toast.error(
+        error.response?.data?.message ||
+          "Failed to publish assignment. Please try again."
+      );
     }
   };
 
   const getDropdownItems = (assignment) => [
-    ...(assignment.status === 'Draft' ? [{
-      label: (
-        <div className="flex items-center gap-2 px-2 py-1">
-          <Upload className="w-4 h-4 text-yellow-600" />
-          <span>Publish Assignment</span>
-        </div>
-      ),
-      onClick: () => handlePublishAssignment(assignment)
-    }] : []),
-    ...(assignment.status === 'Active' ? [{
-      label: (
-        <div className="flex items-center gap-2 px-2 py-1">
-          <Calendar className="w-4 h-4 text-blue-600" />
-          <span>Extend Deadline</span>
-        </div>
-      ),
-      onClick: () => handleUpdateDeadlineClick(assignment)
-    }] : []),
-    ...(assignment.status === 'Draft' || assignment.status === 'Upcoming' ? [{
-      label: (
-        <div className="flex items-center gap-2 px-2 py-1">
-          <Edit className="w-4 h-4 text-green-600" />
-          <span>Edit Assignment</span>
-        </div>
-      ),
-      onClick: () => handleEditClick(assignment)
-    }] : []),
+    ...(assignment.status === "Draft"
+      ? [
+          {
+            label: (
+              <div className="flex items-center gap-2 px-2 py-1">
+                <Upload className="w-4 h-4 text-yellow-600" />
+                <span>Publish Assignment</span>
+              </div>
+            ),
+            onClick: () => handlePublishAssignment(assignment),
+          },
+        ]
+      : []),
+    ...(assignment.status === "Active"
+      ? [
+          {
+            label: (
+              <div className="flex items-center gap-2 px-2 py-1">
+                <Calendar className="w-4 h-4 text-blue-600" />
+                <span>Extend Deadline</span>
+              </div>
+            ),
+            onClick: () => handleUpdateDeadlineClick(assignment),
+          },
+        ]
+      : []),
+    ...(assignment.status === "Draft" || assignment.status === "Upcoming"
+      ? [
+          {
+            label: (
+              <div className="flex items-center gap-2 px-2 py-1">
+                <Edit className="w-4 h-4 text-green-600" />
+                <span>Edit Assignment</span>
+              </div>
+            ),
+            onClick: () => handleEditClick(assignment),
+          },
+        ]
+      : []),
     {
       label: (
         <div className="flex items-center gap-2 px-2 py-1">
@@ -252,19 +303,24 @@ const InstructorManageAssignment = () => {
           <span>View Submissions</span>
         </div>
       ),
-      onClick: () => handleViewSubmissions(assignment)
+      onClick: () => handleViewSubmissions(assignment),
     },
-    ...(assignment.status === 'Draft' || assignment.status === 'Upcoming' ? [{
-      type: 'divider'
-    }, {
-      label: (
-        <div className="flex items-center gap-2 px-2 py-1">
-          <Trash2 className="w-4 h-4 text-red-600" />
-          <span>Delete Assignment</span>
-        </div>
-      ),
-      onClick: () => handleDeleteClick(assignment)
-    }] : [])
+    ...(assignment.status === "Draft" || assignment.status === "Upcoming"
+      ? [
+          {
+            type: "divider",
+          },
+          {
+            label: (
+              <div className="flex items-center gap-2 px-2 py-1">
+                <Trash2 className="w-4 h-4 text-red-600" />
+                <span>Delete Assignment</span>
+              </div>
+            ),
+            onClick: () => handleDeleteClick(assignment),
+          },
+        ]
+      : []),
   ];
 
   const filteredAssignments = assignments;
@@ -280,7 +336,7 @@ const InstructorManageAssignment = () => {
 
   const getDeadlineColor = (deadline) => {
     const today = new Date();
-    const deadlineDate = new Date(deadline.split('/').reverse().join('-'));
+    const deadlineDate = new Date(deadline.split("/").reverse().join("-"));
     const diffTime = deadlineDate - today;
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
@@ -289,24 +345,31 @@ const InstructorManageAssignment = () => {
     return "text-gray-900";
   };
 
-  const courseInfo = assignments.length > 0 ? {
-    courseCode: assignments[0].courseCode,
-    sectionCode: assignments[0].sectionCode,
-    totalStudents: 35 // You can get this from API if available
-  } : null;
+  const courseInfo =
+    assignments.length > 0
+      ? {
+          courseCode: assignments[0].courseCode,
+          sectionCode: assignments[0].sectionCode,
+          totalStudents: 35, // You can get this from API if available
+        }
+      : null;
 
   return (
     <div className="p-8">
       {/* Header */}
       <div className="flex justify-between items-center mb-8">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Assignment Management</h1>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            Assignment Management
+          </h1>
           <div className="flex items-center space-x-4">
             <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium">
-              Course: {assignments.length > 0 ? assignments[0].courseCode : 'N/A'}
+              Course:{" "}
+              {assignments.length > 0 ? assignments[0].courseCode : "N/A"}
             </span>
             <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium">
-              Class: {assignments.length > 0 ? assignments[0].sectionCode : 'N/A'}
+              Class:{" "}
+              {assignments.length > 0 ? assignments[0].sectionCode : "N/A"}
             </span>
           </div>
         </div>
@@ -334,8 +397,12 @@ const InstructorManageAssignment = () => {
         <div className="bg-white p-6 rounded-xl border border-gray-200">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-gray-600 text-sm font-medium">Total Assignments</p>
-              <p className="text-3xl font-bold text-gray-900 mt-1">{assignments.length}</p>
+              <p className="text-gray-600 text-sm font-medium">
+                Total Assignments
+              </p>
+              <p className="text-3xl font-bold text-gray-900 mt-1">
+                {assignments.length}
+              </p>
             </div>
             <div className="bg-blue-100 p-3 rounded-lg">
               <FileText className="w-6 h-6 text-blue-600" />
@@ -360,16 +427,26 @@ const InstructorManageAssignment = () => {
             className="grid grid-cols-12 gap-4 px-6 py-4 border-b border-gray-100 hover:bg-gray-50 items-center transition-colors relative"
           >
             <div className="col-span-3 space-y-1">
-              <h3 className="font-semibold text-gray-900 text-base truncate">{assignment.title}</h3>
+              <h3 className="font-semibold text-gray-900 text-base truncate">
+                {assignment.title}
+              </h3>
             </div>
             <div className="col-span-2 text-center space-y-1">
-              <div className={`font-medium text-base ${getDeadlineColor(assignment.deadline)}`}>
+              <div
+                className={`font-medium text-base ${getDeadlineColor(
+                  assignment.deadline
+                )}`}
+              >
                 {assignment.deadline}
               </div>
               <div className="text-sm text-gray-500">{assignment.time}</div>
             </div>
             <div className="col-span-2 text-center space-y-1">
-              <div className={`font-medium text-base ${getDeadlineColor(assignment.reviewDeadline)}`}>
+              <div
+                className={`font-medium text-base ${getDeadlineColor(
+                  assignment.reviewDeadline
+                )}`}
+              >
                 {assignment.reviewDeadline}
               </div>
               <div className="text-sm text-gray-500">{assignment.time}</div>
@@ -384,7 +461,7 @@ const InstructorManageAssignment = () => {
             <div className="col-span-2 flex justify-center items-center">
               <Dropdown
                 menu={{ items: getDropdownItems(assignment) }}
-                trigger={['click']}
+                trigger={["click"]}
                 placement="bottomRight"
               >
                 <button className="p-2 hover:bg-gray-100 rounded-md transition-colors">
@@ -437,6 +514,7 @@ const InstructorManageAssignment = () => {
         onClose={() => setShowExportModal(false)}
         courseInfo={courseInfo}
         assignments={assignments}
+        classId={courseInstanceId} 
       />
     </div>
   );

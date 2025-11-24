@@ -21,7 +21,6 @@ const submitAssignment = async (submissionData) => {
   }
 };
 
-// Hàm để CẬP NHẬT bài nộp (PUT)
 const updateSubmission = async (submissionId, updateData) => {
   const formData = new FormData();
   formData.append("SubmissionId", submissionId);
@@ -32,8 +31,6 @@ const updateSubmission = async (submissionId, updateData) => {
   
   formData.append("Keywords", updateData.keywords || "");
 
-  // FIX: Thêm trường Status theo yêu cầu của API
-  // Chúng ta có thể mặc định là "Submitted" khi sinh viên nộp lại bài
   formData.append("Status", "Submitted"); 
 
   try {
@@ -46,8 +43,6 @@ const updateSubmission = async (submissionId, updateData) => {
     throw error.response?.data || new Error("Lỗi mạng hoặc server không phản hồi");
   }
 };
-
-
 
 const getSubmissionsByAssignment = async (assignmentId) => {
   try {
@@ -69,10 +64,36 @@ const getSubmissionDetails = async (submissionId) => {
   }
 };
 
+const getExportSubmissions = async (userId, classId, assignmentId) => {
+  try {
+    const response = await api.get('/instructor/InstructorSubmission/submissions', {
+      params: {
+        userId: userId,
+        classId: classId,
+        assignmentId: assignmentId
+      }
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Lỗi khi lấy dữ liệu export:", error.response?.data || error.message);
+    throw error.response?.data || new Error("Lỗi mạng hoặc server không phản hồi");
+  }
+};
+
 
 export const submissionService = {
   submitAssignment,
   updateSubmission,
   getSubmissionsByAssignment,
   getSubmissionDetails,
+  getExportSubmissions, 
+};
+
+
+export {
+  submitAssignment,
+  updateSubmission,
+  getSubmissionsByAssignment,
+  getSubmissionDetails,
+  getExportSubmissions 
 };

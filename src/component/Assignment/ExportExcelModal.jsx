@@ -1,11 +1,17 @@
-import React, { useState } from 'react';
-import { X, FileSpreadsheet, Download } from 'lucide-react';
+import React, { useState } from "react";
+import { X, FileSpreadsheet, Download, Loader2 } from "lucide-react";
+import * as XLSX from 'xlsx'; // Import thư viện Excel
+import { toast } from "react-toastify";
+import { getCurrentAccount } from "../../utils/accountUtils"; // Import hook lấy user
+import { getExportSubmissions } from "../../service/submissionService";
 
-const ExportExcelModal = ({ isOpen, onClose, courseInfo, assignments }) => {
+const ExportExcelModal = ({ isOpen, onClose, courseInfo, assignments, classId }) => {
+  const user = getCurrentAccount(); // Lấy thông tin user hiện tại từ Redux
   const [selectAll, setSelectAll] = useState(true);
   const [selectedAssignments, setSelectedAssignments] = useState(
     assignments.map(a => a.assignmentId)
   );
+  const [isExporting, setIsExporting] = useState(false); // State loading khi đang export
 
   if (!isOpen) return null;
 
@@ -31,13 +37,86 @@ const ExportExcelModal = ({ isOpen, onClose, courseInfo, assignments }) => {
     }
   };
 
-  const handleExport = () => {
-    console.log('Exporting assignments:', selectedAssignments);
-    onClose();
+  const handleExport = async () => {
+    if (!user || !user.id) {
+      toast.error("Không tìm thấy thông tin giảng viên.");
+      return;
+    }
+
+    if (selectedAssignments.length === 0) {
+      toast.warning("Vui lòng chọn ít nhất một bài tập để xuất.");
+      return;
+    }
+
+    setIsExporting(true);
+    try {
+      // 1. Gọi API cho tất cả các assignment được chọn (chạy song song dùng Promise.all)
+      const promises = selectedAssignments.map(assignmentId => 
+        getExportSubmissions(user.id, classId, assignmentId)
+      );
+
+      const responses = await Promise.all(promises);
+
+      // 2. Gộp dữ liệu từ các response lại thành 1 mảng duy nhất
+      // Giả sử response trả về là mảng các submission trực tiếp (response.data hoặc response)
+      // Tùy vào axios config của bạn trả về data hay full response
+      let allSubmissions = [];
+      responses.forEach(res => {
+        // Kiểm tra cấu trúc data trả về. Ví dụ nếu axios trả về res.data thì dùng res.data
+        const data = Array.isArray(res) ? res : (res.data || []); 
+        allSubmissions = [...allSubmissions, ...data];
+      });
+
+      if (allSubmissions.length === 0) {
+        toast.info("Không có dữ liệu bài nộp nào để xuất.");
+        setIsExporting(false);
+        return;
+      }
+
+      // 3. Format dữ liệu theo đúng cột yêu cầu
+      const exportData = allSubmissions.map(item => ({
+        "Username": item.username,
+        "Student Code": item.studentCode,
+        "Assignment Title": item.assignmentTitle,
+        "Class Name": item.className,
+        "Course Name": item.courseName,
+        "Final Score": item.finalScore
+      }));
+
+      // 4. Tạo file Excel bằng XLSX
+      const worksheet = XLSX.utils.json_to_sheet(exportData);
+      
+      // Tùy chỉnh độ rộng cột (Optional)
+      const wscols = [
+        { wch: 20 }, // Username
+        { wch: 15 }, // Student Code
+        { wch: 40 }, // Assignment Title
+        { wch: 15 }, // Class Name
+        { wch: 30 }, // Course Name
+        { wch: 10 }  // Final Score
+      ];
+      worksheet['!cols'] = wscols;
+
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Grades");
+
+      // 5. Tải file xuống
+      const fileName = `${courseInfo?.courseCode || 'Course'}_${courseInfo?.sectionCode || 'Class'}_Grades_${new Date().toLocaleDateString('en-GB').replace(/\//g, '')}.xlsx`;
+      XLSX.writeFile(workbook, fileName);
+
+      toast.success("Xuất file Excel thành công!");
+      onClose();
+
+    } catch (error) {
+      console.error("Export error:", error);
+      toast.error("Có lỗi xảy ra khi xuất file Excel.");
+    } finally {
+      setIsExporting(false);
+    }
   };
 
   const selectedCount = selectedAssignments.length;
-  const fileName = `${courseInfo?.courseCode}_${courseInfo?.sectionCode}_Assignments_${new Date().toLocaleDateString('en-GB').replace(/\//g, '')}.xlsx`;
+  const fileNameDisplay = `${courseInfo?.courseCode}_${courseInfo?.sectionCode}_Assignments_${new Date().toLocaleDateString('en-GB').replace(/\//g, '')}.xlsx`;
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -116,11 +195,11 @@ const ExportExcelModal = ({ isOpen, onClose, courseInfo, assignments }) => {
           <div className="mt-6 bg-green-50 rounded-lg p-4">
             <div className="flex items-center gap-2 mb-2">
               <FileSpreadsheet className="w-5 h-5 text-green-600" />
-              <h3 className="font-semibold text-gray-900">Thông kê xuất file</h3>
+              <h3 className="font-semibold text-gray-900">Thống kê xuất file</h3>
             </div>
             <div className="space-y-1 text-sm text-gray-700">
               <p>Đã chọn: <span className="font-medium text-gray-900">{selectedCount}/{assignments.length} assignments</span></p>
-              <p>Dự kiến tên file: <span className="font-medium text-gray-900 break-all">{fileName}</span></p>
+              <p>Dự kiến tên file: <span className="font-medium text-gray-900 break-all">{fileNameDisplay}</span></p>
             </div>
           </div>
         </div>
@@ -129,17 +208,22 @@ const ExportExcelModal = ({ isOpen, onClose, courseInfo, assignments }) => {
         <div className="flex gap-3 justify-end p-6 border-t border-gray-200 bg-gray-50">
           <button
             onClick={onClose}
+            disabled={isExporting}
             className="px-5 py-2.5 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-100 font-medium transition-colors"
           >
             Cancel
           </button>
           <button
             onClick={handleExport}
-            disabled={selectedAssignments.length === 0}
+            disabled={selectedAssignments.length === 0 || isExporting}
             className="px-5 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed font-medium transition-colors flex items-center gap-2"
           >
-            <Download className="w-4 h-4" />
-            Export Excel
+            {isExporting ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <Download className="w-4 h-4" />
+            )}
+            {isExporting ? 'Exporting...' : 'Export Excel'}
           </button>
         </div>
       </div>
