@@ -5,6 +5,7 @@ import {
   getAllCampuses,
   getAllCourses,
   getAllSemesters,
+  createCourseInstance,
 } from "../../service/adminService";
 import toast from "react-hot-toast";
 
@@ -23,6 +24,15 @@ export default function AdminClassManagement() {
     search: "",
   });
 
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [newClass, setNewClass] = useState({
+    campusId: "",
+    semesterId: "",
+    courseId: "",
+    sectionCode: "",
+  });
+
+  // Lấy dữ liệu filter: campuses, semesters, courses
   useEffect(() => {
     const fetchFiltersData = async () => {
       try {
@@ -42,6 +52,7 @@ export default function AdminClassManagement() {
     fetchFiltersData();
   }, []);
 
+  // Lấy danh sách lớp theo campus
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -64,6 +75,44 @@ export default function AdminClassManagement() {
     setFilters({ ...filters, [name]: value });
   };
 
+  const handleNewClassChange = (e) => {
+    const { name, value } = e.target;
+    setNewClass({ ...newClass, [name]: value });
+  };
+
+  const handleAddClass = async () => {
+    if (!newClass.campusId || !newClass.semesterId || !newClass.courseId || !newClass.sectionCode.trim()) {
+      toast.error("Please fill all required fields");
+      return;
+    }
+
+    try {
+      const requestPayload = {
+        courseId: Number(newClass.courseId),
+        campusId: Number(newClass.campusId),
+        semesterId: Number(newClass.semesterId),
+        sectionCode: newClass.sectionCode.trim(),
+        enrollmentPassword: "", // gửi chuỗi rỗng nếu không dùng
+        requiresApproval: true,
+      };
+
+      await createCourseInstance(requestPayload);
+      toast.success("Class created successfully");
+
+      setShowAddForm(false);
+      setNewClass({ campusId: "", semesterId: "", courseId: "", sectionCode: "" });
+
+      // refresh danh sách lớp
+      if (filters.campus) {
+        const res = await getCourseInstancesByCampusId(Number(filters.campus));
+        setClasses(Array.isArray(res?.data) ? res.data : []);
+      }
+    } catch (err) {
+      console.error("❌ Create class error details:", err.response?.data || err);
+      toast.error("Failed to create class");
+    }
+  };
+
   const handleViewDetail = (id) => navigate(`/admin/classes/${id}`);
 
   const displayedClasses = classes.filter((c) => {
@@ -83,37 +132,37 @@ export default function AdminClassManagement() {
       <div className="bg-white p-5 rounded-2xl shadow-md flex flex-wrap gap-4 items-center">
         <select
           name="campus"
-          className="border rounded-lg p-3 text-gray-700 hover:border-orange-400 transition flex-1 min-w-[150px]"
           value={filters.campus}
           onChange={handleFilterChange}
+          className="border rounded-lg p-3 text-gray-700 hover:border-orange-400 transition flex-1 min-w-[150px]"
         >
           <option value="">Select Campus</option>
-          {campuses.map((campus) => (
-            <option key={campus.campusId} value={campus.campusId}>
-              {campus.name || campus.campusName}
+          {campuses.map((c) => (
+            <option key={c.campusId} value={c.campusId}>
+              {c.name || c.campusName}
             </option>
           ))}
         </select>
 
         <select
           name="semester"
-          className="border rounded-lg p-3 text-gray-700 hover:border-orange-400 transition flex-1 min-w-[150px]"
           value={filters.semester}
           onChange={handleFilterChange}
+          className="border rounded-lg p-3 text-gray-700 hover:border-orange-400 transition flex-1 min-w-[150px]"
         >
           <option value="">All Semesters</option>
-          {semesters.map((sem) => (
-            <option key={sem.semesterId} value={sem.semesterId}>
-              {sem.name || sem.semesterName}
+          {semesters.map((s) => (
+            <option key={s.semesterId} value={s.semesterId}>
+              {s.name || s.semesterName}
             </option>
           ))}
         </select>
 
         <select
           name="course"
-          className="border rounded-lg p-3 text-gray-700 hover:border-orange-400 transition flex-1 min-w-[150px]"
           value={filters.course}
           onChange={handleFilterChange}
+          className="border rounded-lg p-3 text-gray-700 hover:border-orange-400 transition flex-1 min-w-[150px]"
         >
           <option value="">All Courses</option>
           {courses.map((course) => (
@@ -126,19 +175,93 @@ export default function AdminClassManagement() {
         <input
           type="text"
           name="search"
-          placeholder="Search class name..."
-          className="border rounded-lg p-3 flex-1 min-w-[200px] focus:outline-orange-400"
           value={filters.search}
           onChange={handleFilterChange}
+          placeholder="Search class name..."
+          className="border rounded-lg p-3 flex-1 min-w-[200px] focus:outline-orange-400"
         />
 
         <button
-          onClick={() => alert("Add class modal placeholder")}
+          onClick={() => setShowAddForm(!showAddForm)}
           className="px-6 py-3 bg-orange-500 text-white rounded-xl shadow hover:bg-orange-600 transition"
         >
           + Add Class
         </button>
       </div>
+
+      {/* Add Class Form */}
+      {showAddForm && (
+        <div className="bg-white p-5 rounded-2xl shadow-md mt-4 space-y-4">
+          <h3 className="text-xl font-semibold text-gray-700">Create New Class</h3>
+          <div className="flex flex-wrap gap-4">
+            <select
+              name="campusId"
+              value={newClass.campusId}
+              onChange={handleNewClassChange}
+              className="border rounded-lg p-3 flex-1 min-w-[150px]"
+            >
+              <option value="">Select Campus</option>
+              {campuses.map((c) => (
+                <option key={c.campusId} value={c.campusId}>
+                  {c.name || c.campusName}
+                </option>
+              ))}
+            </select>
+
+            <select
+              name="semesterId"
+              value={newClass.semesterId}
+              onChange={handleNewClassChange}
+              className="border rounded-lg p-3 flex-1 min-w-[150px]"
+            >
+              <option value="">Select Semester</option>
+              {semesters.map((s) => (
+                <option key={s.semesterId} value={s.semesterId}>
+                  {s.name || s.semesterName}
+                </option>
+              ))}
+            </select>
+
+            <select
+              name="courseId"
+              value={newClass.courseId || ""}
+              onChange={handleNewClassChange}
+              className="border rounded-lg p-3 flex-1 min-w-[150px]"
+            >
+              <option value="">Select Course</option>
+              {courses.map((course) => (
+                <option key={course.courseId} value={course.courseId}>
+                  {course.name || course.courseName}
+                </option>
+              ))}
+            </select>
+
+            <input
+              type="text"
+              name="sectionCode"
+              value={newClass.sectionCode}
+              onChange={handleNewClassChange}
+              placeholder="Section Code"
+              className="border rounded-lg p-3 flex-1 min-w-[150px]"
+            />
+          </div>
+
+          <div className="flex gap-4">
+            <button
+              onClick={handleAddClass}
+              className="px-6 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition"
+            >
+              Create
+            </button>
+            <button
+              onClick={() => setShowAddForm(false)}
+              className="px-6 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Table */}
       <div className="bg-white rounded-2xl shadow overflow-x-auto">

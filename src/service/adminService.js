@@ -581,3 +581,69 @@ export const getAllSemesters = async () => {
   const res = await api.get("/Semester");
   return res.data;
 };
+
+// Lấy thông tin năm học theo ID
+export const getAcademicYearById = async (id) => {
+  const res = await api.get(`/AcademicYear/${id}`);
+  return res.data;
+};
+
+// Lấy danh sách tất cả năm học
+export const getAllAcademicYears = async () => {
+  const res = await api.get("/AcademicYear");
+  return res.data;
+};
+
+// Tạo năm học mới
+export const createAcademicYear = async (payload) => {
+  const res = await api.post("/AcademicYear", payload);
+  return res.data;
+};
+
+// Cập nhật năm học
+export const updateAcademicYear = async (payload) => {
+  const res = await api.put("/AcademicYear", payload);
+  return res.data;
+};
+
+// Xóa năm học theo ID
+export const deleteAcademicYear = async (id) => {
+  const res = await api.delete(`/AcademicYear/${id}`);
+  return res.data;
+};
+
+// Lấy danh sách năm học theo campus
+export const getAcademicYearsByCampus = async (campusId) => {
+  const res = await api.get(`/AcademicYear/campus/${campusId}`);
+  return res.data;
+};
+
+// Lấy chi tiết một semester theo ID
+export const getSemesterById = async (id) => {
+  const res = await api.get(`/Semester/${id}`);
+  return res.data;
+};
+
+// Lấy danh sách semester theo AcademicYear
+export const getSemestersByAcademicYear = async (academicYearId) => {
+  const res = await api.get(`/Semester/academic-year/${academicYearId}`);
+  return res.data;
+};
+
+// Tạo một semester mới
+export const createSemester = async (payload) => {
+  const res = await api.post("/Semester", payload);
+  return res.data;
+};
+
+// Cập nhật thông tin semester
+export const updateSemester = async (payload) => {
+  const res = await api.put("/Semester", payload);
+  return res.data;
+};
+
+// Xóa semester theo ID
+export const deleteSemester = async (id) => {
+  const res = await api.delete(`/Semester/${id}`);
+  return res.data;
+};

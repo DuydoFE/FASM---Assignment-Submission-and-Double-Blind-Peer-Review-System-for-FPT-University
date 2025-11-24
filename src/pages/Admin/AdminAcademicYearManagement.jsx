@@ -1,44 +1,143 @@
 import React, { useState, useEffect } from "react";
+import {
+  getAllAcademicYears,
+  createAcademicYear,
+  updateAcademicYear,
+  deleteAcademicYear,
+} from "../../service/adminService";
+import toast from "react-hot-toast";
 
 export default function AdminAcademicYearManagement() {
   const [years, setYears] = useState([]);
   const [newYear, setNewYear] = useState("");
   const [editingId, setEditingId] = useState(null);
   const [editingValue, setEditingValue] = useState("");
+  const [loading, setLoading] = useState(true);
+
+  // Convert response object to FE simplified object
+  const mapYear = (item) => ({
+    id: item.academicYearId,
+    name: item.name,
+    campusId: item.campusId,
+    campusName: item.campusName,
+    startDate: item.startDate,
+    endDate: item.endDate,
+    semesterCount: item.semesterCount,
+  });
+
+  // ================================
+  // LOAD DATA
+  // ================================
+  const loadYears = async () => {
+    try {
+      setLoading(true);
+
+      const response = await getAllAcademicYears();
+
+      // FIX: API returns { message, statusCode, data: [...] }
+      const list = response?.data || [];
+
+      setYears(list.map(mapYear));
+    } catch (e) {
+      toast.error("Failed to load academic years");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    setYears([
-      { id: 1, name: "2022 - 2023" },
-      { id: 2, name: "2023 - 2024" },
-    ]);
+    loadYears();
   }, []);
 
-  const handleAdd = () => {
-    if (!newYear.trim()) return;
-    const newItem = { id: Date.now(), name: newYear };
-    setYears([...years, newItem]);
-    setNewYear("");
+  // ================================
+  // ADD
+  // ================================
+  const handleAdd = async () => {
+    if (!newYear.trim()) {
+      toast.error("Academic year cannot be empty");
+      return;
+    }
+
+    try {
+      const today = new Date();
+      const nextYear = new Date();
+      nextYear.setFullYear(today.getFullYear() + 1);
+
+      const body = {
+        campusId: 1, // tạm fix vì UI chưa có campus
+        name: newYear,
+        startDate: today.toISOString(),
+        endDate: nextYear.toISOString(),
+      };
+
+      await createAcademicYear(body);
+
+      toast.success("New academic year added");
+      setNewYear("");
+      loadYears();
+    } catch (e) {
+      toast.error("Failed to add academic year");
+    }
   };
 
-  const handleDelete = (id) => {
-    setYears(years.filter((y) => y.id !== id));
+  // ================================
+  // DELETE
+  // ================================
+  const handleDelete = async (academicYearId) => {
+    if (!window.confirm("Are you sure you want to delete this?")) return;
+
+    try {
+      await deleteAcademicYear(academicYearId);
+      toast.success("Academic year deleted");
+      loadYears();
+    } catch (e) {
+      toast.error("Failed to delete academic year");
+    }
   };
 
+  // ================================
+  // EDIT
+  // ================================
   const handleEdit = (year) => {
     setEditingId(year.id);
     setEditingValue(year.name);
   };
 
-  const handleSaveEdit = () => {
-    setYears(
-      years.map((y) =>
-        y.id === editingId ? { ...y, name: editingValue } : y
-      )
-    );
-    setEditingId(null);
-    setEditingValue("");
+  const handleSaveEdit = async () => {
+    if (!editingValue.trim()) {
+      toast.error("Academic year cannot be empty");
+      return;
+    }
+
+    try {
+      const now = new Date();
+      const next = new Date();
+      next.setFullYear(now.getFullYear() + 1);
+
+      const year = years.find((y) => y.id === editingId);
+
+      const body = {
+        academicYearId: editingId,
+        campusId: year.campusId,
+        name: editingValue,
+        startDate: year.startDate || now.toISOString(),
+        endDate: year.endDate || next.toISOString(),
+      };
+
+      await updateAcademicYear(body);
+
+      toast.success("Academic year updated");
+      setEditingId(null);
+      setEditingValue("");
+      loadYears();
+    } catch (e) {
+      toast.error("Failed to update academic year");
+    }
   };
 
+  // ================================
+  // UI
+  // ================================
   return (
     <div className="bg-white p-6 rounded-2xl shadow-lg border border-gray-200">
       <h2 className="text-3xl font-bold mb-6 text-orange-600">
@@ -68,58 +167,74 @@ export default function AdminAcademicYearManagement() {
           <thead>
             <tr className="bg-orange-50 text-left">
               <th className="p-3 border-b font-semibold text-gray-700">ID</th>
-              <th className="p-3 border-b font-semibold text-gray-700">Academic Year</th>
+              <th className="p-3 border-b font-semibold text-gray-700">
+                Academic Year
+              </th>
               <th className="p-3 border-b font-semibold w-40">Actions</th>
             </tr>
           </thead>
 
           <tbody>
-            {years.map((year) => (
-              <tr
-                key={year.id}
-                className="border-b hover:bg-orange-50 transition"
-              >
-                <td className="p-3">{year.id}</td>
-
-                <td className="p-3">
-                  {editingId === year.id ? (
-                    <input
-                      type="text"
-                      className="border border-gray-300 p-2 rounded-lg w-full focus:ring-2 focus:ring-orange-400 focus:outline-none"
-                      value={editingValue}
-                      onChange={(e) => setEditingValue(e.target.value)}
-                    />
-                  ) : (
-                    year.name
-                  )}
-                </td>
-
-                <td className="p-3 flex gap-2">
-                  {editingId === year.id ? (
-                    <button
-                      onClick={handleSaveEdit}
-                      className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600"
-                    >
-                      Save
-                    </button>
-                  ) : (
-                    <button
-                      onClick={() => handleEdit(year)}
-                      className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600"
-                    >
-                      Edit
-                    </button>
-                  )}
-
-                  <button
-                    onClick={() => handleDelete(year.id)}
-                    className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600"
-                  >
-                    Delete
-                  </button>
+            {loading ? (
+              <tr>
+                <td colSpan="3" className="text-center p-4 text-gray-500">
+                  Loading...
                 </td>
               </tr>
-            ))}
+            ) : years.length === 0 ? (
+              <tr>
+                <td colSpan="3" className="text-center p-4 text-gray-500">
+                  No academic years found
+                </td>
+              </tr>
+            ) : (
+              years.map((year) => (
+                <tr
+                  key={year.id}
+                  className="border-b hover:bg-orange-50 transition"
+                >
+                  <td className="p-3">{year.id}</td>
+
+                  <td className="p-3">
+                    {editingId === year.id ? (
+                      <input
+                        type="text"
+                        className="border border-gray-300 p-2 rounded-lg w-full focus:ring-2 focus:ring-orange-400 focus:outline-none"
+                        value={editingValue}
+                        onChange={(e) => setEditingValue(e.target.value)}
+                      />
+                    ) : (
+                      year.name
+                    )}
+                  </td>
+
+                  <td className="p-3 flex gap-2">
+                    {editingId === year.id ? (
+                      <button
+                        onClick={handleSaveEdit}
+                        className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600"
+                      >
+                        Save
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => handleEdit(year)}
+                        className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600"
+                      >
+                        Edit
+                      </button>
+                    )}
+
+                    <button
+                      onClick={() => handleDelete(year.id)}
+                      className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600"
+                    >
+                      Delete
+                    </button>
+                  </td>
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>
