@@ -14,8 +14,10 @@ const StatCard = ({ icon: Icon, value, label, color }) => {
       <div className={`w-12 h-12 flex items-center justify-center rounded-full ${colorClasses[color]}`}>
         <Icon size={24} />
       </div>
-      <p className="text-2xl font-bold mt-2">{value}</p>
-      <p className="text-sm text-gray-500">{label}</p>
+      
+      <p className="text-2xl font-bold mt-2 text-gray-900">{value}</p>
+      
+      <p className="text-sm text-gray-700 font-medium">{label}</p>
     </div>
   );
 };
