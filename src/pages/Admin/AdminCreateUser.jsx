@@ -2,7 +2,8 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Save } from "lucide-react";
 import { createUser, getAllCampuses, getAllMajors } from "../../service/adminService";
-import toast, { Toaster } from "react-hot-toast";
+import { Toaster } from "react-hot-toast";
+import { toast } from "react-toastify";
 
 export default function AdminCreateUser() {
     const navigate = useNavigate();
