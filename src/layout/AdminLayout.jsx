@@ -1,5 +1,14 @@
 import { Outlet, NavLink, useNavigate } from "react-router-dom";
-import { Settings, User, Users, ClipboardList, BarChart3, FileText } from "lucide-react"; // Thêm FileText cho Rubric
+import {
+  Settings,
+  User,
+  Users,
+  ClipboardList,
+  BarChart3,
+  FileText,
+  CalendarRange, // Icon cho Academic Year
+  CalendarDays    // Icon cho Semester
+} from "lucide-react";
 import React from "react";
 
 export default function AdminLayout() {
@@ -64,6 +73,32 @@ export default function AdminLayout() {
           >
             <FileText size={18} />
             Rubric Management
+          </NavLink>
+
+          {/* Academic Year Management (NEW) */}
+          <NavLink
+            to="/admin/academicYears"
+            className={({ isActive }) =>
+              `flex items-center gap-2 px-4 py-2 rounded-lg ${
+                isActive ? "bg-orange-500 text-white" : "hover:bg-gray-200"
+              }`
+            }
+          >
+            <CalendarRange size={18} />
+            Academic Year Management
+          </NavLink>
+
+          {/* Semester Management (NEW) */}
+          <NavLink
+            to="/admin/semesters"
+            className={({ isActive }) =>
+              `flex items-center gap-2 px-4 py-2 rounded-lg ${
+                isActive ? "bg-orange-500 text-white" : "hover:bg-gray-200"
+              }`
+            }
+          >
+            <CalendarDays size={18} />
+            Semester Management
           </NavLink>
 
           {/* System Setting */}
