@@ -1,16 +1,57 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import ReactECharts from "echarts-for-react";
+import {
+  getAssignmentsOverview,
+  getSubmissionStatistics,
+  getAssignmentsDistribution,
+} from "../../service/instructorStatistic";
+import { getCurrentAccount } from "../../utils/accountUtils";
 
 const InstructorClassDashboard = () => {
-  const assignmentStatusData = [
-    { value: 120, name: "Draft" },
-    { value: 80, name: "Active" },
-    { value: 50, name: "Upcoming" },
-    { value: 110, name: "Closed" },
-    { value: 30, name: "Cancelled" },
-    { value: 95, name: "In Review" },
-    { value: 70, name: "Grades Published" },
-  ];
+  const currentUser = getCurrentAccount();
+  const [assignmentStatusData, setAssignmentStatusData] = useState([
+    { value: 0, name: "Draft" },
+    { value: 0, name: "Upcoming" },
+    { value: 0, name: "Active" },
+    { value: 0, name: "In Review" },
+    { value: 0, name: "Closed" },
+    { value: 0, name: "Grades Published" },
+  ]);
+
+  useEffect(() => {
+    const fetchOverview = async () => {
+      try {
+        const courseInstanceId = sessionStorage.getItem(
+          "currentCourseInstanceId"
+        );
+        if (!currentUser?.id || !courseInstanceId) {
+          console.warn(
+            "Skipping assignments overview fetch: missing userId or courseInstanceId"
+          );
+          return;
+        }
+
+        const res = await getAssignmentsOverview(currentUser.id, courseInstanceId);
+        // service returns an object like { message, statusCode, data: [ ... ] }
+        const item = res && res.data && res.data.length > 0 ? res.data[0] : null;
+        if (item) {
+          const mapped = [
+            { value: item.draftCount, name: "Draft" },
+            { value: item.upcomingCount, name: "Upcoming" },
+            { value: item.activeCount, name: "Active" },
+            { value: item.inReviewCount, name: "In Review" },
+            { value: item.closedCount, name: "Closed" },
+            { value: item.gradesPublishedCount, name: "Grades Published" },
+          ];
+          setAssignmentStatusData(mapped);
+        }
+      } catch (error) {
+        console.error("Failed to load assignments overview:", error);
+      }
+    };
+
+    fetchOverview();
+  }, [currentUser]);
 
   const assignmentStatusOption = {
     tooltip: { trigger: "item" },
@@ -32,8 +73,8 @@ const InstructorClassDashboard = () => {
   };
 
   const submissionData = [
-    { value: 320, name: "Submitted" },
     { value: 180, name: "Not Submitted" },
+    { value: 320, name: "Submitted" },
     { value: 180, name: "Graded" },
   ];
 
@@ -124,7 +165,7 @@ const InstructorClassDashboard = () => {
       <div className="grid grid-cols-12 gap-6">
         <div className="col-span-9 bg-white rounded-lg p-6 shadow-sm border border-gray-200">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">
-            Assignment Status Overview
+            Assignment Overview
           </h2>
           <ReactECharts
             option={assignmentStatusOption}
