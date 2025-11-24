@@ -17,6 +17,11 @@ const InstructorClassDashboard = () => {
     { value: 0, name: "Closed" },
     { value: 0, name: "Grades Published" },
   ]);
+  const [submissionData, setSubmissionData] = useState([
+    { value: 0, name: "Not Submitted" },
+    { value: 0, name: "Submitted" },
+    { value: 0, name: "Graded" },
+  ]);
 
   useEffect(() => {
     const fetchOverview = async () => {
@@ -32,7 +37,6 @@ const InstructorClassDashboard = () => {
         }
 
         const res = await getAssignmentsOverview(currentUser.id, courseInstanceId);
-        // service returns an object like { message, statusCode, data: [ ... ] }
         const item = res && res.data && res.data.length > 0 ? res.data[0] : null;
         if (item) {
           const mapped = [
@@ -44,6 +48,21 @@ const InstructorClassDashboard = () => {
             { value: item.gradesPublishedCount, name: "Grades Published" },
           ];
           setAssignmentStatusData(mapped);
+        }
+
+        try {
+          const resSub = await getSubmissionStatistics(currentUser.id, courseInstanceId);
+          const subItem = resSub && resSub.data && resSub.data.length > 0 ? resSub.data[0] : null;
+          if (subItem) {
+            const mappedSub = [
+              { value: subItem.totalNotSubmittedCount ?? 0, name: "Not Submitted" },
+              { value: subItem.totalSubmittedCount ?? 0, name: "Submitted" },
+              { value: subItem.totalGradedCount ?? 0, name: "Graded" },
+            ];
+            setSubmissionData(mappedSub);
+          }
+        } catch (err) {
+          console.error("Failed to load submission statistics:", err);
         }
       } catch (error) {
         console.error("Failed to load assignments overview:", error);
@@ -72,11 +91,7 @@ const InstructorClassDashboard = () => {
     ],
   };
 
-  const submissionData = [
-    { value: 180, name: "Not Submitted" },
-    { value: 320, name: "Submitted" },
-    { value: 180, name: "Graded" },
-  ];
+  
 
   const submissionOption = {
     tooltip: {
