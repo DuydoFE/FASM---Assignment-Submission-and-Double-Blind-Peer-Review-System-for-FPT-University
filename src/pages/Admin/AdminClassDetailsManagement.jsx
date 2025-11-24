@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import toast from "react-hot-toast";
+import { ToastContainer, toast } from "react-toastify";
 
 import {
   getCourseInstanceById,
@@ -25,8 +25,8 @@ export default function AdminClassDetailsManagement() {
   const [file, setFile] = useState(null);
   const changedByUserId = 1;
 
+  // State Modal
   const [confirmModal, setConfirmModal] = useState({ show: false, user: null, type: "student" });
-
   const [addStudentModal, setAddStudentModal] = useState({ show: false });
   const [studentList, setStudentList] = useState([]);
   const [newStudent, setNewStudent] = useState({ userId: "", studentCode: "" });
@@ -34,6 +34,15 @@ export default function AdminClassDetailsManagement() {
   const [addInstructorModal, setAddInstructorModal] = useState({ show: false });
   const [instructorList, setInstructorList] = useState([]);
   const [newInstructor, setNewInstructor] = useState({ userId: "" });
+
+  // --- 2. Cấu hình Style Tailwind cho Toast ---
+  const contextClass = {
+    success: "bg-green-50 text-green-600 border border-green-200",
+    error: "bg-red-50 text-red-600 border border-red-200",
+    info: "bg-blue-50 text-blue-600 border border-blue-200",
+    warning: "bg-orange-50 text-orange-600 border border-orange-200",
+    default: "bg-white text-gray-600 border border-gray-200",
+  };
 
   const refreshData = async () => {
     try {
@@ -47,18 +56,17 @@ export default function AdminClassDetailsManagement() {
       setInstructors(
         Array.isArray(instructorRes?.data)
           ? instructorRes.data.map((inst) => ({
-            courseInstructorId: inst.id,
-            courseInstanceId: inst.courseInstanceId,
-            userId: inst.userId,
-            instructorName: inst.instructorName,
-            instructorEmail: inst.instructorEmail,
-          }))
+              courseInstructorId: inst.id,
+              courseInstanceId: inst.courseInstanceId,
+              userId: inst.userId,
+              instructorName: inst.instructorName,
+              instructorEmail: inst.instructorEmail,
+            }))
           : []
       );
-
     } catch (err) {
       console.error("❌ Error refreshing data:", err);
-      toast.error("Failed to refresh class data!");
+      // Không cần toast lỗi ở đây để tránh spam nếu auto refresh
     }
   };
 
@@ -80,6 +88,7 @@ export default function AdminClassDetailsManagement() {
     if (id) fetchData();
   }, [id]);
 
+  // --- XỬ LÝ: XÓA THÀNH VIÊN ---
   const handleConfirmRemove = async () => {
     if (!confirmModal.user) return;
 
@@ -91,15 +100,14 @@ export default function AdminClassDetailsManagement() {
           id,
           confirmModal.user.courseStudentId
         );
-        toast.success(`✅ ${confirmModal.user.studentName} has been removed!`);
+        toast.success(`✅ Removed student: ${confirmModal.user.studentName}`);
       } else if (confirmModal.type === "instructor") {
         await deleteCourseInstructor(
           confirmModal.user.courseInstructorId,
           confirmModal.user.courseInstanceId,
           confirmModal.user.instructorId || confirmModal.user.userId
         );
-
-        toast.success(`✅ ${confirmModal.user.instructorName} has been removed!`);
+        toast.success(`✅ Removed instructor: ${confirmModal.user.instructorName}`);
       }
 
       await refreshData();
@@ -113,13 +121,14 @@ export default function AdminClassDetailsManagement() {
     }
   };
 
+  // --- XỬ LÝ: IMPORT EXCEL ---
   const handleImportFile = async () => {
-    if (!file) return toast.error("❌ Please choose a file first!");
+    if (!file) return toast.warn("⚠️ Please choose a file first!");
 
     try {
       setLoading(true);
       await importStudentsFromExcel(id, file, changedByUserId);
-      toast.success("✅ Import successful!");
+      toast.success("✅ Import students successful!");
       setFile(null);
       await refreshData();
     } catch (err) {
@@ -137,14 +146,15 @@ export default function AdminClassDetailsManagement() {
       return Array.isArray(res?.data) ? res.data : [];
     } catch (err) {
       console.error(err);
-      toast.error("❌ Failed to load users!");
+      toast.error("❌ Failed to load users list!");
       return [];
     }
   };
 
+  // --- 3. XỬ LÝ API: ADD STUDENT ---
   const handleAddStudent = async () => {
     if (!newStudent.userId && !newStudent.studentCode)
-      return toast.error("❌ Please select a student or enter student code!");
+      return toast.warn("⚠️ Please select a student or enter student code!");
 
     try {
       setLoading(true);
@@ -157,13 +167,16 @@ export default function AdminClassDetailsManagement() {
         changedByUserId,
       });
 
+      // Thông báo thành công
       toast.success("✅ Student added successfully!");
+      
       setAddStudentModal({ show: false });
       setNewStudent({ userId: "", studentCode: "" });
 
       await refreshData();
     } catch (err) {
       console.error(err);
+      // Lấy thông báo lỗi từ server
       const errorMsg = err?.response?.data?.message || "Failed to add student!";
       toast.error(`❌ ${errorMsg}`);
     } finally {
@@ -171,8 +184,9 @@ export default function AdminClassDetailsManagement() {
     }
   };
 
+  // --- 4. XỬ LÝ API: ADD INSTRUCTOR ---
   const handleAddInstructor = async () => {
-    if (!newInstructor.userId) return toast.error("❌ Please select an instructor!");
+    if (!newInstructor.userId) return toast.warn("⚠️ Please select an instructor!");
 
     try {
       setLoading(true);
@@ -180,10 +194,12 @@ export default function AdminClassDetailsManagement() {
       await createCourseInstructor({
         courseInstanceId: id,
         userId: Number(newInstructor.userId),
-        isMainInstructor: true, // default main
+        isMainInstructor: true,
       });
 
+      // Thông báo thành công
       toast.success("✅ Instructor added successfully!");
+
       setAddInstructorModal({ show: false });
       setNewInstructor({ userId: "" });
 
@@ -209,11 +225,25 @@ export default function AdminClassDetailsManagement() {
     setAddInstructorModal({ show: true });
   };
 
-  if (loading) return <p className="p-6 text-gray-500">Loading...</p>;
+  if (loading && !classInfo) return <p className="p-6 text-gray-500">Loading details...</p>;
   if (!classInfo) return <p className="p-6 text-gray-500">Class not found</p>;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 relative">
+      {/* 5. Thêm ToastContainer với Custom Tailwind Classes */}
+      <ToastContainer
+        toastClassName={({ type }) =>
+          `${
+            contextClass[type || "default"]
+          } relative flex p-3 min-h-[50px] rounded-lg justify-between overflow-hidden cursor-pointer shadow-lg mb-4 transform transition-all hover:scale-105 font-medium`
+        }
+        bodyClassName={() => "flex items-center text-sm px-2"}
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={true}
+        closeButton={false}
+      />
+
       <button
         onClick={() => navigate("/admin/classes")}
         className="px-4 py-2 bg-gray-300 text-gray-800 rounded hover:bg-gray-400"
@@ -233,14 +263,14 @@ export default function AdminClassDetailsManagement() {
       <div className="flex space-x-2">
         <button
           onClick={openAddStudentModal}
-          className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+          className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 shadow"
         >
           Add Student
         </button>
 
         <button
           onClick={openAddInstructorModal}
-          className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+          className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 shadow"
         >
           Add Instructor
         </button>
@@ -251,12 +281,16 @@ export default function AdminClassDetailsManagement() {
         <div className="flex justify-between items-center">
           <h3 className="text-lg font-semibold">👥 Class Members</h3>
 
-          <div className="space-x-2">
-            <input type="file" accept=".xlsx,.xls" onChange={(e) => setFile(e.target.files[0])} />
+          <div className="space-x-2 flex items-center">
+            <input 
+                type="file" 
+                accept=".xlsx,.xls" 
+                onChange={(e) => setFile(e.target.files[0])} 
+                className="text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-orange-50 file:text-orange-700 hover:file:bg-orange-100"
+            />
             <button
               onClick={handleImportFile}
-              className={`px-4 py-2 rounded text-white ${loading ? "bg-gray-400 cursor-not-allowed" : "bg-green-600 hover:bg-green-700"
-                }`}
+              className={`px-4 py-2 rounded text-white shadow ${loading ? "bg-gray-400 cursor-not-allowed" : "bg-green-600 hover:bg-green-700"}`}
               disabled={loading}
             >
               Import Excel
@@ -288,18 +322,11 @@ export default function AdminClassDetailsManagement() {
                   <td className="p-2">{u.studentCode}</td>
                   <td className="p-2">{u.studentEmail}</td>
                   <td className="p-2">{u.roleName || "Student"}</td>
-
-                  <td
-                    className={`p-2 font-medium ${u.status === "Active" ? "text-green-600" : "text-red-500"
-                      }`}
-                  >
-                    {u.status}
-                  </td>
-
+                  <td className={`p-2 font-medium ${u.status === "Active" ? "text-green-600" : "text-red-500"}`}>{u.status}</td>
                   <td className="p-2">
                     <button
                       onClick={() => setConfirmModal({ show: true, user: u, type: "student" })}
-                      className="text-red-500 hover:underline"
+                      className="text-red-500 hover:underline font-medium"
                       disabled={loading}
                     >
                       Remove
@@ -335,13 +362,10 @@ export default function AdminClassDetailsManagement() {
                 <tr key={inst.courseInstructorId} className="border-b hover:bg-gray-50">
                   <td className="p-2">{inst.instructorName}</td>
                   <td className="p-2">{inst.instructorEmail}</td>
-
                   <td className="p-2 text-center">
                     <button
-                      onClick={() =>
-                        setConfirmModal({ show: true, user: inst, type: "instructor" })
-                      }
-                      className="px-2 py-1 bg-red-500 text-white rounded hover:bg-red-600"
+                      onClick={() => setConfirmModal({ show: true, user: inst, type: "instructor" })}
+                      className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 text-xs shadow"
                       disabled={loading}
                     >
                       Remove
@@ -357,7 +381,7 @@ export default function AdminClassDetailsManagement() {
       <div className="flex justify-end">
         <button
           onClick={() => navigate(`/admin/classes/${id}/assignments`)}
-          className="px-6 py-2 bg-orange-500 text-white rounded hover:bg-orange-600"
+          className="px-6 py-2 bg-orange-500 text-white rounded hover:bg-orange-600 shadow-md"
         >
           📄 View Assignments
         </button>
@@ -366,14 +390,11 @@ export default function AdminClassDetailsManagement() {
       {/* CONFIRM REMOVE MODAL */}
       {confirmModal.show && (
         <div className="fixed inset-0 flex items-center justify-center bg-black/40 z-50">
-          <div className="bg-white p-6 rounded-xl w-96 shadow-lg text-center space-y-4">
+          <div className="bg-white p-6 rounded-xl w-96 shadow-lg text-center space-y-4 animate-fade-in-down">
             <h3 className="text-lg font-bold text-red-600">⚠ Confirm Removal</h3>
             <p>
               Are you sure you want to remove{" "}
-              <strong>
-                {confirmModal.user.studentName || confirmModal.user.instructorName}
-              </strong>
-              ?
+              <strong>{confirmModal.user.studentName || confirmModal.user.instructorName}</strong>?
             </p>
 
             <div className="flex justify-center space-x-4 pt-2">
@@ -384,13 +405,12 @@ export default function AdminClassDetailsManagement() {
               >
                 Cancel
               </button>
-
               <button
                 onClick={handleConfirmRemove}
-                className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+                className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 shadow"
                 disabled={loading}
               >
-                Remove
+                {loading ? "Removing..." : "Remove"}
               </button>
             </div>
           </div>
@@ -400,14 +420,14 @@ export default function AdminClassDetailsManagement() {
       {/* ADD STUDENT MODAL */}
       {addStudentModal.show && (
         <div className="fixed inset-0 flex items-center justify-center bg-black/40 z-50">
-          <div className="bg-white p-6 rounded-xl w-96 shadow-lg text-center space-y-4">
+          <div className="bg-white p-6 rounded-xl w-96 shadow-lg text-center space-y-4 animate-fade-in-down">
             <h3 className="text-lg font-bold text-green-600">➕ Add Student</h3>
 
             <div className="space-y-2">
               <select
                 value={newStudent.userId}
                 onChange={(e) => setNewStudent({ ...newStudent, userId: e.target.value })}
-                className="w-full p-2 border rounded"
+                className="w-full p-2 border rounded focus:border-green-500 outline-none"
               >
                 <option value="">Select Student</option>
                 {studentList.map((s) => (
@@ -427,7 +447,7 @@ export default function AdminClassDetailsManagement() {
                     studentCode: e.target.value.trim(),
                   })
                 }
-                className="w-full p-2 border rounded"
+                className="w-full p-2 border rounded focus:border-green-500 outline-none"
               />
             </div>
 
@@ -439,13 +459,12 @@ export default function AdminClassDetailsManagement() {
               >
                 Cancel
               </button>
-
               <button
                 onClick={handleAddStudent}
-                className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+                className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 shadow"
                 disabled={loading}
               >
-                Add
+                {loading ? "Adding..." : "Add"}
               </button>
             </div>
           </div>
@@ -455,13 +474,13 @@ export default function AdminClassDetailsManagement() {
       {/* ADD INSTRUCTOR MODAL */}
       {addInstructorModal.show && (
         <div className="fixed inset-0 flex items-center justify-center bg-black/40 z-50">
-          <div className="bg-white p-6 rounded-xl w-96 shadow-lg text-center space-y-4">
+          <div className="bg-white p-6 rounded-xl w-96 shadow-lg text-center space-y-4 animate-fade-in-down">
             <h3 className="text-lg font-bold text-blue-600">➕ Add Instructor</h3>
 
             <select
               value={newInstructor.userId}
               onChange={(e) => setNewInstructor({ ...newInstructor, userId: e.target.value })}
-              className="w-full p-2 border rounded"
+              className="w-full p-2 border rounded focus:border-blue-500 outline-none"
             >
               <option value="">Select Instructor</option>
               {instructorList.map((i) => (
@@ -479,13 +498,12 @@ export default function AdminClassDetailsManagement() {
               >
                 Cancel
               </button>
-
               <button
                 onClick={handleAddInstructor}
-                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 shadow"
                 disabled={loading}
               >
-                Add
+                {loading ? "Adding..." : "Add"}
               </button>
             </div>
           </div>
