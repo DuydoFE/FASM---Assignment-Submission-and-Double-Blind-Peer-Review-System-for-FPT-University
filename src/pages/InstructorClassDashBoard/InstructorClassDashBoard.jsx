@@ -16,6 +16,7 @@ const InstructorClassDashboard = () => {
     { value: 0, name: "In Review" },
     { value: 0, name: "Closed" },
     { value: 0, name: "Grades Published" },
+    { value: 0, name: "Cancelled" },
   ]);
   const [submissionData, setSubmissionData] = useState([
     { value: 0, name: "Not Submitted" },
@@ -34,7 +35,9 @@ const InstructorClassDashboard = () => {
     "8-9",
     "9-10",
   ]);
-  const [distributionCounts, setDistributionCounts] = useState(new Array(10).fill(0));
+  const [distributionCounts, setDistributionCounts] = useState(
+    new Array(10).fill(0)
+  );
 
   useEffect(() => {
     const fetchOverview = async () => {
@@ -49,8 +52,12 @@ const InstructorClassDashboard = () => {
           return;
         }
 
-        const res = await getAssignmentsOverview(currentUser.id, courseInstanceId);
-        const item = res && res.data && res.data.length > 0 ? res.data[0] : null;
+        const res = await getAssignmentsOverview(
+          currentUser.id,
+          courseInstanceId
+        );
+        const item =
+          res && res.data && res.data.length > 0 ? res.data[0] : null;
         if (item) {
           const mapped = [
             { value: item.draftCount, name: "Draft" },
@@ -59,16 +66,26 @@ const InstructorClassDashboard = () => {
             { value: item.inReviewCount, name: "In Review" },
             { value: item.closedCount, name: "Closed" },
             { value: item.gradesPublishedCount, name: "Grades Published" },
+            { value: item.cancelledCount, name: "Cancelled" },
           ];
           setAssignmentStatusData(mapped);
         }
 
         try {
-          const resSub = await getSubmissionStatistics(currentUser.id, courseInstanceId);
-          const subItem = resSub && resSub.data && resSub.data.length > 0 ? resSub.data[0] : null;
+          const resSub = await getSubmissionStatistics(
+            currentUser.id,
+            courseInstanceId
+          );
+          const subItem =
+            resSub && resSub.data && resSub.data.length > 0
+              ? resSub.data[0]
+              : null;
           if (subItem) {
             const mappedSub = [
-              { value: subItem.totalNotSubmittedCount ?? 0, name: "Not Submitted" },
+              {
+                value: subItem.totalNotSubmittedCount ?? 0,
+                name: "Not Submitted",
+              },
               { value: subItem.totalSubmittedCount ?? 0, name: "Submitted" },
               { value: subItem.totalGradedCount ?? 0, name: "Graded" },
             ];
@@ -80,14 +97,22 @@ const InstructorClassDashboard = () => {
 
         // Fetch assignment score distribution and map to bins/counts
         try {
-          const resDist = await getAssignmentsDistribution(currentUser.id, courseInstanceId);
-          const distItem = resDist && resDist.data && resDist.data.length > 0 ? resDist.data[0] : null;
+          const resDist = await getAssignmentsDistribution(
+            currentUser.id,
+            courseInstanceId
+          );
+          const distItem =
+            resDist && resDist.data && resDist.data.length > 0
+              ? resDist.data[0]
+              : null;
           if (distItem && Array.isArray(distItem.distribution)) {
             const bins = [];
             const counts = [];
             distItem.distribution.forEach((d) => {
               // normalize range label, use as-is
-              bins.push(typeof d.range === 'string' ? d.range.trim() : String(d.range));
+              bins.push(
+                typeof d.range === "string" ? d.range.trim() : String(d.range)
+              );
               counts.push(Number(d.count) || 0);
             });
             if (bins.length > 0) setDistributionBins(bins);
@@ -122,8 +147,6 @@ const InstructorClassDashboard = () => {
       },
     ],
   };
-
-  
 
   const submissionOption = {
     tooltip: {
