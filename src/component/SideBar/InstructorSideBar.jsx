@@ -1,5 +1,5 @@
 import React from 'react';
-import { Search, Users, FileText, BarChart3, Upload } from 'lucide-react';
+import { Search, Users, FileText, BarChart3, Upload, LayoutDashboard} from 'lucide-react';
 import { Link, useLocation, useParams } from 'react-router-dom';
 
 const InstructorSideBar = () => {
@@ -11,6 +11,12 @@ const InstructorSideBar = () => {
   const courseInstanceId = params?.id || location.state?.courseInstanceId || storedId || null;
 
   const menuItems = [
+    {
+      id: 'dashboard',
+      label: 'Dashboard',
+      icon: LayoutDashboard,
+      path: '/instructor/class-dashboard',
+    },
     {
       id: 'manage-class',
       label: 'Class List',
