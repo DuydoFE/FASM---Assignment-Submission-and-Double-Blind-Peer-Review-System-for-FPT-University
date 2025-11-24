@@ -1,16 +1,108 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import ReactECharts from "echarts-for-react";
+import {
+  getAssignmentsOverview,
+  getSubmissionStatistics,
+  getAssignmentsDistribution,
+} from "../../service/instructorStatistic";
+import { getCurrentAccount } from "../../utils/accountUtils";
 
 const InstructorClassDashboard = () => {
-  const assignmentStatusData = [
-    { value: 120, name: "Draft" },
-    { value: 80, name: "Active" },
-    { value: 50, name: "Upcoming" },
-    { value: 110, name: "Closed" },
-    { value: 30, name: "Cancelled" },
-    { value: 95, name: "In Review" },
-    { value: 70, name: "Grades Published" },
-  ];
+  const currentUser = getCurrentAccount();
+  const [assignmentStatusData, setAssignmentStatusData] = useState([
+    { value: 0, name: "Draft" },
+    { value: 0, name: "Upcoming" },
+    { value: 0, name: "Active" },
+    { value: 0, name: "In Review" },
+    { value: 0, name: "Closed" },
+    { value: 0, name: "Grades Published" },
+  ]);
+  const [submissionData, setSubmissionData] = useState([
+    { value: 0, name: "Not Submitted" },
+    { value: 0, name: "Submitted" },
+    { value: 0, name: "Graded" },
+  ]);
+  const [distributionBins, setDistributionBins] = useState([
+    "0-1",
+    "1-2",
+    "2-3",
+    "3-4",
+    "4-5",
+    "5-6",
+    "6-7",
+    "7-8",
+    "8-9",
+    "9-10",
+  ]);
+  const [distributionCounts, setDistributionCounts] = useState(new Array(10).fill(0));
+
+  useEffect(() => {
+    const fetchOverview = async () => {
+      try {
+        const courseInstanceId = sessionStorage.getItem(
+          "currentCourseInstanceId"
+        );
+        if (!currentUser?.id || !courseInstanceId) {
+          console.warn(
+            "Skipping assignments overview fetch: missing userId or courseInstanceId"
+          );
+          return;
+        }
+
+        const res = await getAssignmentsOverview(currentUser.id, courseInstanceId);
+        const item = res && res.data && res.data.length > 0 ? res.data[0] : null;
+        if (item) {
+          const mapped = [
+            { value: item.draftCount, name: "Draft" },
+            { value: item.upcomingCount, name: "Upcoming" },
+            { value: item.activeCount, name: "Active" },
+            { value: item.inReviewCount, name: "In Review" },
+            { value: item.closedCount, name: "Closed" },
+            { value: item.gradesPublishedCount, name: "Grades Published" },
+          ];
+          setAssignmentStatusData(mapped);
+        }
+
+        try {
+          const resSub = await getSubmissionStatistics(currentUser.id, courseInstanceId);
+          const subItem = resSub && resSub.data && resSub.data.length > 0 ? resSub.data[0] : null;
+          if (subItem) {
+            const mappedSub = [
+              { value: subItem.totalNotSubmittedCount ?? 0, name: "Not Submitted" },
+              { value: subItem.totalSubmittedCount ?? 0, name: "Submitted" },
+              { value: subItem.totalGradedCount ?? 0, name: "Graded" },
+            ];
+            setSubmissionData(mappedSub);
+          }
+        } catch (err) {
+          console.error("Failed to load submission statistics:", err);
+        }
+
+        // Fetch assignment score distribution and map to bins/counts
+        try {
+          const resDist = await getAssignmentsDistribution(currentUser.id, courseInstanceId);
+          const distItem = resDist && resDist.data && resDist.data.length > 0 ? resDist.data[0] : null;
+          if (distItem && Array.isArray(distItem.distribution)) {
+            const bins = [];
+            const counts = [];
+            distItem.distribution.forEach((d) => {
+              // normalize range label, use as-is
+              bins.push(typeof d.range === 'string' ? d.range.trim() : String(d.range));
+              counts.push(Number(d.count) || 0);
+            });
+            if (bins.length > 0) setDistributionBins(bins);
+            if (counts.length > 0) setDistributionCounts(counts);
+          }
+        } catch (err) {
+          console.error("Failed to load assignments distribution:", err);
+        }
+      } catch (error) {
+        console.error("Failed to load assignments overview:", error);
+      }
+    };
+
+    fetchOverview();
+  }, [currentUser]);
 
   const assignmentStatusOption = {
     tooltip: { trigger: "item" },
@@ -31,11 +123,7 @@ const InstructorClassDashboard = () => {
     ],
   };
 
-  const submissionData = [
-    { value: 320, name: "Submitted" },
-    { value: 180, name: "Not Submitted" },
-    { value: 180, name: "Graded" },
-  ];
+  
 
   const submissionOption = {
     tooltip: {
@@ -62,48 +150,17 @@ const InstructorClassDashboard = () => {
     ],
   };
 
-  function processScoreData(studentCount) {
-    const rawScores = [];
-    for (let i = 0; i < studentCount; i++) {
-      rawScores.push(+(Math.random() * 10).toFixed(2));
-    }
-    const bins = [
-      "0-1",
-      "1-2",
-      "2-3",
-      "3-4",
-      "4-5",
-      "5-6",
-      "6-7",
-      "7-8",
-      "8-9",
-      "9-10",
-    ];
-    const counts = new Array(10).fill(0);
-    rawScores.forEach((score) => {
-      if (score === 10) {
-        counts[9]++;
-      } else {
-        const binIndex = Math.floor(score);
-        counts[binIndex]++;
-      }
-    });
-    return { bins, counts };
-  }
-
-  const { bins: scoreBins, counts: scoreCounts } = processScoreData(35);
-
   const studentScoreChartOption = {
     xAxis: {
       type: "category",
-      data: scoreBins,
+      data: distributionBins,
     },
     yAxis: {
       type: "value",
     },
     series: [
       {
-        data: scoreCounts,
+        data: distributionCounts,
         type: "bar",
       },
     ],
@@ -124,7 +181,7 @@ const InstructorClassDashboard = () => {
       <div className="grid grid-cols-12 gap-6">
         <div className="col-span-9 bg-white rounded-lg p-6 shadow-sm border border-gray-200">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">
-            Assignment Status Overview
+            Assignment Overview
           </h2>
           <ReactECharts
             option={assignmentStatusOption}
