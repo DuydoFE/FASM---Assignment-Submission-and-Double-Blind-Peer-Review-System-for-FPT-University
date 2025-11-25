@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import {
-    getCriteriaTemplatesByTemplateId,
+    getRubricTemplateById,
     createCriteriaTemplate,
     updateCriteriaTemplate,
     deleteCriteriaTemplate,
@@ -32,15 +32,13 @@ export default function AdminRubricDetail() {
     useEffect(() => {
         const fetchRubric = async () => {
             try {
-                const res = await getCriteriaTemplatesByTemplateId(id);
+                const res = await getRubricTemplateById(id);
 
                 if (res?.statusCode === 200) {
-                    // Lấy templateTitle từ data đầu tiên nếu có, hoặc tạo mặc định
-                    const templateTitle = res.data?.[0]?.templateTitle || "Untitled Rubric";
                     setRubric({
-                        templateId: Number(id),
-                        title: templateTitle,
-                        criteriaTemplates: Array.isArray(res.data) ? res.data : [],
+                        templateId: res.data.templateId,
+                        title: res.data.title,
+                        criteriaTemplates: res.data.criteriaTemplates || [],
                     });
                 } else if (res?.statusCode === 404) {
                     toast.error("Rubric not found");
@@ -61,12 +59,12 @@ export default function AdminRubricDetail() {
     // Reload criteria list
     const reloadCriteria = async () => {
         try {
-            const res = await getCriteriaTemplatesByTemplateId(id);
-            if (res?.statusCode === 200 && Array.isArray(res.data)) {
+            const res = await getRubricTemplateById(id);
+            if (res?.statusCode === 200) {
                 setRubric({
-                    templateId: res.data[0].templateId,
-                    title: res.data[0].templateTitle,
-                    criteriaTemplates: res.data,
+                    templateId: res.data.templateId,
+                    title: res.data.title,
+                    criteriaTemplates: res.data.criteriaTemplates || [],
                 });
             }
         } catch (err) {

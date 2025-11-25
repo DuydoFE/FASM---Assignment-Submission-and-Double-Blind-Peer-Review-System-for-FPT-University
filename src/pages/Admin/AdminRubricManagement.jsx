@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import toast from "react-hot-toast";
+import { Toaster, toast } from "react-hot-toast";
 import {
+  getAllMajors,
   getAllRubricTemplates,
   createRubricTemplate,
   updateRubricTemplate,
@@ -11,91 +12,108 @@ import {
 export default function AdminRubricManagement() {
   const navigate = useNavigate();
   const [rubrics, setRubrics] = useState([]);
+  const [majors, setMajors] = useState([]);
   const [loading, setLoading] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [currentRubric, setCurrentRubric] = useState(null);
-  const [newRubric, setNewRubric] = useState({ title: "" });
+  const [newRubric, setNewRubric] = useState({ title: "", majorId: 0, isPublic: true });
   const [search, setSearch] = useState("");
 
   useEffect(() => {
-    loadRubrics();
+    const fetchData = async () => {
+      try {
+        await loadMajors();
+        await loadRubrics();
+        toast.success("Majors and rubrics loaded successfully!");
+      } catch (err) {
+        toast.error("Failed to load data.");
+      }
+    };
+    fetchData();
   }, []);
 
+  // Load all majors
+  const loadMajors = async () => {
+    try {
+      const res = await getAllMajors();
+      if (res?.statusCode === 200 && Array.isArray(res.data)) {
+        setMajors(res.data);
+      } else {
+        toast.error(res?.message || "Failed to load majors.");
+      }
+    } catch (err) {
+      toast.error("Server error loading majors.");
+    }
+  };
+
+  // Load all rubrics
   const loadRubrics = async () => {
     setLoading(true);
     try {
       const res = await getAllRubricTemplates();
       if (res?.statusCode === 200 && Array.isArray(res.data)) {
-        const mapped = res.data.map((r) => ({
-          id: r.templateId,
-          title: r.title,
-          criteria: r.criteriaTemplates?.map((c) => c.title).join(", ") || "-",
-          assignmentsUsing: r.assignmentsUsingTemplate?.length || 0,
-          createdBy: r.createdByUserName,
-          createdAt: new Date(r.createdAt).toLocaleString(),
-        }));
+        const mapped = res.data.map((r) => {
+          const major = majors.find((m) => m.majorId === r.majorId);
+          return {
+            id: r.templateId,
+            title: r.title,
+            majorId: r.majorId,
+            majorName: r.majorName || major?.majorName || "-",
+            criteria: r.criteriaTemplates?.map((c) => c.title).join(", ") || "-",
+            criteriaCount: r.criteriaTemplates?.length || 0,
+            assignmentsUsing: r.assignmentsUsingTemplate?.length || 0,
+            createdBy: r.createdByUserName,
+            createdAt: new Date(r.createdAt).toLocaleString(),
+          };
+        });
         setRubrics(mapped);
       } else {
-        toast.error(res?.message || "Failed to load rubrics");
+        toast.error(res?.message || "Failed to load rubrics.");
       }
     } catch (err) {
-      toast.error("Failed to load rubrics from server");
+      toast.error("Failed to load rubrics from server.");
     } finally {
       setLoading(false);
     }
   };
 
+  // Create rubric
   const handleCreateRubric = async (e) => {
     e.preventDefault();
     if (!newRubric.title.trim()) {
       toast.error("Please enter a title.");
       return;
     }
+    if (!newRubric.majorId) {
+      toast.error("Please select a major.");
+      return;
+    }
 
     try {
       const payload = {
         title: newRubric.title,
-        isPublic: true,
-        createdByUserId: 1,
+        majorId: newRubric.majorId,
+        isPublic: newRubric.isPublic,
+        createdByUserId: 1, // default
       };
-
       const res = await createRubricTemplate(payload);
 
       if (res?.statusCode === 200 || res?.statusCode === 201) {
         toast.success("Rubric created successfully!");
         setShowCreateModal(false);
-        setNewRubric({ title: "" });
+        setNewRubric({ title: "", majorId: 0, isPublic: true });
         await loadRubrics();
       } else {
-        toast.error(res?.message || "Failed to create rubric");
+        toast.error(res?.message || "Failed to create rubric.");
       }
     } catch (err) {
       console.error(err.response?.data || err);
-      toast.error("Server error creating rubric");
+      toast.error("Server error creating rubric.");
     }
   };
 
-  const handleDeleteRubric = async (id) => {
-    try {
-      const res = await deleteRubricTemplate(id);
-      if (res?.statusCode === 200) {
-        toast.success("Rubric deleted!");
-        setRubrics(rubrics.filter((r) => r.id !== id));
-      } else {
-        toast.error(res?.message || "Failed to delete rubric");
-      }
-    } catch (err) {
-      toast.error("Server error deleting rubric");
-    }
-  };
-
-  const openEditModal = (rubric) => {
-    setCurrentRubric(rubric);
-    setNewRubric({ title: rubric.title });
-    setShowEditModal(true);
-  };
-
+  // Update rubric
   const handleUpdateRubric = async (e) => {
     e.preventDefault();
     if (!newRubric.title.trim()) {
@@ -107,15 +125,37 @@ export default function AdminRubricManagement() {
       const payload = { templateId: currentRubric.id, title: newRubric.title };
       const res = await updateRubricTemplate(payload);
       if (res?.statusCode === 200) {
-        toast.success("Rubric updated!");
+        toast.success("Rubric updated successfully!");
         setShowEditModal(false);
         await loadRubrics();
       } else {
-        toast.error(res?.message || "Failed to update rubric");
+        toast.error(res?.message || "Failed to update rubric.");
       }
     } catch (err) {
-      toast.error("Server error updating rubric");
+      toast.error("Server error updating rubric.");
     }
+  };
+
+  // Delete rubric
+  const handleDeleteRubric = async (id) => {
+    try {
+      const res = await deleteRubricTemplate(id);
+      if (res?.statusCode === 200) {
+        toast.success("Rubric deleted successfully!");
+        setRubrics(rubrics.filter((r) => r.id !== id));
+      } else {
+        toast.error(res?.message || "Failed to delete rubric.");
+      }
+    } catch (err) {
+      toast.error("Server error deleting rubric.");
+    }
+  };
+
+  // Open edit modal
+  const openEditModal = (rubric) => {
+    setCurrentRubric(rubric);
+    setNewRubric({ title: rubric.title, majorId: rubric.majorId, isPublic: rubric.isPublic });
+    setShowEditModal(true);
   };
 
   const filteredRubrics = rubrics.filter((r) =>
@@ -124,10 +164,12 @@ export default function AdminRubricManagement() {
 
   return (
     <div className="space-y-6">
+      <Toaster position="top-right" reverseOrder={false} /> {/* Toast container */}
       <h2 className="text-2xl font-bold text-orange-500 flex items-center gap-2">
         📋 Rubric Management
       </h2>
 
+      {/* Search + Add button */}
       <div className="bg-white p-4 rounded-xl shadow-md flex flex-wrap items-center gap-4">
         <input
           type="text"
@@ -144,6 +186,7 @@ export default function AdminRubricManagement() {
         </button>
       </div>
 
+      {/* Rubrics table */}
       <div className="bg-white rounded-xl shadow-md overflow-x-auto">
         {loading ? (
           <p className="p-4 text-center text-gray-500">Loading rubrics...</p>
@@ -151,8 +194,12 @@ export default function AdminRubricManagement() {
           <table className="w-full text-sm border-collapse">
             <thead className="bg-orange-500 text-white">
               <tr>
-                <th className="p-3 text-left">ID</th>
                 <th className="p-3 text-left">Title</th>
+                <th className="p-3 text-left">Major</th>
+                <th className="p-3 text-left">Created By</th>
+                <th className="p-3 text-left">Created At</th>
+                <th className="p-3 text-left"># Criteria</th>
+                <th className="p-3 text-left">Assignments Using</th>
                 <th className="p-3 text-left">Actions</th>
               </tr>
             </thead>
@@ -160,17 +207,18 @@ export default function AdminRubricManagement() {
               {filteredRubrics.map((r, idx) => (
                 <tr
                   key={r.id}
-                  className={`${idx % 2 === 0 ? "bg-gray-50" : "bg-white"
-                    } hover:bg-gray-100`}
+                  className={`${idx % 2 === 0 ? "bg-gray-50" : "bg-white"} hover:bg-gray-100`}
                 >
-                  <td className="p-3">{r.id}</td>
                   <td className="p-3 font-medium">{r.title}</td>
+                  <td className="p-3">{r.majorName}</td>
+                  <td className="p-3">{r.createdBy}</td>
+                  <td className="p-3">{r.createdAt}</td>
+                  <td className="p-3">{r.criteriaCount}</td>
+                  <td className="p-3">{r.assignmentsUsing}</td>
                   <td className="p-3 space-x-2">
                     <button
                       className="text-green-600 hover:underline"
-                      onClick={() =>
-                        (navigate(`/admin/rubrics/${r.id}`))
-                      }
+                      onClick={() => navigate(`/admin/rubrics/${r.id}`)}
                     >
                       View
                     </button>
@@ -200,18 +248,48 @@ export default function AdminRubricManagement() {
       {showCreateModal && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl shadow-lg p-6 w-full max-w-lg">
-            <h3 className="text-xl font-semibold mb-4 border-b pb-2">
-              Create New Rubric
-            </h3>
+            <h3 className="text-xl font-semibold mb-4 border-b pb-2">Create New Rubric</h3>
             <form className="space-y-3" onSubmit={handleCreateRubric}>
               <input
                 type="text"
                 required
                 value={newRubric.title}
-                onChange={(e) => setNewRubric({ title: e.target.value })}
+                onChange={(e) => setNewRubric({ ...newRubric, title: e.target.value })}
                 placeholder="Rubric Title"
                 className="border rounded p-3 w-full"
               />
+
+              {/* Major Dropdown */}
+              <select
+                required
+                value={newRubric.majorId}
+                onChange={(e) =>
+                  setNewRubric({ ...newRubric, majorId: Number(e.target.value) })
+                }
+                className="border rounded p-3 w-full"
+              >
+                <option value={0}>Select Major</option>
+                {majors.map((m) => (
+                  <option key={m.majorId} value={m.majorId}>
+                    {m.majorName}
+                  </option>
+                ))}
+              </select>
+
+              {/* Public Checkbox */}
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={newRubric.isPublic}
+                  onChange={(e) =>
+                    setNewRubric({ ...newRubric, isPublic: e.target.checked })
+                  }
+                  id="isPublic"
+                  className="w-4 h-4"
+                />
+                <label htmlFor="isPublic">Public</label>
+              </div>
+
               <div className="flex justify-end gap-3 mt-4">
                 <button
                   type="button"
@@ -220,10 +298,7 @@ export default function AdminRubricManagement() {
                 >
                   Cancel
                 </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2 bg-orange-500 text-white rounded"
-                >
+                <button type="submit" className="px-4 py-2 bg-orange-500 text-white rounded">
                   Create
                 </button>
               </div>
@@ -236,15 +311,13 @@ export default function AdminRubricManagement() {
       {showEditModal && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl shadow-lg p-6 w-full max-w-lg">
-            <h3 className="text-xl font-semibold mb-4 border-b pb-2">
-              Edit Rubric
-            </h3>
+            <h3 className="text-xl font-semibold mb-4 border-b pb-2">Edit Rubric</h3>
             <form className="space-y-3" onSubmit={handleUpdateRubric}>
               <input
                 type="text"
                 required
                 value={newRubric.title}
-                onChange={(e) => setNewRubric({ title: e.target.value })}
+                onChange={(e) => setNewRubric({ ...newRubric, title: e.target.value })}
                 placeholder="Rubric Title"
                 className="border rounded p-3 w-full"
               />
@@ -256,10 +329,7 @@ export default function AdminRubricManagement() {
                 >
                   Cancel
                 </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2 bg-blue-600 text-white rounded"
-                >
+                <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded">
                   Save Changes
                 </button>
               </div>
