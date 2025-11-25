@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from "react";
-import ReactECharts from "echarts-for-react";
 import {
   getAssignmentsOverview,
   getSubmissionStatistics,
   getAssignmentsDistribution,
 } from "../../service/instructorStatistic";
 import { getCurrentAccount } from "../../utils/accountUtils";
+import AssignmentStatusChart from "../../component/InstructorDashboard/AssignmentStatusChart";
+import SubmissionStatusChart from "../../component/InstructorDashboard/SubmissionStatusChart";
+import ScoreDistributionChart from "../../component/InstructorDashboard/ScoreDistributionChart";
 
 const InstructorClassDashboard = () => {
   const currentUser = getCurrentAccount();
@@ -95,7 +97,6 @@ const InstructorClassDashboard = () => {
           console.error("Failed to load submission statistics:", err);
         }
 
-        // Fetch assignment score distribution and map to bins/counts
         try {
           const resDist = await getAssignmentsDistribution(
             currentUser.id,
@@ -109,7 +110,6 @@ const InstructorClassDashboard = () => {
             const bins = [];
             const counts = [];
             distItem.distribution.forEach((d) => {
-              // normalize range label, use as-is
               bins.push(
                 typeof d.range === "string" ? d.range.trim() : String(d.range)
               );
@@ -129,105 +129,24 @@ const InstructorClassDashboard = () => {
     fetchOverview();
   }, [currentUser]);
 
-  const assignmentStatusOption = {
-    tooltip: { trigger: "item" },
-    legend: { top: "5%", left: "center" },
-    series: [
-      {
-        name: "Assignment Status",
-        type: "pie",
-        radius: ["40%", "70%"],
-        padAngle: 5,
-        itemStyle: {
-          borderRadius: 10,
-        },
-        label: { show: false },
-        emphasis: { label: { show: true, fontSize: 26, fontWeight: "bold" } },
-        data: assignmentStatusData,
-      },
-    ],
-  };
-
-  const submissionOption = {
-    tooltip: {
-      trigger: "item",
-    },
-    legend: {
-      top: "5%",
-      left: "center",
-    },
-    series: [
-      {
-        name: "Submission Status",
-        type: "pie",
-        radius: ["40%", "70%"],
-        padAngle: 5,
-        itemStyle: {
-          borderRadius: 10,
-        },
-        label: { show: false },
-        emphasis: { label: { show: true, fontSize: 30, fontWeight: "bold" } },
-        labelLine: { show: false },
-        data: submissionData,
-      },
-    ],
-  };
-
-  const studentScoreChartOption = {
-    xAxis: {
-      type: "category",
-      data: distributionBins,
-    },
-    yAxis: {
-      type: "value",
-    },
-    series: [
-      {
-        data: distributionCounts,
-        type: "bar",
-      },
-    ],
-    tooltip: {
-      trigger: "axis",
-    },
-    grid: {
-      left: "3%",
-      right: "4%",
-      bottom: "3%",
-      containLabel: true,
-    },
-  };
-
   return (
     <div className="max-w-7xl mx-auto px-6 py-8">
       {/* Hàng đầu tiên */}
       <div className="grid grid-cols-12 gap-6">
-        <div className="col-span-9 bg-white rounded-lg p-6 shadow-sm border border-gray-200">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">
-            Assignment Overview
-          </h2>
-          <ReactECharts
-            option={assignmentStatusOption}
-            style={{ height: 350 }}
-          />
+        <div className="col-span-9">
+          <AssignmentStatusChart data={assignmentStatusData} />
         </div>
-        <div className="col-span-3 bg-white rounded-lg p-6 shadow-sm border border-gray-200">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">
-            Submission Overview
-          </h2>
-          <ReactECharts option={submissionOption} style={{ height: 350 }} />
+        <div className="col-span-3">
+          <SubmissionStatusChart data={submissionData} />
         </div>
       </div>
 
-      {/* Hàng thứ hai - Thêm lại biểu đồ điểm */}
+      {/* Hàng thứ hai */}
       <div className="grid grid-cols-12 gap-6 mt-6">
-        <div className="col-span-12 bg-white rounded-lg p-6 shadow-sm border border-gray-200">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">
-            Student Score Distribution
-          </h2>
-          <ReactECharts
-            option={studentScoreChartOption}
-            style={{ height: 400 }}
+        <div className="col-span-12">
+          <ScoreDistributionChart
+            bins={distributionBins}
+            counts={distributionCounts}
           />
         </div>
       </div>
