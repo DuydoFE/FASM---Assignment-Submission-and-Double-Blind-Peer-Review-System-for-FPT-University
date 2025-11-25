@@ -30,7 +30,6 @@ export default function AdminSemesterManagement() {
     try {
       const res = await getAllSemesters();
       if (res?.data) setSemesters(res.data);
-      toast.success("Semesters loaded successfully");
     } catch {
       toast.error("Failed to load semesters");
     }
@@ -40,7 +39,6 @@ export default function AdminSemesterManagement() {
     try {
       const res = await getAllAcademicYears();
       if (res?.data) setAcademicYears(res.data);
-      toast.success("Academic years loaded successfully");
     } catch {
       toast.error("Failed to load academic years");
     }
@@ -197,7 +195,6 @@ export default function AdminSemesterManagement() {
         <table className="w-full border-collapse">
           <thead>
             <tr className="bg-orange-50 text-left">
-              <th className="p-3 border-b">ID</th>
               <th className="p-3 border-b">Academic Year</th>
               <th className="p-3 border-b">Name</th>
               <th className="p-3 border-b">Start</th>
@@ -208,7 +205,6 @@ export default function AdminSemesterManagement() {
           <tbody>
             {displayedSemesters.map((sem) => (
               <tr key={sem.semesterId} className="border-b hover:bg-orange-50">
-                <td className="p-3">{sem.semesterId}</td>
                 <td className="p-3">
                   {editing?.semesterId === sem.semesterId ? (
                     <select
