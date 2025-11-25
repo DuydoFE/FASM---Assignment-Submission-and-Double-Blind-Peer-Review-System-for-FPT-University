@@ -215,26 +215,31 @@ export const router = createBrowserRouter([
       },
     ],
   },
+  
   {
-    path: "/admin",
-    element: <AdminLayout />,
-    children: [
-      { path: "dashboard", element: <AdminDashboard /> },
-      { path: "users", element: <AdminUserManagement /> },
-      { path: "users/add", element: <AdminCreateUser /> },
-      { path: "users/:id", element: <AdminUserDetailsManagement /> },
-      { path: "academicYears", element: <AdminAcademicYearManagement /> },
-      { path: "semesters", element: <AdminSemesterManagement /> },
-      { path: "classes", element: <AdminClassManagement /> },
-      { path: "classes/:id/assignments/:assignmentId", element: <AdminAssignmentDetails /> },
-      { path: "classes/:id/assignments", element: <AdminClassAssignments /> },
-      { path: "classes/:id", element: <AdminClassDetailsManagement /> },
-      { path: "classes/:id/assignments/:assignmentId/submissions/:submissionId", element: <AdminSubmissionDetails /> },
-      { path: "rubrics", element: <AdminRubricManagement /> },
-      { path: "rubrics/:id", element: <AdminRubricDetail /> },
-      { path: "settings", element: <AdminAccountSettings /> },
-      { path: "systemSetting", element: <AdminSystemSetting /> },
-    ],
-  }
+  path: "/admin",
+  element: (
+    <ProtectedRoute role={ROLE.ADMIN}>
+      <AdminLayout />
+    </ProtectedRoute>
+  ),
+  children: [
+    { path: "dashboard", element: <AdminDashboard /> },
+    { path: "users", element: <AdminUserManagement /> },
+    { path: "users/add", element: <AdminCreateUser /> },
+    { path: "users/:id", element: <AdminUserDetailsManagement /> },
+    { path: "academicYears", element: <AdminAcademicYearManagement /> },
+    { path: "semesters", element: <AdminSemesterManagement /> },
+    { path: "classes", element: <AdminClassManagement /> },
+    { path: "classes/:id/assignments/:assignmentId", element: <AdminAssignmentDetails /> },
+    { path: "classes/:id/assignments", element: <AdminClassAssignments /> },
+    { path: "classes/:id", element: <AdminClassDetailsManagement /> },
+    { path: "classes/:id/assignments/:assignmentId/submissions/:submissionId", element: <AdminSubmissionDetails /> },
+    { path: "rubrics", element: <AdminRubricManagement /> },
+    { path: "rubrics/:id", element: <AdminRubricDetail /> },
+    { path: "settings", element: <AdminAccountSettings /> },
+    { path: "systemSetting", element: <AdminSystemSetting /> },
+  ],
+}
 
 ]);
