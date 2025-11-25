@@ -172,7 +172,7 @@ const InstructorDashboard = () => {
                   className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow bg-white cursor-pointer"
                     onClick={() => {
                       try { sessionStorage.setItem('currentCourseInstanceId', String(course.id)); } catch (e) { /* ignore */ }
-                      navigate(`/instructor/class-dashboard`);
+                      navigate(`/instructor/class-statistic/${course.id}`);
                     }}
                 >
                   <div className="mb-3">

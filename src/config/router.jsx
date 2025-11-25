@@ -174,7 +174,7 @@ export const router = createBrowserRouter([
         element: <InstructorClassDashBoard />,
       },
       {
-        path: "class-dashboard",
+        path: "class-statistic/:id",
         element: <InstructorClassDashBoard />,
       },
       {

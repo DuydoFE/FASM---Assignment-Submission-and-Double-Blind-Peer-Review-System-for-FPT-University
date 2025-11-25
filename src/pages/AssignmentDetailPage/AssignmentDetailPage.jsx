@@ -43,7 +43,7 @@ const AssignmentDetailPage = () => {
           subject: assignments[0].courseCode,
           campus: assignments[0].campusName,
           year: new Date(assignments[0].createdAt).getFullYear().toString(),
-          instructor: "N/A",
+          instructor: assignments[0].fullName,
         }
       : null;
 

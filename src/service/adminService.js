@@ -213,12 +213,12 @@ export const getCourseInstancesByCampusId = async (campusId) => {
 };
 
 // Tạo lớp học mới
-export const createCourseInstance = async (payload) => {
-  const res = await axios.post(`${API_BASE_URL}/api/CourseInstance`, payload, {
-    headers: { "Content-Type": "application/json", Authorization: `Bearer ${localStorage.getItem("token")}` },
-  });
-  return res.data;
-};
+  export const createCourseInstance = async (payload) => {
+    const res = await axios.post(`${API_BASE_URL}/api/CourseInstance`, payload, {
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${localStorage.getItem("token")}` },
+    });
+    return res.data;
+  };
 
 // Cập nhật lớp học
 export const updateCourseInstance = async (data) => {

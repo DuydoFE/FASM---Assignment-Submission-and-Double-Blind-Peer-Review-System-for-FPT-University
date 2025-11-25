@@ -225,7 +225,6 @@ const StudentAssignmentPage = () => {
                       iconColor={iconColor}
                       title={course.courseName}
                       code={`Class Code: ${course.courseInstanceName}`}
-                      // 👉 3. Truyền trạng thái và hàm xử lý vào component con
                       status={course.status}
                       onJoinClick={() => handleOpenModal(course)}
                     />
