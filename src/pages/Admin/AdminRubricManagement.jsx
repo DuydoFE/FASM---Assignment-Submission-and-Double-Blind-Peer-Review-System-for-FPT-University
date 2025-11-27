@@ -19,16 +19,14 @@ export default function AdminRubricManagement() {
   const [currentRubric, setCurrentRubric] = useState(null);
   const [newRubric, setNewRubric] = useState({ title: "", majorId: 0, isPublic: true });
   const [search, setSearch] = useState("");
+  const [selectedMajorId, setSelectedMajorId] = useState(0); // 0 = chưa chọn major
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         await loadMajors();
         await loadRubrics();
-        toast.success("Majors and rubrics loaded successfully!");
-      } catch (err) {
-        toast.error("Failed to load data.");
-      }
+      } catch (err) { }
     };
     fetchData();
   }, []);
@@ -94,8 +92,7 @@ export default function AdminRubricManagement() {
       const payload = {
         title: newRubric.title,
         majorId: newRubric.majorId,
-        isPublic: newRubric.isPublic,
-        createdByUserId: 1, // default
+        createdByUserId: 1,
       };
       const res = await createRubricTemplate(payload);
 
@@ -136,8 +133,11 @@ export default function AdminRubricManagement() {
     }
   };
 
-  // Delete rubric
+  // Delete rubric with confirmation
   const handleDeleteRubric = async (id) => {
+    const confirmed = window.confirm("Are you sure you want to delete this rubric?");
+    if (!confirmed) return;
+
     try {
       const res = await deleteRubricTemplate(id);
       if (res?.statusCode === 200) {
@@ -158,8 +158,11 @@ export default function AdminRubricManagement() {
     setShowEditModal(true);
   };
 
-  const filteredRubrics = rubrics.filter((r) =>
-    r.title.toLowerCase().includes(search.toLowerCase())
+  // Filtered rubrics based on search and selected major
+  const filteredRubrics = rubrics.filter(
+    (r) =>
+      (selectedMajorId === 0 || r.majorId === selectedMajorId) &&
+      r.title.toLowerCase().includes(search.toLowerCase())
   );
 
   return (
@@ -169,7 +172,7 @@ export default function AdminRubricManagement() {
         📋 Rubric Management
       </h2>
 
-      {/* Search + Add button */}
+      {/* Search + Major Filter + Add button */}
       <div className="bg-white p-4 rounded-xl shadow-md flex flex-wrap items-center gap-4">
         <input
           type="text"
@@ -178,6 +181,20 @@ export default function AdminRubricManagement() {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
+
+        <select
+          className="border rounded p-2 min-w-[180px]"
+          value={selectedMajorId}
+          onChange={(e) => setSelectedMajorId(Number(e.target.value))}
+        >
+          <option value={0}>-- Select Major --</option>
+          {majors.map((m) => (
+            <option key={m.majorId} value={m.majorId}>
+              {m.majorName}
+            </option>
+          ))}
+        </select>
+
         <button
           onClick={() => setShowCreateModal(true)}
           className="px-4 py-2 bg-orange-500 text-white rounded hover:bg-orange-600 font-medium"
@@ -188,7 +205,9 @@ export default function AdminRubricManagement() {
 
       {/* Rubrics table */}
       <div className="bg-white rounded-xl shadow-md overflow-x-auto">
-        {loading ? (
+        {selectedMajorId === 0 ? (
+          <p className="p-4 text-center text-gray-500">Please select a major to view rubrics.</p>
+        ) : loading ? (
           <p className="p-4 text-center text-gray-500">Loading rubrics...</p>
         ) : filteredRubrics.length > 0 ? (
           <table className="w-full text-sm border-collapse">
@@ -196,10 +215,9 @@ export default function AdminRubricManagement() {
               <tr>
                 <th className="p-3 text-left">Title</th>
                 <th className="p-3 text-left">Major</th>
-                <th className="p-3 text-left">Created By</th>
-                <th className="p-3 text-left">Created At</th>
                 <th className="p-3 text-left"># Criteria</th>
                 <th className="p-3 text-left">Assignments Using</th>
+                <th className="p-3 text-left">Public</th> {/* NEW */}
                 <th className="p-3 text-left">Actions</th>
               </tr>
             </thead>
@@ -211,10 +229,15 @@ export default function AdminRubricManagement() {
                 >
                   <td className="p-3 font-medium">{r.title}</td>
                   <td className="p-3">{r.majorName}</td>
-                  <td className="p-3">{r.createdBy}</td>
-                  <td className="p-3">{r.createdAt}</td>
                   <td className="p-3">{r.criteriaCount}</td>
                   <td className="p-3">{r.assignmentsUsing}</td>
+                  <td className="p-3 text-center">
+                    {r.isPublic ? (
+                      <span className="text-green-600 font-bold">✅</span>
+                    ) : (
+                      <span className="text-red-600 font-bold">❌</span>
+                    )}
+                  </td>
                   <td className="p-3 space-x-2">
                     <button
                       className="text-green-600 hover:underline"
@@ -240,7 +263,7 @@ export default function AdminRubricManagement() {
             </tbody>
           </table>
         ) : (
-          <p className="p-4 text-center text-gray-500">No rubrics found</p>
+          <p className="p-4 text-center text-gray-500">No rubrics found for this major.</p>
         )}
       </div>
 
@@ -275,20 +298,6 @@ export default function AdminRubricManagement() {
                   </option>
                 ))}
               </select>
-
-              {/* Public Checkbox */}
-              <div className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  checked={newRubric.isPublic}
-                  onChange={(e) =>
-                    setNewRubric({ ...newRubric, isPublic: e.target.checked })
-                  }
-                  id="isPublic"
-                  className="w-4 h-4"
-                />
-                <label htmlFor="isPublic">Public</label>
-              </div>
 
               <div className="flex justify-end gap-3 mt-4">
                 <button
