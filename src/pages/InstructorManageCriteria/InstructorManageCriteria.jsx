@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Pencil, Trash2, Plus, Loader, ArrowLeft } from 'lucide-react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getCriteriaByRubricId, deleteCriterion, createCriterion, updateCriterion } from '../../service/criteriaService';
-import { updateRubric } from '../../service/rubricService';
+import { deleteCriterion, createCriterion, updateCriterion } from '../../service/criteriaService';
+import { updateRubric, getRubricById } from '../../service/rubricService';
 import AddCriterionModal from '../../component/Criteria/AddCriterionModal';
 import EditCriterionModal from '../../component/Criteria/EditCriterionModal';
 import DeleteCriterionModal from '../../component/Criteria/DeleteCriterionModal';
@@ -29,17 +29,26 @@ function InstructorManageCriteria() {
     const [updatingRubric, setUpdatingRubric] = useState(false);
 
     useEffect(() => {
-        const fetchCriteria = async () => {
+        const fetchRubricData = async () => {
             try {
                 setLoading(true);
-                const data = await getCriteriaByRubricId(rubricId);
-                if (Array.isArray(data) && data.length > 0) {
-                    setCriteria(data);
-                    setRubricTitle(data[0].rubricTitle || 'Rubric Details');
-                    setCourseName(data[0].courseName || '');
-                    setClassName(data[0].className || '');
-                    setAssignmentTitle(data[0].assignmentTitle || '');
-                    setAssignmentStatus(data[0].assignmentStatus || '');
+                const rubricData = await getRubricById(rubricId);
+                console.log('Rubric data:', rubricData);
+                
+                if (rubricData) {
+                    // Set rubric information
+                    setRubricTitle(rubricData.title || 'Rubric Details');
+                    setCourseName(rubricData.courseName || '');
+                    setClassName(rubricData.className || '');
+                    setAssignmentTitle(rubricData.assignmentTitle || '');
+                    setAssignmentStatus(rubricData.assignmentStatus || '');
+                    
+                    // Set criteria from rubric
+                    if (Array.isArray(rubricData.criteria) && rubricData.criteria.length > 0) {
+                        setCriteria(rubricData.criteria);
+                    } else {
+                        setCriteria([]);
+                    }
                 } else {
                     setCriteria([]);
                     setRubricTitle('Rubric Details');
@@ -49,8 +58,8 @@ function InstructorManageCriteria() {
                     setAssignmentStatus('');
                 }
             } catch (error) {
-                console.error('Failed to fetch criteria:', error);
-                toast.error('Failed to load criteria');
+                console.error('Failed to fetch rubric data:', error);
+                toast.error('Failed to load rubric data');
                 setCriteria([]);
                 setRubricTitle('Rubric Details');
                 setCourseName('');
@@ -63,7 +72,7 @@ function InstructorManageCriteria() {
         };
 
         if (rubricId) {
-            fetchCriteria();
+            fetchRubricData();
         } else {
             toast.error('No rubric ID provided');
             setLoading(false);
@@ -131,14 +140,20 @@ function InstructorManageCriteria() {
             setSubmitting(true);
             await createCriterion(criterionData);
 
-            const data = await getCriteriaByRubricId(rubricId);
-            if (Array.isArray(data) && data.length > 0) {
-                setCriteria(data);
-                setRubricTitle(data[0].rubricTitle || 'Rubric Details');
-                setCourseName(data[0].courseName || '');
-                setClassName(data[0].className || '');
-            } else {
-                setCriteria([]);
+            // Refresh rubric data
+            const rubricData = await getRubricById(rubricId);
+            if (rubricData) {
+                setRubricTitle(rubricData.title || 'Rubric Details');
+                setCourseName(rubricData.courseName || '');
+                setClassName(rubricData.className || '');
+                setAssignmentTitle(rubricData.assignmentTitle || '');
+                setAssignmentStatus(rubricData.assignmentStatus || '');
+                
+                if (Array.isArray(rubricData.criteria)) {
+                    setCriteria(rubricData.criteria);
+                } else {
+                    setCriteria([]);
+                }
             }
 
             toast.success('Criterion added successfully');
@@ -161,13 +176,18 @@ function InstructorManageCriteria() {
             setSubmitting(true);
             await updateCriterion(criterionData.criteriaId, criterionData);
 
-            // Refresh danh sách
-            const data = await getCriteriaByRubricId(rubricId);
-            if (Array.isArray(data) && data.length > 0) {
-                setCriteria(data);
-                setRubricTitle(data[0].rubricTitle || 'Rubric Details');
-                setCourseName(data[0].courseName || '');
-                setClassName(data[0].className || '');
+            // Refresh rubric data
+            const rubricData = await getRubricById(rubricId);
+            if (rubricData) {
+                setRubricTitle(rubricData.title || 'Rubric Details');
+                setCourseName(rubricData.courseName || '');
+                setClassName(rubricData.className || '');
+                setAssignmentTitle(rubricData.assignmentTitle || '');
+                setAssignmentStatus(rubricData.assignmentStatus || '');
+                
+                if (Array.isArray(rubricData.criteria)) {
+                    setCriteria(rubricData.criteria);
+                }
             }
 
             toast.success('Criterion updated successfully');
