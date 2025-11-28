@@ -6,6 +6,7 @@ import {
     createCriteriaTemplate,
     updateCriteriaTemplate,
     deleteCriteriaTemplate,
+    toggleRubricTemplatePublicStatus,
 } from "../../service/adminService";
 
 export default function AdminRubricDetail() {
@@ -38,6 +39,7 @@ export default function AdminRubricDetail() {
                     setRubric({
                         templateId: res.data.templateId,
                         title: res.data.title,
+                        isPublic: res.data.isPublic,
                         criteriaTemplates: res.data.criteriaTemplates || [],
                     });
                 } else if (res?.statusCode === 404) {
@@ -125,7 +127,9 @@ export default function AdminRubricDetail() {
             weight: criteria.weight || 0,
             maxScore: criteria.maxScore || 0,
             scoringType: criteria.scoringType || "Scale",
-            scoreLabel: criteria.scoreLabel || (criteria.scoringType === "Pass/Not Pass" ? "Pass-Not Pass" : "0-10"),
+            scoreLabel:
+                criteria.scoreLabel ||
+                (criteria.scoringType === "Pass/Not Pass" ? "Pass-Not Pass" : "0-10"),
         });
         setShowEditModal(true);
     };
@@ -209,6 +213,46 @@ export default function AdminRubricDetail() {
 
             <h2 className="text-3xl font-bold text-orange-500">{rubric.title}</h2>
 
+            <div className="flex items-center gap-3 mt-2">
+                <span className={`px-3 py-1 rounded-full text-sm 
+        ${rubric.isPublic ? "bg-green-100 text-green-700" : "bg-gray-200 text-gray-600"}`}>
+                    {rubric.isPublic ? "Public" : "Private"}
+                </span>
+
+                <button
+                    className={`px-4 py-2 rounded text-white 
+    ${rubric.isPublic ? "bg-red-500 hover:bg-red-600" : "bg-blue-500 hover:bg-blue-600"}`}
+                    onClick={async () => {
+                        // Nếu tổng weight < 100 thì không cho public
+                        if (!rubric.isPublic && usedWeight < 100) {
+                            toast.error("You can only public a rubric when the total weight is exactly 100%.");
+                            return;
+                        }
+
+                        try {
+                            const res = await toggleRubricTemplatePublicStatus(rubric.templateId, !rubric.isPublic); // truyền luôn trạng thái mới
+
+                            if (res?.statusCode === 200) {
+                                toast.success("Rubric public status updated!");
+
+                                // Cập nhật state ngay, không cần reload
+                                setRubric(prev => ({
+                                    ...prev,
+                                    isPublic: !prev.isPublic
+                                }));
+                            } else {
+                                toast.error(res?.message || "Failed to update public status.");
+                            }
+                        } catch (err) {
+                            console.error(err);
+                            toast.error("Server error while updating public status.");
+                        }
+                    }}
+                >
+                    {rubric.isPublic ? "Set to Private" : "Set to Public"}
+                </button>
+            </div>
+
             <div className="mt-6 flex justify-between items-center">
                 <h3 className="text-2xl font-semibold mb-4 border-b pb-2">
                     Criteria
@@ -220,6 +264,10 @@ export default function AdminRubricDetail() {
                 <button
                     className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
                     onClick={() => {
+                        if (rubric.isPublic) {
+                            toast.error("The rubric is currently PUBLIC, so criteria cannot be added. Please switch it back to PRIVATE first.");
+                            return;
+                        }
                         if (availableWeight <= 0) {
                             toast.error("No weight available. Please adjust existing criteria before adding new one.");
                             return;
@@ -257,10 +305,28 @@ export default function AdminRubricDetail() {
                                     </td>
                                     <td className="p-3">{c.description}</td>
                                     <td className="p-3 space-x-2">
-                                        <button className="text-blue-600 hover:underline" onClick={() => openEditModal(c)}>
+                                        <button
+                                            className="text-blue-600 hover:underline"
+                                            onClick={() => {
+                                                if (rubric.isPublic) {
+                                                    toast.error("The rubric is currently PUBLIC, so criteria cannot be edited. Please switch it back to PRIVATE first.");
+                                                    return;
+                                                }
+                                                openEditModal(c);
+                                            }}
+                                        >
                                             Edit
                                         </button>
-                                        <button className="text-red-600 hover:underline" onClick={() => handleDeleteCriteria(c.criteriaTemplateId)}>
+                                        <button
+                                            className="text-red-600 hover:underline"
+                                            onClick={() => {
+                                                if (rubric.isPublic) {
+                                                    toast.error("The rubric is currently PUBLIC, so criteria cannot be deleted. Please switch it back to PRIVATE first.");
+                                                    return;
+                                                }
+                                                handleDeleteCriteria(c.criteriaTemplateId);
+                                            }}
+                                        >
                                             Delete
                                         </button>
                                     </td>
@@ -357,13 +423,13 @@ export default function AdminRubricDetail() {
                                         const selected = e.target.value;
                                         if (selected === "Scale") {
                                             setCriteriaForm({ ...criteriaForm, scoringType: "Scale", scoreLabel: "0-10", maxScore: 10 });
-                                        } else if (selected === "Pass/Not Pass") {
-                                            setCriteriaForm({ ...criteriaForm, scoringType: "Pass/Not Pass", scoreLabel: "Pass-Not Pass", maxScore: 1 });
+                                        } else if (selected === "Pass/Fail") {
+                                            setCriteriaForm({ ...criteriaForm, scoringType: "PassFail", scoreLabel: "Pass/Fail", maxScore: 1 });
                                         }
                                     }}
                                 >
                                     <option value="Scale">Scale (0-10)</option>
-                                    <option value="Pass/Not Pass">Pass / Not Pass</option>
+                                    <option value="Pass/Fail">Pass/Fail</option>
                                 </select>
                                 <p className="text-xs text-gray-500 mt-1">Selecting an option will auto-fill the score label and adjust max score.</p>
                             </div>
@@ -463,14 +529,24 @@ export default function AdminRubricDetail() {
                                     onChange={(e) => {
                                         const selected = e.target.value;
                                         if (selected === "Scale") {
-                                            setCriteriaForm({ ...criteriaForm, scoringType: "Scale", scoreLabel: "0-10", maxScore: 10 });
+                                            setCriteriaForm({
+                                                ...criteriaForm,
+                                                scoringType: "Scale",
+                                                scoreLabel: "0-10",
+                                                maxScore: 10
+                                            });
                                         } else if (selected === "Pass/Not Pass") {
-                                            setCriteriaForm({ ...criteriaForm, scoringType: "Pass/Not Pass", scoreLabel: "Pass-Not Pass", maxScore: 1 });
+                                            setCriteriaForm({
+                                                ...criteriaForm,
+                                                scoringType: "Pass/Not Pass",
+                                                scoreLabel: "Pass-Not Pass",
+                                                maxScore: 1
+                                            });
                                         }
                                     }}
                                 >
                                     <option value="Scale">Scale (0-10)</option>
-                                    <option value="Pass/Not Pass">Pass / Not Pass</option>
+                                    <option value="Pass/Not Pass">Pass/Fail</option>
                                 </select>
                                 <p className="text-xs text-gray-500 mt-1">Selecting an option will auto-fill the score label and adjust max score.</p>
                             </div>

@@ -63,6 +63,7 @@ export default function AdminRubricManagement() {
             assignmentsUsing: r.assignmentsUsingTemplate?.length || 0,
             createdBy: r.createdByUserName,
             createdAt: new Date(r.createdAt).toLocaleString(),
+            isPublic: r.isPublic,
           };
         });
         setRubrics(mapped);

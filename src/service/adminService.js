@@ -366,6 +366,14 @@ export const searchRubricTemplates = async (searchTerm) => {
   return res.data;
 };
 
+// Toggle trạng thái Public của Rubric Template
+export const toggleRubricTemplatePublicStatus = async (id, makePublic) => {
+  const res = await api.put(`/RubricTemplate/${id}/public`, null, {
+    params: { makePublic },
+  });
+  return res.data;
+};
+
 // Lấy danh sách tất cả ngành học
 export const getAllMajors = async () => {
   const res = await api.get("/Major");
