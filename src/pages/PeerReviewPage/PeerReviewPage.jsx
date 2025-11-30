@@ -197,48 +197,53 @@ const PeerReviewPage = () => {
   };
 
   const handleSubmitReview = async () => {
-    const isAllScoresFilled = Object.values(scores).every(
-      (score) => score !== null
-    );
-    if (!isAllScoresFilled) {
-      const errorMessage = "Please enter scores for all criteria.";
-      setValidationError(errorMessage);
-      toast.error(errorMessage);
-      return;
-    }
-    setValidationError(null);
-    try {
-      if (!reviewData) return;
-      const payload = {
-        reviewAssignmentId: reviewData.reviewAssignmentId,
-        reviewerUserId: user?.userId,
-        generalFeedback: comment,
+  // 1. Validation điểm số (giữ nguyên logic cũ của bạn)
+  const isAllScoresFilled = Object.values(scores).every((score) => score !== null);
+  if (!isAllScoresFilled) {
+    const errorMessage = "Please enter scores for all criteria.";
+    setValidationError(errorMessage);
+    toast.error(errorMessage);
+    return;
+  }
+  setValidationError(null);
+
+  try {
+    if (!reviewData) return;
+
+    // 2. Gọi API submit (giữ nguyên logic cũ)
+    const payload = {
+      reviewAssignmentId: reviewData.reviewAssignmentId,
+      reviewerUserId: user?.userId,
+      generalFeedback: comment,
+      criteriaFeedbacks: reviewData.rubric.criteria.map((c) => ({
+        criteriaId: c.criteriaId,
+        score: scores[c.criteriaId] || 0,
+        feedback: "",
+      })),
+    };
+    await reviewService.submitPeerReview(payload);
+
+    
+    navigate("/review-success", {
+      state: {
+        assignmentTitle: reviewData.assignmentTitle,
+        studentName: reviewData.studentName,
         criteriaFeedbacks: reviewData.rubric.criteria.map((c) => ({
           criteriaId: c.criteriaId,
+          criteriaName: c.title || c.criteriaName || "Tiêu chí", 
           score: scores[c.criteriaId] || 0,
-          feedback: "",
+          maxScore: c.maxScore,
         })),
-      };
-      await reviewService.submitPeerReview(payload);
+        totalScore: weightedTotalScore, 
+        generalFeedback: comment, 
+      },
+    });
 
-      navigate("/review-success", {
-        state: {
-          assignmentTitle: reviewData.assignmentTitle,
-          studentName: reviewData.studentName,
-          criteriaFeedbacks: reviewData.rubric.criteria.map((c) => ({
-            criteriaId: c.criteriaId,
-            criteriaName: c.criteriaName,
-            score: scores[c.criteriaId] || 0,
-            maxScore: c.maxScore,
-          })),
-          totalScore: weightedTotalScore,
-          generalFeedback: comment,
-        },
-      });
-    } catch (err) {
-      toast.error("Error sending score, please try again!");
-    }
-  };
+  } catch (err) {
+    console.error(err);
+    toast.error("Error sending score, please try again!");
+  }
+};
 
   if (isLoading)
     return <div className="p-8 text-center text-xl">Finding Assignment...</div>;
