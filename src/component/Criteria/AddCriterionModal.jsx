@@ -57,10 +57,17 @@ const AddCriterionModal = ({ isOpen, onClose, onSubmit, rubricId, isSubmitting }
 
         try {
             await onSubmit(criterionData);
+            // Only reset form if submission was successful
             resetForm();
         } catch (error) {
+            // Don't reset form on error - keep user's input
             console.error('Error submitting criterion:', error);
         }
+    };
+
+    const handleClose = () => {
+        resetForm();
+        onClose();
     };
 
     if (!isOpen) return null;
@@ -178,7 +185,7 @@ const AddCriterionModal = ({ isOpen, onClose, onSubmit, rubricId, isSubmitting }
                     <div className="flex justify-end gap-3 mt-8 pt-6 border-t border-gray-100">
                         <button
                             type="button"
-                            onClick={onClose}
+                            onClick={handleClose}
                             className="px-5 py-2.5 text-sm font-semibold text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400"
                             disabled={isSubmitting}
                         >

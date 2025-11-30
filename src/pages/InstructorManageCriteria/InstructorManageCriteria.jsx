@@ -161,6 +161,7 @@ function InstructorManageCriteria() {
         } catch (error) {
             console.error('Failed to add criterion:', error);
             toast.error(error.response?.data?.message || 'Failed to add criterion');
+            throw error;
         } finally {
             setSubmitting(false);
         }
@@ -301,7 +302,7 @@ function InstructorManageCriteria() {
                         <h2 className="text-xl font-semibold text-gray-900">Evaluation Criteria</h2>
                         <p className="text-sm text-gray-600">Manage and configure assessment criteria</p>
                     </div>
-                    {(assignmentStatus === 'Draft' || assignmentStatus === 'Upcoming') && (
+                    {(assignmentStatus === 'Draft' || assignmentStatus === 'Upcoming') && totalWeight < 100 && (
                         <button
                             onClick={() => setShowAddModal(true)}
                             className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors"
