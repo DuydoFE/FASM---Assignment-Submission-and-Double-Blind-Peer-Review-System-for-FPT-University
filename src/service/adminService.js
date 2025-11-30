@@ -103,8 +103,8 @@ export const getUsersByCampus = async (campusId) => {
 };
 
 // Cập nhật thông tin user
-export const updateUser = async (id, data) => {
-  const res = await api.put(`/Users/${id}`, data);
+export const updateUser = async (id, payload) => {
+  const res = await api.put(`/Users/${id}`, payload);
   return res.data;
 };
 
@@ -213,12 +213,12 @@ export const getCourseInstancesByCampusId = async (campusId) => {
 };
 
 // Tạo lớp học mới
-  export const createCourseInstance = async (payload) => {
-    const res = await axios.post(`${API_BASE_URL}/api/CourseInstance`, payload, {
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${localStorage.getItem("token")}` },
-    });
-    return res.data;
-  };
+export const createCourseInstance = async (payload) => {
+  const res = await axios.post(`${API_BASE_URL}/api/CourseInstance`, payload, {
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${localStorage.getItem("token")}` },
+  });
+  return res.data;
+};
 
 // Cập nhật lớp học
 export const updateCourseInstance = async (data) => {
