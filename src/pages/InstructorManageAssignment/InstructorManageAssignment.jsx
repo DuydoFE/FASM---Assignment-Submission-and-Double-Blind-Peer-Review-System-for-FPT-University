@@ -225,6 +225,8 @@ const InstructorManageAssignment = () => {
       const message =
         error?.response?.data?.message || "Failed to create assignment";
       toast.error(message);
+      // Don't close modal on error - let user fix the issue and retry
+      throw error; // Re-throw to prevent modal from closing
     }
   };
 

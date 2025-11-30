@@ -21,6 +21,7 @@ const CreateAssignmentModal = ({ isOpen, onClose, onSubmit, courseInstanceId }) 
     numPeerReviewsRequired: '',
     missingReviewPenalty: '',
     allowCrossClass: false,
+    crossClassTag: '',
     instructorWeight: '',
     peerWeight: '',
     gradingScale: 'Scale10',
@@ -278,6 +279,7 @@ const CreateAssignmentModal = ({ isOpen, onClose, onSubmit, courseInstanceId }) 
         numPeerReviewsRequired: parseInt(formData.numPeerReviewsRequired),
         missingReviewPenalty: parseInt(formData.missingReviewPenalty) || 0,
         allowCrossClass: formData.allowCrossClass,
+        crossClassTag: formData.allowCrossClass ? formData.crossClassTag : '',
         isBlindReview: formData.isBlindReview,
         instructorWeight: parseInt(formData.instructorWeight),
         peerWeight: parseInt(formData.peerWeight),
@@ -293,8 +295,10 @@ const CreateAssignmentModal = ({ isOpen, onClose, onSubmit, courseInstanceId }) 
 
       console.log('Submitting data:', submitData);
 
+      // Wait for onSubmit to complete successfully before resetting form
       await onSubmit(submitData, selectedFile);
 
+      // Only reset form and close modal if submission was successful
       setFormData({
         courseInstanceId: courseInstanceId || 0,
         rubricTemplateId: '',
@@ -309,6 +313,7 @@ const CreateAssignmentModal = ({ isOpen, onClose, onSubmit, courseInstanceId }) 
         numPeerReviewsRequired: '',
         missingReviewPenalty: 0,
         allowCrossClass: false,
+        crossClassTag: '',
         isBlindReview: false,
         instructorWeight: '',
         peerWeight: '',
@@ -322,7 +327,6 @@ const CreateAssignmentModal = ({ isOpen, onClose, onSubmit, courseInstanceId }) 
       onClose();
     } catch (error) {
       console.error('Error creating assignment:', error);
-      toast.error('Failed to create assignment. Please try again.');
     }
   };
 
@@ -727,6 +731,23 @@ const CreateAssignmentModal = ({ isOpen, onClose, onSubmit, courseInstanceId }) 
                     <p className="text-xs text-gray-500">Students can review submissions from other classes</p>
                   </div>
                 </label>
+
+                {formData.allowCrossClass && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Cross-Class Tag <span className="text-gray-400">(Optional)</span>
+                    </label>
+                    <input
+                      type="text"
+                      name="crossClassTag"
+                      value={formData.crossClassTag}
+                      onChange={handleChange}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none"
+                      placeholder="Enter cross-class tag"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">Tag to identify related assignments across classes</p>
+                  </div>
+                )}
               </div>
             </div>
 

@@ -91,6 +91,8 @@ export const createAssignment = async (assignmentData, file = null) => {
     
     formData.append('AllowCrossClass', assignmentData.allowCrossClass);
     
+    formData.append('CrossClassTag', assignmentData.crossClassTag);
+    
     formData.append('GradingScale', assignmentData.gradingScale);
     
     if (file) {
