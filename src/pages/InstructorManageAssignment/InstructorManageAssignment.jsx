@@ -203,6 +203,7 @@ const InstructorManageAssignment = () => {
         setShowEditModal(false);
         setEditingAssignment(null);
         await fetchAssignments();
+        return true; // Return true on success
       } else {
         throw new Error("Failed to update assignment");
       }
@@ -212,6 +213,7 @@ const InstructorManageAssignment = () => {
         error.response?.data?.message ||
           "Failed to update assignment. Please try again."
       );
+      return false; // Return false on error to keep modal open
     }
   };
 
@@ -225,6 +227,8 @@ const InstructorManageAssignment = () => {
       const message =
         error?.response?.data?.message || "Failed to create assignment";
       toast.error(message);
+      // Don't close modal on error - let user fix the issue and retry
+      throw error; // Re-throw to prevent modal from closing
     }
   };
 

@@ -20,6 +20,7 @@ const EditAssignmentModal = ({ isOpen, onClose, onSubmit, assignment }) => {
     numPeerReviewsRequired: '',
     missingReviewPenalty: '',
     allowCrossClass: false,
+    crossClassTag: '',
     isBlindReview: false,
     instructorWeight: '',
     peerWeight: '',
@@ -87,6 +88,7 @@ const EditAssignmentModal = ({ isOpen, onClose, onSubmit, assignment }) => {
               ? String(assignment.missingReviewPenalty)
               : '',
         allowCrossClass: assignment.allowCrossClass || false,
+        crossClassTag: assignment.crossClassTag || '',
         isBlindReview: assignment.isBlindReview || false,
         instructorWeight: assignment.instructorWeight !== undefined && assignment.instructorWeight !== null
           ? String(assignment.instructorWeight)
@@ -304,6 +306,7 @@ const EditAssignmentModal = ({ isOpen, onClose, onSubmit, assignment }) => {
         numPeerReviewsRequired: parseInt(formData.numPeerReviewsRequired),
         missingReviewPenalty: parseInt(formData.missingReviewPenalty) || 0,
         allowCrossClass: formData.allowCrossClass,
+        crossClassTag: formData.allowCrossClass ? formData.crossClassTag : '',
         isBlindReview: formData.isBlindReview,
         instructorWeight: parseInt(formData.instructorWeight),
         peerWeight: parseInt(formData.peerWeight),
@@ -319,10 +322,19 @@ const EditAssignmentModal = ({ isOpen, onClose, onSubmit, assignment }) => {
 
       console.log('Updating assignment:', submitData);
 
-      await onSubmit(submitData, uploadedFile);
-      onClose();
+      // Call onSubmit and wait for result
+      const result = await onSubmit(submitData, uploadedFile);
+      
+      // Only close modal if the edit was successful
+      // The backend notification (success/error) is handled by the parent component
+      if (result !== false) {
+        onClose();
+      }
+      // If result is false, modal stays open and error is already shown by parent
     } catch (error) {
       console.error('Error updating assignment:', error);
+      // Don't close modal on error - let the error notification show
+      // Parent component should handle the error toast
     }
   };
 
@@ -708,7 +720,24 @@ const EditAssignmentModal = ({ isOpen, onClose, onSubmit, assignment }) => {
                     <span className="text-sm font-medium text-gray-900 group-hover:text-blue-600">Allow Cross-Class Review</span>
                     <p className="text-xs text-gray-500">Students can review submissions from other classes</p>
                   </div>
-                </label>              
+                </label>
+
+                {formData.allowCrossClass && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Cross-Class Tag <span className="text-gray-400">(Optional)</span>
+                    </label>
+                    <input
+                      type="text"
+                      name="crossClassTag"
+                      value={formData.crossClassTag}
+                      onChange={handleChange}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                      placeholder="Enter cross-class tag"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">Tag to identify related assignments across classes</p>
+                  </div>
+                )}
               </div>
             </div>
           </div>
