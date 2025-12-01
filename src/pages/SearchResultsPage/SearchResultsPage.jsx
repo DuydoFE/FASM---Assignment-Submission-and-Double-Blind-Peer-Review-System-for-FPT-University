@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
-import { useSearchParams, Link } from "react-router-dom";
-import { searchStudent } from "../service/searchService";
-import { Tabs, List, Card, Tag, Spin, Empty, Typography } from "antd";
+import { useSearchParams } from "react-router-dom";
+import { searchStudent } from "../../service/searchService";
+import { Tabs, List, Card, Tag, Spin, Empty, Typography, ConfigProvider } from "antd"; 
 import { BookOpen, MessageSquare, FileText, CheckCircle, ListChecks } from "lucide-react";
 
 const { Title, Text } = Typography;
@@ -21,6 +21,7 @@ const SearchResultsPage = () => {
         const result = await searchStudent(query);
         setData(result.data);
       } catch (error) {
+        console.error(error);
       } finally {
         setLoading(false);
       }
@@ -29,7 +30,7 @@ const SearchResultsPage = () => {
   }, [query]);
 
   const renderList = (dataSource, icon, renderItemContent) => {
-    if (!dataSource || dataSource.length === 0) return <Empty description="No results found in this category" />;
+    if (!dataSource || dataSource.length === 0) return <Empty description={<span className="text-zinc-400">No results found</span>} />;
     
     return (
       <List
@@ -37,7 +38,7 @@ const SearchResultsPage = () => {
         dataSource={dataSource}
         renderItem={(item) => (
           <List.Item>
-            <Card hoverable className="h-full border-zinc-700 bg-zinc-900">
+            <Card hoverable className="h-full border-zinc-700 bg-zinc-900 !border-white/10">
               <div className="flex items-start gap-3 mb-3">
                 <div className="p-2 bg-white/10 rounded-lg text-cyan-400">
                   {icon}
@@ -63,7 +64,6 @@ const SearchResultsPage = () => {
           <Title level={5} style={{ color: 'white' }}>{item.title}</Title>
           <Text className="text-zinc-400 block mb-1">Course: {item.courseName}</Text>
           <Text className="text-zinc-500 text-sm line-clamp-3">{item.descriptionSnippet}</Text>
-          
         </>
       )),
     },
@@ -129,12 +129,28 @@ const SearchResultsPage = () => {
           <Spin size="large" />
         </div>
       ) : (
-        <Tabs 
-            defaultActiveKey="1" 
-            items={items} 
-            className="text-white custom-tabs"
-            type="card"
-        />
+       
+        <ConfigProvider
+          theme={{
+            components: {
+              Tabs: {
+                itemColor: "#a1a1aa",        
+                itemSelectedColor: "#0e0d0dff", 
+                itemHoverColor: "#22d3ee",    
+                titleFontSize: 14,
+               
+                cardBg: "rgba(255, 255, 255, 0.05)", 
+                cardGutter: 4 
+              },
+            },
+          }}
+        >
+          <Tabs 
+              defaultActiveKey="1" 
+              items={items} 
+              type="card"
+          />
+        </ConfigProvider>
       )}
     </div>
   );

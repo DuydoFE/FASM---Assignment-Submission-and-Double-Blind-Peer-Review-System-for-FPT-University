@@ -60,6 +60,7 @@ import AdminSystemSetting from "../pages/Admin/AdminSystemSetting";
 import ProfilePage from "../pages/HomePage/ProfilePage";
 import ViewScorePage from "../pages/ViewScorePage/ViewScorePage";
 import ViewRequestHistoryPage from "../pages/RegradeRequest/ViewRequestHistoryPage";
+import SearchResultsPage from "@/pages/SearchResultsPage/SearchResultsPage";
 
 export const router = createBrowserRouter([
   {
@@ -105,6 +106,10 @@ export const router = createBrowserRouter([
       {
         path: "regrade-request",
         element: <ViewRequestHistoryPage />,
+      },
+       {
+        path: "search", 
+        element: <SearchResultsPage />,
       },
 
     ],
