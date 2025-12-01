@@ -1,21 +1,30 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom"; 
 import { Search, Filter, User, LogOut, Home, LayoutDashboard, ClipboardList, History } from "lucide-react";
 import { getCurrentAccount } from "../../utils/accountUtils";
 import { useDispatch } from "react-redux";
 import { logout } from "../../redux/features/userSlice";
 import { Dropdown, Menu, Avatar, Button } from "antd";
 import { toast } from "react-toastify";
+import { useState } from "react"; 
 import NotificationPopover from "./NotificationPopover"; 
 
 const Header = () => {
   const user = getCurrentAccount();
   const dispatch = useDispatch();
+  const navigate = useNavigate(); 
+  const [searchValue, setSearchValue] = useState(""); 
 
   const handleLogout = () => {
     dispatch(logout());
     toast.success("Logged out successfully");
     localStorage.removeItem("token");
     localStorage.removeItem("refreshToken");
+  };
+
+  const handleSearch = (e) => {
+    if (e.key === 'Enter' && searchValue.trim()) {
+      navigate(`/search?query=${encodeURIComponent(searchValue.trim())}`);
+    }
   };
 
   const menu = (
@@ -45,7 +54,6 @@ const Header = () => {
     <header className="sticky top-0 z-50 bg-black/30 backdrop-blur-lg border-b border-white/10">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-20">
-          {/* Logo & Navigation */}
           <div className="flex items-center space-x-8">
             <Link to="/">
               <span className="font-bold text-2xl text-white">FASM</span>
@@ -69,6 +77,7 @@ const Header = () => {
           <div className="flex items-center space-x-4">
             
             {user && <NotificationPopover user={user} />}
+
             <div className="relative w-80">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <Search className="h-5 w-5 text-zinc-400" />
@@ -77,6 +86,9 @@ const Header = () => {
                 type="text"
                 placeholder="Search..."
                 className="w-full pl-10 pr-16 py-2 border border-white/20 rounded-lg bg-white/5 text-zinc-100 focus:ring-cyan-500 focus:border-cyan-500 placeholder:text-zinc-400"
+                value={searchValue}
+                onChange={(e) => setSearchValue(e.target.value)}
+                onKeyDown={handleSearch}
               />
               <div className="absolute inset-y-0 right-0 pr-3 flex items-center space-x-2 text-zinc-400 text-sm">
                 <Filter className="h-4 w-4" />
