@@ -225,14 +225,16 @@ const InstructorGradingDetail = () => {
                 feedback: c.feedback
             }));
 
-            await gradeSubmission({
+            const response = await gradeSubmission({
                 submissionId: parseInt(submissionId, 10),
                 instructorId: currentUser.id,
                 feedback: generalFeedback || `Total Score: ${totalScore}/10`,
                 criteriaFeedbacks: criteriaFeedbacksPayload
             });
 
-            toast.success('Grading submitted successfully!');
+            // Display backend message if available
+            const successMessage = response?.message || 'Grading submitted successfully!';
+            toast.success(successMessage);
 
             setTimeout(() => {
                 const returnPath = location.pathname.includes('publish')
@@ -246,7 +248,12 @@ const InstructorGradingDetail = () => {
 
         } catch (error) {
             console.error('Error submitting grade:', error);
-            toast.error('Failed to submit grade. Please try again.');
+            // Display backend error message if available
+            const errorMessage = error.response?.data?.message ||
+                                error.response?.data ||
+                                error.message ||
+                                'Failed to submit grade. Please try again.';
+            toast.error(errorMessage);
         } finally {
             setSubmitting(false);
         }
