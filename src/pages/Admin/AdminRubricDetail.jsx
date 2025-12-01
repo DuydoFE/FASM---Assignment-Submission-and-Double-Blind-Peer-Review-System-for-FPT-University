@@ -1,11 +1,12 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import toast from "react-hot-toast";
+import { Toaster, toast } from "react-hot-toast";
 import {
-    getCriteriaTemplatesByTemplateId,
+    getRubricTemplateById,
     createCriteriaTemplate,
     updateCriteriaTemplate,
     deleteCriteriaTemplate,
+    toggleRubricTemplatePublicStatus,
 } from "../../service/adminService";
 
 export default function AdminRubricDetail() {
@@ -32,15 +33,14 @@ export default function AdminRubricDetail() {
     useEffect(() => {
         const fetchRubric = async () => {
             try {
-                const res = await getCriteriaTemplatesByTemplateId(id);
+                const res = await getRubricTemplateById(id);
 
                 if (res?.statusCode === 200) {
-                    // Lấy templateTitle từ data đầu tiên nếu có, hoặc tạo mặc định
-                    const templateTitle = res.data?.[0]?.templateTitle || "Untitled Rubric";
                     setRubric({
-                        templateId: Number(id),
-                        title: templateTitle,
-                        criteriaTemplates: Array.isArray(res.data) ? res.data : [],
+                        templateId: res.data.templateId,
+                        title: res.data.title,
+                        isPublic: res.data.isPublic,
+                        criteriaTemplates: res.data.criteriaTemplates || [],
                     });
                 } else if (res?.statusCode === 404) {
                     toast.error("Rubric not found");
@@ -58,15 +58,22 @@ export default function AdminRubricDetail() {
         fetchRubric();
     }, [id]);
 
+    // helper: compute used & available weight
+    const usedWeight = useMemo(() => {
+        return (rubric?.criteriaTemplates || []).reduce((s, it) => s + (Number(it.weight) || 0), 0);
+    }, [rubric]);
+
+    const availableWeight = Math.max(0, 100 - usedWeight);
+
     // Reload criteria list
     const reloadCriteria = async () => {
         try {
-            const res = await getCriteriaTemplatesByTemplateId(id);
-            if (res?.statusCode === 200 && Array.isArray(res.data)) {
+            const res = await getRubricTemplateById(id);
+            if (res?.statusCode === 200) {
                 setRubric({
-                    templateId: res.data[0].templateId,
-                    title: res.data[0].templateTitle,
-                    criteriaTemplates: res.data,
+                    templateId: res.data.templateId,
+                    title: res.data.title,
+                    criteriaTemplates: res.data.criteriaTemplates || [],
                 });
             }
         } catch (err) {
@@ -77,6 +84,18 @@ export default function AdminRubricDetail() {
     // Create Criteria
     const handleCreateCriteria = async (e) => {
         e.preventDefault();
+
+        // validation
+        if (criteriaForm.maxScore < 0 || criteriaForm.maxScore > 10) {
+            toast.error("Max Score must be between 0 and 10");
+            return;
+        }
+
+        if (criteriaForm.weight < 0 || criteriaForm.weight > availableWeight) {
+            toast.error(`Weight must be between 0 and ${availableWeight}`);
+            return;
+        }
+
         try {
             const payload = { ...criteriaForm, templateId: rubric.templateId };
             const res = await createCriteriaTemplate(payload);
@@ -85,10 +104,10 @@ export default function AdminRubricDetail() {
                 setShowCreateModal(false);
                 setCriteriaForm({ title: "", description: "", weight: 0, maxScore: 0, scoringType: "Scale", scoreLabel: "0-10" });
 
-                // Cập nhật state trực tiếp để UI phản ánh ngay
+                // update local state
                 setRubric((prev) => ({
                     ...prev,
-                    criteriaTemplates: [...prev.criteriaTemplates, res.data],
+                    criteriaTemplates: [...(prev.criteriaTemplates || []), res.data],
                 }));
             } else {
                 toast.error(res?.message || "Failed to create criteria");
@@ -103,18 +122,36 @@ export default function AdminRubricDetail() {
     const openEditModal = (criteria) => {
         setCurrentCriteria(criteria);
         setCriteriaForm({
-            title: criteria.title,
-            description: criteria.description,
-            weight: criteria.weight,
-            maxScore: criteria.maxScore,
+            title: criteria.title || "",
+            description: criteria.description || "",
+            weight: criteria.weight || 0,
+            maxScore: criteria.maxScore || 0,
             scoringType: criteria.scoringType || "Scale",
-            scoreLabel: criteria.scoreLabel || "0-10",
+            scoreLabel:
+                criteria.scoreLabel ||
+                (criteria.scoringType === "Pass/Not Pass" ? "Pass-Not Pass" : "0-10"),
         });
         setShowEditModal(true);
     };
 
     const handleUpdateCriteria = async (e) => {
         e.preventDefault();
+
+        // compute how much weight is available when editing: include current item's weight
+        const currentWeight = Number(currentCriteria?.weight) || 0;
+        const usedWithoutCurrent = Math.max(0, usedWeight - currentWeight);
+        const editAvailable = Math.max(0, 100 - usedWithoutCurrent);
+
+        if (criteriaForm.maxScore < 0 || criteriaForm.maxScore > 10) {
+            toast.error("Max Score must be between 0 and 10");
+            return;
+        }
+
+        if (criteriaForm.weight < 0 || criteriaForm.weight > editAvailable) {
+            toast.error(`Weight must be between 0 and ${editAvailable}`);
+            return;
+        }
+
         try {
             const payload = {
                 criteriaTemplateId: currentCriteria.criteriaTemplateId,
@@ -126,7 +163,7 @@ export default function AdminRubricDetail() {
                 toast.success("Criteria updated successfully");
                 setShowEditModal(false);
 
-                // Cập nhật state trực tiếp
+                // update local state
                 setRubric((prev) => ({
                     ...prev,
                     criteriaTemplates: prev.criteriaTemplates.map((c) =>
@@ -150,10 +187,10 @@ export default function AdminRubricDetail() {
             if (res?.statusCode === 200) {
                 toast.success("Criteria deleted successfully");
 
-                // Cập nhật state trực tiếp
+                // update local state
                 setRubric((prev) => ({
                     ...prev,
-                    criteriaTemplates: prev.criteriaTemplates.filter(c => c.criteriaTemplateId !== criteriaId),
+                    criteriaTemplates: prev.criteriaTemplates.filter((c) => c.criteriaTemplateId !== criteriaId),
                 }));
             } else {
                 toast.error(res?.message || "Failed to delete criteria");
@@ -169,20 +206,74 @@ export default function AdminRubricDetail() {
 
     return (
         <div className="space-y-6 p-6">
-            <button
-                className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300"
-                onClick={() => navigate(-1)}
-            >
+            <Toaster position="top-right" reverseOrder={false} />
+            <button className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300" onClick={() => navigate(-1)}>
                 ← Back
             </button>
 
             <h2 className="text-3xl font-bold text-orange-500">{rubric.title}</h2>
 
+            <div className="flex items-center gap-3 mt-2">
+                <span className={`px-3 py-1 rounded-full text-sm 
+        ${rubric.isPublic ? "bg-green-100 text-green-700" : "bg-gray-200 text-gray-600"}`}>
+                    {rubric.isPublic ? "Public" : "Private"}
+                </span>
+
+                <button
+                    className={`px-4 py-2 rounded text-white 
+    ${rubric.isPublic ? "bg-red-500 hover:bg-red-600" : "bg-blue-500 hover:bg-blue-600"}`}
+                    onClick={async () => {
+                        // Nếu tổng weight < 100 thì không cho public
+                        if (!rubric.isPublic && usedWeight < 100) {
+                            toast.error("You can only public a rubric when the total weight is exactly 100%.");
+                            return;
+                        }
+
+                        try {
+                            const res = await toggleRubricTemplatePublicStatus(rubric.templateId, !rubric.isPublic); // truyền luôn trạng thái mới
+
+                            if (res?.statusCode === 200) {
+                                toast.success("Rubric public status updated!");
+
+                                // Cập nhật state ngay, không cần reload
+                                setRubric(prev => ({
+                                    ...prev,
+                                    isPublic: !prev.isPublic
+                                }));
+                            } else {
+                                toast.error(res?.message || "Failed to update public status.");
+                            }
+                        } catch (err) {
+                            console.error(err);
+                            toast.error("Server error while updating public status.");
+                        }
+                    }}
+                >
+                    {rubric.isPublic ? "Set to Private" : "Set to Public"}
+                </button>
+            </div>
+
             <div className="mt-6 flex justify-between items-center">
-                <h3 className="text-2xl font-semibold mb-4 border-b pb-2">Criteria</h3>
+                <h3 className="text-2xl font-semibold mb-4 border-b pb-2">
+                    Criteria
+                    <span className="ml-3 text-sm text-gray-600">
+                        Available weight: <b className={`ml-1 ${availableWeight > 0 ? "text-green-600" : "text-red-600"}`}>{availableWeight}%</b>
+                    </span>
+                </h3>
+
                 <button
                     className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
-                    onClick={() => setShowCreateModal(true)}
+                    onClick={() => {
+                        if (rubric.isPublic) {
+                            toast.error("The rubric is currently PUBLIC, so criteria cannot be added. Please switch it back to PRIVATE first.");
+                            return;
+                        }
+                        if (availableWeight <= 0) {
+                            toast.error("No weight available. Please adjust existing criteria before adding new one.");
+                            return;
+                        }
+                        setShowCreateModal(true);
+                    }}
                 >
                     + Add Criteria
                 </button>
@@ -216,13 +307,25 @@ export default function AdminRubricDetail() {
                                     <td className="p-3 space-x-2">
                                         <button
                                             className="text-blue-600 hover:underline"
-                                            onClick={() => openEditModal(c)}
+                                            onClick={() => {
+                                                if (rubric.isPublic) {
+                                                    toast.error("The rubric is currently PUBLIC, so criteria cannot be edited. Please switch it back to PRIVATE first.");
+                                                    return;
+                                                }
+                                                openEditModal(c);
+                                            }}
                                         >
                                             Edit
                                         </button>
                                         <button
                                             className="text-red-600 hover:underline"
-                                            onClick={() => handleDeleteCriteria(c.criteriaTemplateId)}
+                                            onClick={() => {
+                                                if (rubric.isPublic) {
+                                                    toast.error("The rubric is currently PUBLIC, so criteria cannot be deleted. Please switch it back to PRIVATE first.");
+                                                    return;
+                                                }
+                                                handleDeleteCriteria(c.criteriaTemplateId);
+                                            }}
                                         >
                                             Delete
                                         </button>
@@ -241,60 +344,104 @@ export default function AdminRubricDetail() {
                 <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
                     <div className="bg-white rounded-xl shadow-lg p-6 w-full max-w-lg">
                         <h3 className="text-xl font-semibold mb-4 border-b pb-2">Create New Criteria</h3>
-                        <form className="space-y-3" onSubmit={handleCreateCriteria}>
-                            <input
-                                type="text"
-                                required
-                                placeholder="Title"
-                                className="border rounded p-3 w-full"
-                                value={criteriaForm.title}
-                                onChange={(e) => setCriteriaForm({ ...criteriaForm, title: e.target.value })}
-                            />
-                            <textarea
-                                placeholder="Description"
-                                className="border rounded p-3 w-full"
-                                value={criteriaForm.description}
-                                onChange={(e) => setCriteriaForm({ ...criteriaForm, description: e.target.value })}
-                            />
-                            <div className="flex gap-3">
-                                <input
-                                    type="number"
-                                    required
-                                    placeholder="Weight"
-                                    className="border rounded p-3 w-1/2"
-                                    value={criteriaForm.weight}
-                                    onChange={(e) => setCriteriaForm({ ...criteriaForm, weight: Number(e.target.value) })}
-                                />
-                                <input
-                                    type="number"
-                                    required
-                                    placeholder="Max Score"
-                                    className="border rounded p-3 w-1/2"
-                                    value={criteriaForm.maxScore}
-                                    onChange={(e) => setCriteriaForm({ ...criteriaForm, maxScore: Number(e.target.value) })}
-                                />
-                            </div>
-                            <div className="flex gap-3">
+                        <form className="space-y-4" onSubmit={handleCreateCriteria}>
+                            {/* Title */}
+                            <div>
+                                <label className="font-medium">Title</label>
                                 <input
                                     type="text"
                                     required
-                                    placeholder="Scoring Type"
-                                    className="border rounded p-3 w-1/2"
+                                    placeholder="Enter title"
+                                    className="border rounded p-3 w-full mt-1"
+                                    value={criteriaForm.title}
+                                    onChange={(e) => setCriteriaForm({ ...criteriaForm, title: e.target.value })}
+                                />
+                            </div>
+
+                            {/* Description */}
+                            <div>
+                                <label className="font-medium">Description</label>
+                                <textarea
+                                    placeholder="Enter description"
+                                    className="border rounded p-3 w-full mt-1"
+                                    value={criteriaForm.description}
+                                    onChange={(e) => setCriteriaForm({ ...criteriaForm, description: e.target.value })}
+                                />
+                            </div>
+
+                            {/* Weight + Max Score */}
+                            <div className="flex gap-3">
+                                <div className="w-1/2">
+                                    <label className="font-medium">Weight (%)</label>
+                                    <input
+                                        type="number"
+                                        required
+                                        placeholder="Weight"
+                                        className="border rounded p-3 w-full mt-1"
+                                        min={0}
+                                        max={availableWeight}
+                                        value={criteriaForm.weight}
+                                        onChange={(e) => {
+                                            let val = Number(e.target.value);
+                                            if (isNaN(val)) val = 0;
+                                            if (val > availableWeight) val = availableWeight;
+                                            if (val < 0) val = 0;
+                                            setCriteriaForm({ ...criteriaForm, weight: val });
+                                        }}
+                                    />
+                                    <p className="text-xs text-gray-500 mt-1">You can use up to <b>{availableWeight}%</b> weight.</p>
+                                </div>
+                                <div className="w-1/2">
+                                    <label className="font-medium">Max Score</label>
+                                    <input
+                                        type="number"
+                                        required
+                                        placeholder="Max Score"
+                                        className="border rounded p-3 w-full mt-1 focus:ring-2 focus:ring-orange-400 focus:outline-none"
+                                        min={0}
+                                        max={10}
+                                        value={criteriaForm.maxScore}
+                                        onChange={(e) => {
+                                            let v = Number(e.target.value);
+                                            if (isNaN(v)) v = 0;
+                                            if (v < 0) v = 0;
+                                            if (v > 10) v = 10;
+                                            setCriteriaForm({ ...criteriaForm, maxScore: v });
+                                        }}
+                                    />
+                                    <p className="text-xs text-gray-500 mt-1">Allowed range: 0 - 10</p>
+                                </div>
+                            </div>
+
+                            {/* Scoring Type + Score Label */}
+                            <div>
+                                <label className="font-medium">Scoring Method</label>
+                                <select
+                                    className="border rounded p-3 w-full mt-1"
                                     value={criteriaForm.scoringType}
-                                    onChange={(e) => setCriteriaForm({ ...criteriaForm, scoringType: e.target.value })}
-                                />
-                                <input
-                                    type="text"
-                                    required
-                                    placeholder="Score Label"
-                                    className="border rounded p-3 w-1/2"
-                                    value={criteriaForm.scoreLabel}
-                                    onChange={(e) => setCriteriaForm({ ...criteriaForm, scoreLabel: e.target.value })}
-                                />
+                                    onChange={(e) => {
+                                        const selected = e.target.value;
+                                        if (selected === "Scale") {
+                                            setCriteriaForm({ ...criteriaForm, scoringType: "Scale", scoreLabel: "0-10", maxScore: 10 });
+                                        } else if (selected === "Pass/Fail") {
+                                            setCriteriaForm({ ...criteriaForm, scoringType: "PassFail", scoreLabel: "Pass/Fail", maxScore: 1 });
+                                        }
+                                    }}
+                                >
+                                    <option value="Scale">Scale (0-10)</option>
+                                    <option value="Pass/Fail">Pass/Fail</option>
+                                </select>
+                                <p className="text-xs text-gray-500 mt-1">Selecting an option will auto-fill the score label and adjust max score.</p>
                             </div>
+
+                            {/* Actions */}
                             <div className="flex justify-end gap-3 mt-4">
-                                <button type="button" className="px-4 py-2 border rounded" onClick={() => setShowCreateModal(false)}>Cancel</button>
-                                <button type="submit" className="px-4 py-2 bg-green-500 text-white rounded">Create</button>
+                                <button type="button" className="px-4 py-2 border rounded" onClick={() => setShowCreateModal(false)}>
+                                    Cancel
+                                </button>
+                                <button type="submit" className="px-4 py-2 bg-green-500 text-white rounded">
+                                    Create
+                                </button>
                             </div>
                         </form>
                     </div>
@@ -306,57 +453,104 @@ export default function AdminRubricDetail() {
                 <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
                     <div className="bg-white rounded-xl shadow-lg p-6 w-full max-w-lg">
                         <h3 className="text-xl font-semibold mb-4 border-b pb-2">Edit Criteria</h3>
-                        <form className="space-y-3" onSubmit={handleUpdateCriteria}>
-                            <input
-                                type="text"
-                                required
-                                placeholder="Title"
-                                className="border rounded p-3 w-full"
-                                value={criteriaForm.title}
-                                onChange={(e) => setCriteriaForm({ ...criteriaForm, title: e.target.value })}
-                            />
-                            <textarea
-                                placeholder="Description"
-                                className="border rounded p-3 w-full"
-                                value={criteriaForm.description}
-                                onChange={(e) => setCriteriaForm({ ...criteriaForm, description: e.target.value })}
-                            />
-                            <div className="flex gap-3">
-                                <input
-                                    type="number"
-                                    required
-                                    placeholder="Weight"
-                                    className="border rounded p-3 w-1/2"
-                                    value={criteriaForm.weight}
-                                    onChange={(e) => setCriteriaForm({ ...criteriaForm, weight: Number(e.target.value) })}
-                                />
-                                <input
-                                    type="number"
-                                    required
-                                    placeholder="Max Score"
-                                    className="border rounded p-3 w-1/2"
-                                    value={criteriaForm.maxScore}
-                                    onChange={(e) => setCriteriaForm({ ...criteriaForm, maxScore: Number(e.target.value) })}
-                                />
-                            </div>
-                            <div className="flex gap-3">
+                        <form className="space-y-4" onSubmit={handleUpdateCriteria}>
+                            <div>
+                                <label className="font-medium">Title</label>
                                 <input
                                     type="text"
                                     required
-                                    placeholder="Scoring Type"
-                                    className="border rounded p-3 w-1/2"
+                                    placeholder="Enter title"
+                                    className="border rounded p-3 w-full mt-1"
+                                    value={criteriaForm.title}
+                                    onChange={(e) => setCriteriaForm({ ...criteriaForm, title: e.target.value })}
+                                />
+                            </div>
+
+                            <div>
+                                <label className="font-medium">Description</label>
+                                <textarea
+                                    placeholder="Enter description"
+                                    className="border rounded p-3 w-full mt-1"
+                                    value={criteriaForm.description}
+                                    onChange={(e) => setCriteriaForm({ ...criteriaForm, description: e.target.value })}
+                                />
+                            </div>
+
+                            <div className="flex gap-3">
+                                <div className="w-1/2">
+                                    <label className="font-medium">Weight (%)</label>
+                                    {/* allow up to available + current item weight so user can keep same value */}
+                                    <input
+                                        type="number"
+                                        required
+                                        placeholder="Weight"
+                                        className="border rounded p-3 w-full mt-1"
+                                        min={0}
+                                        max={Math.min(100, availableWeight + (currentCriteria?.weight || 0))}
+                                        value={criteriaForm.weight}
+                                        onChange={(e) => {
+                                            let val = Number(e.target.value);
+                                            const maxAllowed = Math.min(100, availableWeight + (currentCriteria?.weight || 0));
+                                            if (isNaN(val)) val = 0;
+                                            if (val > maxAllowed) val = maxAllowed;
+                                            if (val < 0) val = 0;
+                                            setCriteriaForm({ ...criteriaForm, weight: val });
+                                        }}
+                                    />
+                                    <p className="text-xs text-gray-500 mt-1">You can use up to <b>{Math.min(100, availableWeight + (currentCriteria?.weight || 0))}%</b> for this item.</p>
+                                </div>
+                                <div className="w-1/2">
+                                    <label className="font-medium">Max Score</label>
+                                    <input
+                                        type="number"
+                                        required
+                                        placeholder="Max Score"
+                                        className="border rounded p-3 w-full mt-1 focus:ring-2 focus:ring-orange-400 focus:outline-none"
+                                        min={0}
+                                        max={10}
+                                        value={criteriaForm.maxScore}
+                                        onChange={(e) => {
+                                            let v = Number(e.target.value);
+                                            if (isNaN(v)) v = 0;
+                                            if (v < 0) v = 0;
+                                            if (v > 10) v = 10;
+                                            setCriteriaForm({ ...criteriaForm, maxScore: v });
+                                        }}
+                                    />
+                                    <p className="text-xs text-gray-500 mt-1">Allowed range: 0 - 10</p>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label className="font-medium">Scoring Method</label>
+                                <select
+                                    className="border rounded p-3 w-full mt-1"
                                     value={criteriaForm.scoringType}
-                                    onChange={(e) => setCriteriaForm({ ...criteriaForm, scoringType: e.target.value })}
-                                />
-                                <input
-                                    type="text"
-                                    required
-                                    placeholder="Score Label"
-                                    className="border rounded p-3 w-1/2"
-                                    value={criteriaForm.scoreLabel}
-                                    onChange={(e) => setCriteriaForm({ ...criteriaForm, scoreLabel: e.target.value })}
-                                />
+                                    onChange={(e) => {
+                                        const selected = e.target.value;
+                                        if (selected === "Scale") {
+                                            setCriteriaForm({
+                                                ...criteriaForm,
+                                                scoringType: "Scale",
+                                                scoreLabel: "0-10",
+                                                maxScore: 10
+                                            });
+                                        } else if (selected === "Pass/Not Pass") {
+                                            setCriteriaForm({
+                                                ...criteriaForm,
+                                                scoringType: "Pass/Not Pass",
+                                                scoreLabel: "Pass-Not Pass",
+                                                maxScore: 1
+                                            });
+                                        }
+                                    }}
+                                >
+                                    <option value="Scale">Scale (0-10)</option>
+                                    <option value="Pass/Not Pass">Pass/Fail</option>
+                                </select>
+                                <p className="text-xs text-gray-500 mt-1">Selecting an option will auto-fill the score label and adjust max score.</p>
                             </div>
+
                             <div className="flex justify-end gap-3 mt-4">
                                 <button type="button" className="px-4 py-2 border rounded" onClick={() => setShowEditModal(false)}>Cancel</button>
                                 <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded">Save Changes</button>

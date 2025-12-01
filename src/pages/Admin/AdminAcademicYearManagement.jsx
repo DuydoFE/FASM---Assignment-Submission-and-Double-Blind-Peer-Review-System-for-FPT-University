@@ -38,7 +38,6 @@ export default function AdminAcademicYearManagement() {
       const response = await getAllAcademicYears();
       const list = response?.data || [];
       setYears(list.map(mapYear));
-      toast.success("Academic years loaded successfully");
     } catch (e) {
       console.error(e);
       toast.error("Failed to load academic years");
@@ -186,7 +185,6 @@ export default function AdminAcademicYearManagement() {
         <table className="w-full border-collapse">
           <thead>
             <tr className="bg-orange-50 text-left">
-              <th className="p-3 border-b font-semibold text-gray-700">ID</th>
               <th className="p-3 border-b font-semibold text-gray-700">Academic Year</th>
               <th className="p-3 border-b font-semibold text-gray-700">Start Date</th>
               <th className="p-3 border-b font-semibold text-gray-700">End Date</th>
@@ -197,20 +195,19 @@ export default function AdminAcademicYearManagement() {
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan="6" className="text-center p-4 text-gray-500">
+                <td colSpan="5" className="text-center p-4 text-gray-500">
                   Loading...
                 </td>
               </tr>
             ) : years.length === 0 ? (
               <tr>
-                <td colSpan="6" className="text-center p-4 text-gray-500">
+                <td colSpan="5" className="text-center p-4 text-gray-500">
                   No academic years found
                 </td>
               </tr>
             ) : (
               years.map((year) => (
                 <tr key={year.id} className="border-b hover:bg-orange-50 transition">
-                  <td className="p-3">{year.id}</td>
                   <td className="p-3">
                     {editingId === year.id ? (
                       <input

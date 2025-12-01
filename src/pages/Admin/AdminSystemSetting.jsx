@@ -44,11 +44,12 @@ export default function AdminSystemSetting() {
       const request = {
         configKey: config.configKey,
         configValue: editForm.configValue,
-        description: editForm.description,
-        updatedByUserId: 1, // default
+        description: config.description,
+        updatedByUserId: 1
       };
 
-      await updateConfig([request]);
+      await updateConfig(request);
+
       toast.success("✅ Configuration updated successfully!");
       setEditingId(null);
       fetchConfigs();
@@ -102,14 +103,9 @@ export default function AdminSystemSetting() {
                   className="w-full border rounded-lg p-2 focus:ring-2 focus:ring-orange-400 outline-none mb-2"
                   placeholder="Value"
                 />
-                <input
-                  type="text"
-                  name="description"
-                  value={editForm.description}
-                  onChange={handleEditChange}
-                  className="w-full border rounded-lg p-2 focus:ring-2 focus:ring-orange-400 outline-none mb-2"
-                  placeholder="Description"
-                />
+                <p className="text-gray-500 text-sm mb-2">
+                  Description: {config.description}
+                </p>
                 <div className="flex justify-end space-x-2 mt-2">
                   <button
                     onClick={() => handleSave(config)}

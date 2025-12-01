@@ -103,8 +103,8 @@ export const getUsersByCampus = async (campusId) => {
 };
 
 // Cập nhật thông tin user
-export const updateUser = async (id, data) => {
-  const res = await api.put(`/Users/${id}`, data);
+export const updateUser = async (id, payload) => {
+  const res = await api.put(`/Users/${id}`, payload);
   return res.data;
 };
 
@@ -213,12 +213,12 @@ export const getCourseInstancesByCampusId = async (campusId) => {
 };
 
 // Tạo lớp học mới
-  export const createCourseInstance = async (payload) => {
-    const res = await axios.post(`${API_BASE_URL}/api/CourseInstance`, payload, {
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${localStorage.getItem("token")}` },
-    });
-    return res.data;
-  };
+export const createCourseInstance = async (payload) => {
+  const res = await axios.post(`${API_BASE_URL}/api/CourseInstance`, payload, {
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${localStorage.getItem("token")}` },
+  });
+  return res.data;
+};
 
 // Cập nhật lớp học
 export const updateCourseInstance = async (data) => {
@@ -363,6 +363,14 @@ export const deleteRubricTemplate = async (id) => {
 // Tìm kiếm Rubric Template theo từ khóa
 export const searchRubricTemplates = async (searchTerm) => {
   const res = await api.get(`/RubricTemplate/search?searchTerm=${encodeURIComponent(searchTerm)}`);
+  return res.data;
+};
+
+// Toggle trạng thái Public của Rubric Template
+export const toggleRubricTemplatePublicStatus = async (id, makePublic) => {
+  const res = await api.put(`/RubricTemplate/${id}/public`, null, {
+    params: { makePublic },
+  });
   return res.data;
 };
 

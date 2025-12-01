@@ -1,4 +1,8 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useSelector } from "react-redux";
+import { getUserById, updateUser } from "../../service/adminService";
+import { Pencil, Save } from "lucide-react";
+import { toast } from "react-hot-toast";
 
 const tabs = [
   "Personal Info",
@@ -11,6 +15,86 @@ const tabs = [
 
 export default function AdminAccountSettings() {
   const [activeTab, setActiveTab] = useState("Personal Info");
+  const userId = useSelector((state) => state.user.userId); // lấy userId từ redux
+  const [user, setUser] = useState({
+    firstName: "",
+    lastName: "",
+    username: "",
+    email: "",
+    roles: [],
+    avatarUrl: "",
+    phone: "",
+    address: "",
+    website: "",
+  });
+  const [isEditing, setIsEditing] = useState(false);
+
+  // Lấy thông tin user khi component mount
+  useEffect(() => {
+    if (!userId) return;
+
+    const fetchUser = async () => {
+      try {
+        const res = await getUserById(userId);
+        if (res.statusCode === 200 || res.statusCode === 100) {
+          setUser({
+            firstName: res.data.firstName || "",
+            lastName: res.data.lastName || "",
+            username: res.data.username || "",
+            email: res.data.email || "",
+            roles: res.data.roles || [],
+            avatarUrl: res.data.avatarUrl || "",
+            phone: res.data.phone || "",
+            address: res.data.address || "",
+            website: res.data.website || "",
+
+            // thêm những field backend cần mà UI không hiển thị
+            campusId: res.data.campusId ?? 1,
+            majorId: res.data.majorId ?? 1,
+            studentCode: res.data.studentCode ?? null,
+            isActive: res.data.isActive ?? true,
+          });
+        }
+      } catch (error) {
+        console.error("Failed to fetch user info", error);
+        toast.error("Failed to fetch user info");
+      }
+    };
+
+    fetchUser();
+  }, [userId]);
+
+  const handleSave = async () => {
+    try {
+      const payload = {
+        userId: userId || 1,
+        campusId: user.campusId ?? 1,
+        majorId: user.majorId ?? 1,
+
+        username: user.username || "",
+        email: user.email || "",
+        firstName: user.firstName || "",
+        lastName: user.lastName || "",
+
+        studentCode: user.studentCode ?? null,
+        avatarUrl: user.avatarUrl || "",
+
+        isActive: user.isActive ?? true
+      };
+
+      console.log("Updating with payload:", payload);
+
+      // 🔥 FIX HERE — truyền đúng 2 tham số
+      const res = await updateUser(userId, payload);
+
+      toast.success("User information updated successfully!");
+      setIsEditing(false);
+
+    } catch (error) {
+      console.error("Failed to update user", error);
+      toast.error("Failed to update user");
+    }
+  };
 
   return (
     <div className="flex space-x-6">
@@ -20,11 +104,9 @@ export default function AdminAccountSettings() {
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
-            className={`block w-full text-left px-4 py-2 rounded 
-              ${
-                activeTab === tab
-                  ? "bg-orange-500 text-white"
-                  : "hover:bg-gray-100"
+            className={`block w-full text-left px-4 py-2 rounded ${activeTab === tab
+              ? "bg-orange-500 text-white"
+              : "hover:bg-gray-100"
               }`}
           >
             {tab}
@@ -37,32 +119,104 @@ export default function AdminAccountSettings() {
         {/* Personal Info */}
         {activeTab === "Personal Info" && (
           <div className="space-y-4">
-            <h2 className="text-xl font-bold text-orange-500">👤 Personal Information</h2>
-            <div className="grid grid-cols-2 gap-4">
-              <input
-                type="text"
-                placeholder="Full Name"
-                className="border rounded w-full p-2"
-              />
-              <input
-                type="text"
-                placeholder="Username"
-                className="border rounded w-full p-2"
-              />
-              <input
-                type="email"
-                placeholder="Email"
-                className="border rounded w-full p-2"
-              />
-              <input
-                type="text"
-                placeholder="Role (e.g. System Admin)"
-                className="border rounded w-full p-2"
-              />
+            <div className="flex items-center justify-between">
+              <h2 className="text-xl font-bold text-orange-500">
+                👤 Personal Information
+              </h2>
+              {!isEditing ? (
+                <button
+                  onClick={() => setIsEditing(true)}
+                  className="flex items-center gap-1 px-3 py-1 bg-gray-200 hover:bg-gray-300 rounded"
+                >
+                  <Pencil size={16} />
+                  Edit
+                </button>
+              ) : (
+                <button
+                  onClick={handleSave}
+                  className="flex items-center gap-1 px-3 py-1 bg-green-500 hover:bg-green-600 text-white rounded"
+                >
+                  <Save size={16} />
+                  Save
+                </button>
+              )}
             </div>
-            <button className="px-4 py-2 bg-orange-500 text-white rounded hover:bg-orange-600">
-              Save Changes
-            </button>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="flex flex-col">
+                <label className="mb-1 font-medium">First Name</label>
+                <input
+                  type="text"
+                  value={user.firstName}
+                  readOnly={!isEditing}
+                  onChange={(e) =>
+                    setUser({ ...user, firstName: e.target.value })
+                  }
+                  className={`border rounded w-full p-2 ${isEditing
+                    ? "bg-white cursor-text"
+                    : "bg-gray-100 cursor-not-allowed"
+                    }`}
+                />
+              </div>
+
+              <div className="flex flex-col">
+                <label className="mb-1 font-medium">Last Name</label>
+                <input
+                  type="text"
+                  value={user.lastName}
+                  readOnly={!isEditing}
+                  onChange={(e) =>
+                    setUser({ ...user, lastName: e.target.value })
+                  }
+                  className={`border rounded w-full p-2 ${isEditing
+                    ? "bg-white cursor-text"
+                    : "bg-gray-100 cursor-not-allowed"
+                    }`}
+                />
+              </div>
+
+              <div className="flex flex-col">
+                <label className="mb-1 font-medium">Username</label>
+                <input
+                  type="text"
+                  value={user.username}
+                  readOnly={!isEditing}
+                  onChange={(e) =>
+                    setUser({ ...user, username: e.target.value })
+                  }
+                  className={`border rounded w-full p-2 ${isEditing
+                    ? "bg-white cursor-text"
+                    : "bg-gray-100 cursor-not-allowed"
+                    }`}
+                />
+              </div>
+
+              <div className="flex flex-col">
+                <label className="mb-1 font-medium">Email</label>
+                <input
+                  type="email"
+                  value={user.email}
+                  readOnly={!isEditing}
+                  onChange={(e) =>
+                    setUser({ ...user, email: e.target.value })
+                  }
+                  className={`border rounded w-full p-2 ${isEditing
+                    ? "bg-white cursor-text"
+                    : "bg-gray-100 cursor-not-allowed"
+                    }`}
+                />
+              </div>
+
+              <div className="flex flex-col">
+                <label className="mb-1 font-medium">Role</label>
+                <input
+                  type="text"
+                  value={user.roles.join(", ")}
+                  readOnly
+                  className="border rounded w-full p-2 bg-gray-100 cursor-not-allowed"
+                />
+              </div>
+            </div>
           </div>
         )}
 
@@ -72,7 +226,7 @@ export default function AdminAccountSettings() {
             <h2 className="text-xl font-bold text-orange-500">🖼️ Profile Picture</h2>
             <div className="flex items-center space-x-4">
               <img
-                src="https://via.placeholder.com/100"
+                src={user.avatarUrl || "https://via.placeholder.com/100"}
                 alt="avatar"
                 className="w-24 h-24 rounded-full border"
               />
@@ -93,16 +247,22 @@ export default function AdminAccountSettings() {
             <input
               type="text"
               placeholder="Phone Number"
+              value={user.phone}
+              onChange={(e) => setUser({ ...user, phone: e.target.value })}
               className="border rounded w-full p-2"
             />
             <input
               type="text"
               placeholder="Address"
+              value={user.address}
+              onChange={(e) => setUser({ ...user, address: e.target.value })}
               className="border rounded w-full p-2"
             />
             <input
               type="text"
               placeholder="Website or LinkedIn (optional)"
+              value={user.website}
+              onChange={(e) => setUser({ ...user, website: e.target.value })}
               className="border rounded w-full p-2"
             />
             <button className="px-4 py-2 bg-orange-500 text-white rounded hover:bg-orange-600">
@@ -115,21 +275,9 @@ export default function AdminAccountSettings() {
         {activeTab === "Password" && (
           <div className="space-y-4">
             <h2 className="text-xl font-bold text-orange-500">🔑 Change Password</h2>
-            <input
-              type="password"
-              placeholder="Current Password"
-              className="border rounded w-full p-2"
-            />
-            <input
-              type="password"
-              placeholder="New Password"
-              className="border rounded w-full p-2"
-            />
-            <input
-              type="password"
-              placeholder="Confirm New Password"
-              className="border rounded w-full p-2"
-            />
+            <input type="password" placeholder="Current Password" className="border rounded w-full p-2" />
+            <input type="password" placeholder="New Password" className="border rounded w-full p-2" />
+            <input type="password" placeholder="Confirm New Password" className="border rounded w-full p-2" />
             <button className="px-4 py-2 bg-orange-500 text-white rounded hover:bg-orange-600">
               Update Password
             </button>
