@@ -26,6 +26,7 @@ import InstructorManageGrading from "../pages/IntructorManageGrading/IntructorMa
 import InstructorGradingDetail from "../pages/IntructorGradingDetail/IntructorGradingDetail";
 import InstructorPublishMark from "../pages/InstructorPublishMark/InstructorPublishMark";
 import InstructorRegradeRequest from "../pages/IntructorRegradeRequest/IntructorRegradeRequest";
+import InstructorSearchResultsPage from "../pages/InstructorSearchResultsPage/InstructorSearchResultsPage";
 import PeerReviewPage from "../pages/PeerReviewPage/PeerReviewPage";
 import ReviewSuccessPage from "../pages/PeerReviewPage/ReviewSuccessPage";
 import { getCurrentAccount } from "../utils/accountUtils";
@@ -145,6 +146,10 @@ export const router = createBrowserRouter([
       {
         path: "regrade-request",
         element: <InstructorRegradeRequest />,
+      },
+      {
+        path: "search",
+        element: <InstructorSearchResultsPage />,
       },
     ],
   },

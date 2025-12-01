@@ -39,6 +39,12 @@ const InstructorHeader = () => {
   const [popoverVisible, setPopoverVisible] = useState(false);
   const [searchValue, setSearchValue] = useState("");
 
+  const handleSearch = (e) => {
+    if (e.key === 'Enter' && searchValue.trim()) {
+      navigate(`/instructor/search?query=${encodeURIComponent(searchValue.trim())}`);
+    }
+  };
+
   const fetchNotifications = useCallback(async () => {
     if (!user) return;
     setLoading(true);
@@ -192,6 +198,7 @@ const InstructorHeader = () => {
                 placeholder="Search..."
                 value={searchValue}
                 onChange={(e) => setSearchValue(e.target.value)}
+                onKeyDown={handleSearch}
                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all"
               />
             </div>
