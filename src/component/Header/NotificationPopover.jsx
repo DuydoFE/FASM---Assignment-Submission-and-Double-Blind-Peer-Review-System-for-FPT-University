@@ -33,6 +33,8 @@ const getTypeStyles = (type) => {
       return "bg-rose-500/10 text-rose-400 border-rose-500/20";
     case "MissingReview":
       return "bg-amber-500/10 text-amber-400 border-amber-500/20";
+    case "RegradeRequest":
+      return "bg-amber-500/10 text-amber-400 border-amber-500/20";
     default:
       return "bg-zinc-500/10 text-zinc-400 border-zinc-500/20";
   }
@@ -73,7 +75,6 @@ const NotificationPopover = ({ user }) => {
   }, [user, fetchNotifications]);
 
   const handleNavigate = (item) => {
- 
     const { courseId, assignmentId, type } = item;
 
     switch (type) {
@@ -102,6 +103,9 @@ const NotificationPopover = ({ user }) => {
 
       case "RegradeStatusUpdate":
         navigate(`/regrade-request`);
+        break;
+      case "RegradeRequest":
+        navigate(`/instructor/regrade-request`);
         break;
 
       default:
@@ -135,9 +139,9 @@ const NotificationPopover = ({ user }) => {
       }
 
       handleNavigate(item);
-      setPopoverVisible(false); 
+      setPopoverVisible(false);
     },
-    [navigate] 
+    [navigate]
   );
 
   const notificationContent = (
@@ -186,7 +190,6 @@ const NotificationPopover = ({ user }) => {
               >
                 {item.message}
               </p>
-
             </div>
           )}
         />
@@ -232,7 +235,7 @@ const NotificationPopover = ({ user }) => {
         }
         trigger="click"
         visible={popoverVisible}
-        onVisibleChange={handlePopoverVisibleChange} 
+        onVisibleChange={handlePopoverVisibleChange}
         placement="bottomRight"
         overlayClassName="!mt-2 !bg-[#18181b] !backdrop-blur-xl !border !border-white/10 !rounded-xl !shadow-2xl"
         arrow={false}
