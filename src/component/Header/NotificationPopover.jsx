@@ -1,33 +1,46 @@
 import { useState, useEffect, useCallback } from "react";
 import { Bell } from "lucide-react";
-import { Popover, Badge, List, Spin, Empty, Button, ConfigProvider } from "antd";
+import {
+  Popover,
+  Badge,
+  List,
+  Spin,
+  Empty,
+  Button,
+  ConfigProvider,
+} from "antd";
 import { toast } from "react-toastify";
-import { getMyNotifications, markNotificationAsRead } from "../../service/notificationService";
+import { useNavigate } from "react-router-dom";
+
+import {
+  getMyNotifications,
+  markNotificationAsRead,
+} from "../../service/notificationService";
 
 const getTypeStyles = (type) => {
   switch (type) {
     case "DeadlineReminder":
-      return "bg-red-500/10 text-red-400 border-red-500/20"; 
+      return "bg-red-500/10 text-red-400 border-red-500/20";
     case "GradesPublished":
-      return "bg-purple-500/10 text-purple-400 border-purple-500/20"; 
+      return "bg-purple-500/10 text-purple-400 border-purple-500/20";
     case "AssignmentActive":
-      return "bg-blue-500/10 text-blue-400 border-blue-500/20"; 
+      return "bg-blue-500/10 text-blue-400 border-blue-500/20";
     case "RegradeStatusUpdate":
-      return "bg-cyan-500/10 text-cyan-400 border-cyan-500/20"; 
+      return "bg-cyan-500/10 text-cyan-400 border-cyan-500/20";
     case "AssignmentNew":
-      return "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"; 
+      return "bg-emerald-500/10 text-emerald-400 border-emerald-500/20";
     case "MissingSubmission":
-      return "bg-rose-500/10 text-rose-400 border-rose-500/20"; 
+      return "bg-rose-500/10 text-rose-400 border-rose-500/20";
     case "MissingReview":
-      return "bg-amber-500/10 text-amber-400 border-amber-500/20"; 
+      return "bg-amber-500/10 text-amber-400 border-amber-500/20";
     default:
-      return "bg-zinc-500/10 text-zinc-400 border-zinc-500/20"; 
+      return "bg-zinc-500/10 text-zinc-400 border-zinc-500/20";
   }
 };
 
 const formatType = (type) => {
   if (!type) return "";
-  return type.replace(/([A-Z])/g, ' $1').trim();
+  return type.replace(/([A-Z])/g, " $1").trim();
 };
 
 const NotificationPopover = ({ user }) => {
@@ -35,6 +48,8 @@ const NotificationPopover = ({ user }) => {
   const [loading, setLoading] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const [popoverVisible, setPopoverVisible] = useState(false);
+
+  const navigate = useNavigate();
 
   const fetchNotifications = useCallback(async () => {
     if (!user) return;
@@ -57,21 +72,42 @@ const NotificationPopover = ({ user }) => {
     }
   }, [user, fetchNotifications]);
 
-  const handleNotificationClick = useCallback(async (item) => {
-    if (item.isRead) return;
+  const handleNavigate = (item) => {
+ 
+    const { courseId, assignmentId, type } = item;
 
-    try {
-      await markNotificationAsRead(item.notificationId);
-      setNotifications((currentNotifications) =>
-        currentNotifications.map((n) =>
-          n.notificationId === item.notificationId ? { ...n, isRead: true } : n
-        )
-      );
-      setUnreadCount((prevCount) => prevCount - 1);
-    } catch (error) {
-      toast.error("Unable to mark notification as read.");
+    switch (type) {
+      case "AssignmentNew":
+      case "AssignmentActive":
+      case "DeadlineReminder":
+      case "MissingSubmission":
+        if (courseId && assignmentId) {
+          navigate(`/assignment/${courseId}/${assignmentId}`);
+        } else if (courseId) {
+          navigate(`/assignment/${courseId}`);
+        }
+        break;
+
+      case "MissingReview":
+        if (courseId && assignmentId) {
+          navigate(`/assignment/${courseId}/${assignmentId}/review`);
+        }
+        break;
+
+      case "GradesPublished":
+        if (courseId && assignmentId) {
+          navigate(`/assignment/${courseId}/${assignmentId}/scores`);
+        }
+        break;
+
+      case "RegradeStatusUpdate":
+        navigate(`/regrade-request`);
+        break;
+
+      default:
+        navigate("/my-assignments");
     }
-  }, []);
+  };
 
   const handlePopoverVisibleChange = (visible) => {
     setPopoverVisible(visible);
@@ -79,6 +115,30 @@ const NotificationPopover = ({ user }) => {
       fetchNotifications();
     }
   };
+
+  const handleNotificationClick = useCallback(
+    async (item) => {
+      if (!item.isRead) {
+        try {
+          await markNotificationAsRead(item.notificationId);
+          setNotifications((currentNotifications) =>
+            currentNotifications.map((n) =>
+              n.notificationId === item.notificationId
+                ? { ...n, isRead: true }
+                : n
+            )
+          );
+          setUnreadCount((prevCount) => prevCount - 1);
+        } catch (error) {
+          console.error("Failed to mark read", error);
+        }
+      }
+
+      handleNavigate(item);
+      setPopoverVisible(false); 
+    },
+    [navigate] 
+  );
 
   const notificationContent = (
     <div style={{ width: 400, maxHeight: 450, overflowY: "auto" }}>
@@ -93,38 +153,49 @@ const NotificationPopover = ({ user }) => {
             <div
               onClick={() => handleNotificationClick(item)}
               className={`p-3 border-b border-white/5 cursor-pointer transition-colors group
-                ${!item.isRead ? "bg-white/10 hover:bg-white/15" : "bg-transparent hover:bg-white/5"}`}
+                ${
+                  !item.isRead
+                    ? "bg-white/10 hover:bg-white/15"
+                    : "bg-transparent hover:bg-white/5"
+                }`}
             >
-              {/* Header: Title + Type Badge */}
               <div className="flex justify-between items-start gap-2 mb-1">
-                <span className={`font-semibold text-sm ${!item.isRead ? "text-white" : "text-zinc-400"}`}>
+                <span
+                  className={`font-semibold text-sm ${
+                    !item.isRead ? "text-white" : "text-zinc-400"
+                  }`}
+                >
                   {item.title}
                 </span>
-                
-                {/* Hiển thị Type ở đây */}
-                <span className={`
+
+                <span
+                  className={`
                   text-[10px] uppercase font-bold px-2 py-0.5 rounded border
                   whitespace-nowrap tracking-wide
                   ${getTypeStyles(item.type)}
-                `}>
+                `}
+                >
                   {formatType(item.type)}
                 </span>
               </div>
 
-              {/* Message */}
-              <p className={`text-xs line-clamp-2 ${!item.isRead ? "text-zinc-300" : "text-zinc-500"}`}>
+              <p
+                className={`text-xs line-clamp-2 ${
+                  !item.isRead ? "text-zinc-300" : "text-zinc-500"
+                }`}
+              >
                 {item.message}
               </p>
-              
-              {/* Optional: Time (nếu API có trả về createdDate) */}
-              {/* <div className="text-[10px] text-zinc-500 mt-2 text-right">
-                {new Date(item.createdDate).toLocaleString()}
-              </div> */}
+
             </div>
           )}
         />
       ) : (
-        <Empty description={<span className="text-zinc-400">No notification Yet</span>} />
+        <Empty
+          description={
+            <span className="text-zinc-400">No notification Yet</span>
+          }
+        />
       )}
     </div>
   );
@@ -161,15 +232,25 @@ const NotificationPopover = ({ user }) => {
         }
         trigger="click"
         visible={popoverVisible}
-        onVisibleChange={handlePopoverVisibleChange}
+        onVisibleChange={handlePopoverVisibleChange} 
         placement="bottomRight"
         overlayClassName="!mt-2 !bg-[#18181b] !backdrop-blur-xl !border !border-white/10 !rounded-xl !shadow-2xl"
         arrow={false}
       >
-        <Badge count={unreadCount} offset={[-2, 2]} size="small" color="#06b6d4">
+        <Badge
+          count={unreadCount}
+          offset={[-2, 2]}
+          size="small"
+          color="#06b6d4"
+        >
           <Button
             shape="circle"
-            icon={<Bell className="text-zinc-300 hover:text-white transition-colors" size={20} />}
+            icon={
+              <Bell
+                className="text-zinc-300 hover:text-white transition-colors"
+                size={20}
+              />
+            }
             type="text"
             className="flex items-center justify-center hover:bg-white/10"
           />
