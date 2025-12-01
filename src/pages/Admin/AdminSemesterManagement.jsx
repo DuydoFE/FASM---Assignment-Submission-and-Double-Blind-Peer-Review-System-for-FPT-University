@@ -20,6 +20,12 @@ export default function AdminSemesterManagement() {
   const [editing, setEditing] = useState(null);
   const [showAddForm, setShowAddForm] = useState(false);
   const [filterYearId, setFilterYearId] = useState("");
+  const [confirmModal, setConfirmModal] = useState({
+    isOpen: false,
+    type: "",
+    semesterId: null,
+    callback: null,
+  });
 
   useEffect(() => {
     loadAcademicYears();
@@ -44,10 +50,87 @@ export default function AdminSemesterManagement() {
     }
   };
 
+  const semesterOptions = (academicYearName) => [
+    `Spring ${academicYearName}`,
+    `Summer ${academicYearName}`,
+    `Fall ${academicYearName}`,
+  ];
+
+  // Khi render form:
+  <select
+    className="border p-3 rounded-xl"
+    value={newSemester.name}
+    onChange={(e) => setNewSemester({ ...newSemester, name: e.target.value })}
+  >
+    <option value="">Select Semester Name</option>
+    {newSemester.academicYearId &&
+      semesterOptions(
+        academicYears.find((y) => y.academicYearId === newSemester.academicYearId)?.name
+      ).map((option) => (
+        <option
+          key={option}
+          value={option}
+          disabled={semesters.some(
+            (s) =>
+              s.name === option &&
+              s.academicYearId === newSemester.academicYearId
+          )}
+        >
+          {option}
+        </option>
+      ))}
+  </select>
+
+  const handleStartDateChange = (value) => {
+    const selectedYear = academicYears.find(
+      (y) => y.academicYearId === Number(newSemester.academicYearId)
+    );
+    if (!selectedYear) return setNewSemester({ ...newSemester, startDate: value });
+
+    const start = new Date(value);
+    const yearStart = new Date(selectedYear.startDate);
+    const yearEnd = new Date(selectedYear.endDate);
+
+    if (start < yearStart || start > yearEnd) {
+      toast.error("Start date must be within the selected academic year");
+      return;
+    }
+
+    setNewSemester({ ...newSemester, startDate: value });
+  };
+
+  const handleEndDateChange = (value) => {
+    const selectedYear = academicYears.find(
+      (y) => y.academicYearId === Number(newSemester.academicYearId)
+    );
+    if (!selectedYear) return setNewSemester({ ...newSemester, endDate: value });
+
+    const end = new Date(value);
+    const yearStart = new Date(selectedYear.startDate);
+    const yearEnd = new Date(selectedYear.endDate);
+
+    if (end < yearStart || end > yearEnd) {
+      toast.error("End date must be within the selected academic year");
+      return;
+    }
+
+    setNewSemester({ ...newSemester, endDate: value });
+  };
+
   const handleAdd = async () => {
     if (!newSemester.academicYearId) return toast.error("Please select an academic year");
     if (!newSemester.name.trim()) return toast.error("Please enter semester name");
     if (!newSemester.startDate || !newSemester.endDate) return toast.error("Please select start and end date");
+
+    if (
+      semesters.some(
+        (s) =>
+          s.name === newSemester.name &&
+          s.academicYearId === newSemester.academicYearId
+      )
+    ) {
+      return toast.error("Semester name already exists for this academic year");
+    }
 
     try {
       const res = await createSemester(newSemester);
@@ -159,26 +242,44 @@ export default function AdminSemesterManagement() {
             ))}
           </select>
 
-          <input
-            type="text"
-            placeholder="Semester name"
+          <select
             className="border p-3 rounded-xl"
             value={newSemester.name}
             onChange={(e) => setNewSemester({ ...newSemester, name: e.target.value })}
-          />
+          >
+            <option value="">Select Semester Name</option>
+            {newSemester.academicYearId &&
+              semesterOptions(
+                academicYears.find(
+                  (y) => y.academicYearId === newSemester.academicYearId
+                )?.name
+              ).map((option) => (
+                <option
+                  key={option}
+                  value={option}
+                  disabled={semesters.some(
+                    (s) =>
+                      s.name === option &&
+                      s.academicYearId === newSemester.academicYearId
+                  )}
+                >
+                  {option}
+                </option>
+              ))}
+          </select>
 
           <input
             type="date"
             className="border p-3 rounded-xl"
             value={newSemester.startDate}
-            onChange={(e) => setNewSemester({ ...newSemester, startDate: e.target.value })}
+            onChange={(e) => handleStartDateChange(e.target.value)}
           />
 
           <input
             type="date"
             className="border p-3 rounded-xl"
             value={newSemester.endDate}
-            onChange={(e) => setNewSemester({ ...newSemester, endDate: e.target.value })}
+            onChange={(e) => handleEndDateChange(e.target.value)}
           />
 
           <button
@@ -262,26 +363,56 @@ export default function AdminSemesterManagement() {
                 </td>
                 <td className="p-3 flex gap-2">
                   {editing?.semesterId === sem.semesterId ? (
-                    <button
-                      onClick={handleSaveEdit}
-                      className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600"
-                    >
-                      Save
-                    </button>
+                    <>
+                      {/* Save */}
+                      <button
+                        onClick={() =>
+                          setConfirmModal({
+                            isOpen: true,
+                            type: "edit",
+                            semesterId: editing.semesterId,
+                            callback: () => handleSaveEdit(),
+                          })
+                        }
+                        className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600"
+                      >
+                        Save
+                      </button>
+
+                      {/* Cancel */}
+                      <button
+                        onClick={() => setEditing(null)}
+                        className="bg-gray-300 text-black px-4 py-2 rounded-lg hover:bg-gray-400"
+                      >
+                        Cancel
+                      </button>
+                    </>
                   ) : (
-                    <button
-                      onClick={() => setEditing({ ...sem })}
-                      className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600"
-                    >
-                      Edit
-                    </button>
+                    <>
+                      {/* Edit */}
+                      <button
+                        onClick={() => setEditing({ ...sem })}
+                        className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600"
+                      >
+                        Edit
+                      </button>
+
+                      {/* Delete */}
+                      <button
+                        onClick={() =>
+                          setConfirmModal({
+                            isOpen: true,
+                            type: "delete",
+                            semesterId: sem.semesterId,
+                            callback: () => handleDelete(sem.semesterId),
+                          })
+                        }
+                        className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600"
+                      >
+                        Delete
+                      </button>
+                    </>
                   )}
-                  <button
-                    onClick={() => handleDelete(sem.semesterId)}
-                    className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600"
-                  >
-                    Delete
-                  </button>
                 </td>
               </tr>
             ))}
@@ -295,6 +426,34 @@ export default function AdminSemesterManagement() {
           </tbody>
         </table>
       </div>
+      {confirmModal.isOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-xl shadow-lg w-96">
+            <h3 className="text-lg font-semibold mb-4">
+              {confirmModal.type === "delete"
+                ? "Are you sure you want to delete this semester?"
+                : "Are you sure you want to save changes?"}
+            </h3>
+            <div className="flex justify-end gap-3">
+              <button
+                className="px-4 py-2 bg-gray-300 rounded-lg hover:bg-gray-400"
+                onClick={() => setConfirmModal({ ...confirmModal, isOpen: false })}
+              >
+                Cancel
+              </button>
+              <button
+                className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
+                onClick={() => {
+                  if (confirmModal.callback) confirmModal.callback();
+                  setConfirmModal({ ...confirmModal, isOpen: false });
+                }}
+              >
+                Confirm
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
