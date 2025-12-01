@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useNavigate } from "react-router-dom"; 
 import { searchStudent } from "../../service/searchService";
 import { Tabs, List, Card, Tag, Spin, Empty, Typography, ConfigProvider } from "antd"; 
 import { BookOpen, MessageSquare, FileText, CheckCircle, ListChecks } from "lucide-react";
@@ -9,6 +9,7 @@ const { Title, Text } = Typography;
 const SearchResultsPage = () => {
   const [searchParams] = useSearchParams();
   const query = searchParams.get("query");
+  const navigate = useNavigate(); 
   
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -29,6 +30,20 @@ const SearchResultsPage = () => {
     fetchData();
   }, [query]);
 
+  const handleCardClick = (item) => {
+    
+    if (item.type === "Assignment" || item.type === "assignment") {
+      if (item.courseId && item.assignmentId) {
+        navigate(`/assignment/${item.courseId}/${item.assignmentId}`);
+      } else if (item.courseId) {
+        navigate(`/assignment/${item.courseId}`);
+      } else {
+        console.warn("Missing courseId or assignmentId for navigation");
+      }
+    }
+    
+  };
+
   const renderList = (dataSource, icon, renderItemContent) => {
     if (!dataSource || dataSource.length === 0) return <Empty description={<span className="text-zinc-400">No results found</span>} />;
     
@@ -38,7 +53,11 @@ const SearchResultsPage = () => {
         dataSource={dataSource}
         renderItem={(item) => (
           <List.Item>
-            <Card hoverable className="h-full border-zinc-700 bg-zinc-900 !border-white/10">
+            <Card 
+              hoverable 
+              onClick={() => handleCardClick(item)}
+              className="h-full border-zinc-700 bg-zinc-900 !border-white/10 cursor-pointer hover:!border-cyan-500/50 transition-all"
+            >
               <div className="flex items-start gap-3 mb-3">
                 <div className="p-2 bg-white/10 rounded-lg text-cyan-400">
                   {icon}
@@ -134,11 +153,10 @@ const SearchResultsPage = () => {
           theme={{
             components: {
               Tabs: {
-                itemColor: "#a1a1aa",        
-                itemSelectedColor: "#0e0d0dff", 
+                itemColor: "#f6f6faff",        
+                itemSelectedColor: "#000000ff",
                 itemHoverColor: "#22d3ee",    
                 titleFontSize: 14,
-               
                 cardBg: "rgba(255, 255, 255, 0.05)", 
                 cardGutter: 4 
               },
