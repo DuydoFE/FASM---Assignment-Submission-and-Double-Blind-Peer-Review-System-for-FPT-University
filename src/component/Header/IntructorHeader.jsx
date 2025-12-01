@@ -1,5 +1,5 @@
 import { Link, useNavigate } from "react-router-dom";
-import { Bell, Book, Calendar, LogOut, User } from 'lucide-react';
+import { Bell, Book, Calendar, LogOut, User, Search } from 'lucide-react';
 import { getCurrentAccount } from "../../utils/accountUtils";
 import { useDispatch } from "react-redux";
 import { Dropdown, Menu, Avatar, Button, Popover, Badge, List, Spin, Empty, ConfigProvider } from "antd";
@@ -37,6 +37,7 @@ const InstructorHeader = () => {
   const [loading, setLoading] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const [popoverVisible, setPopoverVisible] = useState(false);
+  const [searchValue, setSearchValue] = useState("");
 
   const fetchNotifications = useCallback(async () => {
     if (!user) return;
@@ -184,6 +185,17 @@ const InstructorHeader = () => {
           </div>
 
           <div className="flex items-center space-x-4">
+            <div className="relative w-64">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Search..."
+                value={searchValue}
+                onChange={(e) => setSearchValue(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all"
+              />
+            </div>
+            
             {user && (
               <ConfigProvider
                 theme={{
