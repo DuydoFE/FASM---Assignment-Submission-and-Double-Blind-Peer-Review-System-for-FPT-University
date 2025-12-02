@@ -48,8 +48,8 @@ const InstructorSearchResultsPage = () => {
   const handleCardClick = (item) => {
     // Custom navigation logic for instructor
     if (item.type === "Assignment" || item.type === "assignment") {
-      if (item.classId && item.assignmentId) {
-        navigate(`/instructor/manage-assignment/${item.classId}`);
+      if (item.courseInstanceId && item.assignmentId) {
+        navigate(`/instructor/manage-assignment/${item.courseInstanceId}`);
       }
     } else if (item.type === "Submission" || item.type === "submission") {
       if (item.submissionId) {

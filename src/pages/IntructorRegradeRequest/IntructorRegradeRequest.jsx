@@ -20,6 +20,8 @@ const InstructorRegradeRequest = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isCompleteModalOpen, setIsCompleteModalOpen] = useState(false);
     const [selectedRequestForComplete, setSelectedRequestForComplete] = useState(null);
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 5;
 
     useEffect(() => {
         fetchRegradeRequests();
@@ -173,6 +175,12 @@ const InstructorRegradeRequest = () => {
         return matchesSearch && matchesStatus;
     });
 
+    // Pagination
+    const indexOfLastRequest = currentPage * itemsPerPage;
+    const indexOfFirstRequest = indexOfLastRequest - itemsPerPage;
+    const currentRequests = filteredRequests.slice(indexOfFirstRequest, indexOfLastRequest);
+    const totalPages = Math.ceil(filteredRequests.length / itemsPerPage);
+
     if (loading) {
         return (
             <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -262,7 +270,7 @@ const InstructorRegradeRequest = () => {
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-200">
-                                {filteredRequests.map((request) => (
+                                {currentRequests.map((request) => (
                                     <tr key={request.requestId} className="hover:bg-gray-50 transition-colors">
                                         <td className="px-6 py-4">
                                             <div className="flex flex-col">
@@ -282,8 +290,13 @@ const InstructorRegradeRequest = () => {
                                             </span>
                                         </td>
                                         <td className="px-6 py-4">
-                                            <span className="text-sm text-gray-900 max-w-xs truncate block">
-                                                {request.assignmentTitle}
+                                            <span
+                                                className="text-sm text-gray-900 max-w-xs truncate block"
+                                                title={request.assignmentTitle?.length > 25 ? request.assignmentTitle : undefined}
+                                            >
+                                                {request.assignmentTitle?.length > 25
+                                                    ? `${request.assignmentTitle.substring(0, 25)}...`
+                                                    : request.assignmentTitle}
                                             </span>
                                         </td>
                                         <td className="px-6 py-4 text-center">
@@ -328,6 +341,43 @@ const InstructorRegradeRequest = () => {
                             </tbody>
                         </table>
                     </div>
+
+                    {/* Pagination */}
+                    {filteredRequests.length > itemsPerPage && (
+                        <div className="mt-6 flex items-center justify-between px-6">
+                            <div className="text-sm text-gray-600">
+                                Showing {indexOfFirstRequest + 1}-{Math.min(indexOfLastRequest, filteredRequests.length)} of {filteredRequests.length} requests
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <button
+                                    onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                                    disabled={currentPage === 1}
+                                    className="px-4 py-2 text-gray-600 hover:text-gray-900 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    Previous
+                                </button>
+                                {[...Array(totalPages)].map((_, idx) => (
+                                    <button
+                                        key={idx + 1}
+                                        onClick={() => setCurrentPage(idx + 1)}
+                                        className={`px-4 py-2 rounded-lg transition ${currentPage === idx + 1
+                                            ? 'bg-blue-600 text-white'
+                                            : 'text-gray-600 hover:bg-gray-100'
+                                            }`}
+                                    >
+                                        {idx + 1}
+                                    </button>
+                                ))}
+                                <button
+                                    onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                                    disabled={currentPage === totalPages}
+                                    className="px-4 py-2 text-gray-600 hover:text-gray-900 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    Next
+                                </button>
+                            </div>
+                        </div>
+                    )}
                 </div>
 
                 {/* Empty State */}
