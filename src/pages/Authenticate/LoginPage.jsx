@@ -3,7 +3,6 @@ import { AlertCircle } from "lucide-react";
 
 import logo from "../../assets/img/Logo_FPT_Education.png";
 import backgroundImage from "../../assets/img/daihocfpt.png";
-import { getCampus } from "../../service/campusService";
 import { toast } from "react-toastify";
 import { login } from "../../service/userService";
 import { loginRedux } from "../../redux/features/userSlice";
@@ -30,33 +29,24 @@ const GoogleIcon = (props) => (
 );
 
 const LoginPage = () => {
-  const [campuses, setCampuses] = useState([]);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [campusId, setCampusId] = useState("");
 
-  const fetchCampus = async () => {
-    const response = await getCampus();
-    setCampuses(response);
-  };
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  useEffect(() => {
-    fetchCampus();
-  }, []);
+
 
   const handleLogin = async () => {
     const data = {
       username,
       password,
-      campusId,
     };
     try {
       const result = await login(data);
       console.log("Login success:", result);
       dispatch(loginRedux(result));
       toast.success("Login successful!");
-      // TODO: Lưu token, chuyển trang, vv.
+      
       localStorage.setItem("token", result.accessToken);
       localStorage.setItem("refreshToken", result.refreshToken);
       if (result.roles?.includes("Admin")) navigate("/admin/dashboard");
@@ -64,7 +54,6 @@ const LoginPage = () => {
       else navigate("/");
     } catch (error) {
       console.error("Login failed:", error);
-      // TODO: show thông báo lỗi cho user
       toast.error("Login failed. Please check your credentials.");
     }
   };
@@ -79,9 +68,9 @@ const LoginPage = () => {
       const fullUrl = window.location.href;
       const query = fullUrl.split('?').slice(1).join('&')
       const params = new URLSearchParams(query);
-      const isGoogleCallback = params.get("google"); // check param
-      const accessToken = params.get("accessToken"); // check param
-      const refreshToken = params.get("refreshToken"); // check param
+      const isGoogleCallback = params.get("google"); 
+      const accessToken = params.get("accessToken"); 
+      const refreshToken = params.get("refreshToken"); 
       if (isGoogleCallback) {
         try {
           console.log("Detected Google callback, fetching user info...");
@@ -121,24 +110,6 @@ const LoginPage = () => {
           </h1>
 
           <div className="w-full">
-            <select
-              defaultValue=""
-              onChange={(e) => setCampusId(e.target.value)}
-              className="w-full p-3 mb-4 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 bg-white text-gray-500"
-            >
-              <option value="" disabled>
-                Select Campus
-              </option>
-              {campuses?.map((campus) => (
-                <option
-                  key={campus.campusId}
-                  value={campus.campusId}
-                  className="text-black"
-                >
-                  {campus.address}
-                </option>
-              ))}
-            </select>
 
             <input
               type="text"

@@ -13,12 +13,16 @@ import {
   Eye,
   EyeOff,
   FileSearch,
+  CheckSquare,
 } from "lucide-react";
 import { Tag, Spin, Alert, Empty, Pagination, Card, Button } from "antd";
 import { toast } from "react-toastify";
 
 import { selectUser } from "../../redux/features/userSlice";
-import { getRegradeRequestsByStudentId, getRegradeRequestById } from "../../service/regradeService";
+import {
+  getRegradeRequestsByStudentId,
+  getRegradeRequestById,
+} from "../../service/regradeService";
 
 import RequestRegradeDetailModal from "../../component/Assignment/RequestRegradeDetailModal";
 
@@ -40,6 +44,12 @@ export const StatusTag = ({ status }) => {
       return (
         <Tag icon={<Clock className="w-4 h-4" />} color="processing">
           Pending
+        </Tag>
+      );
+    case "Completed":
+      return (
+        <Tag icon={<CheckSquare className="w-4 h-4" />} color="blue">
+          Completed
         </Tag>
       );
     default:
@@ -80,6 +90,8 @@ const ViewRequestHistoryPage = () => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [requestDetails, setRequestDetails] = useState(null);
   const [isDetailLoading, setIsDetailLoading] = useState(false);
+
+  const [selectedRequest, setSelectedRequest] = useState(null);
 
   const fetchRequests = async (studentId, page = 1, size = 10) => {
     setLoading(true);
@@ -149,10 +161,12 @@ const ViewRequestHistoryPage = () => {
       };
     });
   };
-const showDetailModal = async (requestId) => {
+
+  const showDetailModal = async (requestId) => {
     setIsModalVisible(true);
     setIsDetailLoading(true);
-    setRequestDetails(null); // Clear previous details
+    setRequestDetails(null);
+    setSelectedRequest(requestId);
     try {
       const apiResponse = await getRegradeRequestById(requestId);
       if (apiResponse && apiResponse.data) {
@@ -167,7 +181,7 @@ const showDetailModal = async (requestId) => {
         err.message ||
         "An unexpected error occurred.";
       toast.error(errorMessage);
-      setIsModalVisible(false); // Close modal on error
+      setIsModalVisible(false);
     } finally {
       setIsDetailLoading(false);
     }
