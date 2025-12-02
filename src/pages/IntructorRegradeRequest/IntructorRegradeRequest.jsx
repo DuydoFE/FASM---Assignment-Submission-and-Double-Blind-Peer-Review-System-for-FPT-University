@@ -282,8 +282,13 @@ const InstructorRegradeRequest = () => {
                                             </span>
                                         </td>
                                         <td className="px-6 py-4">
-                                            <span className="text-sm text-gray-900 max-w-xs truncate block">
-                                                {request.assignmentTitle}
+                                            <span
+                                                className="text-sm text-gray-900 max-w-xs truncate block"
+                                                title={request.assignmentTitle?.length > 25 ? request.assignmentTitle : undefined}
+                                            >
+                                                {request.assignmentTitle?.length > 25
+                                                    ? `${request.assignmentTitle.substring(0, 25)}...`
+                                                    : request.assignmentTitle}
                                             </span>
                                         </td>
                                         <td className="px-6 py-4 text-center">
