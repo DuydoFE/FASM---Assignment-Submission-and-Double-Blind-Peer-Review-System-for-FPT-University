@@ -15,6 +15,7 @@ const InstructorManageRubric = () => {
     const [loading, setLoading] = useState(true);
     const [templatesLoading, setTemplatesLoading] = useState(true);
     const [currentPage, setCurrentPage] = useState(1);
+    const [currentRubricPage, setCurrentRubricPage] = useState(1);
     const itemsPerPage = 5;
 
     const fetchTemplates = async () => {
@@ -85,10 +86,17 @@ const InstructorManageRubric = () => {
         navigate(`/instructor/manage-criteria-template/${template.templateId}`);
     };
 
+    // Template pagination
     const indexOfLastItem = currentPage * itemsPerPage;
     const indexOfFirstItem = indexOfLastItem - itemsPerPage;
     const currentTemplates = templates.slice(indexOfFirstItem, indexOfLastItem);
     const totalPages = Math.ceil(templates.length / itemsPerPage);
+
+    // Rubric pagination
+    const indexOfLastRubric = currentRubricPage * itemsPerPage;
+    const indexOfFirstRubric = indexOfLastRubric - itemsPerPage;
+    const currentRubrics = filteredRubrics.slice(indexOfFirstRubric, indexOfLastRubric);
+    const totalRubricPages = Math.ceil(filteredRubrics.length / itemsPerPage);
 
     return (
         <div className="p-8">
@@ -278,10 +286,10 @@ const InstructorManageRubric = () => {
                                 <Loader className="w-6 h-6 animate-spin mx-auto mb-2 text-orange-500" />
                                 Loading rubrics...
                             </div>
-                        ) : filteredRubrics.length === 0 ? (
+                        ) : currentRubrics.length === 0 ? (
                             <div className="px-6 py-10 text-center text-gray-500">No rubrics found</div>
                         ) : (
-                            filteredRubrics.map((rubric, index) => (
+                            currentRubrics.map((rubric, index) => (
                                 <div
                                     key={rubric.rubricId}
                                     className={`grid grid-cols-10 px-6 py-4 text-sm items-center border-b border-gray-100 transition-colors ${index % 2 === 0 ? "bg-white" : "bg-gray-50"
@@ -311,7 +319,7 @@ const InstructorManageRubric = () => {
 
                                     {/* Actions */}
                                     <div className="col-span-1 flex justify-center gap-2">
-                                        {(rubric.assignmentStatus === 'Draft' || rubric.assignmentStatus === 'Upcoming') ? (
+                                        {(rubric.assignmentStatus === 'Draft') ? (
                                             <button
                                                 className="p-2 rounded-lg hover:bg-blue-50 text-blue-600 transition border border-blue-200"
                                                 title="Edit Rubric and Criteria"
@@ -341,6 +349,43 @@ const InstructorManageRubric = () => {
                             ))
                         )}
                     </div>
+
+                    {/* Rubric Pagination */}
+                    {!loading && filteredRubrics.length > itemsPerPage && (
+                        <div className="mt-6 flex items-center justify-between">
+                            <div className="text-sm text-gray-600">
+                                Showing {indexOfFirstRubric + 1}-{Math.min(indexOfLastRubric, filteredRubrics.length)} of {filteredRubrics.length} rubrics
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <button
+                                    onClick={() => setCurrentRubricPage(prev => Math.max(1, prev - 1))}
+                                    disabled={currentRubricPage === 1}
+                                    className="px-4 py-2 text-gray-600 hover:text-gray-900 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    Previous
+                                </button>
+                                {[...Array(totalRubricPages)].map((_, idx) => (
+                                    <button
+                                        key={idx + 1}
+                                        onClick={() => setCurrentRubricPage(idx + 1)}
+                                        className={`px-4 py-2 rounded-lg transition ${currentRubricPage === idx + 1
+                                            ? 'bg-blue-600 text-white'
+                                            : 'text-gray-600 hover:bg-gray-100'
+                                            }`}
+                                    >
+                                        {idx + 1}
+                                    </button>
+                                ))}
+                                <button
+                                    onClick={() => setCurrentRubricPage(prev => Math.min(totalRubricPages, prev + 1))}
+                                    disabled={currentRubricPage === totalRubricPages}
+                                    className="px-4 py-2 text-gray-600 hover:text-gray-900 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    Next
+                                </button>
+                            </div>
+                        </div>
+                    )}
                 </div>
             </div>
         </div>

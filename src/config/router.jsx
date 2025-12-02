@@ -141,15 +141,15 @@ export const router = createBrowserRouter([
       },
       {
         path: "my-classes",
-        element: <InstructorViewClass />,
+        element: <ProtectedRoute role={ROLE.INSTRUCTOR}><InstructorViewClass /></ProtectedRoute>,
       },
       {
         path: "regrade-request",
-        element: <InstructorRegradeRequest />,
+        element: <ProtectedRoute role={ROLE.INSTRUCTOR}><InstructorRegradeRequest /></ProtectedRoute>,
       },
       {
         path: "search",
-        element: <InstructorSearchResultsPage />,
+        element: <ProtectedRoute role={ROLE.INSTRUCTOR}><InstructorSearchResultsPage /></ProtectedRoute>,
       },
     ],
   },
@@ -163,15 +163,15 @@ export const router = createBrowserRouter([
       },
       {
         path: "my-classes",
-        element: <InstructorViewClass />,
+        element: <ProtectedRoute role={ROLE.INSTRUCTOR}><InstructorViewClass /></ProtectedRoute>,
       },
       {
         path: "regrade-request",
-        element: <InstructorRegradeRequest />,
+        element: <ProtectedRoute role={ROLE.INSTRUCTOR}><InstructorRegradeRequest /></ProtectedRoute>,
       },
       {
         path: "grading-detail/:submissionId",
-        element: <InstructorGradingDetail />,
+        element: <ProtectedRoute role={ROLE.INSTRUCTOR}><InstructorGradingDetail /></ProtectedRoute>,
       },
     ],
   },
@@ -181,47 +181,47 @@ export const router = createBrowserRouter([
     children: [
       {
         index: true,
-        element: <InstructorClassDashBoard />,
+        element: <ProtectedRoute role={ROLE.INSTRUCTOR}><InstructorClassDashBoard /></ProtectedRoute>,
       },
       {
         path: "class-statistic/:id",
-        element: <InstructorClassDashBoard />,
+        element: <ProtectedRoute role={ROLE.INSTRUCTOR}><InstructorClassDashBoard /></ProtectedRoute>,
       },
       {
         path: "manage-class/:id",
-        element: <InstructorManageClass />,
+        element: <ProtectedRoute role={ROLE.INSTRUCTOR}><InstructorManageClass /></ProtectedRoute>,
       },
       {
         path: "manage-assignment/:id",
-        element: <InstructorManageAssignment />,
+        element: <ProtectedRoute role={ROLE.INSTRUCTOR}><InstructorManageAssignment /></ProtectedRoute>,
       },
       {
         path: "manage-rubric",
-        element: <InstructorManageRubric />,
+        element: <ProtectedRoute role={ROLE.INSTRUCTOR}><InstructorManageRubric /></ProtectedRoute>,
       },
       {
         path: "manage-criteria/:rubricId?",
-        element: <InstructorManageCriteria />,
+        element: <ProtectedRoute role={ROLE.INSTRUCTOR}><InstructorManageCriteria /></ProtectedRoute>,
       },
       {
         path: "manage-criteria-template/:templateId?",
-        element: <InstructorManageCriteriaTemplate />,
+        element: <ProtectedRoute role={ROLE.INSTRUCTOR}><InstructorManageCriteriaTemplate /></ProtectedRoute>,
       },
       {
         path: "manage-submission/:assignmentId",
-        element: <InstructorManageSubmission />,
+        element: <ProtectedRoute role={ROLE.INSTRUCTOR}><InstructorManageSubmission /></ProtectedRoute>,
       },
       {
         path: "submission-detail/:submissionId",
-        element: <InstructorSubmissionDetail />,
+        element: <ProtectedRoute role={ROLE.INSTRUCTOR}><InstructorSubmissionDetail /></ProtectedRoute>,
       },
       {
         path: "manage-grading",
-        element: <InstructorManageGrading />,
+        element: <ProtectedRoute role={ROLE.INSTRUCTOR}><InstructorManageGrading /></ProtectedRoute>,
       },
       {
         path: "publish-mark",
-        element: <InstructorPublishMark />,
+        element: <ProtectedRoute role={ROLE.INSTRUCTOR}><InstructorPublishMark /></ProtectedRoute>,
       },
     ],
   },
