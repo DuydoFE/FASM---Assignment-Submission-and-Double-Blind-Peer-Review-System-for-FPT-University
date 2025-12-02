@@ -19,6 +19,7 @@ const Header = () => {
     toast.success("Logged out successfully");
     localStorage.removeItem("token");
     localStorage.removeItem("refreshToken");
+    navigate("/login"); 
   };
 
   const handleSearch = (e) => {

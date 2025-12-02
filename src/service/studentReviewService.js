@@ -19,6 +19,18 @@ const getSubmissionByUserAndAssignment = async ({ assignmentId, userId }) => {
   }
 };
 
+const getCompletedReviews = async (studentId) => {
+  try {
+    const response = await api.get(
+      `/StudentReview/completed-reviews/${studentId}`
+    );
+ 
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
 export const studentReviewService = {
   getSubmissionByUserAndAssignment,
+  getCompletedReviews,
 };
