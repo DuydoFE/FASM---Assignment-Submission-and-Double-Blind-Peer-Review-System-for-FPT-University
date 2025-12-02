@@ -302,7 +302,7 @@ function InstructorManageCriteria() {
                         <h2 className="text-xl font-semibold text-gray-900">Evaluation Criteria</h2>
                         <p className="text-sm text-gray-600">Manage and configure assessment criteria</p>
                     </div>
-                    {(assignmentStatus === 'Draft' || assignmentStatus === 'Upcoming') && totalWeight < 100 && (
+                    {(assignmentStatus === 'Draft') && totalWeight < 100 && (
                         <button
                             onClick={() => setShowAddModal(true)}
                             className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors"
@@ -346,7 +346,7 @@ function InstructorManageCriteria() {
                                                         </div>
                                                     </div>
                                                     <div className="flex items-center gap-1 ml-2">
-                                                        {(assignmentStatus === 'Draft' || assignmentStatus === 'Upcoming') && (
+                                                        {(assignmentStatus === 'Draft') && (
                                                             <button
                                                                 onClick={() => handleEditClick(criterion)}
                                                                 className="text-gray-400 hover:text-indigo-600 transition-colors p-2 rounded-lg hover:bg-indigo-50"
@@ -355,7 +355,7 @@ function InstructorManageCriteria() {
                                                                 <Pencil size={18} />
                                                             </button>
                                                         )}
-                                                        {(assignmentStatus === 'Draft' || assignmentStatus === 'Upcoming') && (
+                                                        {(assignmentStatus === 'Draft') && (
                                                             <button
                                                                 onClick={(e) => {
                                                                     e.stopPropagation();
