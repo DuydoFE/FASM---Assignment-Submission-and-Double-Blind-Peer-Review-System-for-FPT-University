@@ -92,9 +92,19 @@ const getRegradeRequestDetails = async (requestId) => {
     throw error;
   }
 };
+const getRandomCrossClassReview = async (assignmentId) => {
+  try {
+    const response = await api.get(`/StudentReview/assignment/${assignmentId}/random-cross-class-review`);
+    return response.data.data;
+  } catch (error) {
+    console.error(`Lỗi khi lấy bài chấm chéo khác lớp cho assignment ID ${assignmentId}:`, error);
+    throw error;
+  }
+};
 
 export const reviewService = {
   getPeerReviewAssignment,
+  getRandomCrossClassReview,
   submitPeerReview,
   getStudentReviewTracking,
   getAssignmentsWithTracking,
