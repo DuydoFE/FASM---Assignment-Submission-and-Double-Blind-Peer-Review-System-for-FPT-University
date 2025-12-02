@@ -21,6 +21,7 @@ import SubmissionGuideCard from "../../component/Submission/SubmissionGuideCard"
 import SubmissionCard from "../../component/Submission/SubmissionCard";
 import PeerReviewCard from "../../component/Submission/PeerReviewCard";
 import RubricCard from "../../component/Submission/RubricCard";
+import CrossClassReviewCard from "@/component/Submission/CrossClassReviewCard";
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSelector } from "react-redux";
@@ -269,12 +270,25 @@ const StudentSubmitAssignmentPage = () => {
                     Đang tải trạng thái chấm chéo...
                   </p>
                 ) : (
-                  <PeerReviewCard
-                    completed={completedReviews}
-                    required={requiredReviews}
-                    reviewDeadline={reviewDeadline}
-                    isReviewOpen={isReviewOpen}
-                  />
+                  <div className="space-y-6"> 
+                    {/* Bọc trong div space-y-6 để tạo khoảng cách giữa 2 thẻ */}
+                    
+                    {/* Card Review trong lớp (Giữ nguyên) */}
+                    <PeerReviewCard
+                      completed={completedReviews}
+                      required={requiredReviews}
+                      reviewDeadline={reviewDeadline}
+                      isReviewOpen={isReviewOpen}
+                    />
+
+                    {/* Card Review khác lớp (MỚI THÊM) */}
+                    {isReviewOpen && (
+                      <CrossClassReviewCard 
+                        assignmentId={assignmentId}
+                        courseId={courseId}
+                      />
+                    )}
+                  </div>
                 )}
               </>
             )}
