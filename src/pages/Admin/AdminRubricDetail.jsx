@@ -10,6 +10,10 @@ import {
 } from "../../service/adminService";
 
 export default function AdminRubricDetail() {
+
+    const [showConfirmModal, setShowConfirmModal] = useState(false);
+    const [pendingToggle, setPendingToggle] = useState(null);
+
     const { id } = useParams();
     const navigate = useNavigate();
 
@@ -30,31 +34,28 @@ export default function AdminRubricDetail() {
     });
 
     // Load rubric + criteria
-    useEffect(() => {
-        const fetchRubric = async () => {
-            try {
-                const res = await getRubricTemplateById(id);
+    const fetchRubric = async () => {
+        try {
+            const res = await getRubricTemplateById(id);
 
-                if (res?.statusCode === 200) {
-                    setRubric({
-                        templateId: res.data.templateId,
-                        title: res.data.title,
-                        isPublic: res.data.isPublic,
-                        criteriaTemplates: res.data.criteriaTemplates || [],
-                    });
-                } else if (res?.statusCode === 404) {
-                    toast.error("Rubric not found");
-                } else {
-                    toast.error(res?.message || "Failed to load rubric details");
-                }
-            } catch (err) {
-                console.error(err);
-                toast.error("Server error fetching rubric details");
-            } finally {
+            if (res?.statusCode === 200 || res?.statusCode === 100) {
+                setRubric(prev => ({
+                    ...prev,
+                    templateId: res.data.templateId,
+                    title: res.data.title,
+                    isPublic: res.data.isPublic,
+                    criteriaTemplates: res.data.criteriaTemplates || [],
+                }));
                 setLoading(false);
+            } else {
+                toast.error(res?.message || "Failed to load rubric details");
             }
-        };
+        } catch (err) {
+            toast.error("Server error fetching rubric details");
+        }
+    };
 
+    useEffect(() => {
         fetchRubric();
     }, [id]);
 
@@ -70,11 +71,13 @@ export default function AdminRubricDetail() {
         try {
             const res = await getRubricTemplateById(id);
             if (res?.statusCode === 200) {
-                setRubric({
+                setRubric(prev => ({
+                    ...prev,
                     templateId: res.data.templateId,
                     title: res.data.title,
+                    isPublic: res.data.isPublic,
                     criteriaTemplates: res.data.criteriaTemplates || [],
-                });
+                }));
             }
         } catch (err) {
             console.error(err);
@@ -222,31 +225,18 @@ export default function AdminRubricDetail() {
                 <button
                     className={`px-4 py-2 rounded text-white 
     ${rubric.isPublic ? "bg-red-500 hover:bg-red-600" : "bg-blue-500 hover:bg-blue-600"}`}
-                    onClick={async () => {
-                        // Nếu tổng weight < 100 thì không cho public
+                    onClick={() => {
                         if (!rubric.isPublic && usedWeight < 100) {
                             toast.error("You can only public a rubric when the total weight is exactly 100%.");
                             return;
                         }
 
-                        try {
-                            const res = await toggleRubricTemplatePublicStatus(rubric.templateId, !rubric.isPublic); // truyền luôn trạng thái mới
+                        setPendingToggle({
+                            templateId: rubric.templateId,
+                            newStatus: !rubric.isPublic
+                        });
 
-                            if (res?.statusCode === 200) {
-                                toast.success("Rubric public status updated!");
-
-                                // Cập nhật state ngay, không cần reload
-                                setRubric(prev => ({
-                                    ...prev,
-                                    isPublic: !prev.isPublic
-                                }));
-                            } else {
-                                toast.error(res?.message || "Failed to update public status.");
-                            }
-                        } catch (err) {
-                            console.error(err);
-                            toast.error("Server error while updating public status.");
-                        }
+                        setShowConfirmModal(true);
                     }}
                 >
                     {rubric.isPublic ? "Set to Private" : "Set to Public"}
@@ -287,7 +277,6 @@ export default function AdminRubricDetail() {
                                 <th className="p-3">Title</th>
                                 <th className="p-3">Max Score</th>
                                 <th className="p-3">Weight</th>
-                                <th className="p-3">Scoring Type</th>
                                 <th className="p-3">Description</th>
                                 <th className="p-3">Actions</th>
                             </tr>
@@ -298,11 +287,6 @@ export default function AdminRubricDetail() {
                                     <td className="p-3 font-medium">{c.title}</td>
                                     <td className="p-3 text-center">{c.maxScore}</td>
                                     <td className="p-3 text-center">{c.weight}%</td>
-                                    <td className="p-3 text-center">
-                                        <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">
-                                            {c.scoringType} ({c.scoreLabel})
-                                        </span>
-                                    </td>
                                     <td className="p-3">{c.description}</td>
                                     <td className="p-3 space-x-2">
                                         <button
@@ -413,27 +397,6 @@ export default function AdminRubricDetail() {
                                 </div>
                             </div>
 
-                            {/* Scoring Type + Score Label */}
-                            <div>
-                                <label className="font-medium">Scoring Method</label>
-                                <select
-                                    className="border rounded p-3 w-full mt-1"
-                                    value={criteriaForm.scoringType}
-                                    onChange={(e) => {
-                                        const selected = e.target.value;
-                                        if (selected === "Scale") {
-                                            setCriteriaForm({ ...criteriaForm, scoringType: "Scale", scoreLabel: "0-10", maxScore: 10 });
-                                        } else if (selected === "Pass/Fail") {
-                                            setCriteriaForm({ ...criteriaForm, scoringType: "PassFail", scoreLabel: "Pass/Fail", maxScore: 1 });
-                                        }
-                                    }}
-                                >
-                                    <option value="Scale">Scale (0-10)</option>
-                                    <option value="Pass/Fail">Pass/Fail</option>
-                                </select>
-                                <p className="text-xs text-gray-500 mt-1">Selecting an option will auto-fill the score label and adjust max score.</p>
-                            </div>
-
                             {/* Actions */}
                             <div className="flex justify-end gap-3 mt-4">
                                 <button type="button" className="px-4 py-2 border rounded" onClick={() => setShowCreateModal(false)}>
@@ -520,42 +483,57 @@ export default function AdminRubricDetail() {
                                     <p className="text-xs text-gray-500 mt-1">Allowed range: 0 - 10</p>
                                 </div>
                             </div>
-
-                            <div>
-                                <label className="font-medium">Scoring Method</label>
-                                <select
-                                    className="border rounded p-3 w-full mt-1"
-                                    value={criteriaForm.scoringType}
-                                    onChange={(e) => {
-                                        const selected = e.target.value;
-                                        if (selected === "Scale") {
-                                            setCriteriaForm({
-                                                ...criteriaForm,
-                                                scoringType: "Scale",
-                                                scoreLabel: "0-10",
-                                                maxScore: 10
-                                            });
-                                        } else if (selected === "Pass/Not Pass") {
-                                            setCriteriaForm({
-                                                ...criteriaForm,
-                                                scoringType: "Pass/Not Pass",
-                                                scoreLabel: "Pass-Not Pass",
-                                                maxScore: 1
-                                            });
-                                        }
-                                    }}
-                                >
-                                    <option value="Scale">Scale (0-10)</option>
-                                    <option value="Pass/Not Pass">Pass/Fail</option>
-                                </select>
-                                <p className="text-xs text-gray-500 mt-1">Selecting an option will auto-fill the score label and adjust max score.</p>
-                            </div>
-
                             <div className="flex justify-end gap-3 mt-4">
                                 <button type="button" className="px-4 py-2 border rounded" onClick={() => setShowEditModal(false)}>Cancel</button>
                                 <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded">Save Changes</button>
                             </div>
                         </form>
+                    </div>
+                </div>
+            )}
+            {showConfirmModal && (
+                <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+                    <div className="bg-white rounded-xl shadow-lg p-6 w-full max-w-sm">
+                        <h3 className="text-lg font-semibold mb-3">Confirm Action</h3>
+                        <p className="text-gray-600 mb-6">
+                            Are you sure you want to change the public status of this rubric?
+                        </p>
+
+                        <div className="flex justify-end gap-3">
+                            <button
+                                onClick={() => setShowConfirmModal(false)}
+                                className="px-4 py-2 border rounded"
+                            >
+                                Cancel
+                            </button>
+
+                            <button
+                                onClick={async () => {
+                                    try {
+                                        const res = await toggleRubricTemplatePublicStatus(
+                                            pendingToggle.templateId,
+                                            pendingToggle.newStatus
+                                        );
+
+                                        if (res.statusCode === 100 || res.statusCode === 200) {
+                                            toast.success("Status updated successfully!");
+
+                                            // fetch lại rubric từ server
+                                            await fetchRubric();
+                                        } else {
+                                            toast.error(res.message || "Failed to update status.");
+                                        }
+                                    } catch (err) {
+                                        toast.error("Error updating status.");
+                                    }
+
+                                    setShowConfirmModal(false);
+                                }}
+                                className="px-4 py-2 bg-blue-600 text-white rounded"
+                            >
+                                Confirm
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}

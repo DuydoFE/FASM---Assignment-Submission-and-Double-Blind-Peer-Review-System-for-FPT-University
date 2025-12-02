@@ -59,7 +59,9 @@ const LoginPage = () => {
       // TODO: Lưu token, chuyển trang, vv.
       localStorage.setItem("token", result.accessToken);
       localStorage.setItem("refreshToken", result.refreshToken);
-      navigate("/");
+      if (result.roles?.includes("Admin")) navigate("/admin/dashboard");
+      else if (result.roles?.includes("Instructor")) navigate("/instructor/dashboard");
+      else navigate("/");
     } catch (error) {
       console.error("Login failed:", error);
       // TODO: show thông báo lỗi cho user
@@ -91,7 +93,10 @@ const LoginPage = () => {
           localStorage.setItem("refreshToken", refreshToken);
           dispatch(loginRedux(res.data.data));
           toast.success("Google Login successful!");
-          navigate("/instructor/dashboard");
+          const roles = res.data.data.roles || [];
+          if (roles.includes("Admin")) navigate("/admin/dashboard");
+          else if (roles.includes("Instructor")) navigate("/instructor/dashboard");
+          else navigate("/");
         } catch (err) {
           console.error("Failed to fetch user after Google callback:", err);
           toast.error("Google Login failed.");

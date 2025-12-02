@@ -188,7 +188,6 @@ export default function AdminAcademicYearManagement() {
               <th className="p-3 border-b font-semibold text-gray-700">Academic Year</th>
               <th className="p-3 border-b font-semibold text-gray-700">Start Date</th>
               <th className="p-3 border-b font-semibold text-gray-700">End Date</th>
-              <th className="p-3 border-b font-semibold text-gray-700 text-center w-32">Semesters</th>
               <th className="p-3 border-b font-semibold w-40">Actions</th>
             </tr>
           </thead>
@@ -250,7 +249,6 @@ export default function AdminAcademicYearManagement() {
                       formatDate(year.endDate)
                     )}
                   </td>
-                  <td className="p-3 text-center">{year.semesterCount}</td>
                   <td className="p-3 flex gap-2">
                     {editingId === year.id ? (
                       <button
