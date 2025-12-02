@@ -8,19 +8,60 @@ import {
   FileText,
   CalendarRange,
   CalendarDays,
-  LogOut   // import icon logout
+  LogOut
 } from "lucide-react";
+
 import React from "react";
 import { useDispatch } from "react-redux";
 import { logout } from "../redux/features/userSlice";
+import axios from "axios";
+
+// Nếu bạn có dùng redux-persist
+// Nếu không dùng thì import này sẽ không gây lỗi
+import { persistStore } from "redux-persist";
+import { store } from "../redux/store";
 
 export default function AdminLayout() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
   const handleLogout = () => {
-    dispatch(logout());
-    navigate("/login"); // điều hướng về trang login
+    try {
+      // 1) Reset Redux state
+      dispatch(logout());
+
+      // 2) Xoá toàn bộ key token có thể có
+      localStorage.removeItem("token");
+      localStorage.removeItem("access_token");
+      localStorage.removeItem("authToken");
+      localStorage.removeItem("user");
+
+      sessionStorage.removeItem("token");
+      sessionStorage.removeItem("access_token");
+
+      // 3) Clear axios Authorization header nếu có
+      if (axios?.defaults?.headers?.common["Authorization"]) {
+        delete axios.defaults.headers.common["Authorization"];
+      }
+
+      // 4) Purge redux-persist nếu dùng
+      try {
+        const persistor = persistStore(store);
+        persistor.purge();
+      } catch (err) {
+        // bỏ qua nếu không dùng redux persist
+      }
+
+      // 5) Điều hướng về Login
+      navigate("/login");
+
+      // OPTIONAL: reload trang để xoá mọi thứ trong memory
+      // window.location.replace("/login");
+
+    } catch (error) {
+      console.error("Logout error:", error);
+      navigate("/login");
+    }
   };
 
   return (
@@ -32,12 +73,10 @@ export default function AdminLayout() {
         </div>
 
         <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
-          {/* Dashboard */}
           <NavLink
             to="/admin/dashboard"
             className={({ isActive }) =>
-              `flex items-center gap-2 px-4 py-2 rounded-lg ${
-                isActive ? "bg-orange-500 text-white" : "hover:bg-gray-200"
+              `flex items-center gap-2 px-4 py-2 rounded-lg ${isActive ? "bg-orange-500 text-white" : "hover:bg-gray-200"
               }`
             }
           >
@@ -45,12 +84,10 @@ export default function AdminLayout() {
             Dashboard
           </NavLink>
 
-          {/* User Management */}
           <NavLink
             to="/admin/users"
             className={({ isActive }) =>
-              `flex items-center gap-2 px-4 py-2 rounded-lg ${
-                isActive ? "bg-orange-500 text-white" : "hover:bg-gray-200"
+              `flex items-center gap-2 px-4 py-2 rounded-lg ${isActive ? "bg-orange-500 text-white" : "hover:bg-gray-200"
               }`
             }
           >
@@ -58,12 +95,10 @@ export default function AdminLayout() {
             User Management
           </NavLink>
 
-          {/* Class Management */}
           <NavLink
             to="/admin/classes"
             className={({ isActive }) =>
-              `flex items-center gap-2 px-4 py-2 rounded-lg ${
-                isActive ? "bg-orange-500 text-white" : "hover:bg-gray-200"
+              `flex items-center gap-2 px-4 py-2 rounded-lg ${isActive ? "bg-orange-500 text-white" : "hover:bg-gray-200"
               }`
             }
           >
@@ -71,12 +106,10 @@ export default function AdminLayout() {
             Class Management
           </NavLink>
 
-          {/* Rubric Management */}
           <NavLink
             to="/admin/rubrics"
             className={({ isActive }) =>
-              `flex items-center gap-2 px-4 py-2 rounded-lg ${
-                isActive ? "bg-orange-500 text-white" : "hover:bg-gray-200"
+              `flex items-center gap-2 px-4 py-2 rounded-lg ${isActive ? "bg-orange-500 text-white" : "hover:bg-gray-200"
               }`
             }
           >
@@ -84,12 +117,10 @@ export default function AdminLayout() {
             Rubric Management
           </NavLink>
 
-          {/* Academic Year Management */}
           <NavLink
             to="/admin/academicYears"
             className={({ isActive }) =>
-              `flex items-center gap-2 px-4 py-2 rounded-lg ${
-                isActive ? "bg-orange-500 text-white" : "hover:bg-gray-200"
+              `flex items-center gap-2 px-4 py-2 rounded-lg ${isActive ? "bg-orange-500 text-white" : "hover:bg-gray-200"
               }`
             }
           >
@@ -97,12 +128,10 @@ export default function AdminLayout() {
             Academic Year Management
           </NavLink>
 
-          {/* Semester Management */}
           <NavLink
             to="/admin/semesters"
             className={({ isActive }) =>
-              `flex items-center gap-2 px-4 py-2 rounded-lg ${
-                isActive ? "bg-orange-500 text-white" : "hover:bg-gray-200"
+              `flex items-center gap-2 px-4 py-2 rounded-lg ${isActive ? "bg-orange-500 text-white" : "hover:bg-gray-200"
               }`
             }
           >
@@ -110,12 +139,10 @@ export default function AdminLayout() {
             Semester Management
           </NavLink>
 
-          {/* System Setting */}
           <NavLink
             to="/admin/systemSetting"
             className={({ isActive }) =>
-              `flex items-center gap-2 px-4 py-2 rounded-lg ${
-                isActive ? "bg-orange-500 text-white" : "hover:bg-gray-200"
+              `flex items-center gap-2 px-4 py-2 rounded-lg ${isActive ? "bg-orange-500 text-white" : "hover:bg-gray-200"
               }`
             }
           >
@@ -124,7 +151,7 @@ export default function AdminLayout() {
           </NavLink>
         </nav>
 
-        {/* Logout button ở cuối sidebar */}
+        {/* Logout */}
         <div className="p-4 border-t">
           <button
             onClick={handleLogout}
@@ -138,7 +165,6 @@ export default function AdminLayout() {
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col">
-        {/* Header */}
         <header className="h-16 bg-white shadow flex items-center justify-between px-6">
           <h1 className="text-lg font-semibold">Administrator Dashboard</h1>
           <div className="flex items-center space-x-4">
@@ -159,7 +185,6 @@ export default function AdminLayout() {
           </div>
         </header>
 
-        {/* Page Content */}
         <main className="flex-1 p-6 overflow-y-auto">
           <Outlet />
         </main>
