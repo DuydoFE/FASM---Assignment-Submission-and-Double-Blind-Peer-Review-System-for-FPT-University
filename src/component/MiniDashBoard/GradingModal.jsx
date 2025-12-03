@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { toast } from "react-toastify";
-import { X, Send, Download, Eye, RefreshCw } from "lucide-react"; 
+import { X, Send, Download, Eye, RefreshCw } from "lucide-react";
 
 import { studentReviewService } from "../../service/studentReviewService";
 
@@ -22,25 +22,21 @@ const GradingModal = ({ reviewAssignmentId, onClose, onSuccess, reviewerId, stat
   });
 
   const reviewData = detailResponse?.data;
-  const oldResult = resultResponse?.data;
+  const oldResult = resultResponse?.data; 
 
   useEffect(() => {
     if (reviewData?.rubric?.criteria) {
       const initialScores = {};
-
       if (status === "Completed" && oldResult?.criteriaFeedbacks) {
         oldResult.criteriaFeedbacks.forEach((fb) => {
-           initialScores[fb.criteriaId] = fb.scoreAwarded;
+          initialScores[fb.criteriaId] = fb.scoreAwarded;
         });
-        if (oldResult.generalFeedback) {
-          setComment(oldResult.generalFeedback);
-        }
+        if (oldResult.generalFeedback) setComment(oldResult.generalFeedback);
       } else {
         reviewData.rubric.criteria.forEach((c) => {
           initialScores[c.criteriaId] = null;
         });
       }
-      
       setScores(initialScores);
     }
   }, [reviewData, oldResult, status]);
@@ -51,9 +47,7 @@ const GradingModal = ({ reviewAssignmentId, onClose, onSuccess, reviewerId, stat
       return;
     }
     let newScore = parseFloat(value);
-    const maxScore = reviewData.rubric.criteria.find(
-      (c) => c.criteriaId === criteriaId
-    )?.maxScore;
+    const maxScore = reviewData.rubric.criteria.find(c => c.criteriaId === criteriaId)?.maxScore;
     if (!isNaN(newScore) && maxScore !== undefined) {
       newScore = Math.max(0, Math.min(newScore, maxScore));
       setScores((prev) => ({ ...prev, [criteriaId]: newScore }));
@@ -73,14 +67,22 @@ const GradingModal = ({ reviewAssignmentId, onClose, onSuccess, reviewerId, stat
   }, [scores, reviewData]);
 
   const submitMutation = useMutation({
-    mutationFn: (payload) => studentReviewService.submitPeerReview(payload),
+    mutationFn: (payload) => {
+      if (status === "Completed") {
+ 
+        return studentReviewService.updatePeerReview(payload.reviewId, payload);
+      } else {
+        return studentReviewService.submitPeerReview(payload);
+      }
+    },
     onSuccess: () => {
-      toast.success(status === "Completed" ? "Regrading updated!" : "Grading completed!");
+      toast.success(status === "Completed" ? "Review updated successfully!" : "Grading completed!");
       onSuccess();
       onClose();
     },
     onError: (err) => {
-      toast.error("Failed to submit review.");
+      console.error(err);
+      toast.error(status === "Completed" ? "Failed to update review." : "Failed to submit review.");
     },
   });
 
@@ -90,16 +92,35 @@ const GradingModal = ({ reviewAssignmentId, onClose, onSuccess, reviewerId, stat
       toast.error("Please enter scores for all criteria.");
       return;
     }
-    const payload = {
-      reviewAssignmentId: reviewData.reviewAssignmentId,
-      reviewerUserId: reviewerId,
-      generalFeedback: comment,
-      criteriaFeedbacks: reviewData.rubric.criteria.map((c) => ({
-        criteriaId: c.criteriaId,
-        score: scores[c.criteriaId] || 0,
-        feedback: "", 
-      })),
-    };
+
+    const criteriaFeedbacks = reviewData.rubric.criteria.map((c) => ({
+      criteriaId: c.criteriaId,
+      score: scores[c.criteriaId] || 0,
+      feedback: "", 
+    }));
+
+    let payload;
+
+    if (status === "Completed") {
+      if (!oldResult?.reviewId) {
+        toast.error("Cannot find Review ID to update.");
+        return;
+      }
+      payload = {
+        reviewId: oldResult.reviewId, 
+        reviewerUserId: reviewerId,
+        generalFeedback: comment,
+        criteriaFeedbacks: criteriaFeedbacks
+      };
+    } else {
+      payload = {
+        reviewAssignmentId: reviewData.reviewAssignmentId,
+        reviewerUserId: reviewerId,
+        generalFeedback: comment,
+        criteriaFeedbacks: criteriaFeedbacks
+      };
+    }
+
     submitMutation.mutate(payload);
   };
 
@@ -164,7 +185,6 @@ const GradingModal = ({ reviewAssignmentId, onClose, onSuccess, reviewerId, stat
                         min="0"
                         max={criterion.maxScore}
                         step="0.25"
-                        // Hiển thị điểm (nếu có từ result cũ sẽ tự điền vào đây)
                         value={scores[criterion.criteriaId] ?? ""}
                         onChange={(e) => handleScoreChange(criterion.criteriaId, e.target.value)}
                         className="w-20 p-2 text-center border border-gray-300 rounded focus:ring-2 focus:ring-orange-500 focus:outline-none font-bold text-gray-900 placeholder-gray-400"
@@ -203,7 +223,9 @@ const GradingModal = ({ reviewAssignmentId, onClose, onSuccess, reviewerId, stat
             disabled={submitMutation.isPending || isLoading}
             className="px-5 py-2 bg-orange-600 text-white font-semibold rounded-lg hover:bg-orange-700 flex items-center transition-colors disabled:opacity-50"
           >
-            {submitMutation.isPending ? "Submitting..." : (
+            {submitMutation.isPending ? (
+              "Saving..."
+            ) : (
               <>
                 {status === "Completed" ? <RefreshCw className="w-4 h-4 mr-2" /> : <Send className="w-4 h-4 mr-2" />}
                 {status === "Completed" ? "Update Grade" : "Submit Review"}
