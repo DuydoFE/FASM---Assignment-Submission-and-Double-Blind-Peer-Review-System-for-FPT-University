@@ -1,14 +1,9 @@
-import React from "react";
+import React, { useState } from "react";
 import { useSelector } from "react-redux";
-import { useQuery } from "@tanstack/react-query";
-import { selectUser } from "../../redux/features/userSlice";
-import { assignmentService } from "../../service/assignmentService";
-import { studentReviewService } from "../../service/studentReviewService";
-
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import {
   ChevronRight,
-  Link as LinkIcon,
   Upload,
   FileText,
   Calendar,
@@ -16,10 +11,16 @@ import {
   CheckCircle,
   Clock,
   AlertCircle,
+  PlayCircle,
 } from "lucide-react";
+
+import { selectUser } from "../../redux/features/userSlice";
+import { assignmentService } from "../../service/assignmentService";
+import { studentReviewService } from "../../service/studentReviewService";
 
 import AssignmentCard from "../../component/MiniDashBoard/AssignmentCard";
 import RecentActivity from "../../component/MiniDashBoard/RecentActivity";
+import GradingModal from "../../component/MiniDashBoard/GradingModal";
 
 const getAssignmentColor = (days) => {
   if (days <= 3) return "red";
@@ -46,6 +47,9 @@ const formatHistoryDate = (dateString) => {
 const StudentDashBoard = () => {
   const currentUser = useSelector(selectUser);
   const studentId = currentUser?.userId;
+  const queryClient = useQueryClient();
+
+  const [selectedReviewId, setSelectedReviewId] = useState(null);
 
   const {
     data: assignmentData,
@@ -65,16 +69,18 @@ const StudentDashBoard = () => {
 
   const assignments = assignmentData?.data || [];
   const reviewHistory = reviewHistoryData?.data || [];
+  const displayedAssignments = assignments.slice(0, 5);
 
-  const MAX_ASSIGNMENTS_TO_SHOW = 5;
-  const displayedAssignments = assignments.slice(0, MAX_ASSIGNMENTS_TO_SHOW);
+  const handleRefreshData = () => {
+    queryClient.invalidateQueries(["completedReviews", studentId]);
+  };
 
   return (
-    <div className="bg-gray-50 min-h-screen">
+    <div className="bg-gray-50 min-h-screen relative">
       <main className="p-8">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-800">
-            Welcome back, {currentUser?.firstName}!{" "}
+            Welcome back, {currentUser?.firstName}!
           </h1>
         </div>
 
@@ -85,7 +91,7 @@ const StudentDashBoard = () => {
                 <h2 className="text-xl font-bold text-gray-800">
                   Assignments are about to expire
                 </h2>
-                {assignments.length > MAX_ASSIGNMENTS_TO_SHOW && (
+                {assignments.length > 5 && (
                   <Link
                     to="/my-assignments"
                     className="text-sm font-semibold text-orange-600 flex items-center"
@@ -167,7 +173,7 @@ const StudentDashBoard = () => {
                   reviewHistory.map((review) => (
                     <div
                       key={review.reviewAssignmentId}
-                      className="bg-white border border-gray-100 p-3 rounded-lg shadow-sm hover:shadow-md transition-shadow"
+                      className="bg-white border border-gray-100 p-3 rounded-lg shadow-sm hover:shadow-md transition-shadow group"
                     >
                       <div className="flex justify-between items-start mb-1">
                         <h3
@@ -187,7 +193,7 @@ const StudentDashBoard = () => {
                         </span>
                       </div>
 
-                      <div className="flex justify-between items-end">
+                      <div className="flex justify-between items-end mt-2">
                         <div className="flex flex-col">
                           <span className="text-xs font-medium text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded w-fit mb-1">
                             {review.sectionCode}
@@ -198,9 +204,18 @@ const StudentDashBoard = () => {
                           </div>
                         </div>
 
-                        {/* Icon trạng thái góc phải dưới */}
-                        <div>
-                          {review.status === "Completed" ? (
+                        <div className="flex items-center">
+                          {review.status === "Assigned" ? (
+                            <button
+                              onClick={() =>
+                                setSelectedReviewId(review.reviewAssignmentId)
+                              }
+                              className="flex items-center text-xs bg-orange-100 text-orange-700 px-2 py-1 rounded hover:bg-orange-200 transition-colors font-semibold"
+                            >
+                              <PlayCircle className="w-3 h-3 mr-1" />
+                              Continue Grading
+                            </button>
+                          ) : review.status === "Completed" ? (
                             <CheckCircle className="w-5 h-5 text-green-500" />
                           ) : (
                             <AlertCircle className="w-5 h-5 text-yellow-500" />
@@ -221,6 +236,14 @@ const StudentDashBoard = () => {
           </div>
         </div>
 
+        {selectedReviewId && (
+          <GradingModal
+            reviewAssignmentId={selectedReviewId}
+            reviewerId={studentId}
+            onClose={() => setSelectedReviewId(null)}
+            onSuccess={handleRefreshData}
+          />
+        )}
       </main>
     </div>
   );
