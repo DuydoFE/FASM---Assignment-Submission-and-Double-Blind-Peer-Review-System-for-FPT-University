@@ -1,8 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { useSelector } from "react-redux";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
-import { RefreshCw } from "lucide-react";
 import {
   ChevronRight,
   Upload,
@@ -13,6 +12,7 @@ import {
   Clock,
   AlertCircle,
   PlayCircle,
+  RefreshCw,
 } from "lucide-react";
 
 import { selectUser } from "../../redux/features/userSlice";
@@ -22,6 +22,13 @@ import { studentReviewService } from "../../service/studentReviewService";
 import AssignmentCard from "../../component/MiniDashBoard/AssignmentCard";
 import RecentActivity from "../../component/MiniDashBoard/RecentActivity";
 import GradingModal from "../../component/MiniDashBoard/GradingModal";
+
+const calculateDaysRemaining = (deadlineStr) => {
+  const now = new Date();
+  const deadline = new Date(deadlineStr);
+  const diffTime = deadline - now;
+  return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+};
 
 const getAssignmentColor = (days) => {
   if (days <= 3) return "red";
@@ -53,6 +60,16 @@ const StudentDashBoard = () => {
   const [selectedReviewId, setSelectedReviewId] = useState(null);
   const [selectedReviewStatus, setSelectedReviewStatus] = useState(null);
 
+  const handleOpenModal = (reviewId, status) => {
+    setSelectedReviewId(reviewId);
+    setSelectedReviewStatus(status);
+  };
+
+  const handleCloseModal = () => {
+    setSelectedReviewId(null);
+    setSelectedReviewStatus(null);
+  };
+
   const {
     data: assignmentData,
     isLoading: isLoadingAssign,
@@ -71,17 +88,26 @@ const StudentDashBoard = () => {
 
   const assignments = assignmentData?.data || [];
   const reviewHistory = reviewHistoryData?.data || [];
-  const displayedAssignments = assignments.slice(0, 5);
 
-  const handleOpenModal = (reviewId, status) => {
-    setSelectedReviewId(reviewId);
-    setSelectedReviewStatus(status);
-  };
+  const displayedAssignments = useMemo(() => {
+    const now = new Date();
 
-  const handleCloseModal = () => {
-    setSelectedReviewId(null);
-    setSelectedReviewStatus(null);
-  };
+    return assignments
+      .filter((assignment) => {
+        const deadlineDate = new Date(assignment.deadline);
+
+        return assignment.status === "Active" && deadlineDate > now;
+      })
+      .map((assignment) => {
+        const daysLeft = calculateDaysRemaining(assignment.deadline);
+        return {
+          ...assignment,
+          calculatedDays: daysLeft,
+        };
+      })
+      .sort((a, b) => a.calculatedDays - b.calculatedDays)
+      .slice(0, 5);
+  }, [assignments]);
 
   const handleRefreshData = () => {
     queryClient.invalidateQueries(["completedReviews", studentId]);
@@ -103,7 +129,10 @@ const StudentDashBoard = () => {
                 <h2 className="text-xl font-bold text-gray-800">
                   Assignments are about to expire
                 </h2>
-                {assignments.length > 5 && (
+                {assignments.filter(
+                  (a) =>
+                    a.status === "Active" && new Date(a.deadline) > new Date()
+                ).length > 5 && (
                   <Link
                     to="/my-assignments"
                     className="text-sm font-semibold text-orange-600 flex items-center"
@@ -130,16 +159,16 @@ const StudentDashBoard = () => {
                   ? displayedAssignments.map((assignment) => (
                       <AssignmentCard
                         key={assignment.assignmentId}
-                        color={getAssignmentColor(assignment.daysUntilDeadline)}
+                        color={getAssignmentColor(assignment.calculatedDays)}
                         title={assignment.title}
                         subject={assignment.courseName}
                         dueDate={formatDueDate(assignment.deadline)}
-                        remaining={`${assignment.daysUntilDeadline} days`}
+                        remaining={`${assignment.calculatedDays} days`}
                       />
                     ))
                   : !isLoadingAssign && (
                       <p className="text-gray-500 text-sm">
-                        No upcoming assignments.
+                        No upcoming active assignments.
                       </p>
                     )}
               </div>
@@ -147,7 +176,6 @@ const StudentDashBoard = () => {
 
             <RecentActivity />
           </div>
-
           <div className="space-y-8">
             <div className="bg-white p-6 rounded-lg shadow-sm">
               <h2 className="text-xl font-bold text-gray-800 mb-4">
@@ -231,7 +259,6 @@ const StudentDashBoard = () => {
                               Continue Grading
                             </button>
                           ) : review.status === "Completed" ? (
-                           
                             <div className="flex items-center space-x-2">
                               <button
                                 onClick={() =>
@@ -266,15 +293,15 @@ const StudentDashBoard = () => {
           </div>
         </div>
 
-       {selectedReviewId && (
-        <GradingModal
-          reviewAssignmentId={selectedReviewId}
-          reviewerId={studentId}
-          status={selectedReviewStatus} 
-          onClose={handleCloseModal} 
-          onSuccess={handleRefreshData}
-        />
-      )}
+        {selectedReviewId && (
+          <GradingModal
+            reviewAssignmentId={selectedReviewId}
+            reviewerId={studentId}
+            status={selectedReviewStatus}
+            onClose={handleCloseModal}
+            onSuccess={handleRefreshData}
+          />
+        )}
       </main>
     </div>
   );

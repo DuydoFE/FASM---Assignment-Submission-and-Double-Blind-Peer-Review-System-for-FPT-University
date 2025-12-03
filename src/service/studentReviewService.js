@@ -61,6 +61,16 @@ const updatePeerReview = async (reviewId, payload) => {
     throw error;
   }
 };
+const getCompletedReviewsByAssignment = async (assignmentId) => {
+  try {
+    const response = await api.get(
+      `/StudentReview/assignment/${assignmentId}/completed-reviews`
+    );
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
 export const studentReviewService = {
   getSubmissionByUserAndAssignment,
   getCompletedReviews,
@@ -68,4 +78,5 @@ export const studentReviewService = {
   submitPeerReview,
   getReviewDetails,
   updatePeerReview,
+  getCompletedReviewsByAssignment,
 };
