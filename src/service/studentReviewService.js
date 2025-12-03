@@ -54,8 +54,12 @@ const getReviewDetails = async (reviewAssignmentId) => {
   }
 };
 const updatePeerReview = async (reviewId, payload) => {
-  const response = await api.put(`/StudentReview/review/${reviewId}`, payload);
-  return response.data;
+  try {
+    const response = await api.put(`/StudentReview/review/${reviewId}`, payload);
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
 };
 export const studentReviewService = {
   getSubmissionByUserAndAssignment,
