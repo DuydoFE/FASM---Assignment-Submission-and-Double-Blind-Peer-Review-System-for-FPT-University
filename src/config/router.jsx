@@ -63,6 +63,7 @@ import ViewScorePage from "../pages/ViewScorePage/ViewScorePage";
 import ViewRequestHistoryPage from "../pages/RegradeRequest/ViewRequestHistoryPage";
 import SearchResultsPage from "@/pages/SearchResultsPage/SearchResultsPage";
 import CrossClassReviewPage from "@/pages/PeerReviewPage/CrossClassReviewPage";
+import PeerReviewHistoryPage from "@/pages/PeerReviewPage/PeerReviewHistoryPage";
 
 export const router = createBrowserRouter([
   {
@@ -116,6 +117,10 @@ export const router = createBrowserRouter([
        {
         path: "search", 
         element: <SearchResultsPage />,
+      },
+      {
+        path: "assignment/:courseId/:assignmentId/review-history",
+        element: <PeerReviewHistoryPage />,
       },
 
     ],

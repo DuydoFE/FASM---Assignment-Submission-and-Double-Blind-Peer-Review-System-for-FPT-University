@@ -149,8 +149,8 @@ const StudentSubmitAssignmentPage = () => {
     assignment.numPeerReviewsRequired;
   const reviewDeadline =
     reviewTrackingData?.data?.reviewDeadline || assignment.reviewDeadline;
-  
-  const isReviewOpen = reviewTrackingData?.data?.status === 'InReview';
+
+  const isReviewOpen = reviewTrackingData?.data?.status === "InReview";
 
   return (
     <div className="bg-gray-100 min-h-screen p-8">
@@ -222,7 +222,7 @@ const StudentSubmitAssignmentPage = () => {
                   <BarChart2 className="w-4 h-4 mr-1.5" />
                   Weight:{" "}
                   <span className="font-semibold ml-1">{`${
-                    (assignment.instructorWeight + assignment.peerWeight)
+                    assignment.instructorWeight + assignment.peerWeight
                   }%`}</span>
                 </div>
               </div>
@@ -270,9 +270,9 @@ const StudentSubmitAssignmentPage = () => {
                     Đang tải trạng thái chấm chéo...
                   </p>
                 ) : (
-                  <div className="space-y-6"> 
+                  <div className="space-y-6">
                     {/* Bọc trong div space-y-6 để tạo khoảng cách giữa 2 thẻ */}
-                    
+
                     {/* Card Review trong lớp (Giữ nguyên) */}
                     <PeerReviewCard
                       completed={completedReviews}
@@ -283,7 +283,7 @@ const StudentSubmitAssignmentPage = () => {
 
                     {/* Card Review khác lớp (MỚI THÊM) */}
                     {isReviewOpen && (
-                      <CrossClassReviewCard 
+                      <CrossClassReviewCard
                         assignmentId={assignmentId}
                         courseId={courseId}
                       />
