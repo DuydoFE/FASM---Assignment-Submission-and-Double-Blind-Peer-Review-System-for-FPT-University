@@ -19,7 +19,6 @@ import {
 } from "lucide-react";
 
 import AssignmentCard from "../../component/MiniDashBoard/AssignmentCard";
-import CourseCard from "../../component/MiniDashBoard/CourseCard";
 import RecentActivity from "../../component/MiniDashBoard/RecentActivity";
 
 const getAssignmentColor = (days) => {
@@ -222,33 +221,6 @@ const StudentDashBoard = () => {
           </div>
         </div>
 
-        <div className="mt-8">
-          <h2 className="text-xl font-bold text-gray-800">Your class</h2>
-          <p className="text-gray-600 mb-4">The classes you are taking</p>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <CourseCard
-              title="Mobile App Development"
-              code="PRM391"
-              teacher="Nguyễn Văn A"
-              students={45}
-              campus="Hồ Chí Minh"
-            />
-            <CourseCard
-              title="Database Design"
-              code="DBI202"
-              teacher="Trần Thị B"
-              students={38}
-              campus="Hồ Chí Minh"
-            />
-            <CourseCard
-              title="Software Engineering"
-              code="SWE201"
-              teacher="Lê Văn C"
-              students={42}
-              campus="Hồ Chí Minh"
-            />
-          </div>
-        </div>
       </main>
     </div>
   );

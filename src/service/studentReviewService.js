@@ -30,7 +30,25 @@ const getCompletedReviews = async (studentId) => {
     throw error;
   }
 };
+
+const getReviewAssignmentDetails = async (reviewAssignmentId) => {
+  try {
+    const response = await api.get(
+      `/StudentReview/review-assignment/${reviewAssignmentId}/details`
+    );
+    return response.data; 
+  } catch (error) {
+    throw error;
+  }
+};
+
+const submitPeerReview = async (payload) => {
+    const response = await api.post(`/StudentReview/submit`, payload); 
+    return response.data;
+};
 export const studentReviewService = {
   getSubmissionByUserAndAssignment,
   getCompletedReviews,
+  getReviewAssignmentDetails,
+  submitPeerReview
 };

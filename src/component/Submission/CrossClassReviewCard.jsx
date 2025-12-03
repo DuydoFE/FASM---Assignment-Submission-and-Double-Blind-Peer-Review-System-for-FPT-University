@@ -6,7 +6,6 @@ const CrossClassReviewCard = ({ assignmentId, courseId }) => {
   const navigate = useNavigate();
 
   const handleStartReview = () => {
-    // Điều hướng đến trang CrossClassReviewPage mới tạo
     navigate(`/assignment/${courseId}/${assignmentId}/cross-review`);
   };
 

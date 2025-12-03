@@ -2,7 +2,7 @@ import api from "../config/axios";
 
 const getPeerReviewAssignment = async (assignmentId) => {
   try {
-    const response = await api.get(`/StudentReview/assignment/${assignmentId}/random-pending`);
+    const response = await api.get(`/StudentReview/assignment/${assignmentId}/random-review`);
     return response.data.data;
   } catch (error) {
     console.error(`Lỗi khi lấy bài chấm chéo cho assignment ID ${assignmentId}:`, error);
