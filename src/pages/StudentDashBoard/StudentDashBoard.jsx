@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useSelector } from "react-redux";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
+import { RefreshCw } from "lucide-react";
 import {
   ChevronRight,
   Upload,
@@ -50,6 +51,7 @@ const StudentDashBoard = () => {
   const queryClient = useQueryClient();
 
   const [selectedReviewId, setSelectedReviewId] = useState(null);
+  const [selectedReviewStatus, setSelectedReviewStatus] = useState(null);
 
   const {
     data: assignmentData,
@@ -70,6 +72,16 @@ const StudentDashBoard = () => {
   const assignments = assignmentData?.data || [];
   const reviewHistory = reviewHistoryData?.data || [];
   const displayedAssignments = assignments.slice(0, 5);
+
+  const handleOpenModal = (reviewId, status) => {
+    setSelectedReviewId(reviewId);
+    setSelectedReviewStatus(status);
+  };
+
+  const handleCloseModal = () => {
+    setSelectedReviewId(null);
+    setSelectedReviewStatus(null);
+  };
 
   const handleRefreshData = () => {
     queryClient.invalidateQueries(["completedReviews", studentId]);
@@ -208,7 +220,10 @@ const StudentDashBoard = () => {
                           {review.status === "Assigned" ? (
                             <button
                               onClick={() =>
-                                setSelectedReviewId(review.reviewAssignmentId)
+                                handleOpenModal(
+                                  review.reviewAssignmentId,
+                                  "Assigned"
+                                )
                               }
                               className="flex items-center text-xs bg-orange-100 text-orange-700 px-2 py-1 rounded hover:bg-orange-200 transition-colors font-semibold"
                             >
@@ -216,7 +231,22 @@ const StudentDashBoard = () => {
                               Continue Grading
                             </button>
                           ) : review.status === "Completed" ? (
-                            <CheckCircle className="w-5 h-5 text-green-500" />
+                           
+                            <div className="flex items-center space-x-2">
+                              <button
+                                onClick={() =>
+                                  handleOpenModal(
+                                    review.reviewAssignmentId,
+                                    "Completed"
+                                  )
+                                }
+                                className="flex items-center text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded hover:bg-gray-200 transition-colors font-semibold border border-gray-200"
+                              >
+                                <RefreshCw className="w-3 h-3 mr-1" />
+                                Regrade
+                              </button>
+                              <CheckCircle className="w-5 h-5 text-green-500" />
+                            </div>
                           ) : (
                             <AlertCircle className="w-5 h-5 text-yellow-500" />
                           )}
@@ -236,14 +266,15 @@ const StudentDashBoard = () => {
           </div>
         </div>
 
-        {selectedReviewId && (
-          <GradingModal
-            reviewAssignmentId={selectedReviewId}
-            reviewerId={studentId}
-            onClose={() => setSelectedReviewId(null)}
-            onSuccess={handleRefreshData}
-          />
-        )}
+       {selectedReviewId && (
+        <GradingModal
+          reviewAssignmentId={selectedReviewId}
+          reviewerId={studentId}
+          status={selectedReviewStatus} 
+          onClose={handleCloseModal} 
+          onSuccess={handleRefreshData}
+        />
+      )}
       </main>
     </div>
   );

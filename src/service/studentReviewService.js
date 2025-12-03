@@ -43,12 +43,24 @@ const getReviewAssignmentDetails = async (reviewAssignmentId) => {
 };
 
 const submitPeerReview = async (payload) => {
-    const response = await api.post(`/StudentReview/submit`, payload); 
+    const response = await api.post(`/StudentReview/submit-review`, payload); 
     return response.data;
+};
+
+const getReviewDetails = async (reviewAssignmentId) => {
+  try {
+    const response = await api.get(
+      `/StudentReview/review-assignment/${reviewAssignmentId}/review-details`
+    );
+    return response.data; // Trả về cục data JSON bạn cung cấp
+  } catch (error) {
+    throw error;
+  }
 };
 export const studentReviewService = {
   getSubmissionByUserAndAssignment,
   getCompletedReviews,
   getReviewAssignmentDetails,
-  submitPeerReview
+  submitPeerReview,
+  getReviewDetails,
 };
