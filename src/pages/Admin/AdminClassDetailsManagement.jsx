@@ -143,7 +143,8 @@ export default function AdminClassDetailsManagement() {
   const fetchUsersByRole = async (role) => {
     try {
       const res = await getUsersByRole(role);
-      return Array.isArray(res?.data) ? res.data : [];
+      const users = Array.isArray(res?.data) ? res.data : [];
+      return users.filter(u => u.campusId === classInfo?.campusId);
     } catch (err) {
       console.error(err);
       toast.error("❌ Failed to load users list!");

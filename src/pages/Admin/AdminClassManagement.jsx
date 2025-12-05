@@ -388,8 +388,12 @@ export default function AdminClassManagement() {
                       </td>
                       <td className="p-3">
                         <button
-                          className="text-green-500 hover:text-green-700 font-semibold mr-2"
-                          onClick={() => handleOpenUpdateForm(c)}
+                          disabled={c.isActive}
+                          className={`font-semibold mr-2 ${c.isActive
+                              ? "text-gray-400 cursor-not-allowed"
+                              : "text-green-500 hover:text-green-700"
+                            }`}
+                          onClick={() => !c.isActive && handleOpenUpdateForm(c)}
                         >
                           Update
                         </button>
