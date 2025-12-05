@@ -3,7 +3,9 @@ import * as echarts from 'echarts';
 import { Users, Clock, CheckCircle, ChevronDown, Calendar } from 'lucide-react';
 
 function AdminDashboard() {
+  const [selectedAcademicYear, setSelectedAcademicYear] = useState('2024-2025');
   const [selectedSemester, setSelectedSemester] = useState('FALL2025');
+  const [yearDropdownOpen, setYearDropdownOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const chartRef = useRef(null);
   const gradeChartRef = useRef(null);
@@ -30,6 +32,7 @@ function AdminDashboard() {
     { name: 'Algorithm Analysis', course: 'CS301-C', percentage: 42 }
   ];
 
+  const academicYears = ['2024-2025', '2023-2024', '2022-2023', '2021-2022'];
   const semesters = ['FALL2025', 'SPRING2025', 'SUMMER2025', 'FALL2024'];
 
   useEffect(() => {
@@ -225,31 +228,62 @@ function AdminDashboard() {
         {/* Header */}
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-4xl font-bold text-gray-900">System Overview</h1>
-          <div className="relative">
-            <button
-              onClick={() => setDropdownOpen(!dropdownOpen)}
-              className="flex items-center gap-2 bg-white px-4 py-2 rounded-lg border border-gray-200 cursor-pointer hover:bg-gray-50 transition-colors"
-            >
-              <Calendar className="w-4 h-4 text-gray-600" />
-              <span className="font-medium text-gray-700">{selectedSemester}</span>
-              <ChevronDown className="w-4 h-4 text-gray-500" />
-            </button>
-            {dropdownOpen && (
-              <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-10">
-                {semesters.map((semester) => (
-                  <button
-                    key={semester}
-                    onClick={() => {
-                      setSelectedSemester(semester);
-                      setDropdownOpen(false);
-                    }}
-                    className="w-full text-left px-4 py-2 hover:bg-gray-50 first:rounded-t-lg last:rounded-b-lg"
-                  >
-                    {semester}
-                  </button>
-                ))}
-              </div>
-            )}
+          <div className="flex items-center gap-3">
+            {/* Academic Year Dropdown */}
+            <div className="relative">
+              <button
+                onClick={() => setYearDropdownOpen(!yearDropdownOpen)}
+                className="flex items-center gap-2 bg-white px-4 py-2 rounded-lg border border-gray-200 cursor-pointer hover:bg-gray-50 transition-colors"
+              >
+                <Calendar className="w-4 h-4 text-gray-600" />
+                <span className="font-medium text-gray-700">{selectedAcademicYear}</span>
+                <ChevronDown className="w-4 h-4 text-gray-500" />
+              </button>
+              {yearDropdownOpen && (
+                <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-10">
+                  {academicYears.map((year) => (
+                    <button
+                      key={year}
+                      onClick={() => {
+                        setSelectedAcademicYear(year);
+                        setYearDropdownOpen(false);
+                      }}
+                      className="w-full text-left px-4 py-2 hover:bg-gray-50 first:rounded-t-lg last:rounded-b-lg"
+                    >
+                      {year}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Semester Dropdown */}
+            <div className="relative">
+              <button
+                onClick={() => setDropdownOpen(!dropdownOpen)}
+                className="flex items-center gap-2 bg-white px-4 py-2 rounded-lg border border-gray-200 cursor-pointer hover:bg-gray-50 transition-colors"
+              >
+                <Calendar className="w-4 h-4 text-gray-600" />
+                <span className="font-medium text-gray-700">{selectedSemester}</span>
+                <ChevronDown className="w-4 h-4 text-gray-500" />
+              </button>
+              {dropdownOpen && (
+                <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-10">
+                  {semesters.map((semester) => (
+                    <button
+                      key={semester}
+                      onClick={() => {
+                        setSelectedSemester(semester);
+                        setDropdownOpen(false);
+                      }}
+                      className="w-full text-left px-4 py-2 hover:bg-gray-50 first:rounded-t-lg last:rounded-b-lg"
+                    >
+                      {semester}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
