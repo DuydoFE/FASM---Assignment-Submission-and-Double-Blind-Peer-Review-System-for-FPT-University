@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import * as echarts from 'echarts';
 import { Users, Clock, CheckCircle, ChevronDown, Calendar } from 'lucide-react';
-import { getAllAcademicYears } from '../../service/adminService';
+import { getAllAcademicYears, getSemestersByAcademicYear } from '../../service/adminService';
 
 function AdminDashboard() {
   const [selectedAcademicYear, setSelectedAcademicYear] = useState(null);
@@ -9,7 +9,9 @@ function AdminDashboard() {
   const [yearDropdownOpen, setYearDropdownOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [academicYears, setAcademicYears] = useState([]);
+  const [semesters, setSemesters] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadingSemesters, setLoadingSemesters] = useState(false);
   const chartRef = useRef(null);
   const gradeChartRef = useRef(null);
 
@@ -69,6 +71,48 @@ function AdminDashboard() {
 
     fetchAcademicYears();
   }, []);
+
+  // Fetch semesters when academic year is selected
+  useEffect(() => {
+    const fetchSemesters = async () => {
+      if (!selectedAcademicYear?.id) {
+        setSemesters([]);
+        setSelectedSemester('');
+        return;
+      }
+
+      try {
+        setLoadingSemesters(true);
+        const response = await getSemestersByAcademicYear(selectedAcademicYear.id);
+        
+        // Extract semesters from the response data
+        const semesterList = response.data.map(semester => ({
+          id: semester.semesterId,
+          name: semester.name,
+          startDate: semester.startDate,
+          endDate: semester.endDate,
+          academicYearId: semester.academicYearId
+        }));
+        
+        setSemesters(semesterList);
+        
+        // Set the first semester as selected if available
+        if (semesterList.length > 0) {
+          setSelectedSemester(semesterList[0].name);
+        } else {
+          setSelectedSemester('');
+        }
+      } catch (error) {
+        console.error('Error fetching semesters:', error);
+        setSemesters([]);
+        setSelectedSemester('');
+      } finally {
+        setLoadingSemesters(false);
+      }
+    };
+
+    fetchSemesters();
+  }, [selectedAcademicYear]);
 
   useEffect(() => {
     console.log('Submission Chart useEffect triggered');
@@ -304,26 +348,35 @@ function AdminDashboard() {
             <div className="relative">
               <button
                 onClick={() => setDropdownOpen(!dropdownOpen)}
-                className="flex items-center gap-2 bg-white px-4 py-2 rounded-lg border border-gray-200 cursor-pointer hover:bg-gray-50 transition-colors"
+                disabled={!selectedAcademicYear || loadingSemesters}
+                className="flex items-center gap-2 bg-white px-4 py-2 rounded-lg border border-gray-200 cursor-pointer hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <Calendar className="w-4 h-4 text-gray-600" />
-                <span className="font-medium text-gray-700">{selectedSemester}</span>
+                <span className="font-medium text-gray-700">
+                  {loadingSemesters ? 'Loading...' : selectedSemester || 'Select Semester'}
+                </span>
                 <ChevronDown className="w-4 h-4 text-gray-500" />
               </button>
-              {dropdownOpen && (
+              {dropdownOpen && !loadingSemesters && (
                 <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-10">
-                  {semesters.map((semester) => (
+                  {semesters.length > 0 ? semesters.map((semester) => (
                     <button
-                      key={semester}
+                      key={semester.id}
                       onClick={() => {
-                        setSelectedSemester(semester);
+                        setSelectedSemester(semester.name);
                         setDropdownOpen(false);
                       }}
-                      className="w-full text-left px-4 py-2 hover:bg-gray-50 first:rounded-t-lg last:rounded-b-lg"
+                      className={`w-full text-left px-4 py-2 hover:bg-gray-50 first:rounded-t-lg last:rounded-b-lg ${
+                        selectedSemester === semester.name ? 'bg-blue-50 text-blue-600' : ''
+                      }`}
                     >
-                      {semester}
+                      {semester.name}
                     </button>
-                  ))}
+                  )) : (
+                    <div className="px-4 py-2 text-gray-500 text-sm">
+                      No semesters found
+                    </div>
+                  )}
                 </div>
               )}
             </div>
