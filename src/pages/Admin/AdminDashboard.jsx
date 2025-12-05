@@ -1,162 +1,365 @@
-import React, { useState, useEffect } from "react";
-import {
-  getAllUsers,
-  getAllCourseInstances,
-  getAllAcademicYears,
-  getAllSemesters,
-  getAllCampuses,
-} from "../../service/adminService";
+import React, { useState, useEffect, useRef } from 'react';
+import * as echarts from 'echarts';
+import { Users, Clock, CheckCircle, ChevronDown, Calendar } from 'lucide-react';
 
-export default function AdminDashboard() {
-  const [stats, setStats] = useState({
-    usersByCampus: {},
-    classesByCampus: {},
-    totalAcademicYears: 0,
-    totalSemesters: 0,
-  });
+function AdminDashboard() {
+  const [selectedSemester, setSelectedSemester] = useState('FALL2025');
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const chartRef = useRef(null);
+  const gradeChartRef = useRef(null);
 
-  const [animatedStats, setAnimatedStats] = useState(stats);
-  const [maxCounts, setMaxCounts] = useState({ users: 0, classes: 0 });
+  const userStats = {
+    instructors: 1234,
+    students: 1613
+  };
+
+  const assignmentStatus = {
+    active: 234,
+    inReview: 89,
+    closed: 1456
+  };
+
+  const rubricStats = {
+    rubrics: 456,
+    criteria: 892
+  };
+
+  const lowSubmissionAssignments = [
+    { name: 'React Fundamentals Quiz', course: 'CS101-A', percentage: 28 },
+    { name: 'Database Design Project', course: 'CS202-B', percentage: 35 },
+    { name: 'Algorithm Analysis', course: 'CS301-C', percentage: 42 }
+  ];
+
+  const semesters = ['FALL2025', 'SPRING2025', 'SUMMER2025', 'FALL2024'];
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [usersRes, classesRes, academicYearsRes, semestersRes, campusesRes] =
-          await Promise.all([
-            getAllUsers(),
-            getAllCourseInstances(),
-            getAllAcademicYears(),
-            getAllSemesters(),
-            getAllCampuses(),
-          ]);
-
-        const campuses = campusesRes.data || [];
-        const users = usersRes.data || [];
-        const classes = classesRes.data || [];
-        const academicYears = academicYearsRes.data || [];
-        const semesters = semestersRes.data || [];
-
-        // Tính users theo campus
-        const usersByCampus = {};
-        campuses.forEach((campus) => {
-          usersByCampus[campus.campusName] = users.filter(
-            (user) => Number(user.campusId) === Number(campus.campusId)
-          ).length;
-        });
-
-        // Tính classes theo campus
-        const classesByCampus = {};
-        campuses.forEach((campus) => {
-          classesByCampus[campus.campusName] = classes.filter(
-            (course) => course.campusId === campus.campusId
-          ).length;
-        });
-
-        const maxUsers = Math.max(...Object.values(usersByCampus), 1);
-        const maxClasses = Math.max(...Object.values(classesByCampus), 1);
-
-        setMaxCounts({ users: maxUsers, classes: maxClasses });
-        setStats({
-          usersByCampus,
-          classesByCampus,
-          totalAcademicYears: academicYears.length,
-          totalSemesters: semesters.length,
-        });
-      } catch (error) {
-        console.error("Error fetching dashboard data:", error);
-      }
-    };
-
-    fetchData();
+    console.log('Submission Chart useEffect triggered');
+    console.log('chartRef.current:', chartRef.current);
+    
+    if (chartRef.current) {
+      console.log('Initializing submission chart...');
+      const myChart = echarts.init(chartRef.current);
+      
+      const option = {
+        tooltip: {
+          trigger: 'item',
+          formatter: '{b}: {c} ({d}%)',
+          backgroundColor: 'rgba(255, 255, 255, 0.95)',
+          borderColor: '#e5e7eb',
+          borderWidth: 1,
+          textStyle: {
+            color: '#374151'
+          }
+        },
+        legend: {
+          top: '5%',
+          left: 'center',
+          textStyle: {
+            fontSize: 12,
+            color: '#374151'
+          }
+        },
+        series: [
+          {
+            name: 'Submission Rate',
+            type: 'pie',
+            radius: ['40%', '70%'],
+            center: ['50%', '60%'],
+            avoidLabelOverlap: false,
+            itemStyle: {
+              borderRadius: 10,
+              borderColor: '#fff',
+              borderWidth: 2
+            },
+            label: {
+              show: false,
+              position: 'center'
+            },
+            emphasis: {
+              label: {
+                show: true,
+                fontSize: 20,
+                fontWeight: 'bold'
+              }
+            },
+            labelLine: {
+              show: false
+            },
+            data: [
+              { value: 450, name: 'Not Submitted', itemStyle: { color: '#ef4444' } },
+              { value: 820, name: 'Submitted', itemStyle: { color: '#3b82f6' } },
+              { value: 1200, name: 'Graded', itemStyle: { color: '#22c55e' } }
+            ]
+          }
+        ]
+      };
+      
+      myChart.setOption(option);
+      console.log('Submission chart option set successfully');
+      
+      // Ensure chart renders after a short delay
+      setTimeout(() => {
+        myChart.resize();
+        console.log('Submission chart resized');
+      }, 100);
+      
+      const handleResize = () => {
+        myChart.resize();
+      };
+      
+      window.addEventListener('resize', handleResize);
+      
+      return () => {
+        window.removeEventListener('resize', handleResize);
+        myChart.dispose();
+      };
+    }
   }, []);
 
-  // Animate số liệu count-up
   useEffect(() => {
-    const duration = 800; // ms
-    const steps = 30;
-
-    const animateCounts = (type, data) => {
-      Object.entries(data).forEach(([key, end]) => {
-        let start = 0;
-        const increment = end / steps;
-        const interval = setInterval(() => {
-          start += increment;
-          setAnimatedStats((prev) => ({
-            ...prev,
-            [type]: {
-              ...prev[type],
-              [key]: Math.min(Math.round(start), end),
+    if (gradeChartRef.current) {
+      const ranges = ["0-1", "1-2", "2-3", "3-4", "4-5", "5-6", "6-7", "7-8", "8-9", "9-10"];
+      const counts = [45, 58, 89, 123, 167, 278, 356, 423, 389, 315];
+      const percents = [2.1, 2.7, 4.2, 5.8, 7.8, 13.1, 16.7, 19.9, 18.3, 14.8];
+      
+      const chart = echarts.init(gradeChartRef.current);
+      
+      const option = {
+        grid: {
+          left: 80,
+          right: 100,
+          top: 20,
+          bottom: 40,
+        },
+        xAxis: {
+          type: "value",
+          show: false,
+        },
+        yAxis: {
+          type: "category",
+          data: ranges,
+          axisLine: { show: false },
+          axisTick: { show: false },
+          axisLabel: {
+            fontSize: 14,
+            color: "#374151",
+            fontWeight: 500,
+          },
+        },
+        series: [
+          {
+            type: "bar",
+            data: counts,
+            barWidth: 24,
+            itemStyle: {
+              color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
+                { offset: 0, color: '#3b82f6' },
+                { offset: 1, color: '#60a5fa' }
+              ]),
+              borderRadius: [0, 8, 8, 0],
             },
-          }));
-          if (start >= end) clearInterval(interval);
-        }, duration / steps);
-      });
-    };
-
-    animateCounts("usersByCampus", stats.usersByCampus);
-    animateCounts("classesByCampus", stats.classesByCampus);
-  }, [stats.usersByCampus, stats.classesByCampus]);
-
-  const cardClass =
-    "rounded-xl shadow-md p-6 flex flex-col items-center border-t-4 transition-transform duration-300 hover:scale-105 hover:shadow-xl w-full text-center";
+            label: {
+              show: true,
+              position: "right",
+              formatter: (params) => {
+                const value = counts[params.dataIndex];
+                const percent = percents[params.dataIndex];
+                return `{val|${value}}  {per|${percent}%}`;
+              },
+              rich: {
+                val: {
+                  color: "#111827",
+                  fontWeight: 600,
+                  fontSize: 14,
+                },
+                per: {
+                  color: "#6b7280",
+                  fontSize: 13,
+                  padding: [0, 0, 0, 6],
+                },
+              },
+            },
+          },
+        ],
+        tooltip: {
+          show: true,
+          backgroundColor: 'rgba(255, 255, 255, 0.95)',
+          borderColor: '#e5e7eb',
+          borderWidth: 1,
+          textStyle: {
+            color: '#374151'
+          },
+          formatter: (params) => {
+            const range = ranges[params.dataIndex];
+            const value = counts[params.dataIndex];
+            const percent = percents[params.dataIndex];
+            return `
+              <div style="padding: 4px;">
+                <b style="color: #111827;">Grade Range: ${range}</b><br />
+                Count: ${value}<br />
+                Percentage: ${percent}%
+              </div>
+            `;
+          },
+        },
+      };
+      
+      chart.setOption(option);
+      
+      const handleResize = () => {
+        chart.resize();
+      };
+      
+      window.addEventListener('resize', handleResize);
+      
+      return () => {
+        window.removeEventListener('resize', handleResize);
+        chart.dispose();
+      };
+    }
+  }, []);
 
   return (
-    <div className="space-y-6 p-4">
-      <h2 className="text-3xl font-bold text-orange-500 flex items-center gap-2">
-        📊 System Activity Dashboard
-      </h2>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {/* Users */}
-        {Object.entries(animatedStats.usersByCampus).map(([campusName, count]) => (
-          <div
-            key={campusName}
-            className={`${cardClass} bg-gradient-to-r from-green-100 via-green-200 to-green-100 border-green-500`}
-          >
-            <div className="text-4xl mb-2">👤</div>
-            <p className="text-gray-600 font-semibold">Users - {campusName}</p>
-            <h3 className="text-3xl font-bold text-green-700">{count}</h3>
-            <div className="w-full h-2 bg-green-300 rounded-full mt-2 overflow-hidden">
-              <div
-                className="h-2 bg-green-600 rounded-full transition-all duration-500"
-                style={{ width: `${(count / maxCounts.users) * 100}%` }}
-              ></div>
-            </div>
+    <div className="min-h-screen p-8 ">
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <div className="flex justify-between items-center mb-8">
+          <h1 className="text-4xl font-bold text-gray-900">System Overview</h1>
+          <div className="relative">
+            <button
+              onClick={() => setDropdownOpen(!dropdownOpen)}
+              className="flex items-center gap-2 bg-white px-4 py-2 rounded-lg border border-gray-200 cursor-pointer hover:bg-gray-50 transition-colors"
+            >
+              <Calendar className="w-4 h-4 text-gray-600" />
+              <span className="font-medium text-gray-700">{selectedSemester}</span>
+              <ChevronDown className="w-4 h-4 text-gray-500" />
+            </button>
+            {dropdownOpen && (
+              <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-10">
+                {semesters.map((semester) => (
+                  <button
+                    key={semester}
+                    onClick={() => {
+                      setSelectedSemester(semester);
+                      setDropdownOpen(false);
+                    }}
+                    className="w-full text-left px-4 py-2 hover:bg-gray-50 first:rounded-t-lg last:rounded-b-lg"
+                  >
+                    {semester}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
-        ))}
-
-        {/* Classes */}
-        {Object.entries(animatedStats.classesByCampus).map(([campusName, count]) => (
-          <div
-            key={campusName}
-            className={`${cardClass} bg-gradient-to-r from-blue-100 via-blue-200 to-blue-100 border-blue-500`}
-          >
-            <div className="text-4xl mb-2">🏫</div>
-            <p className="text-gray-600 font-semibold">Classes - {campusName}</p>
-            <h3 className="text-3xl font-bold text-blue-700">{count}</h3>
-            <div className="w-full h-2 bg-blue-300 rounded-full mt-2 overflow-hidden">
-              <div
-                className="h-2 bg-blue-600 rounded-full transition-all duration-500"
-                style={{ width: `${(count / maxCounts.classes) * 100}%` }}
-              ></div>
-            </div>
-          </div>
-        ))}
-
-        {/* Academic Years */}
-        <div className={`${cardClass} bg-gradient-to-r from-purple-100 via-purple-200 to-purple-100 border-purple-500`}>
-          <div className="text-4xl mb-2">🎓</div>
-          <p className="text-gray-600 font-semibold">Academic Years</p>
-          <h3 className="text-3xl font-bold text-purple-700">{stats.totalAcademicYears}</h3>
         </div>
 
-        {/* Semesters */}
-        <div className={`${cardClass} bg-gradient-to-r from-yellow-100 via-yellow-200 to-yellow-100 border-yellow-500`}>
-          <div className="text-4xl mb-2">📅</div>
-          <p className="text-gray-600 font-semibold">Semesters</p>
-          <h3 className="text-3xl font-bold text-yellow-700">{stats.totalSemesters}</h3>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Left Section - User Statistics and Assignment Status */}
+          <div className="lg:col-span-2 space-y-6">
+            {/* User Statistics */}
+            <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+              <h2 className="text-xl font-semibold text-gray-900 mb-6">User Statistics</h2>
+              <div className="grid grid-cols-2 gap-6">
+                <div className="bg-gray-50 rounded-lg p-6">
+                  <div className="text-sm text-gray-600 mb-2">Instructors</div>
+                  <div className="text-4xl font-bold text-gray-900">{userStats.instructors.toLocaleString()}</div>
+                </div>
+                <div className="bg-gray-50 rounded-lg p-6">
+                  <div className="text-sm text-gray-600 mb-2">Students</div>
+                  <div className="text-4xl font-bold text-gray-900">{userStats.students.toLocaleString()}</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Assignment Status Overview */}
+            <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+              <h2 className="text-xl font-semibold text-gray-900 mb-6">Assignment Status Overview</h2>
+              <div className="grid grid-cols-3 gap-4">
+                {/* Active */}
+                <div className="bg-blue-50 rounded-lg p-6">
+                  <div className="flex items-center gap-2 text-blue-600 mb-3">
+                    <Clock className="w-5 h-5" />
+                    <span className="text-sm font-medium">Active</span>
+                  </div>
+                  <div className="text-3xl font-bold text-blue-700">{assignmentStatus.active}</div>
+                </div>
+
+                {/* In Review */}
+                <div className="bg-yellow-50 rounded-lg p-6">
+                  <div className="flex items-center gap-2 text-yellow-600 mb-3">
+                    <Clock className="w-5 h-5" />
+                    <span className="text-sm font-medium">In Review</span>
+                  </div>
+                  <div className="text-3xl font-bold text-yellow-700">{assignmentStatus.inReview}</div>
+                </div>
+
+                {/* Closed */}
+                <div className="bg-gray-50 rounded-lg p-6">
+                  <div className="flex items-center gap-2 text-gray-600 mb-3">
+                    <CheckCircle className="w-5 h-5" />
+                    <span className="text-sm font-medium">Closed</span>
+                  </div>
+                  <div className="text-3xl font-bold text-gray-700">{assignmentStatus.closed.toLocaleString()}</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Rubric and Criteria Overview */}
+            <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+              <h2 className="text-xl font-semibold text-gray-900 mb-6">Rubric and Criteria Overview</h2>
+              <div className="grid grid-cols-2 gap-6">
+                <div className="bg-gray-50 rounded-lg p-6">
+                  <div className="text-sm text-gray-600 mb-2">Rubrics</div>
+                  <div className="text-4xl font-bold text-gray-900">{rubricStats.rubrics.toLocaleString()}</div>
+                </div>
+                <div className="bg-gray-50 rounded-lg p-6">
+                  <div className="text-sm text-gray-600 mb-2">Criteria</div>
+                  <div className="text-4xl font-bold text-gray-900">{rubricStats.criteria.toLocaleString()}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Right Section - Low Submission Assignments & Submission Rate */}
+          <div className="lg:col-span-1 space-y-6">
+            {/* Low Submission Assignments */}
+            <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-xl font-semibold text-gray-900">Low Submission Assignments</h2>
+                <span className="text-sm font-medium text-red-500">Top 3</span>
+              </div>
+              <div className="space-y-4">
+                {lowSubmissionAssignments.map((assignment, index) => (
+                  <div key={index} className="pb-4 border-b border-gray-100 last:border-b-0 last:pb-0">
+                    <div className="flex justify-between items-start mb-2">
+                      <h3 className="font-semibold text-gray-900 text-sm">{assignment.name}</h3>
+                      <span className="text-red-500 font-bold text-sm">{assignment.percentage}%</span>
+                    </div>
+                    <div className="flex items-center gap-1 text-gray-500 text-xs">
+                      <Users className="w-3 h-3" />
+                      <span>{assignment.course}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Submission Rate Chart */}
+            <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+              <h2 className="text-xl font-semibold text-gray-900 mb-4">Submission Rate</h2>
+              <div ref={chartRef} style={{ width: '100%', height: '300px' }}></div>
+            </div>
+          </div>
+        </div>
+
+        {/* Grade Distribution Chart - Full Width at Bottom */}
+        <div className="mt-6 bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+          <h2 className="text-xl font-semibold text-gray-900 mb-6">Score Distribution by Range</h2>
+          <div ref={gradeChartRef} style={{ width: '100%', height: '500px' }}></div>
         </div>
       </div>
     </div>
   );
 }
+
+export default AdminDashboard;
