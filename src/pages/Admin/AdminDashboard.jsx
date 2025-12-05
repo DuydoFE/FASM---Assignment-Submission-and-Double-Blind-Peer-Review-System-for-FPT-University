@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import * as echarts from 'echarts';
 import { Users, Clock, CheckCircle, ChevronDown, Calendar } from 'lucide-react';
-import { getAllAcademicYears, getSemestersByAcademicYear } from '../../service/adminService';
+import { getAllAcademicYears, getSemestersByAcademicYear, getSemesterStatistics } from '../../service/adminService';
 
 function AdminDashboard() {
   const [selectedAcademicYear, setSelectedAcademicYear] = useState(null);
@@ -12,30 +12,33 @@ function AdminDashboard() {
   const [semesters, setSemesters] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadingSemesters, setLoadingSemesters] = useState(false);
+  const [loadingStatistics, setLoadingStatistics] = useState(false);
+  const [statisticsData, setStatisticsData] = useState(null);
   const chartRef = useRef(null);
   const gradeChartRef = useRef(null);
 
+  // Default values (will be replaced with API data)
   const userStats = {
-    instructors: 1234,
-    students: 1613
+    instructors: statisticsData?.totalInstructors || 0,
+    students: statisticsData?.totalStudents || 0
   };
 
   const assignmentStatus = {
-    active: 234,
-    inReview: 89,
-    closed: 1456
+    active: statisticsData?.totalActiveAssignments || 0,
+    inReview: statisticsData?.totalInReviewAssignments || 0,
+    closed: statisticsData?.totalClosedAssignments || 0
   };
 
   const rubricStats = {
-    rubrics: 456,
-    criteria: 892
+    rubrics: statisticsData?.totalRubricsUsed || 0,
+    criteria: statisticsData?.totalCriteriaUsed || 0
   };
 
-  const lowSubmissionAssignments = [
-    { name: 'React Fundamentals Quiz', course: 'CS101-A', percentage: 28 },
-    { name: 'Database Design Project', course: 'CS202-B', percentage: 35 },
-    { name: 'Algorithm Analysis', course: 'CS301-C', percentage: 42 }
-  ];
+  const lowSubmissionAssignments = statisticsData?.lowestSubmissionAssignments?.map(item => ({
+    name: item.assignmentTitle,
+    course: `${item.courseName} - ${item.className}`,
+    percentage: item.submissionRate
+  })) || [];
 
   // Fetch academic years from API
   useEffect(() => {
@@ -114,13 +117,44 @@ function AdminDashboard() {
     fetchSemesters();
   }, [selectedAcademicYear]);
 
+  // Fetch statistics when academic year or semester changes
   useEffect(() => {
-    console.log('Submission Chart useEffect triggered');
-    console.log('chartRef.current:', chartRef.current);
-    
-    if (chartRef.current) {
-      console.log('Initializing submission chart...');
+    const fetchStatistics = async () => {
+      if (!selectedAcademicYear?.id || !selectedSemester) {
+        setStatisticsData(null);
+        return;
+      }
+
+      // Find the semester ID from the selected semester name
+      const semester = semesters.find(s => s.name === selectedSemester);
+      if (!semester) {
+        return;
+      }
+
+      try {
+        setLoadingStatistics(true);
+        const response = await getSemesterStatistics(selectedAcademicYear.id, semester.id);
+        
+        if (response.statusCode === 200 && response.data) {
+          setStatisticsData(response.data);
+        }
+      } catch (error) {
+        console.error('Error fetching semester statistics:', error);
+        setStatisticsData(null);
+      } finally {
+        setLoadingStatistics(false);
+      }
+    };
+
+    fetchStatistics();
+  }, [selectedAcademicYear, selectedSemester, semesters]);
+
+  // Update submission chart when statistics data changes
+  useEffect(() => {
+    if (chartRef.current && statisticsData?.submissionRate) {
       const myChart = echarts.init(chartRef.current);
+      
+      const submissionData = statisticsData.submissionRate;
       
       const option = {
         tooltip: {
@@ -168,21 +202,18 @@ function AdminDashboard() {
               show: false
             },
             data: [
-              { value: 450, name: 'Not Submitted', itemStyle: { color: '#ef4444' } },
-              { value: 820, name: 'Submitted', itemStyle: { color: '#3b82f6' } },
-              { value: 1200, name: 'Graded', itemStyle: { color: '#22c55e' } }
+              { value: submissionData.notSubmitted.count, name: 'Not Submitted', itemStyle: { color: '#ef4444' } },
+              { value: submissionData.submitted.count, name: 'Submitted', itemStyle: { color: '#3b82f6' } },
+              { value: submissionData.graded.count, name: 'Graded', itemStyle: { color: '#22c55e' } }
             ]
           }
         ]
       };
       
       myChart.setOption(option);
-      console.log('Submission chart option set successfully');
       
-      // Ensure chart renders after a short delay
       setTimeout(() => {
         myChart.resize();
-        console.log('Submission chart resized');
       }, 100);
       
       const handleResize = () => {
@@ -196,13 +227,15 @@ function AdminDashboard() {
         myChart.dispose();
       };
     }
-  }, []);
+  }, [statisticsData]);
 
+  // Update grade distribution chart when statistics data changes
   useEffect(() => {
-    if (gradeChartRef.current) {
-      const ranges = ["0-1", "1-2", "2-3", "3-4", "4-5", "5-6", "6-7", "7-8", "8-9", "9-10"];
-      const counts = [45, 58, 89, 123, 167, 278, 356, 423, 389, 315];
-      const percents = [2.1, 2.7, 4.2, 5.8, 7.8, 13.1, 16.7, 19.9, 18.3, 14.8];
+    if (gradeChartRef.current && statisticsData?.scoreDistribution) {
+      const scoreData = statisticsData.scoreDistribution;
+      const ranges = scoreData.map(item => item.rangeLabel);
+      const counts = scoreData.map(item => item.count);
+      const percents = scoreData.map(item => item.percentage);
       
       const chart = echarts.init(gradeChartRef.current);
       
@@ -299,14 +332,19 @@ function AdminDashboard() {
         chart.dispose();
       };
     }
-  }, []);
+  }, [statisticsData]);
 
   return (
     <div className="min-h-screen p-8 ">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="flex justify-between items-center mb-8">
-          <h1 className="text-4xl font-bold text-gray-900">System Overview</h1>
+          <div>
+            <h1 className="text-4xl font-bold text-gray-900">System Overview</h1>
+            {loadingStatistics && (
+              <p className="text-sm text-gray-500 mt-2">Loading statistics...</p>
+            )}
+          </div>
           <div className="flex items-center gap-3">
             {/* Academic Year Dropdown */}
             <div className="relative">
