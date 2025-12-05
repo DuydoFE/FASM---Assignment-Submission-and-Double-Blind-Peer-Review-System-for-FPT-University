@@ -47,16 +47,25 @@ function AdminDashboard() {
         setLoading(true);
         const response = await getAllAcademicYears();
         
-        // Extract academic years from the response data
-        const years = response.data.map(year => ({
-          id: year.academicYearId,
-          name: year.name,
-          campusId: year.campusId,
-          campusName: year.campusName,
-          startDate: year.startDate,
-          endDate: year.endDate,
-          semesterCount: year.semesterCount
-        }));
+        // Get current date
+        const now = new Date();
+        
+        // Extract academic years from the response data and filter out future ones
+        const years = response.data
+          .map(year => ({
+            id: year.academicYearId,
+            name: year.name,
+            campusId: year.campusId,
+            campusName: year.campusName,
+            startDate: year.startDate,
+            endDate: year.endDate,
+            semesterCount: year.semesterCount
+          }))
+          .filter(year => {
+            // Only include academic years that have already started
+            const startDate = new Date(year.startDate);
+            return startDate <= now;
+          });
         
         setAcademicYears(years);
         
@@ -88,14 +97,23 @@ function AdminDashboard() {
         setLoadingSemesters(true);
         const response = await getSemestersByAcademicYear(selectedAcademicYear.id);
         
-        // Extract semesters from the response data
-        const semesterList = response.data.map(semester => ({
-          id: semester.semesterId,
-          name: semester.name,
-          startDate: semester.startDate,
-          endDate: semester.endDate,
-          academicYearId: semester.academicYearId
-        }));
+        // Get current date
+        const now = new Date();
+        
+        // Extract semesters from the response data and filter out future ones
+        const semesterList = response.data
+          .map(semester => ({
+            id: semester.semesterId,
+            name: semester.name,
+            startDate: semester.startDate,
+            endDate: semester.endDate,
+            academicYearId: semester.academicYearId
+          }))
+          .filter(semester => {
+            // Only include semesters that have already started
+            const startDate = new Date(semester.startDate);
+            return startDate <= now;
+          });
         
         setSemesters(semesterList);
         
@@ -441,15 +459,15 @@ function AdminDashboard() {
 
             {/* Assignment Status Overview */}
             <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-              <h2 className="text-xl font-semibold text-gray-900 mb-6">Assignment Status Overview</h2>
+              <h2 className="text-xl font-semibold text-gray-900 mb-6">Ongoing Assignment Overview</h2>
               <div className="grid grid-cols-3 gap-4">
                 {/* Active */}
-                <div className="bg-blue-50 rounded-lg p-6">
-                  <div className="flex items-center gap-2 text-blue-600 mb-3">
+                <div className="bg-green-50 rounded-lg p-6">
+                  <div className="flex items-center gap-2 text-green-600 mb-3">
                     <Clock className="w-5 h-5" />
                     <span className="text-sm font-medium">Active</span>
                   </div>
-                  <div className="text-3xl font-bold text-blue-700">{assignmentStatus.active}</div>
+                  <div className="text-3xl font-bold text-green-700">{assignmentStatus.active}</div>
                 </div>
 
                 {/* In Review */}
@@ -462,19 +480,19 @@ function AdminDashboard() {
                 </div>
 
                 {/* Closed */}
-                <div className="bg-gray-50 rounded-lg p-6">
-                  <div className="flex items-center gap-2 text-gray-600 mb-3">
+                <div className="bg-red-50 rounded-lg p-6">
+                  <div className="flex items-center gap-2 text-red-600 mb-3">
                     <CheckCircle className="w-5 h-5" />
                     <span className="text-sm font-medium">Closed</span>
                   </div>
-                  <div className="text-3xl font-bold text-gray-700">{assignmentStatus.closed.toLocaleString()}</div>
+                  <div className="text-3xl font-bold text-red-700">{assignmentStatus.closed.toLocaleString()}</div>
                 </div>
               </div>
             </div>
 
             {/* Rubric and Criteria Overview */}
             <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-              <h2 className="text-xl font-semibold text-gray-900 mb-6">Rubric and Criteria Overview</h2>
+              <h2 className="text-xl font-semibold text-gray-900 mb-6">Rubric Template and Criteria Template Overview</h2>
               <div className="grid grid-cols-2 gap-6">
                 <div className="bg-gray-50 rounded-lg p-6">
                   <div className="text-sm text-gray-600 mb-2">Rubrics</div>
