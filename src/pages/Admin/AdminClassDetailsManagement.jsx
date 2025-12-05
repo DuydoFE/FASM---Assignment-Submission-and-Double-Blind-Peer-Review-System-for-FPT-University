@@ -226,7 +226,7 @@ export default function AdminClassDetailsManagement() {
     const instructors = await fetchUsersByRole("Instructor");
     setInstructorList(instructors);
     setAddInstructorModal({ show: true });
-  };/
+  };
 
   if (loading && !classInfo) return <p className="p-6 text-gray-500">Loading details...</p>;
   if (!classInfo) return <p className="p-6 text-gray-500">Class not found</p>;
