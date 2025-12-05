@@ -1,12 +1,15 @@
 import React, { useState, useEffect, useRef } from 'react';
 import * as echarts from 'echarts';
 import { Users, Clock, CheckCircle, ChevronDown, Calendar } from 'lucide-react';
+import { getAllAcademicYears } from '../../service/adminService';
 
 function AdminDashboard() {
-  const [selectedAcademicYear, setSelectedAcademicYear] = useState('2024-2025');
-  const [selectedSemester, setSelectedSemester] = useState('FALL2025');
+  const [selectedAcademicYear, setSelectedAcademicYear] = useState(null);
+  const [selectedSemester, setSelectedSemester] = useState('');
   const [yearDropdownOpen, setYearDropdownOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [academicYears, setAcademicYears] = useState([]);
+  const [loading, setLoading] = useState(true);
   const chartRef = useRef(null);
   const gradeChartRef = useRef(null);
 
@@ -32,8 +35,40 @@ function AdminDashboard() {
     { name: 'Algorithm Analysis', course: 'CS301-C', percentage: 42 }
   ];
 
-  const academicYears = ['2024-2025', '2023-2024', '2022-2023', '2021-2022'];
-  const semesters = ['FALL2025', 'SPRING2025', 'SUMMER2025', 'FALL2024'];
+  // Fetch academic years from API
+  useEffect(() => {
+    const fetchAcademicYears = async () => {
+      try {
+        setLoading(true);
+        const response = await getAllAcademicYears();
+        
+        // Extract academic years from the response data
+        const years = response.data.map(year => ({
+          id: year.academicYearId,
+          name: year.name,
+          campusId: year.campusId,
+          campusName: year.campusName,
+          startDate: year.startDate,
+          endDate: year.endDate,
+          semesterCount: year.semesterCount
+        }));
+        
+        setAcademicYears(years);
+        
+        // Set the first year as selected if available
+        if (years.length > 0) {
+          setSelectedAcademicYear(years[0]);
+        }
+      } catch (error) {
+        console.error('Error fetching academic years:', error);
+        setAcademicYears([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAcademicYears();
+  }, []);
 
   useEffect(() => {
     console.log('Submission Chart useEffect triggered');
@@ -236,23 +271,31 @@ function AdminDashboard() {
                 className="flex items-center gap-2 bg-white px-4 py-2 rounded-lg border border-gray-200 cursor-pointer hover:bg-gray-50 transition-colors"
               >
                 <Calendar className="w-4 h-4 text-gray-600" />
-                <span className="font-medium text-gray-700">{selectedAcademicYear}</span>
+                <span className="font-medium text-gray-700">
+                  {loading ? 'Loading...' : selectedAcademicYear?.name || 'Select Year'}
+                </span>
                 <ChevronDown className="w-4 h-4 text-gray-500" />
               </button>
-              {yearDropdownOpen && (
+              {yearDropdownOpen && !loading && (
                 <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-10">
-                  {academicYears.map((year) => (
+                  {academicYears.length > 0 ? academicYears.map((year) => (
                     <button
-                      key={year}
+                      key={year.id}
                       onClick={() => {
                         setSelectedAcademicYear(year);
                         setYearDropdownOpen(false);
                       }}
-                      className="w-full text-left px-4 py-2 hover:bg-gray-50 first:rounded-t-lg last:rounded-b-lg"
+                      className={`w-full text-left px-4 py-2 hover:bg-gray-50 first:rounded-t-lg last:rounded-b-lg ${
+                        selectedAcademicYear?.id === year.id ? 'bg-blue-50 text-blue-600' : ''
+                      }`}
                     >
-                      {year}
+                      {year.name}
                     </button>
-                  ))}
+                  )) : (
+                    <div className="px-4 py-2 text-gray-500 text-sm">
+                      No academic years found
+                    </div>
+                  )}
                 </div>
               )}
             </div>
