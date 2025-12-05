@@ -19,7 +19,7 @@ export default function AdminRubricManagement() {
   const [currentRubric, setCurrentRubric] = useState(null);
   const [newRubric, setNewRubric] = useState({ title: "", majorId: 0, isPublic: true });
   const [search, setSearch] = useState("");
-  const [selectedMajorId, setSelectedMajorId] = useState(0); // 0 = chưa chọn major
+  const [selectedMajorId, setSelectedMajorId] = useState(0);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -31,7 +31,6 @@ export default function AdminRubricManagement() {
     fetchData();
   }, []);
 
-  // Load all majors
   const loadMajors = async () => {
     try {
       const res = await getAllMajors();
@@ -45,7 +44,6 @@ export default function AdminRubricManagement() {
     }
   };
 
-  // Load all rubrics
   const loadRubrics = async () => {
     setLoading(true);
     try {
@@ -77,7 +75,6 @@ export default function AdminRubricManagement() {
     }
   };
 
-  // Create rubric
   const handleCreateRubric = async (e) => {
     e.preventDefault();
     if (!newRubric.title.trim()) {
@@ -111,7 +108,6 @@ export default function AdminRubricManagement() {
     }
   };
 
-  // Update rubric
   const handleUpdateRubric = async (e) => {
     e.preventDefault();
     if (!newRubric.title.trim()) {
@@ -134,7 +130,6 @@ export default function AdminRubricManagement() {
     }
   };
 
-  // Delete rubric with confirmation
   const handleDeleteRubric = async (id) => {
     const confirmed = window.confirm("Are you sure you want to delete this rubric?");
     if (!confirmed) return;
@@ -152,14 +147,12 @@ export default function AdminRubricManagement() {
     }
   };
 
-  // Open edit modal
   const openEditModal = (rubric) => {
     setCurrentRubric(rubric);
     setNewRubric({ title: rubric.title, majorId: rubric.majorId, isPublic: rubric.isPublic });
     setShowEditModal(true);
   };
 
-  // Filtered rubrics based on search and selected major
   const filteredRubrics = rubrics.filter(
     (r) =>
       (selectedMajorId === 0 || r.majorId === selectedMajorId) &&

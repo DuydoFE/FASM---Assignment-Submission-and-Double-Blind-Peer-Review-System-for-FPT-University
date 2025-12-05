@@ -13,14 +13,10 @@ export default function AdminRubricDetail() {
 
     const [showConfirmModal, setShowConfirmModal] = useState(false);
     const [pendingToggle, setPendingToggle] = useState(null);
-
     const { id } = useParams();
     const navigate = useNavigate();
-
     const [rubric, setRubric] = useState(null);
     const [loading, setLoading] = useState(true);
-
-    // CRUD state
     const [showCreateModal, setShowCreateModal] = useState(false);
     const [showEditModal, setShowEditModal] = useState(false);
     const [currentCriteria, setCurrentCriteria] = useState(null);
@@ -33,7 +29,6 @@ export default function AdminRubricDetail() {
         scoreLabel: "0-10",
     });
 
-    // Load rubric + criteria
     const fetchRubric = async () => {
         try {
             const res = await getRubricTemplateById(id);
@@ -59,14 +54,12 @@ export default function AdminRubricDetail() {
         fetchRubric();
     }, [id]);
 
-    // helper: compute used & available weight
     const usedWeight = useMemo(() => {
         return (rubric?.criteriaTemplates || []).reduce((s, it) => s + (Number(it.weight) || 0), 0);
     }, [rubric]);
 
     const availableWeight = Math.max(0, 100 - usedWeight);
 
-    // Reload criteria list
     const reloadCriteria = async () => {
         try {
             const res = await getRubricTemplateById(id);
@@ -84,11 +77,9 @@ export default function AdminRubricDetail() {
         }
     };
 
-    // Create Criteria
     const handleCreateCriteria = async (e) => {
         e.preventDefault();
 
-        // validation
         if (criteriaForm.maxScore < 0 || criteriaForm.maxScore > 10) {
             toast.error("Max Score must be between 0 and 10");
             return;
@@ -107,7 +98,6 @@ export default function AdminRubricDetail() {
                 setShowCreateModal(false);
                 setCriteriaForm({ title: "", description: "", weight: 0, maxScore: 0, scoringType: "Scale", scoreLabel: "0-10" });
 
-                // update local state
                 setRubric((prev) => ({
                     ...prev,
                     criteriaTemplates: [...(prev.criteriaTemplates || []), res.data],
@@ -121,7 +111,6 @@ export default function AdminRubricDetail() {
         }
     };
 
-    // Edit Criteria
     const openEditModal = (criteria) => {
         setCurrentCriteria(criteria);
         setCriteriaForm({
@@ -139,8 +128,6 @@ export default function AdminRubricDetail() {
 
     const handleUpdateCriteria = async (e) => {
         e.preventDefault();
-
-        // compute how much weight is available when editing: include current item's weight
         const currentWeight = Number(currentCriteria?.weight) || 0;
         const usedWithoutCurrent = Math.max(0, usedWeight - currentWeight);
         const editAvailable = Math.max(0, 100 - usedWithoutCurrent);
@@ -165,8 +152,6 @@ export default function AdminRubricDetail() {
             if (res?.statusCode === 200) {
                 toast.success("Criteria updated successfully");
                 setShowEditModal(false);
-
-                // update local state
                 setRubric((prev) => ({
                     ...prev,
                     criteriaTemplates: prev.criteriaTemplates.map((c) =>
@@ -182,15 +167,12 @@ export default function AdminRubricDetail() {
         }
     };
 
-    // Delete Criteria
     const handleDeleteCriteria = async (criteriaId) => {
         if (!window.confirm("Are you sure to delete this criteria?")) return;
         try {
             const res = await deleteCriteriaTemplate(criteriaId);
             if (res?.statusCode === 200) {
                 toast.success("Criteria deleted successfully");
-
-                // update local state
                 setRubric((prev) => ({
                     ...prev,
                     criteriaTemplates: prev.criteriaTemplates.filter((c) => c.criteriaTemplateId !== criteriaId),
@@ -517,8 +499,6 @@ export default function AdminRubricDetail() {
 
                                         if (res.statusCode === 100 || res.statusCode === 200) {
                                             toast.success("Status updated successfully!");
-
-                                            // fetch lại rubric từ server
                                             await fetchRubric();
                                         } else {
                                             toast.error(res.message || "Failed to update status.");

@@ -5,6 +5,7 @@ import {
   getAllUsers,
   getAllCampuses,
   getAllMajors,
+  importUsers,
 } from "../../service/adminService";
 
 export default function AdminUserManagement() {
@@ -46,20 +47,20 @@ export default function AdminUserManagement() {
 
   const filteredUsers = isAnyFilterSelected
     ? users
-        .filter((u) => !u.roles?.includes("Admin"))
-        .filter((u) => {
-          return (
-            (filters.campus ? u.campusName === filters.campus : true) &&
-            (filters.role ? u.roles?.includes(filters.role) : true) &&
-            (filters.major ? u.majorName === filters.major : true) &&
-            (filters.search
-              ? Object.values(u)
-                  .join(" ")
-                  .toLowerCase()
-                  .includes(filters.search.toLowerCase())
-              : true)
-          );
-        })
+      .filter((u) => !u.roles?.includes("Admin"))
+      .filter((u) => {
+        return (
+          (filters.campus ? u.campusName === filters.campus : true) &&
+          (filters.role ? u.roles?.includes(filters.role) : true) &&
+          (filters.major ? u.majorName === filters.major : true) &&
+          (filters.search
+            ? Object.values(u)
+              .join(" ")
+              .toLowerCase()
+              .includes(filters.search.toLowerCase())
+            : true)
+        );
+      })
     : [];
 
   return (
@@ -67,12 +68,49 @@ export default function AdminUserManagement() {
       {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
         <h2 className="text-4xl font-bold text-orange-600">User Management</h2>
-        <button
-          onClick={() => navigate("/admin/users/add")}
-          className="flex items-center gap-2 bg-orange-600 text-white px-6 py-3 rounded-lg shadow-lg hover:bg-orange-700 transition"
-        >
-          <Plus size={20} /> Add User
-        </button>
+
+        <div className="flex gap-3">
+          {/* Hidden file input */}
+          <input
+            type="file"
+            id="excelInput"
+            accept=".xlsx, .xls"
+            className="hidden"
+            onChange={async (e) => {
+              const file = e.target.files[0];
+              if (!file) return;
+
+              const formData = new FormData();
+              formData.append("file", file);
+
+              try {
+                const res = await importUsers(formData);
+                alert("Import users successfully!");
+                const allUsers = await getAllUsers();
+                setUsers(Array.isArray(allUsers?.data) ? allUsers.data : []);
+              } catch (err) {
+                console.error(err);
+                alert("Failed to import users.");
+              }
+            }}
+          />
+
+          {/* Import button */}
+          <button
+            onClick={() => document.getElementById("excelInput").click()}
+            className="flex items-center gap-2 bg-green-600 text-white px-6 py-3 rounded-lg shadow-lg hover:bg-green-700 transition"
+          >
+            Import Users
+          </button>
+
+          {/* Add user button */}
+          <button
+            onClick={() => navigate("/admin/users/add")}
+            className="flex items-center gap-2 bg-orange-600 text-white px-6 py-3 rounded-lg shadow-lg hover:bg-orange-700 transition"
+          >
+            <Plus size={20} /> Add User
+          </button>
+        </div>
       </div>
 
       {/* Filters */}
@@ -164,9 +202,8 @@ export default function AdminUserManagement() {
                 <td className="p-3 text-gray-600">{user.campusName}</td>
                 <td className="p-3 text-gray-600">{user.majorName}</td>
                 <td
-                  className={`p-3 font-semibold ${
-                    user.isActive ? "text-green-600" : "text-red-600"
-                  }`}
+                  className={`p-3 font-semibold ${user.isActive ? "text-green-600" : "text-red-600"
+                    }`}
                 >
                   {user.isActive ? "Active" : "Inactive"}
                 </td>

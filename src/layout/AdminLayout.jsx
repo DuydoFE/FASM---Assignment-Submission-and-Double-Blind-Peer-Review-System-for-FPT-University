@@ -15,9 +15,6 @@ import React from "react";
 import { useDispatch } from "react-redux";
 import { logout } from "../redux/features/userSlice";
 import axios from "axios";
-
-// Nếu bạn có dùng redux-persist
-// Nếu không dùng thì import này sẽ không gây lỗi
 import { persistStore } from "redux-persist";
 import { store } from "../redux/store";
 
@@ -27,10 +24,8 @@ export default function AdminLayout() {
 
   const handleLogout = () => {
     try {
-      // 1) Reset Redux state
       dispatch(logout());
 
-      // 2) Xoá toàn bộ key token có thể có
       localStorage.removeItem("token");
       localStorage.removeItem("access_token");
       localStorage.removeItem("authToken");
@@ -39,24 +34,17 @@ export default function AdminLayout() {
       sessionStorage.removeItem("token");
       sessionStorage.removeItem("access_token");
 
-      // 3) Clear axios Authorization header nếu có
       if (axios?.defaults?.headers?.common["Authorization"]) {
         delete axios.defaults.headers.common["Authorization"];
       }
 
-      // 4) Purge redux-persist nếu dùng
       try {
         const persistor = persistStore(store);
         persistor.purge();
       } catch (err) {
-        // bỏ qua nếu không dùng redux persist
       }
 
-      // 5) Điều hướng về Login
       navigate("/login");
-
-      // OPTIONAL: reload trang để xoá mọi thứ trong memory
-      // window.location.replace("/login");
 
     } catch (error) {
       console.error("Logout error:", error);

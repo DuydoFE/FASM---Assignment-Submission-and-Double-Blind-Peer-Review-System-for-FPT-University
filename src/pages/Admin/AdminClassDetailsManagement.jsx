@@ -24,9 +24,9 @@ export default function AdminClassDetailsManagement() {
   const [loading, setLoading] = useState(false);
   const [file, setFile] = useState(null);
   const changedByUserId = 1;
-
-  // State Modal
+  const isClassActive = !!classInfo?.isActive;
   const [confirmModal, setConfirmModal] = useState({ show: false, user: null, type: "student" });
+  const isActive = classInfo?.status === "Active";
   const [addStudentModal, setAddStudentModal] = useState({ show: false });
   const [studentList, setStudentList] = useState([]);
   const [newStudent, setNewStudent] = useState({ userId: "", studentCode: "" });
@@ -35,7 +35,6 @@ export default function AdminClassDetailsManagement() {
   const [instructorList, setInstructorList] = useState([]);
   const [newInstructor, setNewInstructor] = useState({ userId: "" });
 
-  // --- 2. Cấu hình Style Tailwind cho Toast ---
   const contextClass = {
     success: "bg-green-50 text-green-600 border border-green-200",
     error: "bg-red-50 text-red-600 border border-red-200",
@@ -56,17 +55,16 @@ export default function AdminClassDetailsManagement() {
       setInstructors(
         Array.isArray(instructorRes?.data)
           ? instructorRes.data.map((inst) => ({
-              courseInstructorId: inst.id,
-              courseInstanceId: inst.courseInstanceId,
-              userId: inst.userId,
-              instructorName: inst.instructorName,
-              instructorEmail: inst.instructorEmail,
-            }))
+            courseInstructorId: inst.id,
+            courseInstanceId: inst.courseInstanceId,
+            userId: inst.userId,
+            instructorName: inst.instructorName,
+            instructorEmail: inst.instructorEmail,
+          }))
           : []
       );
     } catch (err) {
       console.error("❌ Error refreshing data:", err);
-      // Không cần toast lỗi ở đây để tránh spam nếu auto refresh
     }
   };
 
@@ -88,7 +86,6 @@ export default function AdminClassDetailsManagement() {
     if (id) fetchData();
   }, [id]);
 
-  // --- XỬ LÝ: XÓA THÀNH VIÊN ---
   const handleConfirmRemove = async () => {
     if (!confirmModal.user) return;
 
@@ -121,8 +118,11 @@ export default function AdminClassDetailsManagement() {
     }
   };
 
-  // --- XỬ LÝ: IMPORT EXCEL ---
   const handleImportFile = async () => {
+    if (classInfo?.isActive) {
+      toast.error("⚠️ Cannot import while the class is Active.");
+      return;
+    }
     if (!file) return toast.warn("⚠️ Please choose a file first!");
 
     try {
@@ -143,7 +143,8 @@ export default function AdminClassDetailsManagement() {
   const fetchUsersByRole = async (role) => {
     try {
       const res = await getUsersByRole(role);
-      return Array.isArray(res?.data) ? res.data : [];
+      const users = Array.isArray(res?.data) ? res.data : [];
+      return users.filter(u => u.campusId === classInfo?.campusId);
     } catch (err) {
       console.error(err);
       toast.error("❌ Failed to load users list!");
@@ -151,8 +152,12 @@ export default function AdminClassDetailsManagement() {
     }
   };
 
-  // --- 3. XỬ LÝ API: ADD STUDENT ---
   const handleAddStudent = async () => {
+    if (classInfo?.isActive) {
+      toast.error("⚠️ Cannot add students while the class is Active.");
+      return;
+    }
+
     if (!newStudent.userId && !newStudent.studentCode)
       return toast.warn("⚠️ Please select a student or enter student code!");
 
@@ -167,16 +172,13 @@ export default function AdminClassDetailsManagement() {
         changedByUserId,
       });
 
-      // Thông báo thành công
       toast.success("✅ Student added successfully!");
-      
       setAddStudentModal({ show: false });
       setNewStudent({ userId: "", studentCode: "" });
 
       await refreshData();
     } catch (err) {
       console.error(err);
-      // Lấy thông báo lỗi từ server
       const errorMsg = err?.response?.data?.message || "Failed to add student!";
       toast.error(`❌ ${errorMsg}`);
     } finally {
@@ -184,8 +186,11 @@ export default function AdminClassDetailsManagement() {
     }
   };
 
-  // --- 4. XỬ LÝ API: ADD INSTRUCTOR ---
   const handleAddInstructor = async () => {
+    if (classInfo?.isActive) {
+      toast.error("⚠️ Cannot add instructors while the class is Active.");
+      return;
+    }
     if (!newInstructor.userId) return toast.warn("⚠️ Please select an instructor!");
 
     try {
@@ -197,7 +202,6 @@ export default function AdminClassDetailsManagement() {
         isMainInstructor: true,
       });
 
-      // Thông báo thành công
       toast.success("✅ Instructor added successfully!");
 
       setAddInstructorModal({ show: false });
@@ -230,11 +234,9 @@ export default function AdminClassDetailsManagement() {
 
   return (
     <div className="space-y-6 relative">
-      {/* 5. Thêm ToastContainer với Custom Tailwind Classes */}
       <ToastContainer
         toastClassName={({ type }) =>
-          `${
-            contextClass[type || "default"]
+          `${contextClass[type || "default"]
           } relative flex p-3 min-h-[50px] rounded-lg justify-between overflow-hidden cursor-pointer shadow-lg mb-4 transform transition-all hover:scale-105 font-medium`
         }
         bodyClassName={() => "flex items-center text-sm px-2"}
@@ -256,21 +258,23 @@ export default function AdminClassDetailsManagement() {
       <div className="bg-white p-4 rounded-xl shadow-md space-y-2">
         <p><strong>Class Name:</strong> {classInfo.className || classInfo.sectionCode}</p>
         <p><strong>Course:</strong> {classInfo.courseName}</p>
-        <p><strong>Major:</strong> {classInfo.majorName}</p>
+        <p><strong>Status:</strong> {classInfo.isActive ? "Active" : "Deactive"}</p>
         <p><strong>Semester:</strong> {classInfo.semesterName}</p>
       </div>
 
       <div className="flex space-x-2">
         <button
           onClick={openAddStudentModal}
-          className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 shadow"
+          disabled={isClassActive}
+          className={`px-4 py-2 rounded ${isClassActive ? "bg-gray-300 cursor-not-allowed" : "bg-green-600 hover:bg-green-700 text-white"}`}
         >
           Add Student
         </button>
 
         <button
           onClick={openAddInstructorModal}
-          className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 shadow"
+          disabled={isClassActive}
+          className={`px-4 py-2 rounded ${isClassActive ? "bg-gray-300 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700 text-white"}`}
         >
           Add Instructor
         </button>
@@ -282,16 +286,16 @@ export default function AdminClassDetailsManagement() {
           <h3 className="text-lg font-semibold">👥 Class Members</h3>
 
           <div className="space-x-2 flex items-center">
-            <input 
-                type="file" 
-                accept=".xlsx,.xls" 
-                onChange={(e) => setFile(e.target.files[0])} 
-                className="text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-orange-50 file:text-orange-700 hover:file:bg-orange-100"
+            <input
+              type="file"
+              accept=".xlsx,.xls"
+              onChange={(e) => setFile(e.target.files[0])}
+              className="text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-orange-50 file:text-orange-700 hover:file:bg-orange-100"
             />
             <button
               onClick={handleImportFile}
-              className={`px-4 py-2 rounded text-white shadow ${loading ? "bg-gray-400 cursor-not-allowed" : "bg-green-600 hover:bg-green-700"}`}
-              disabled={loading}
+              disabled={isClassActive}
+              className={`px-4 py-2 rounded ${isClassActive ? "bg-gray-300 cursor-not-allowed" : "bg-green-600 hover:bg-green-700 text-white"}`}
             >
               Import Excel
             </button>
@@ -326,8 +330,9 @@ export default function AdminClassDetailsManagement() {
                   <td className="p-2">
                     <button
                       onClick={() => setConfirmModal({ show: true, user: u, type: "student" })}
-                      className="text-red-500 hover:underline font-medium"
-                      disabled={loading}
+                      className={`text-red-500 hover:underline font-medium ${isClassActive ? "cursor-not-allowed opacity-50" : ""
+                        }`}
+                      disabled={isClassActive}
                     >
                       Remove
                     </button>
@@ -365,8 +370,9 @@ export default function AdminClassDetailsManagement() {
                   <td className="p-2 text-center">
                     <button
                       onClick={() => setConfirmModal({ show: true, user: inst, type: "instructor" })}
-                      className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 text-xs shadow"
-                      disabled={loading}
+                      className={`px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 text-xs shadow ${isClassActive ? "cursor-not-allowed opacity-50 hover:bg-red-500" : ""
+                        }`}
+                      disabled={isClassActive}
                     >
                       Remove
                     </button>
