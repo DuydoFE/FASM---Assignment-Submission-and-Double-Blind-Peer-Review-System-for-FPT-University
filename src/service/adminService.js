@@ -128,6 +128,20 @@ export const createUser = async (userData) => {
   return res.data;
 };
 
+// Import users from Excel
+export const importUsers = async (file) => {
+  const formData = new FormData();
+  formData.append("file", file);
+
+  const res = await api.post("/Users/import", formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
+
+  return res.data;
+};
+
 // Lấy thông tin môn học theo ID
 export const getCourseById = async (id) => {
   const res = await api.get(`/Course/${id}`);
@@ -235,6 +249,12 @@ export const deleteCourseInstance = async (id) => {
 // Cập nhật Enroll Key cho lớp học
 export const updateEnrollKey = async (courseInstanceId, data) => {
   const res = await api.put(`/CourseInstance/${courseInstanceId}/enroll-key`, data);
+  return res.data;
+};
+
+// Bật/Tắt trạng thái lớp học
+export const toggleCourseStatus = async (id) => {
+  const res = await api.patch(`/CourseInstance/${id}/toggle-status`);
   return res.data;
 };
 

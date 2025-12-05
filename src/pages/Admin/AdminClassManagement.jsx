@@ -8,6 +8,8 @@ import {
   getAllCourses,
   getAllSemesters,
   createCourseInstance,
+  toggleCourseStatus,
+  updateCourseInstance,
 } from "../../service/adminService";
 
 export default function AdminClassManagement() {
@@ -23,6 +25,7 @@ export default function AdminClassManagement() {
     semester: "",
     course: "",
     search: "",
+    status: "",
   });
 
   const [showAddForm, setShowAddForm] = useState(false);
@@ -31,6 +34,17 @@ export default function AdminClassManagement() {
     semesterId: "",
     courseId: "",
     sectionCode: "",
+  });
+
+  const [showUpdateForm, setShowUpdateForm] = useState(false);
+  const [updateClass, setUpdateClass] = useState({
+    courseInstanceId: 0,
+    courseId: "",
+    semesterId: "",
+    campusId: "",
+    sectionCode: "",
+    enrollmentPassword: "",
+    requiresApproval: true
   });
 
   const contextClass = {
@@ -125,25 +139,92 @@ export default function AdminClassManagement() {
     const matchSearch =
       c.courseName?.toLowerCase().includes(filters.search.toLowerCase()) ||
       c.sectionCode?.toLowerCase().includes(filters.search.toLowerCase());
+
     const matchCourse = filters.course ? c.courseId === Number(filters.course) : true;
     const matchSemester = filters.semester ? c.semesterId === Number(filters.semester) : true;
-    return matchSearch && matchCourse && matchSemester;
+
+    const matchStatus =
+      filters.status === "active"
+        ? c.isActive === true
+        : filters.status === "deactive"
+          ? c.isActive === false
+          : true;
+
+    return matchSearch && matchCourse && matchSemester && matchStatus;
   });
 
-   return (
+  const handleToggleStatus = async (courseInstanceId, isActive) => {
+    if (!window.confirm(`Are you sure you want to set class to ${isActive ? "Deactive" : "Active"}?`)) {
+      return;
+    }
+
+    try {
+      await toggleCourseStatus(courseInstanceId);
+      toast.success("Status updated successfully!");
+
+      if (filters.campus) {
+        const res = await getCourseInstancesByCampusId(Number(filters.campus));
+        setClasses(Array.isArray(res?.data) ? res.data : []);
+      }
+    } catch (err) {
+      console.error(err);
+      const msg = err.response?.data?.message || "Update status failed!";
+      toast.error(msg);
+    }
+  };
+
+  const handleOpenUpdateForm = (c) => {
+    setUpdateClass({
+      courseInstanceId: c.courseInstanceId,
+      courseId: c.courseId,
+      semesterId: c.semesterId,
+      campusId: c.campusId,
+      sectionCode: c.sectionCode || "",
+      enrollmentPassword: c.enrollmentPassword || "",
+      requiresApproval: true
+    });
+    setShowUpdateForm(true);
+  };
+
+  const handleUpdateClassChange = (e) => {
+    setUpdateClass({ ...updateClass, [e.target.name]: e.target.value });
+  };
+
+  const handleUpdateClass = async () => {
+    if (!updateClass.sectionCode.trim()) {
+      toast.warn("Please enter the class name.");
+      return;
+    }
+
+    try {
+      await updateCourseInstance(updateClass);
+      toast.success("Class updated successfully!");
+      setShowUpdateForm(false);
+
+      if (filters.campus) {
+        const res = await getCourseInstancesByCampusId(Number(filters.campus));
+        setClasses(Array.isArray(res?.data) ? res.data : []);
+      }
+    } catch (err) {
+      console.error(err);
+      const msg = err.response?.data?.message || "Class update failed!";
+      toast.error(msg);
+    }
+  };
+
+  return (
     <div className="space-y-6 p-6 relative">
-      
+
       <ToastContainer
         toastClassName={({ type }) =>
-          `${
-            contextClass[type || "default"]
+          `${contextClass[type || "default"]
           } relative flex p-3 min-h-[50px] rounded-lg justify-between overflow-hidden cursor-pointer shadow-lg mb-4 transform transition-all hover:scale-105 font-medium`
         }
         bodyClassName={() => "flex items-center text-sm px-2"}
         position="top-right"
         autoClose={3000}
-        hideProgressBar={true} 
-        closeButton={false} 
+        hideProgressBar={true}
+        closeButton={false}
       />
 
       <h2 className="text-3xl font-bold text-orange-500 mb-4">🏫 Class Management</h2>
@@ -161,13 +242,23 @@ export default function AdminClassManagement() {
           ))}
         </select>
 
-       <select name="semester" value={filters.semester} onChange={handleFilterChange} className="border rounded-lg p-3 text-gray-700 hover:border-orange-400 transition flex-1 min-w-[150px]">
-           <option value="">All Semesters</option>
-           {semesters.map((s) => (<option key={s.semesterId} value={s.semesterId}>{s.name || s.semesterName}</option>))}
+        <select name="semester" value={filters.semester} onChange={handleFilterChange} className="border rounded-lg p-3 text-gray-700 hover:border-orange-400 transition flex-1 min-w-[150px]">
+          <option value="">All Semesters</option>
+          {semesters.map((s) => (<option key={s.semesterId} value={s.semesterId}>{s.name || s.semesterName}</option>))}
         </select>
         <select name="course" value={filters.course} onChange={handleFilterChange} className="border rounded-lg p-3 text-gray-700 hover:border-orange-400 transition flex-1 min-w-[150px]">
-           <option value="">All Courses</option>
-           {courses.map((course) => (<option key={course.courseId} value={course.courseId}>{course.name || course.courseName}</option>))}
+          <option value="">All Courses</option>
+          {courses.map((course) => (<option key={course.courseId} value={course.courseId}>{course.name || course.courseName}</option>))}
+        </select>
+        <select
+          name="status"
+          value={filters.status}
+          onChange={handleFilterChange}
+          className="border rounded-lg p-3 text-gray-700 hover:border-orange-400 transition flex-1 min-w-[150px]"
+        >
+          <option value="">All Status</option>
+          <option value="active">Active</option>
+          <option value="deactive">Deactive</option>
         </select>
         <input
           type="text"
@@ -216,6 +307,39 @@ export default function AdminClassManagement() {
         </div>
       )}
 
+      {showUpdateForm && (
+        <div className="bg-white p-5 rounded-2xl shadow-md mt-4 space-y-4 animate-fade-in-down">
+          <h3 className="text-xl font-semibold text-gray-700">Update Class</h3>
+          <div className="flex flex-wrap gap-4">
+            <select name="campusId" value={updateClass.campusId} onChange={handleUpdateClassChange} className="border rounded-lg p-3 flex-1 min-w-[150px]">
+              <option value="">Select Campus</option>
+              {campuses.map(c => <option key={c.campusId} value={c.campusId}>{c.name || c.campusName}</option>)}
+            </select>
+
+            <select name="semesterId" value={updateClass.semesterId} onChange={handleUpdateClassChange} className="border rounded-lg p-3 flex-1 min-w-[150px]">
+              <option value="">Select Semester</option>
+              {semesters.map(s => <option key={s.semesterId} value={s.semesterId}>{s.name || s.semesterName}</option>)}
+            </select>
+
+            <select name="courseId" value={updateClass.courseId} onChange={handleUpdateClassChange} className="border rounded-lg p-3 flex-1 min-w-[150px]">
+              <option value="">Select Course</option>
+              {courses.map(course => <option key={course.courseId} value={course.courseId}>{course.name || course.courseName}</option>)}
+            </select>
+
+            <input type="text" name="sectionCode" value={updateClass.sectionCode} onChange={handleUpdateClassChange} placeholder="Class Name" className="border rounded-lg p-3 flex-1 min-w-[150px]" />
+          </div>
+
+          <div className="flex gap-4">
+            <button onClick={handleUpdateClass} className="px-6 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition font-semibold shadow-sm">
+              Update
+            </button>
+            <button onClick={() => setShowUpdateForm(false)} className="px-6 py-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 transition font-semibold">
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* --- TABLE --- */}
       <div className="bg-white rounded-2xl shadow overflow-x-auto">
         {filters.campus ? (
@@ -229,28 +353,62 @@ export default function AdminClassManagement() {
                   <th className="p-3">Campus</th>
                   <th className="p-3">Students</th>
                   <th className="p-3">Assignments</th>
+                  <th className="p-3">Start Date</th>
+                  <th className="p-3">End Date</th>
+                  <th className="p-3">Status</th>
                   <th className="p-3">Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {displayedClasses.map((c) => (
-                  <tr key={c.courseInstanceId} className="border-b hover:bg-gray-50 transition">
-                    <td className="p-3 font-medium text-gray-800">{c.sectionCode || c.courseName}</td>
-                    <td className="p-3">{c.courseName}</td>
-                    <td className="p-3">{c.semesterName}</td>
-                    <td className="p-3">{c.campusName}</td>
-                    <td className="p-3">{c.studentCount}</td>
-                    <td className="p-3">{c.assignmentCount}</td>
-                    <td className="p-3">
-                      <button
-                        className="text-orange-500 hover:text-orange-700 font-semibold"
-                        onClick={() => handleViewDetail(c.courseInstanceId)}
-                      >
-                        View Detail
-                      </button>
-                    </td>
-                  </tr>
-                ))}
+                {displayedClasses.map((c) => {
+                  const formatDate = (dateStr) => {
+                    if (!dateStr || dateStr.startsWith("0001")) return "-";
+                    return new Date(dateStr).toLocaleDateString("en-GB");
+                  };
+
+                  return (
+                    <tr key={c.courseInstanceId} className="border-b hover:bg-gray-50 transition">
+                      <td className="p-3 font-medium text-gray-800">{c.sectionCode || c.courseName}</td>
+                      <td className="p-3">{c.courseName}</td>
+                      <td className="p-3">{c.semesterName}</td>
+                      <td className="p-3">{c.campusName}</td>
+                      <td className="p-3">{c.studentCount}</td>
+                      <td className="p-3">{c.assignmentCount}</td>
+                      <td className="p-3">{formatDate(c.startDate)}</td>
+                      <td className="p-3">{formatDate(c.endDate)}</td>
+                      <td className="p-3">
+                        <span
+                          className={`px-3 py-1 text-xs rounded-full font-semibold ${c.isActive
+                            ? "bg-green-100 text-green-700"
+                            : "bg-red-100 text-red-700"
+                            }`}
+                        >
+                          {c.isActive ? "Active" : "Deactive"}
+                        </span>
+                      </td>
+                      <td className="p-3">
+                        <button
+                          className="text-green-500 hover:text-green-700 font-semibold mr-2"
+                          onClick={() => handleOpenUpdateForm(c)}
+                        >
+                          Update
+                        </button>
+                        <button
+                          className="text-orange-500 hover:text-orange-700 font-semibold"
+                          onClick={() => handleViewDetail(c.courseInstanceId)}
+                        >
+                          View Detail
+                        </button>
+                        <button
+                          className="text-blue-500 hover:text-blue-700 font-semibold"
+                          onClick={() => handleToggleStatus(c.courseInstanceId, c.isActive)}
+                        >
+                          {c.isActive ? "Deactivate" : "Activate"}
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           ) : (<p className="p-6 text-center text-gray-500 font-medium">No classes found</p>)

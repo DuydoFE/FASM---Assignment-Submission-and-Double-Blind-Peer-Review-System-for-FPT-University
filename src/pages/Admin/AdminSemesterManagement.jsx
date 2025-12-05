@@ -6,7 +6,7 @@ import {
   updateSemester,
   deleteSemester,
 } from "../../service/adminService";
-import toast, { Toaster } from "react-hot-toast"; // ✅ import Toaster
+import toast, { Toaster } from "react-hot-toast";
 
 export default function AdminSemesterManagement() {
   const [semesters, setSemesters] = useState([]);
@@ -56,7 +56,6 @@ export default function AdminSemesterManagement() {
     `Fall ${academicYearName}`,
   ];
 
-  // Khi render form:
   <select
     className="border p-3 rounded-xl"
     value={newSemester.name}
@@ -189,14 +188,12 @@ export default function AdminSemesterManagement() {
     }
   };
 
-  // Filtered semesters by academic year
   const displayedSemesters = filterYearId
     ? semesters.filter((s) => s.academicYearId === Number(filterYearId))
     : [];
 
   return (
     <div className="bg-white p-6 rounded-2xl shadow-lg border border-gray-200">
-      {/* ✅ Thêm Toaster */}
       <Toaster position="top-right" reverseOrder={false} />
 
       <h2 className="text-3xl font-bold mb-6 text-orange-600">Semester Management</h2>

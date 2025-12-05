@@ -15,7 +15,7 @@ const tabs = [
 
 export default function AdminAccountSettings() {
   const [activeTab, setActiveTab] = useState("Personal Info");
-  const userId = useSelector((state) => state.user.userId); // lấy userId từ redux
+  const userId = useSelector((state) => state.user.userId);
   const [user, setUser] = useState({
     firstName: "",
     lastName: "",
@@ -29,7 +29,6 @@ export default function AdminAccountSettings() {
   });
   const [isEditing, setIsEditing] = useState(false);
 
-  // Lấy thông tin user khi component mount
   useEffect(() => {
     if (!userId) return;
 
@@ -47,8 +46,6 @@ export default function AdminAccountSettings() {
             phone: res.data.phone || "",
             address: res.data.address || "",
             website: res.data.website || "",
-
-            // thêm những field backend cần mà UI không hiển thị
             campusId: res.data.campusId ?? 1,
             majorId: res.data.majorId ?? 1,
             studentCode: res.data.studentCode ?? null,
@@ -83,8 +80,6 @@ export default function AdminAccountSettings() {
       };
 
       console.log("Updating with payload:", payload);
-
-      // 🔥 FIX HERE — truyền đúng 2 tham số
       const res = await updateUser(userId, payload);
 
       toast.success("User information updated successfully!");
