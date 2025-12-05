@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import * as echarts from 'echarts';
 import { Users, Clock, CheckCircle, ChevronDown, Calendar } from 'lucide-react';
-import { getAllAcademicYears } from '../../service/adminService';
+import { getAllAcademicYears, getSemestersByAcademicYear, getSemesterStatistics } from '../../service/adminService';
 
 function AdminDashboard() {
   const [selectedAcademicYear, setSelectedAcademicYear] = useState(null);
@@ -9,31 +9,36 @@ function AdminDashboard() {
   const [yearDropdownOpen, setYearDropdownOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [academicYears, setAcademicYears] = useState([]);
+  const [semesters, setSemesters] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadingSemesters, setLoadingSemesters] = useState(false);
+  const [loadingStatistics, setLoadingStatistics] = useState(false);
+  const [statisticsData, setStatisticsData] = useState(null);
   const chartRef = useRef(null);
   const gradeChartRef = useRef(null);
 
+  // Default values (will be replaced with API data)
   const userStats = {
-    instructors: 1234,
-    students: 1613
+    instructors: statisticsData?.totalInstructors || 0,
+    students: statisticsData?.totalStudents || 0
   };
 
   const assignmentStatus = {
-    active: 234,
-    inReview: 89,
-    closed: 1456
+    active: statisticsData?.totalActiveAssignments || 0,
+    inReview: statisticsData?.totalInReviewAssignments || 0,
+    closed: statisticsData?.totalClosedAssignments || 0
   };
 
   const rubricStats = {
-    rubrics: 456,
-    criteria: 892
+    rubrics: statisticsData?.totalRubricsUsed || 0,
+    criteria: statisticsData?.totalCriteriaUsed || 0
   };
 
-  const lowSubmissionAssignments = [
-    { name: 'React Fundamentals Quiz', course: 'CS101-A', percentage: 28 },
-    { name: 'Database Design Project', course: 'CS202-B', percentage: 35 },
-    { name: 'Algorithm Analysis', course: 'CS301-C', percentage: 42 }
-  ];
+  const lowSubmissionAssignments = statisticsData?.lowestSubmissionAssignments?.map(item => ({
+    name: item.assignmentTitle,
+    course: `${item.courseName} - ${item.className}`,
+    percentage: item.submissionRate
+  })) || [];
 
   // Fetch academic years from API
   useEffect(() => {
@@ -42,16 +47,25 @@ function AdminDashboard() {
         setLoading(true);
         const response = await getAllAcademicYears();
         
-        // Extract academic years from the response data
-        const years = response.data.map(year => ({
-          id: year.academicYearId,
-          name: year.name,
-          campusId: year.campusId,
-          campusName: year.campusName,
-          startDate: year.startDate,
-          endDate: year.endDate,
-          semesterCount: year.semesterCount
-        }));
+        // Get current date
+        const now = new Date();
+        
+        // Extract academic years from the response data and filter out future ones
+        const years = response.data
+          .map(year => ({
+            id: year.academicYearId,
+            name: year.name,
+            campusId: year.campusId,
+            campusName: year.campusName,
+            startDate: year.startDate,
+            endDate: year.endDate,
+            semesterCount: year.semesterCount
+          }))
+          .filter(year => {
+            // Only include academic years that have already started
+            const startDate = new Date(year.startDate);
+            return startDate <= now;
+          });
         
         setAcademicYears(years);
         
@@ -70,13 +84,95 @@ function AdminDashboard() {
     fetchAcademicYears();
   }, []);
 
+  // Fetch semesters when academic year is selected
   useEffect(() => {
-    console.log('Submission Chart useEffect triggered');
-    console.log('chartRef.current:', chartRef.current);
-    
-    if (chartRef.current) {
-      console.log('Initializing submission chart...');
+    const fetchSemesters = async () => {
+      if (!selectedAcademicYear?.id) {
+        setSemesters([]);
+        setSelectedSemester('');
+        return;
+      }
+
+      try {
+        setLoadingSemesters(true);
+        const response = await getSemestersByAcademicYear(selectedAcademicYear.id);
+        
+        // Get current date
+        const now = new Date();
+        
+        // Extract semesters from the response data and filter out future ones
+        const semesterList = response.data
+          .map(semester => ({
+            id: semester.semesterId,
+            name: semester.name,
+            startDate: semester.startDate,
+            endDate: semester.endDate,
+            academicYearId: semester.academicYearId
+          }))
+          .filter(semester => {
+            // Only include semesters that have already started
+            const startDate = new Date(semester.startDate);
+            return startDate <= now;
+          });
+        
+        setSemesters(semesterList);
+        
+        // Set the first semester as selected if available
+        if (semesterList.length > 0) {
+          setSelectedSemester(semesterList[0].name);
+        } else {
+          setSelectedSemester('');
+        }
+      } catch (error) {
+        console.error('Error fetching semesters:', error);
+        setSemesters([]);
+        setSelectedSemester('');
+      } finally {
+        setLoadingSemesters(false);
+      }
+    };
+
+    fetchSemesters();
+  }, [selectedAcademicYear]);
+
+  // Fetch statistics when academic year or semester changes
+  useEffect(() => {
+    const fetchStatistics = async () => {
+      if (!selectedAcademicYear?.id || !selectedSemester) {
+        setStatisticsData(null);
+        return;
+      }
+
+      // Find the semester ID from the selected semester name
+      const semester = semesters.find(s => s.name === selectedSemester);
+      if (!semester) {
+        return;
+      }
+
+      try {
+        setLoadingStatistics(true);
+        const response = await getSemesterStatistics(selectedAcademicYear.id, semester.id);
+        
+        if (response.statusCode === 200 && response.data) {
+          setStatisticsData(response.data);
+        }
+      } catch (error) {
+        console.error('Error fetching semester statistics:', error);
+        setStatisticsData(null);
+      } finally {
+        setLoadingStatistics(false);
+      }
+    };
+
+    fetchStatistics();
+  }, [selectedAcademicYear, selectedSemester, semesters]);
+
+  // Update submission chart when statistics data changes
+  useEffect(() => {
+    if (chartRef.current && statisticsData?.submissionRate) {
       const myChart = echarts.init(chartRef.current);
+      
+      const submissionData = statisticsData.submissionRate;
       
       const option = {
         tooltip: {
@@ -124,21 +220,18 @@ function AdminDashboard() {
               show: false
             },
             data: [
-              { value: 450, name: 'Not Submitted', itemStyle: { color: '#ef4444' } },
-              { value: 820, name: 'Submitted', itemStyle: { color: '#3b82f6' } },
-              { value: 1200, name: 'Graded', itemStyle: { color: '#22c55e' } }
+              { value: submissionData.notSubmitted.count, name: 'Not Submitted', itemStyle: { color: '#ef4444' } },
+              { value: submissionData.submitted.count, name: 'Submitted', itemStyle: { color: '#3b82f6' } },
+              { value: submissionData.graded.count, name: 'Graded', itemStyle: { color: '#22c55e' } }
             ]
           }
         ]
       };
       
       myChart.setOption(option);
-      console.log('Submission chart option set successfully');
       
-      // Ensure chart renders after a short delay
       setTimeout(() => {
         myChart.resize();
-        console.log('Submission chart resized');
       }, 100);
       
       const handleResize = () => {
@@ -152,13 +245,15 @@ function AdminDashboard() {
         myChart.dispose();
       };
     }
-  }, []);
+  }, [statisticsData]);
 
+  // Update grade distribution chart when statistics data changes
   useEffect(() => {
-    if (gradeChartRef.current) {
-      const ranges = ["0-1", "1-2", "2-3", "3-4", "4-5", "5-6", "6-7", "7-8", "8-9", "9-10"];
-      const counts = [45, 58, 89, 123, 167, 278, 356, 423, 389, 315];
-      const percents = [2.1, 2.7, 4.2, 5.8, 7.8, 13.1, 16.7, 19.9, 18.3, 14.8];
+    if (gradeChartRef.current && statisticsData?.scoreDistribution) {
+      const scoreData = statisticsData.scoreDistribution;
+      const ranges = scoreData.map(item => item.rangeLabel);
+      const counts = scoreData.map(item => item.count);
+      const percents = scoreData.map(item => item.percentage);
       
       const chart = echarts.init(gradeChartRef.current);
       
@@ -255,14 +350,19 @@ function AdminDashboard() {
         chart.dispose();
       };
     }
-  }, []);
+  }, [statisticsData]);
 
   return (
     <div className="min-h-screen p-8 ">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="flex justify-between items-center mb-8">
-          <h1 className="text-4xl font-bold text-gray-900">System Overview</h1>
+          <div>
+            <h1 className="text-4xl font-bold text-gray-900">System Overview</h1>
+            {loadingStatistics && (
+              <p className="text-sm text-gray-500 mt-2">Loading statistics...</p>
+            )}
+          </div>
           <div className="flex items-center gap-3">
             {/* Academic Year Dropdown */}
             <div className="relative">
@@ -304,26 +404,35 @@ function AdminDashboard() {
             <div className="relative">
               <button
                 onClick={() => setDropdownOpen(!dropdownOpen)}
-                className="flex items-center gap-2 bg-white px-4 py-2 rounded-lg border border-gray-200 cursor-pointer hover:bg-gray-50 transition-colors"
+                disabled={!selectedAcademicYear || loadingSemesters}
+                className="flex items-center gap-2 bg-white px-4 py-2 rounded-lg border border-gray-200 cursor-pointer hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <Calendar className="w-4 h-4 text-gray-600" />
-                <span className="font-medium text-gray-700">{selectedSemester}</span>
+                <span className="font-medium text-gray-700">
+                  {loadingSemesters ? 'Loading...' : selectedSemester || 'Select Semester'}
+                </span>
                 <ChevronDown className="w-4 h-4 text-gray-500" />
               </button>
-              {dropdownOpen && (
+              {dropdownOpen && !loadingSemesters && (
                 <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-10">
-                  {semesters.map((semester) => (
+                  {semesters.length > 0 ? semesters.map((semester) => (
                     <button
-                      key={semester}
+                      key={semester.id}
                       onClick={() => {
-                        setSelectedSemester(semester);
+                        setSelectedSemester(semester.name);
                         setDropdownOpen(false);
                       }}
-                      className="w-full text-left px-4 py-2 hover:bg-gray-50 first:rounded-t-lg last:rounded-b-lg"
+                      className={`w-full text-left px-4 py-2 hover:bg-gray-50 first:rounded-t-lg last:rounded-b-lg ${
+                        selectedSemester === semester.name ? 'bg-blue-50 text-blue-600' : ''
+                      }`}
                     >
-                      {semester}
+                      {semester.name}
                     </button>
-                  ))}
+                  )) : (
+                    <div className="px-4 py-2 text-gray-500 text-sm">
+                      No semesters found
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -350,15 +459,15 @@ function AdminDashboard() {
 
             {/* Assignment Status Overview */}
             <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-              <h2 className="text-xl font-semibold text-gray-900 mb-6">Assignment Status Overview</h2>
+              <h2 className="text-xl font-semibold text-gray-900 mb-6">Ongoing Assignment Overview</h2>
               <div className="grid grid-cols-3 gap-4">
                 {/* Active */}
-                <div className="bg-blue-50 rounded-lg p-6">
-                  <div className="flex items-center gap-2 text-blue-600 mb-3">
+                <div className="bg-green-50 rounded-lg p-6">
+                  <div className="flex items-center gap-2 text-green-600 mb-3">
                     <Clock className="w-5 h-5" />
                     <span className="text-sm font-medium">Active</span>
                   </div>
-                  <div className="text-3xl font-bold text-blue-700">{assignmentStatus.active}</div>
+                  <div className="text-3xl font-bold text-green-700">{assignmentStatus.active}</div>
                 </div>
 
                 {/* In Review */}
@@ -371,19 +480,19 @@ function AdminDashboard() {
                 </div>
 
                 {/* Closed */}
-                <div className="bg-gray-50 rounded-lg p-6">
-                  <div className="flex items-center gap-2 text-gray-600 mb-3">
+                <div className="bg-red-50 rounded-lg p-6">
+                  <div className="flex items-center gap-2 text-red-600 mb-3">
                     <CheckCircle className="w-5 h-5" />
                     <span className="text-sm font-medium">Closed</span>
                   </div>
-                  <div className="text-3xl font-bold text-gray-700">{assignmentStatus.closed.toLocaleString()}</div>
+                  <div className="text-3xl font-bold text-red-700">{assignmentStatus.closed.toLocaleString()}</div>
                 </div>
               </div>
             </div>
 
             {/* Rubric and Criteria Overview */}
             <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-              <h2 className="text-xl font-semibold text-gray-900 mb-6">Rubric and Criteria Overview</h2>
+              <h2 className="text-xl font-semibold text-gray-900 mb-6">Rubric Template and Criteria Template Overview</h2>
               <div className="grid grid-cols-2 gap-6">
                 <div className="bg-gray-50 rounded-lg p-6">
                   <div className="text-sm text-gray-600 mb-2">Rubrics</div>

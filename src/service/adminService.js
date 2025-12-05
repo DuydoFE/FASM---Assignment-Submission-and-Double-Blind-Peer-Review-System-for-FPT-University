@@ -705,3 +705,14 @@ export const getImportantConfigs = async () => {
   const res = await api.get("/SystemConfig/important-configs");
   return res.data;
 };
+
+// Lấy thống kê học kỳ (sinh viên, giảng viên, trạng thái assignment, phân phối điểm, tỉ lệ nộp)
+export const getSemesterStatistics = async (academicYearId, semesterId) => {
+  const res = await api.get("/Users/semester-statistics", {
+    params: {
+      academicYearId,
+      semesterId,
+    },
+  });
+  return res.data;
+};
