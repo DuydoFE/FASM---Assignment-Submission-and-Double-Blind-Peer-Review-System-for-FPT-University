@@ -96,7 +96,7 @@ function InstructorManageCriteria() {
             // Update local state
             setRubricTitle(rubricData.title);
 
-            toast.success('Rubric updated successfully');
+            toast.success('Rubric updated successfully!');
             setShowEditRubricModal(false);
         } catch (error) {
             console.error('Failed to update rubric:', error);
@@ -125,7 +125,7 @@ function InstructorManageCriteria() {
 
             setCriteria(prev => prev.filter(c => c.criteriaId !== deleteConfirm.criterionId));
 
-            toast.success('Criterion deleted successfully');
+            toast.success('Criterion deleted successfully!');
             setDeleteConfirm({ show: false, criterionId: null, criterionTitle: '' });
         } catch (error) {
             console.error('Failed to delete criterion:', error);
@@ -156,7 +156,7 @@ function InstructorManageCriteria() {
                 }
             }
 
-            toast.success('Criterion added successfully');
+            toast.success('Criterion added successfully!');
             setShowAddModal(false);
         } catch (error) {
             console.error('Failed to add criterion:', error);
@@ -191,7 +191,7 @@ function InstructorManageCriteria() {
                 }
             }
 
-            toast.success('Criterion updated successfully');
+            toast.success('Criterion updated successfully!');
             setShowEditModal(false);
             setEditingCriterion(null);
         } catch (error) {
@@ -308,7 +308,7 @@ function InstructorManageCriteria() {
                             className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors"
                         >
                             <Plus size={20} />
-                            Add Criteria
+                            Add Criterion
                         </button>
                     )}
                 </div>
