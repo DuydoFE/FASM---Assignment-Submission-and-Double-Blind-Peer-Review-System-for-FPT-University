@@ -1,54 +1,67 @@
 import React, { useState, useEffect } from 'react';
 import { X, Calendar } from 'lucide-react';
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
 
 const UpdateDeadlineModal = ({ isOpen, onClose, onSave, assignment }) => {
-  const [newDeadline, setNewDeadline] = useState('');
-  const [newTime, setNewTime] = useState('');
+  const [newDeadline, setNewDeadline] = useState(null);
 
   useEffect(() => {
     if (assignment && isOpen) {
-      // Format date for input
-      const [day, month, year] = assignment.deadline.split('/');
-      const formattedDate = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
-      setNewDeadline(formattedDate);
-
-      // Format time for input
-      const timeArr = assignment.time.split(':');
-      const formattedTime = `${timeArr[0].padStart(2, '0')}:${timeArr[1].padStart(2, '0')}`;
-      setNewTime(formattedTime);
+      // Parse the assignment deadline and time to create a Date object
+      if (assignment.deadline && assignment.time) {
+        const [day, month, year] = assignment.deadline.split('/');
+        const [hours, minutes] = assignment.time.split(':');
+        const parsedDate = new Date(year, month - 1, day, hours, minutes); // month is 0-indexed
+        setNewDeadline(parsedDate);
+      } else if (assignment.deadline) {
+        // If there's no time component, just parse the date
+        const [day, month, year] = assignment.deadline.split('/');
+        const parsedDate = new Date(year, month - 1, day);
+        setNewDeadline(parsedDate);
+      }
     }
   }, [assignment, isOpen]);
 
   if (!isOpen || !assignment) return null;
 
   const handleSubmit = () => {
-    if (!newDeadline || !newTime) {
-      alert('Please enter both date and time');
+    if (!newDeadline) {
+      alert('Please select a date and time');
       return;
     }
-    onSave(newDeadline, newTime);
+
+    // Format the date to the expected format
+    const formattedDate = newDeadline.toISOString().split('T')[0]; // YYYY-MM-DD
+    const formattedTime = newDeadline.toTimeString().substring(0, 5); // HH:MM
+
+    onSave(formattedDate, formattedTime);
   };
 
   const handleClose = () => {
-    setNewDeadline('');
-    setNewTime('');
+    setNewDeadline(null);
     onClose();
   };
 
+  // Get current time to prevent past dates/times
+  const now = new Date();
+
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-xl font-bold text-gray-900">Extend Deadline</h2>
-          <button
-            onClick={handleClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors"
-          >
-            <X className="w-5 h-5" />
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-hidden flex flex-col">
+        <div className="flex justify-between items-center p-6 border-b border-gray-200">
+          <div className="flex items-center gap-3">
+            <div className="bg-orange-100 p-2 rounded-lg">
+              <Calendar className="w-6 h-6 text-orange-600" />
+            </div>
+            <h2 className="text-xl font-bold text-gray-900">Extend Deadline</h2>
+          </div>
+          <button onClick={handleClose} className="text-gray-400 hover:text-gray-600 transition-colors">
+            <X className="w-6 h-6" />
           </button>
         </div>
 
-        <div className="space-y-4 mb-6">
+        <div className="flex-1 overflow-y-auto p-6 space-y-6">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Assignment: <span className="font-semibold text-gray-900">{assignment.title}</span>
@@ -57,47 +70,39 @@ const UpdateDeadlineModal = ({ isOpen, onClose, onSave, assignment }) => {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              New Date <span className="text-red-500">*</span>
+              New Deadline <span className="text-red-500">*</span>
             </label>
-            <input
-              type="date"
-              value={newDeadline}
-              onChange={(e) => setNewDeadline(e.target.value)}
+            <DatePicker
+              selected={newDeadline}
+              onChange={(date) => setNewDeadline(date)}
+              showTimeSelect
+              timeIntervals={1}
+              dateFormat="MMM d, yyyy h:mm aa"
+              minDate={now}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              New Time <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="time"
-              value={newTime}
-              onChange={(e) => setNewTime(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none"
+              placeholderText="Select new deadline and time"
             />
           </div>
 
           <div className="bg-gray-50 p-3 rounded-lg">
             <p className="text-sm text-gray-600">
-              <span className="font-medium">Current deadline:</span> {assignment.deadline} at {assignment.time}
+              <span className="font-medium">Current deadline:</span> {assignment.deadline} at {assignment.time || 'N/A'}
             </p>
           </div>
         </div>
 
-        <div className="flex gap-3 justify-end">
+        <div className="border-t border-gray-200 p-6 bg-gray-50 flex gap-3 justify-end">
           <button
             onClick={handleClose}
-            className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+            className="px-6 py-2.5 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 font-medium transition-colors"
           >
             Cancel
           </button>
           <button
             onClick={handleSubmit}
-            className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 flex items-center gap-2 transition-colors"
+            className="px-6 py-2.5 bg-orange-500 text-white rounded-lg hover:bg-orange-600 flex items-center gap-2 transition-colors"
           >
-            <Calendar className="w-4 h-4" />
+            <Calendar className="w-5 h-5" />
             Extend
           </button>
         </div>
