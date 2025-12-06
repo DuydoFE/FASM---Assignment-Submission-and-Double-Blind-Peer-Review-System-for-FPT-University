@@ -273,7 +273,7 @@ const InstructorSubmissionDetail = () => {
       )}
 
       {/* Submitted File */}
-      {submissionData?.fileUrl && (
+      {submissionData?.fileUrl && submissionData.fileUrl !== 'Not Submitted' && (
         <div className="mb-8">
           <h3 className="text-lg font-medium text-gray-800 mb-4">Submitted File</h3>
 
@@ -310,7 +310,7 @@ const InstructorSubmissionDetail = () => {
       )}
 
       {/* File Preview Placeholder */}
-      {submissionData?.fileUrl && (
+      {submissionData?.fileUrl && submissionData.fileUrl !== 'Not Submitted' && (
         <div className="mb-8">
           <div className="border border-gray-200 rounded-lg p-8 bg-gray-50">
             <div className="text-center">
