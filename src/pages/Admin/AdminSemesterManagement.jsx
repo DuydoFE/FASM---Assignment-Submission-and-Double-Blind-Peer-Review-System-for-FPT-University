@@ -56,10 +56,70 @@ export default function AdminSemesterManagement() {
     `Fall ${academicYearName}`,
   ];
 
+  const getPresetDates = (name, academicYearObj) => {
+    if (!academicYearObj || !academicYearObj.name) return { startDate: "", endDate: "" };
+
+    const parsedYear = academicYearObj.name.match(/^(\d{4})/)?.[1];
+    if (!parsedYear) return { startDate: "", endDate: "" };
+
+    const y = Number(parsedYear);
+
+    const format = (date) =>
+      `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(
+        date.getDate()
+      ).padStart(2, "0")}T${String(date.getHours()).padStart(2, "0")}:${String(
+        date.getMinutes()
+      ).padStart(2, "0")}`;
+
+    let start, end;
+
+    switch (name) {
+      case "Spring":
+        start = new Date(y, 0, 1, 0, 0, 0, 0);
+        end = new Date(y, 3, 30, 23, 59, 59, 999);
+        break;
+
+      case "Summer":
+        start = new Date(y, 4, 1, 0, 0, 0, 0);
+        end = new Date(y, 7, 31, 23, 59, 59, 999);
+        break;
+
+      case "Fall":
+        start = new Date(y, 8, 1, 0, 0, 0, 0);
+        end = new Date(y, 11, 31, 23, 59, 59, 999);
+        break;
+
+      default:
+        start = new Date(y, 0, 1, 0, 0, 0, 0);
+        end = new Date(y, 11, 31, 23, 59, 59, 999);
+    }
+
+    return {
+      startDate: format(start),
+      endDate: format(end),
+    };
+  };
+
   <select
     className="border p-3 rounded-xl"
     value={newSemester.name}
-    onChange={(e) => setNewSemester({ ...newSemester, name: e.target.value })}
+    onChange={(e) => {
+      const updatedName = e.target.value;
+      const selectedYearObj = academicYears.find(
+        (y) => y.academicYearId === Number(newSemester.academicYearId)
+      );
+
+      const shortName = updatedName.split(" ")[0];
+
+      const dates = getPresetDates(shortName, selectedYearObj);
+
+      setNewSemester({
+        ...newSemester,
+        name: updatedName,
+        startDate: dates.startDate,
+        endDate: dates.endDate,
+      });
+    }}
   >
     <option value="">Select Semester Name</option>
     {newSemester.academicYearId &&
@@ -70,9 +130,7 @@ export default function AdminSemesterManagement() {
           key={option}
           value={option}
           disabled={semesters.some(
-            (s) =>
-              s.name === option &&
-              s.academicYearId === newSemester.academicYearId
+            (s) => s.name === option && s.academicYearId === newSemester.academicYearId
           )}
         >
           {option}
@@ -80,74 +138,29 @@ export default function AdminSemesterManagement() {
       ))}
   </select>
 
-  const handleStartDateChange = (value) => {
-    const selectedYear = academicYears.find(
-      (y) => y.academicYearId === Number(newSemester.academicYearId)
-    );
-    if (!selectedYear) return setNewSemester({ ...newSemester, startDate: value });
+  const handleSubmit = async () => {
+    if (!newSemester.name || !newSemester.startDate || !newSemester.endDate)
+      return toast.error("Please fill all fields");
 
-    const start = new Date(value);
-    const yearStart = new Date(selectedYear.startDate);
-    const yearEnd = new Date(selectedYear.endDate);
+    const formatForAPI = (value) => {
+      if (!value) return null;
+      return value.length === 16 ? value + ":00" : value;
+    };
 
-    if (start < yearStart || start > yearEnd) {
-      toast.error("Start date must be within the selected academic year");
-      return;
-    }
-
-    setNewSemester({ ...newSemester, startDate: value });
-  };
-
-  const handleEndDateChange = (value) => {
-    const selectedYear = academicYears.find(
-      (y) => y.academicYearId === Number(newSemester.academicYearId)
-    );
-    if (!selectedYear) return setNewSemester({ ...newSemester, endDate: value });
-
-    const end = new Date(value);
-    const yearStart = new Date(selectedYear.startDate);
-    const yearEnd = new Date(selectedYear.endDate);
-
-    if (end < yearStart || end > yearEnd) {
-      toast.error("End date must be within the selected academic year");
-      return;
-    }
-
-    setNewSemester({ ...newSemester, endDate: value });
-  };
-
-  const handleAdd = async () => {
-    if (!newSemester.academicYearId) return toast.error("Please select an academic year");
-    if (!newSemester.name.trim()) return toast.error("Please enter semester name");
-    if (!newSemester.startDate || !newSemester.endDate) return toast.error("Please select start and end date");
-
-    if (
-      semesters.some(
-        (s) =>
-          s.name === newSemester.name &&
-          s.academicYearId === newSemester.academicYearId
-      )
-    ) {
-      return toast.error("Semester name already exists for this academic year");
-    }
+    const payload = {
+      academicYearId: Number(newSemester.academicYearId),
+      name: newSemester.name,
+      startDate: formatForAPI(newSemester.startDate),
+      endDate: formatForAPI(newSemester.endDate),
+    };
 
     try {
-      const res = await createSemester(newSemester);
-      if (res?.data) {
-        const academicYear = academicYears.find(
-          (y) => y.academicYearId === res.data.academicYearId
-        );
-
-        setSemesters([
-          ...semesters,
-          { ...res.data, academicYearName: academicYear?.name || "" },
-        ]);
-        setNewSemester({ academicYearId: "", name: "", startDate: "", endDate: "" });
-        setShowAddForm(false);
-        toast.success("Semester created successfully");
-      }
-    } catch {
-      toast.error("Failed to create semester");
+      await createSemester(payload);
+      toast.success("Semester created!");
+      loadSemesters();
+      setShowAddForm(false);
+    } catch (err) {
+      toast.error(err?.response?.data?.message || "Error creating semester");
     }
   };
 
@@ -161,13 +174,23 @@ export default function AdminSemesterManagement() {
     }
   };
 
+  const normalizeDate = (value) => {
+    if (!value) return null;
+    return value.length === 16 ? value + ":00" : value;
+  };
+
   const handleSaveEdit = async () => {
     if (!editing.academicYearId) return toast.error("Please select an academic year");
     if (!editing.name.trim()) return toast.error("Please enter semester name");
     if (!editing.startDate || !editing.endDate) return toast.error("Please select start and end date");
 
     try {
-      const res = await updateSemester(editing);
+      const payload = {
+        ...editing,
+        startDate: normalizeDate(editing.startDate),
+        endDate: normalizeDate(editing.endDate),
+      };
+      const res = await updateSemester(payload);
       if (res?.data) {
         const academicYear = academicYears.find(
           (y) => y.academicYearId === res.data.academicYearId
@@ -242,7 +265,22 @@ export default function AdminSemesterManagement() {
           <select
             className="border p-3 rounded-xl"
             value={newSemester.name}
-            onChange={(e) => setNewSemester({ ...newSemester, name: e.target.value })}
+            onChange={(e) => {
+              const updatedName = e.target.value;
+
+              const selectedYear = academicYears.find(
+                (y) => y.academicYearId === Number(newSemester.academicYearId)
+              );
+
+              const dates = getPresetDates(updatedName.split(" ")[0], selectedYear);
+
+              setNewSemester({
+                ...newSemester,
+                name: updatedName,
+                startDate: dates.startDate,
+                endDate: dates.endDate,
+              });
+            }}
           >
             <option value="">Select Semester Name</option>
             {newSemester.academicYearId &&
@@ -266,21 +304,24 @@ export default function AdminSemesterManagement() {
           </select>
 
           <input
-            type="date"
-            className="border p-3 rounded-xl"
+            type="datetime-local"
             value={newSemester.startDate}
-            onChange={(e) => handleStartDateChange(e.target.value)}
+            onChange={(e) =>
+              setNewSemester({ ...newSemester, startDate: e.target.value })
+            }
           />
 
           <input
-            type="date"
-            className="border p-3 rounded-xl"
+            type="datetime-local"
             value={newSemester.endDate}
-            onChange={(e) => handleEndDateChange(e.target.value)}
+            onChange={(e) =>
+              setNewSemester({ ...newSemester, endDate: e.target.value })
+            }
           />
 
+
           <button
-            onClick={handleAdd}
+            onClick={handleSubmit}
             className="col-span-4 bg-green-500 text-white px-6 py-3 rounded-xl hover:bg-green-600"
           >
             Save
@@ -337,9 +378,9 @@ export default function AdminSemesterManagement() {
                 <td className="p-3">
                   {editing?.semesterId === sem.semesterId ? (
                     <input
-                      type="date"
+                      type="datetime-local"
                       className="border p-2 rounded-lg"
-                      value={editing.startDate}
+                      value={editing.startDate || ""}
                       onChange={(e) => setEditing({ ...editing, startDate: e.target.value })}
                     />
                   ) : (
@@ -349,9 +390,9 @@ export default function AdminSemesterManagement() {
                 <td className="p-3">
                   {editing?.semesterId === sem.semesterId ? (
                     <input
-                      type="date"
+                      type="datetime-local"
                       className="border p-2 rounded-lg"
-                      value={editing.endDate}
+                      value={editing.endDate || ""}
                       onChange={(e) => setEditing({ ...editing, endDate: e.target.value })}
                     />
                   ) : (
@@ -388,7 +429,13 @@ export default function AdminSemesterManagement() {
                     <>
                       {/* Edit */}
                       <button
-                        onClick={() => setEditing({ ...sem })}
+                        onClick={() =>
+                          setEditing({
+                            ...sem,
+                            startDate: sem.startDate ? sem.startDate.slice(0, 16) : "",
+                            endDate: sem.endDate ? sem.endDate.slice(0, 16) : "",
+                          })
+                        }
                         className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600"
                       >
                         Edit
@@ -434,7 +481,10 @@ export default function AdminSemesterManagement() {
             <div className="flex justify-end gap-3">
               <button
                 className="px-4 py-2 bg-gray-300 rounded-lg hover:bg-gray-400"
-                onClick={() => setConfirmModal({ ...confirmModal, isOpen: false })}
+                onClick={() => {
+                  setConfirmModal({ ...confirmModal, isOpen: false });
+                  if (confirmModal.type === "edit") setEditing(null);
+                }}
               >
                 Cancel
               </button>
