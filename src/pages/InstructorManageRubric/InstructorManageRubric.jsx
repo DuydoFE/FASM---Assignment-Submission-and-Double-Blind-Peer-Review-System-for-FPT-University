@@ -10,6 +10,7 @@ const InstructorManageRubric = () => {
     const currentUser = getCurrentAccount();
     const navigate = useNavigate();
     const [searchQuery, setSearchQuery] = useState('');
+    const [rubricSearchQuery, setRubricSearchQuery] = useState('');
     const [rubrics, setRubrics] = useState([]);
     const [templates, setTemplates] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -77,9 +78,28 @@ const InstructorManageRubric = () => {
         fetchRubrics();
     }, []);
 
-    const filteredRubrics = rubrics.filter(rubric =>
-        rubric.title.toLowerCase().includes(searchQuery.toLowerCase())
+    const filteredRubrics = rubrics.filter(rubric => {
+        const query = rubricSearchQuery.toLowerCase();
+        const title = rubric.title?.toLowerCase() || '';
+        const courseClass = rubric.assignmentsUsingTemplate?.[0]?.className?.toLowerCase() || '';
+        const assignment = rubric.assignmentTitle?.toLowerCase() || '';
+        
+        return title.includes(query) || courseClass.includes(query) || assignment.includes(query);
+    });
+
+    const filteredTemplates = templates.filter(template =>
+        template.title.toLowerCase().includes(searchQuery.toLowerCase())
     );
+
+    // Reset template pagination when template search query changes
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [searchQuery]);
+
+    // Reset rubric pagination when rubric search query changes
+    useEffect(() => {
+        setCurrentRubricPage(1);
+    }, [rubricSearchQuery]);
 
     const handleViewCriteriaTemplateClick = (e, template) => {
         e.stopPropagation();
@@ -89,8 +109,8 @@ const InstructorManageRubric = () => {
     // Template pagination
     const indexOfLastItem = currentPage * itemsPerPage;
     const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-    const currentTemplates = templates.slice(indexOfFirstItem, indexOfLastItem);
-    const totalPages = Math.ceil(templates.length / itemsPerPage);
+    const currentTemplates = filteredTemplates.slice(indexOfFirstItem, indexOfLastItem);
+    const totalPages = Math.ceil(filteredTemplates.length / itemsPerPage);
 
     // Rubric pagination
     const indexOfLastRubric = currentRubricPage * itemsPerPage;
@@ -131,7 +151,7 @@ const InstructorManageRubric = () => {
                             <Loader className="w-8 h-8 animate-spin mx-auto mb-3 text-orange-500" />
                             <p className="text-gray-500">Loading templates...</p>
                         </div>
-                    ) : templates.length === 0 ? (
+                    ) : filteredTemplates.length === 0 ? (
                         <div className="bg-white rounded-lg shadow-sm p-12 text-center">
                             <p className="text-gray-500">No templates available</p>
                         </div>
@@ -230,7 +250,7 @@ const InstructorManageRubric = () => {
                             {/* Footer with Pagination */}
                             <div className="mt-6 flex items-center justify-between">
                                 <div className="text-sm text-gray-600">
-                                    Showing {indexOfFirstItem + 1}-{Math.min(indexOfLastItem, templates.length)} of {templates.length} templates
+                                    Showing {indexOfFirstItem + 1}-{Math.min(indexOfLastItem, filteredTemplates.length)} of {filteredTemplates.length} templates
                                 </div>
                                 <div className="flex items-center gap-2">
                                     <button
@@ -268,7 +288,21 @@ const InstructorManageRubric = () => {
                 {/* My Rubrics Section */}
                 <div>
                     <h2 className="text-2xl font-bold text-gray-900 mb-2">My Rubrics</h2>
-                    <p className="text-gray-600 mb-6">Rubrics you've created and are currently using</p>
+                    <p className="text-gray-600 mb-4">Rubrics you've created and are currently using</p>
+
+                    {/* Search for My Rubrics */}
+                    <div className="flex gap-4 mb-6">
+                        <div className="flex-1 relative">
+                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                            <input
+                                type="text"
+                                placeholder="Search by title, course/class, or assignment..."
+                                value={rubricSearchQuery}
+                                onChange={(e) => setRubricSearchQuery(e.target.value)}
+                                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                            />
+                        </div>
+                    </div>
 
                     <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
                         {/* Table Header */}
