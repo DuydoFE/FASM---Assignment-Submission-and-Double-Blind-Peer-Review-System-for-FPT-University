@@ -102,10 +102,16 @@ const LoginPage = () => {
           dispatch(loginRedux(res.data.data));
           toast.success("Google Login successful!");
           
+          // Clear URL parameters first to prevent re-triggering
+          window.history.replaceState({}, document.title, "/login");
+          
           const roles = res.data.data.roles || [];
-          if (roles.includes("Admin")) navigate("/admin/dashboard");
-          else if (roles.includes("Instructor")) navigate("/instructor/dashboard");
-          else navigate("/");
+          // Use setTimeout to ensure Redux state is updated before navigation
+          setTimeout(() => {
+            if (roles.includes("Admin")) navigate("/admin/dashboard");
+            else if (roles.includes("Instructor")) navigate("/instructor/dashboard");
+            else navigate("/");
+          }, 100);
         } catch (err) {
           console.error("Failed to fetch user after Google callback:", err);
           // Clear any stored tokens on failure
@@ -119,7 +125,7 @@ const LoginPage = () => {
     };
 
     handleGoogleCallback();
-  }, []);
+  }, [dispatch, navigate]);
 
   return (
     <div className="relative min-h-screen w-full flex items-center justify-center bg-black text-zinc-200 overflow-hidden font-sans">
