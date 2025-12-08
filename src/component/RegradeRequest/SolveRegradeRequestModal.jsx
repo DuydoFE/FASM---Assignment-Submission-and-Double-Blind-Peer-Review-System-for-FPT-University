@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { X, CheckCircle, Info, AlertCircle } from 'lucide-react';
 import { reviewRegradeRequest } from '../../service/regradeService';
 import { getCurrentAccount } from '../../utils/accountUtils';
+import { toast } from 'react-toastify';
 
 const SolveRegradeRequestModal = ({ request, onClose, onSubmit }) => {
     const currentUser = getCurrentAccount();
@@ -33,7 +34,7 @@ const SolveRegradeRequestModal = ({ request, onClose, onSubmit }) => {
             onSubmit(decision, feedback);
         } catch (error) {
             console.error('Error submitting review:', error);
-            alert('Failed to submit review. Please try again.');
+            toast.error(error.response?.data?.message || 'Failed to solve regrade request. Please try again.');
         } finally {
             setIsSubmitting(false);
         }

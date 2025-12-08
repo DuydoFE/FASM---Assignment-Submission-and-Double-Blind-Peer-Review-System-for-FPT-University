@@ -157,6 +157,7 @@ export const updateAssignment = async (assignmentData, file = null) => {
     formData.append('PassThreshold', assignmentData.passThreshold);
     
     formData.append('AllowCrossClass', assignmentData.allowCrossClass);
+    formData.append('CrossClassTag', assignmentData.crossClassTag || '');
     formData.append('GradingScale', assignmentData.gradingScale);
     
     if (file) {
