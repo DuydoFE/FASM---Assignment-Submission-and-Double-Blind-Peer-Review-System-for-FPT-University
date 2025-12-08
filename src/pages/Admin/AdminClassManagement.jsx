@@ -37,8 +37,7 @@ const startDate = new Date(selectedDate).toISOString();
     sectionCode: "",
     startDate: "",
     endDate: "",
-    enrollmentPassword: "",
-    requiresApproval: true,
+
   });
 
   const [showUpdateForm, setShowUpdateForm] = useState(false);
@@ -102,18 +101,14 @@ const startDate = new Date(selectedDate).toISOString();
     setFilters({ ...filters, [e.target.name]: e.target.value });
   };
 
+  const formatDateForInput = (dateStr) => {
+    if (!dateStr || dateStr.startsWith("0001")) return "";
+    return new Date(dateStr).toISOString().split('T')[0];
+  };
+
   const handleNewClassChange = (e) => {
     const { name, value } = e.target;
 
-    setNewClass({
-      ...newClass,
-      [name]:
-        ["courseId", "campusId", "semesterId"].includes(name)
-          ? Number(value)
-          : name === "requiresApproval"
-            ? value === "true"
-            : value,
-    });
   };
 
   const formatToISO = (input) => {
@@ -121,6 +116,8 @@ const startDate = new Date(selectedDate).toISOString();
   const d = new Date(input);
   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}T${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`;
 };
+
+
 
 
 
@@ -150,16 +147,7 @@ const startDate = new Date(selectedDate).toISOString();
       await createCourseInstance(payload);
       toast.success("🎉 Class created successfully!");
       setShowAddForm(false);
-      setNewClass({
-        campusId: "",
-        semesterId: "",
-        courseId: "",
-        sectionCode: "",
-        enrollmentPassword: "",
-        requiresApproval: true,
-        startDate: "",
-        endDate: "",
-      });
+
 
       if (filters.campus) {
         const res = await getCourseInstancesByCampusId(Number(filters.campus));
@@ -386,6 +374,59 @@ const startDate = new Date(selectedDate).toISOString();
             />
           </div>
 
+          <div className="flex flex-wrap gap-4">
+            {(() => {
+              const selectedSemester = newClass.semesterId
+                ? semesters.find(s => s.semesterId === Number(newClass.semesterId))
+                : null;
+              const minDate = selectedSemester ? formatDateForInput(selectedSemester.startDate) : "";
+              const maxDate = selectedSemester ? formatDateForInput(selectedSemester.endDate) : "";
+              
+              return (
+                <>
+                  <div className="flex-1 min-w-[150px]">
+                    <label className="block text-sm font-medium text-gray-600 mb-1">Start Date</label>
+                    <input
+                      type="date"
+                      name="startDate"
+                      value={newClass.startDate}
+                      onChange={handleNewClassChange}
+                      min={minDate}
+                      max={maxDate}
+                      disabled={!newClass.semesterId}
+                      className={`border rounded-lg p-3 w-full focus:outline-orange-400 ${!newClass.semesterId ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+                    />
+                  </div>
+                  <div className="flex-1 min-w-[150px]">
+                    <label className="block text-sm font-medium text-gray-600 mb-1">End Date</label>
+                    <input
+                      type="date"
+                      name="endDate"
+                      value={newClass.endDate}
+                      onChange={handleNewClassChange}
+                      min={minDate}
+                      max={maxDate}
+                      disabled={!newClass.semesterId}
+                      className={`border rounded-lg p-3 w-full focus:outline-orange-400 ${!newClass.semesterId ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+                    />
+                  </div>
+                  {selectedSemester && selectedSemester.startDate && selectedSemester.endDate && (
+                    <div className="w-full text-sm text-orange-600 bg-orange-50 p-2 rounded-lg">
+                      📅 Semester period: <strong>{new Date(selectedSemester.startDate).toLocaleDateString('en-GB')}</strong> - <strong>{new Date(selectedSemester.endDate).toLocaleDateString('en-GB')}</strong>
+                      <br />
+                      <span className="text-gray-500">You can only select dates within this range.</span>
+                    </div>
+                  )}
+                  {!newClass.semesterId && (
+                    <div className="w-full text-sm text-gray-500 italic">
+                      Please select a semester first to enable date selection.
+                    </div>
+                  )}
+                </>
+              );
+            })()}
+          </div>
+
           <div className="flex gap-4">
             <button onClick={handleAddClass} className="px-6 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition font-semibold shadow-sm">
               Create
@@ -493,28 +534,7 @@ const startDate = new Date(selectedDate).toISOString();
                         </span>
                       </td>
                       <td className="p-3">
-                        <button
-                          disabled={c.isActive}
-                          className={`font-semibold mr-2 ${c.isActive
-                            ? "text-gray-400 cursor-not-allowed"
-                            : "text-green-500 hover:text-green-700"
-                            }`}
-                          onClick={() => !c.isActive && handleOpenUpdateForm(c)}
-                        >
-                          Update
-                        </button>
-                        <button
-                          className="text-orange-500 hover:text-orange-700 font-semibold"
-                          onClick={() => handleViewDetail(c.courseInstanceId)}
-                        >
-                          View Detail
-                        </button>
-                        <button
-                          className="text-blue-500 hover:text-blue-700 font-semibold"
-                          onClick={() => handleToggleStatus(c.courseInstanceId, c.isActive)}
-                        >
-                          {c.isActive ? "Deactivate" : "Activate"}
-                        </button>
+
                       </td>
                     </tr>
                   );
