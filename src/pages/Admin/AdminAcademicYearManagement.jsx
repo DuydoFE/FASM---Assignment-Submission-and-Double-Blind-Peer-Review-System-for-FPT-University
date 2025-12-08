@@ -50,6 +50,24 @@ export default function AdminAcademicYearManagement() {
     loadYears();
   }, []);
 
+  const handleYearNameChange = (value) => {
+    if (!/^\d{0,4}$/.test(value)) return;
+
+    setNewYearData(prev => ({ ...prev, name: value }));
+    if (/^\d{4}$/.test(value)) {
+      const year = parseInt(value);
+
+      const start = `${year}-01-01T00:00`;
+      const end = `${year}-12-31T23:59`;
+
+      setNewYearData(prev => ({
+        ...prev,
+        startDate: start,
+        endDate: end
+      }));
+    }
+  };
+
   const handleAddNewYear = async () => {
     if (!newYearData.name || !newYearData.startDate || !newYearData.endDate) {
       toast.error("Please fill in all fields");
@@ -68,6 +86,10 @@ export default function AdminAcademicYearManagement() {
       console.error(e);
       toast.error("Failed to add new academic year", { id: toastId });
     }
+    if (!/^\d{4}$/.test(newYearData.name)) {
+      toast.error("Year must be in format YYYY (e.g., 2025)");
+      return;
+    }
   };
 
   const handleDelete = async (academicYearId) => {
@@ -84,26 +106,59 @@ export default function AdminAcademicYearManagement() {
     }
   };
 
+  const handleCancelEdit = () => {
+    setEditingId(null);
+    setEditingValues({});
+  };
+
+  const formatForEdit = (dateStr) => {
+    const d = new Date(dateStr);
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    const hours = String(d.getHours()).padStart(2, "0");
+    const mins = String(d.getMinutes()).padStart(2, "0");
+
+    return `${year}-${month}-${day}T${hours}:${mins}`;
+  };
+
   const handleEdit = (year) => {
     setEditingId(year.id);
     setEditingValues({
       name: year.name,
-      startDate: year.startDate,
-      endDate: year.endDate,
+      startDate: formatForEdit(year.startDate),
+      endDate: formatForEdit(year.endDate),
     });
   };
 
   const handleSaveEdit = async () => {
+    const confirmed = window.confirm(
+      "Are you sure you want to apply these changes to the academic year?"
+    );
+
+    if (!confirmed) return;
+
     const toastId = toast.loading("Updating academic year...");
     try {
-      const year = years.find((y) => y.id === editingId);
+      const original = years.find((y) => y.id === editingId);
+      const updatedStart = new Date(original.startDate);
+      const editedStart = new Date(editingValues.startDate);
+      updatedStart.setDate(editedStart.getDate());
+      updatedStart.setMonth(editedStart.getMonth());
+
+      const updatedEnd = new Date(original.endDate);
+      const editedEnd = new Date(editingValues.endDate);
+      updatedEnd.setDate(editedEnd.getDate());
+      updatedEnd.setMonth(editedEnd.getMonth());
+
       const body = {
         academicYearId: editingId,
-        campusId: year.campusId,
+        campusId: original.campusId,
         name: editingValues.name,
         startDate: editingValues.startDate,
         endDate: editingValues.endDate,
       };
+
       await updateAcademicYear(body);
       toast.success("Academic year updated successfully", { id: toastId });
       setEditingId(null);
@@ -141,11 +196,9 @@ export default function AdminAcademicYearManagement() {
           <div className="flex flex-col gap-3">
             <input
               type="text"
-              placeholder="Academic Year Name (e.g., 2024 - 2025)"
+              placeholder="Academic Year (e.g., 2025)"
               value={newYearData.name}
-              onChange={(e) =>
-                setNewYearData({ ...newYearData, name: e.target.value })
-              }
+              onChange={(e) => handleYearNameChange(e.target.value)}
               className="border border-gray-300 p-2 rounded-lg"
             />
             <label>
@@ -153,10 +206,8 @@ export default function AdminAcademicYearManagement() {
               <input
                 type="datetime-local"
                 value={newYearData.startDate}
-                onChange={(e) =>
-                  setNewYearData({ ...newYearData, startDate: e.target.value })
-                }
-                className="border border-gray-300 p-2 rounded-lg w-full"
+                disabled
+                className="border border-gray-300 p-2 rounded-lg w-full bg-gray-100 cursor-not-allowed"
               />
             </label>
             <label>
@@ -164,10 +215,8 @@ export default function AdminAcademicYearManagement() {
               <input
                 type="datetime-local"
                 value={newYearData.endDate}
-                onChange={(e) =>
-                  setNewYearData({ ...newYearData, endDate: e.target.value })
-                }
-                className="border border-gray-300 p-2 rounded-lg w-full"
+                disabled
+                className="border border-gray-300 p-2 rounded-lg w-full bg-gray-100 cursor-not-allowed"
               />
             </label>
             <button
@@ -224,40 +273,70 @@ export default function AdminAcademicYearManagement() {
                   <td className="p-3">
                     {editingId === year.id ? (
                       <input
-                        type="datetime-local"
+                        type="date"
                         className="border border-gray-300 p-2 rounded-lg"
-                        value={editingValues.startDate.slice(0, 16)}
-                        onChange={(e) =>
-                          setEditingValues({ ...editingValues, startDate: e.target.value })
-                        }
+                        value={editingValues.startDate.split("T")[0]}
+                        min={`${editingValues.name}-01-01`}
+                        max={`${editingValues.name}-12-31`}
+                        onChange={(e) => {
+                          const newDate = e.target.value;
+                          setEditingValues(prev => {
+                            // Auto-fix end date if it's earlier
+                            if (prev.endDate.split("T")[0] < newDate) {
+                              return {
+                                ...prev,
+                                startDate: newDate + "T00:00",
+                                endDate: newDate + "T23:59"
+                              };
+                            }
+                            return { ...prev, startDate: newDate + "T00:00" };
+                          });
+                        }}
                       />
                     ) : (
                       formatDate(year.startDate)
                     )}
                   </td>
+
                   <td className="p-3">
                     {editingId === year.id ? (
                       <input
-                        type="datetime-local"
+                        type="date"
                         className="border border-gray-300 p-2 rounded-lg"
-                        value={editingValues.endDate.slice(0, 16)}
+                        value={editingValues.endDate.split("T")[0]}
+                        min={editingValues.startDate.split("T")[0]}
+                        max={`${editingValues.name}-12-31`}
                         onChange={(e) =>
-                          setEditingValues({ ...editingValues, endDate: e.target.value })
+                          setEditingValues(prev => ({
+                            ...prev,
+                            endDate: e.target.value + "T23:59"
+                          }))
                         }
                       />
                     ) : (
                       formatDate(year.endDate)
                     )}
                   </td>
+
                   <td className="p-3 flex gap-2">
                     {editingId === year.id ? (
-                      <button
-                        type="button"
-                        onClick={handleSaveEdit}
-                        className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600"
-                      >
-                        Save
-                      </button>
+                      <>
+                        <button
+                          type="button"
+                          onClick={handleSaveEdit}
+                          className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600"
+                        >
+                          Save
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={handleCancelEdit}
+                          className="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600"
+                        >
+                          Cancel
+                        </button>
+                      </>
                     ) : (
                       <button
                         type="button"
@@ -267,6 +346,7 @@ export default function AdminAcademicYearManagement() {
                         Edit
                       </button>
                     )}
+
                     <button
                       type="button"
                       onClick={() => handleDelete(year.id)}
