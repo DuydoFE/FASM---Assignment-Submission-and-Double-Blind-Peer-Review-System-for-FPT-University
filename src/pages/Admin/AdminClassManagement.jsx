@@ -34,6 +34,8 @@ export default function AdminClassManagement() {
     semesterId: "",
     courseId: "",
     sectionCode: "",
+    startDate: "",
+    endDate: "",
   });
 
   const [showUpdateForm, setShowUpdateForm] = useState(false);
@@ -95,8 +97,29 @@ export default function AdminClassManagement() {
     setFilters({ ...filters, [e.target.name]: e.target.value });
   };
 
+  const formatDateForInput = (dateStr) => {
+    if (!dateStr || dateStr.startsWith("0001")) return "";
+    return new Date(dateStr).toISOString().split('T')[0];
+  };
+
   const handleNewClassChange = (e) => {
-    setNewClass({ ...newClass, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    
+    // If semester is changed, auto-populate start and end dates from semester
+    if (name === "semesterId" && value) {
+      const selectedSemester = semesters.find(s => s.semesterId === Number(value));
+      if (selectedSemester && selectedSemester.startDate && selectedSemester.endDate) {
+        setNewClass({
+          ...newClass,
+          [name]: value,
+          startDate: formatDateForInput(selectedSemester.startDate),
+          endDate: formatDateForInput(selectedSemester.endDate)
+        });
+        return;
+      }
+    }
+    
+    setNewClass({ ...newClass, [name]: value });
   };
 
   const handleAddClass = async () => {
@@ -105,12 +128,43 @@ export default function AdminClassManagement() {
       return;
     }
 
+    if (!newClass.startDate || !newClass.endDate) {
+      toast.warn("Vui lòng chọn ngày bắt đầu và kết thúc!");
+      return;
+    }
+
+    // Validate start date is before end date
+    if (new Date(newClass.startDate) >= new Date(newClass.endDate)) {
+      toast.warn("Ngày bắt đầu phải trước ngày kết thúc!");
+      return;
+    }
+
+    // Validate dates are within semester range
+    const selectedSemester = semesters.find(s => s.semesterId === Number(newClass.semesterId));
+    if (selectedSemester) {
+      const semesterStart = new Date(selectedSemester.startDate);
+      const semesterEnd = new Date(selectedSemester.endDate);
+      const classStart = new Date(newClass.startDate);
+      const classEnd = new Date(newClass.endDate);
+
+      if (classStart < semesterStart) {
+        toast.warn(`Ngày bắt đầu lớp không thể trước ngày bắt đầu học kỳ (${semesterStart.toLocaleDateString('en-GB')})!`);
+        return;
+      }
+      if (classEnd > semesterEnd) {
+        toast.warn(`Ngày kết thúc lớp không thể sau ngày kết thúc học kỳ (${semesterEnd.toLocaleDateString('en-GB')})!`);
+        return;
+      }
+    }
+
     try {
       const requestPayload = {
         courseId: Number(newClass.courseId),
         campusId: Number(newClass.campusId),
         semesterId: Number(newClass.semesterId),
         sectionCode: newClass.sectionCode.trim(),
+        startDate: newClass.startDate,
+        endDate: newClass.endDate,
         enrollmentPassword: "",
         requiresApproval: true,
       };
@@ -120,7 +174,7 @@ export default function AdminClassManagement() {
       toast.success("Tạo lớp thành công!");
 
       setShowAddForm(false);
-      setNewClass({ campusId: "", semesterId: "", courseId: "", sectionCode: "" });
+      setNewClass({ campusId: "", semesterId: "", courseId: "", sectionCode: "", startDate: "", endDate: "" });
 
       if (filters.campus) {
         const res = await getCourseInstancesByCampusId(Number(filters.campus));
@@ -294,6 +348,59 @@ export default function AdminClassManagement() {
               {courses.map((course) => (<option key={course.courseId} value={course.courseId}>{course.name || course.courseName}</option>))}
             </select>
             <input type="text" name="sectionCode" value={newClass.sectionCode} onChange={handleNewClassChange} placeholder="ClassName" className="border rounded-lg p-3 flex-1 min-w-[150px]" />
+          </div>
+
+          <div className="flex flex-wrap gap-4">
+            {(() => {
+              const selectedSemester = newClass.semesterId
+                ? semesters.find(s => s.semesterId === Number(newClass.semesterId))
+                : null;
+              const minDate = selectedSemester ? formatDateForInput(selectedSemester.startDate) : "";
+              const maxDate = selectedSemester ? formatDateForInput(selectedSemester.endDate) : "";
+              
+              return (
+                <>
+                  <div className="flex-1 min-w-[150px]">
+                    <label className="block text-sm font-medium text-gray-600 mb-1">Start Date</label>
+                    <input
+                      type="date"
+                      name="startDate"
+                      value={newClass.startDate}
+                      onChange={handleNewClassChange}
+                      min={minDate}
+                      max={maxDate}
+                      disabled={!newClass.semesterId}
+                      className={`border rounded-lg p-3 w-full focus:outline-orange-400 ${!newClass.semesterId ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+                    />
+                  </div>
+                  <div className="flex-1 min-w-[150px]">
+                    <label className="block text-sm font-medium text-gray-600 mb-1">End Date</label>
+                    <input
+                      type="date"
+                      name="endDate"
+                      value={newClass.endDate}
+                      onChange={handleNewClassChange}
+                      min={minDate}
+                      max={maxDate}
+                      disabled={!newClass.semesterId}
+                      className={`border rounded-lg p-3 w-full focus:outline-orange-400 ${!newClass.semesterId ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+                    />
+                  </div>
+                  {selectedSemester && selectedSemester.startDate && selectedSemester.endDate && (
+                    <div className="w-full text-sm text-orange-600 bg-orange-50 p-2 rounded-lg">
+                      📅 Semester period: <strong>{new Date(selectedSemester.startDate).toLocaleDateString('en-GB')}</strong> - <strong>{new Date(selectedSemester.endDate).toLocaleDateString('en-GB')}</strong>
+                      <br />
+                      <span className="text-gray-500">You can only select dates within this range.</span>
+                    </div>
+                  )}
+                  {!newClass.semesterId && (
+                    <div className="w-full text-sm text-gray-500 italic">
+                      Please select a semester first to enable date selection.
+                    </div>
+                  )}
+                </>
+              );
+            })()}
           </div>
 
           <div className="flex gap-4">
