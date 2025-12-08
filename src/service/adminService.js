@@ -1,7 +1,7 @@
 import api from "../config/axios";
 import axios from "axios";
 
-const API_BASE_URL = "https://localhost:7104";
+const API_BASE_URL = "https://api.fasm.site";
 
 // Lấy thông tin user theo ID
 export const getUserById = async (id) => {
