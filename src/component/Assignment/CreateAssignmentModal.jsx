@@ -88,7 +88,7 @@ const CreateAssignmentModal = ({ isOpen, onClose, onSubmit, courseInstanceId }) 
           newValue = "";
         } else {
           let num = Number(value);
-          if (num < 0) num = 0;
+          if (num < 1) num = 1;
           if (num > 10) num = 10;
           num = Math.floor(num);
           newValue = num;
@@ -233,6 +233,14 @@ const CreateAssignmentModal = ({ isOpen, onClose, onSubmit, courseInstanceId }) 
 
     if (!formData.numPeerReviewsRequired || formData.numPeerReviewsRequired === '') {
       newErrors.numPeerReviewsRequired = 'Number of peer reviews is required';
+    }
+
+    if (!formData.missingReviewPenalty || formData.missingReviewPenalty === '') {
+      newErrors.missingReviewPenalty = 'Missing review penalty is required';
+    }
+
+    if (formData.allowCrossClass && !formData.crossClassTag.trim()) {
+      newErrors.crossClassTag = 'Cross-class tag is required when cross-class review is enabled';
     }
 
     if (formData.gradingScale === 'PassFail') {
@@ -703,17 +711,25 @@ const CreateAssignmentModal = ({ isOpen, onClose, onSubmit, courseInstanceId }) 
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Missing Review Penalty <span className="text-gray-400">(Optional)</span>
+                    Missing Review Penalty <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="number"
                     name="missingReviewPenalty"
                     value={formData.missingReviewPenalty}
                     onChange={handleChange}
-                    min="0"
+                    min="1"
                     max="10"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none"
+                    step="1"
+                    className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none ${errors.missingReviewPenalty ? 'border-red-500' : 'border-gray-300'
+                      }`}
                   />
+                  {errors.missingReviewPenalty && (
+                    <div className="flex items-center gap-1 mt-1 text-red-500 text-sm">
+                      <AlertCircle className="w-4 h-4" />
+                      <span>{errors.missingReviewPenalty}</span>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -735,16 +751,23 @@ const CreateAssignmentModal = ({ isOpen, onClose, onSubmit, courseInstanceId }) 
                 {formData.allowCrossClass && (
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Cross-Class Tag <span className="text-gray-400">(Optional)</span>
+                      Cross-Class Tag <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="text"
                       name="crossClassTag"
                       value={formData.crossClassTag}
                       onChange={handleChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none"
+                      className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none ${errors.crossClassTag ? 'border-red-500' : 'border-gray-300'
+                        }`}
                       placeholder="Enter cross-class tag"
                     />
+                    {errors.crossClassTag && (
+                      <div className="flex items-center gap-1 mt-1 text-red-500 text-sm">
+                        <AlertCircle className="w-4 h-4" />
+                        <span>{errors.crossClassTag}</span>
+                      </div>
+                    )}
                     <p className="text-xs text-gray-500 mt-1">Tag to identify related assignments across classes</p>
                   </div>
                 )}
