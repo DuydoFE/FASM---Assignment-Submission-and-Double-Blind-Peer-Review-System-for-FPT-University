@@ -130,16 +130,19 @@ export const createUser = async (userData) => {
 
 // Import users from Excel
 export const importUsers = async (file) => {
-  const formData = new FormData();
-  formData.append("file", file);
+  try {
+    const formData = new FormData();
+    formData.append("file", file);
 
-  const res = await api.post("/Users/import", formData, {
-    headers: {
-      "Content-Type": "multipart/form-data",
-    },
-  });
+    const res = await api.post("/Users/import", formData);
 
-  return res.data;
+    return res.data;
+  } catch (error) {
+    if (error.response) {
+      throw error.response.data;
+    }
+    throw new Error("Cannot connect to server");
+  }
 };
 
 // Lấy thông tin môn học theo ID

@@ -84,7 +84,7 @@ export default function AdminUserManagement() {
               formData.append("file", file);
 
               try {
-                const res = await importUsers(formData);
+                const res = await importUsers(file);
                 alert("Import users successfully!");
                 const allUsers = await getAllUsers();
                 setUsers(Array.isArray(allUsers?.data) ? allUsers.data : []);
