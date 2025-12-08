@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 
 import React from "react";
+import FASMLogo from "../assets/img/FASM.png";
 import { useDispatch } from "react-redux";
 import { logout } from "../redux/features/userSlice";
 import axios from "axios";
@@ -56,8 +57,8 @@ export default function AdminLayout() {
     <div className="flex h-screen bg-gray-100">
       {/* Sidebar */}
       <aside className="w-64 bg-white shadow-lg flex flex-col">
-        <div className="h-16 flex items-center justify-center font-bold text-xl border-b">
-          Admin Panel
+        <div className="h-16 flex items-center justify-center border-b px-4">
+          <img src={FASMLogo} alt="FASM Logo" className="h-12 object-contain" />
         </div>
 
         <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
