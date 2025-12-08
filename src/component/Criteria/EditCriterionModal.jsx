@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { X, Loader } from 'lucide-react';
 
 const EditCriterionModal = ({ isOpen, onClose, onSubmit, criterion, isSubmitting }) => {
@@ -17,12 +17,48 @@ const EditCriterionModal = ({ isOpen, onClose, onSubmit, criterion, isSubmitting
             setFormData({
                 title: criterion.title || '',
                 description: criterion.description || '',
-                weight: criterion.weight || '',
-                maxScore: criterion.maxScore || ''
+                weight: criterion.weight !== undefined && criterion.weight !== null ? criterion.weight : '',
+                maxScore: criterion.maxScore !== undefined && criterion.maxScore !== null ? criterion.maxScore : ''
             });
             setErrors({});
         }
     }, [isOpen, criterion]);
+
+    // Check if form has been modified and is valid
+    const isFormValid = useMemo(() => {
+        // Check required fields are not empty
+        const hasTitle = formData.title.trim() !== '';
+        const hasWeight = formData.weight !== '' && formData.weight !== null && formData.weight !== undefined;
+        const hasMaxScore = formData.maxScore !== '' && formData.maxScore !== null && formData.maxScore !== undefined;
+
+        // Validate weight and maxScore values
+        const weightValue = Number(formData.weight);
+        const maxScoreValue = Number(formData.maxScore);
+        const isWeightValid = !isNaN(weightValue) && weightValue >= 0 && weightValue <= 100;
+        const isMaxScoreValid = !isNaN(maxScoreValue) && maxScoreValue >= 0;
+
+        return hasTitle && hasWeight && hasMaxScore && isWeightValid && isMaxScoreValid;
+    }, [formData]);
+
+    // Check if form has been modified from original values
+    const hasChanges = useMemo(() => {
+        if (!criterion) return false;
+
+        const originalTitle = criterion.title || '';
+        const originalDescription = criterion.description || '';
+        const originalWeight = criterion.weight !== undefined && criterion.weight !== null ? String(criterion.weight) : '';
+        const originalMaxScore = criterion.maxScore !== undefined && criterion.maxScore !== null ? String(criterion.maxScore) : '';
+
+        return (
+            formData.title !== originalTitle ||
+            formData.description !== originalDescription ||
+            String(formData.weight) !== originalWeight ||
+            String(formData.maxScore) !== originalMaxScore
+        );
+    }, [formData, criterion]);
+
+    // Button should be disabled if form is invalid, no changes made, or submitting
+    const isButtonDisabled = !isFormValid || !hasChanges || isSubmitting;
 
     const validateForm = () => {
         const newErrors = {};
@@ -197,7 +233,7 @@ const EditCriterionModal = ({ isOpen, onClose, onSubmit, criterion, isSubmitting
                         <button
                             type="button"
                             onClick={handleSubmit}
-                            disabled={isSubmitting}
+                            disabled={isButtonDisabled}
                             className="px-5 py-2.5 text-sm font-semibold text-white bg-orange-500 hover:bg-orange-600 rounded-lg transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 flex items-center gap-2 shadow-lg hover:shadow-xl disabled:opacity-60 disabled:cursor-not-allowed"
                         >
                             {isSubmitting ? (

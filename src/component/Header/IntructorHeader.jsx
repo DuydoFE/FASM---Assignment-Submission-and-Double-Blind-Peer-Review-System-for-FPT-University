@@ -3,11 +3,12 @@ import { LogOut, User, Search } from 'lucide-react';
 import { getCurrentAccount } from "../../utils/accountUtils";
 import { useDispatch } from "react-redux";
 import { Dropdown, Menu, Avatar, Button } from "antd";
-import { logout } from "../../redux/features/userSlice";
+import { logout as logoutAction } from "../../redux/features/userSlice";
+import { logout as logoutApi } from "../../service/userService";
 import { toast } from "react-toastify";
 import { useState } from "react";
 // Import component NotificationPopover đã tách riêng
-import NotificationPopover from "./NotificationPopover"; 
+import NotificationPopover from "./NotificationPopover";
 
 const FasmLogo = () => (
   <div className="flex items-center space-x-2">
@@ -41,12 +42,24 @@ const InstructorHeader = () => {
     }
   };
 
-  const handleLogout = () => {
-    dispatch(logout());
-    toast.success("Logged out successfully");
+  const handleLogout = async () => {
+    // Clear local storage first to prevent re-authentication with old tokens
     localStorage.removeItem("token");
     localStorage.removeItem("refreshToken");
-    navigate("/");
+    
+    try {
+      // Call backend logout API to clear the HTTP-only cookie
+      await logoutApi();
+      dispatch(logoutAction());
+      toast.success("Logged out successfully");
+      navigate("/login");
+    } catch (error) {
+      console.error("Logout error:", error);
+      // Still logout locally even if API call fails
+      dispatch(logoutAction());
+      toast.warning("Logged out locally. Please clear browser cookies if issues persist.");
+      navigate("/login");
+    }
   };
 
   const menu = (

@@ -3,17 +3,24 @@ import { X } from 'lucide-react';
 
 function EditRubricModal({ isOpen, onClose, onSubmit, rubric, isSubmitting }) {
     const [title, setTitle] = useState('');
+    const [originalTitle, setOriginalTitle] = useState('');
 
     useEffect(() => {
         if (rubric) {
             setTitle(rubric.title || '');
+            setOriginalTitle(rubric.title || '');
         }
     }, [rubric]);
+
+    // Check if value has changed from original
+    const hasChanged = title.trim() !== originalTitle.trim();
+    const isValidTitle = title.trim().length > 0;
+    const canSubmit = isValidTitle && hasChanged;
 
     const handleSubmit = (e) => {
         e.preventDefault();
         
-        if (!title.trim()) {
+        if (!canSubmit) {
             return;
         }
 
@@ -26,6 +33,7 @@ function EditRubricModal({ isOpen, onClose, onSubmit, rubric, isSubmitting }) {
     const handleClose = () => {
         if (!isSubmitting) {
             setTitle('');
+            setOriginalTitle('');
             onClose();
         }
     };
@@ -78,8 +86,9 @@ function EditRubricModal({ isOpen, onClose, onSubmit, rubric, isSubmitting }) {
                         </button>
                         <button
                             type="submit"
-                            disabled={isSubmitting || !title.trim()}
+                            disabled={isSubmitting || !canSubmit}
                             className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            title={!canSubmit ? (isValidTitle ? 'No changes made' : 'Title is required') : ''}
                         >
                             {isSubmitting ? 'Updating...' : 'Update Rubric'}
                         </button>

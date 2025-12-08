@@ -3,6 +3,7 @@ import { ChevronLeft, ChevronRight, FileText, Eye, Download, ArrowLeft, BookOpen
 import { useParams, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { submissionService } from '../../service/submissionService';
+import { downloadFile } from '../../utils/fileDownload';
 
 const InstructorSubmissionDetail = () => {
   const { submissionId } = useParams();
@@ -26,6 +27,16 @@ const InstructorSubmissionDetail = () => {
       toast.error('Failed to load submission details');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDownload = async (fileUrl, fileName) => {
+    try {
+      await downloadFile(fileUrl, fileName);
+      toast.success('File downloaded successfully!');
+    } catch (error) {
+      console.error('Download error:', error);
+      toast.error('Failed to download file. Please try again.');
     }
   };
 
@@ -262,7 +273,7 @@ const InstructorSubmissionDetail = () => {
       )}
 
       {/* Submitted File */}
-      {submissionData?.fileUrl && (
+      {submissionData?.fileUrl && submissionData.fileUrl !== 'Not Submitted' && (
         <div className="mb-8">
           <h3 className="text-lg font-medium text-gray-800 mb-4">Submitted File</h3>
 
@@ -285,14 +296,13 @@ const InstructorSubmissionDetail = () => {
               </div>
 
               <div className="flex items-center gap-2">
-                <a
-                  href={submissionData.fileUrl}
-                  download
+                <button
+                  onClick={() => handleDownload(submissionData.fileUrl, submissionData.fileName || submissionData.originalFileName || 'submission-file')}
                   className="flex items-center gap-2 px-4 py-2 text-sm bg-blue-500 text-white rounded-lg hover:bg-blue-600"
                 >
                   <Download className="w-4 h-4" />
                   Download
-                </a>
+                </button>
               </div>
             </div>
           </div>
@@ -300,7 +310,7 @@ const InstructorSubmissionDetail = () => {
       )}
 
       {/* File Preview Placeholder */}
-      {submissionData?.fileUrl && (
+      {submissionData?.fileUrl && submissionData.fileUrl !== 'Not Submitted' && (
         <div className="mb-8">
           <div className="border border-gray-200 rounded-lg p-8 bg-gray-50">
             <div className="text-center">
