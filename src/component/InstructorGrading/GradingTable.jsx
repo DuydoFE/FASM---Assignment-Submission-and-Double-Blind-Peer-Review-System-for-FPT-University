@@ -13,6 +13,10 @@ const GradingTable = ({
 }) => {
   const formatDateTime = (dateString) => {
     if (!dateString) return { date: "--", time: "" };
+    // Check for default/empty datetime value (0001-01-01T00:00:00)
+    if (dateString === "0001-01-01T00:00:00" || dateString.startsWith("0001-01-01")) {
+      return { date: "--", time: "" };
+    }
     const date = new Date(dateString);
     const dateStr = date.toLocaleDateString("vi-VN");
     const timeStr = date.toLocaleTimeString("vi-VN", {
