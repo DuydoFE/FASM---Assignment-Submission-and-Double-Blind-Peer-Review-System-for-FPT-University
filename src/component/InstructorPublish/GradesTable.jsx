@@ -208,8 +208,8 @@ const GradesTable = ({
                       </span>
                     </td>
                     <td className="px-6 py-4 text-center">
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${student.status === 'Not Submitted' ? 'text-gray-400 bg-gray-50' : getGradeColor(student.instructorGrade)}`}>
-                        {student.status === 'Not Submitted'
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${student.status === 'Not Submitted' || student.status === 'Submitted' ? 'text-gray-400 bg-gray-50' : getGradeColor(student.instructorGrade)}`}>
+                        {student.status === 'Not Submitted' || student.status === 'Submitted'
                           ? '--'
                           : (student.instructorGrade !== null && student.instructorGrade !== undefined
                             ? (student.instructorGrade).toFixed(1)
@@ -217,8 +217,8 @@ const GradesTable = ({
                       </span>
                     </td>
                     <td className="px-6 py-4 text-center">
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${student.status === 'Not Submitted' ? 'text-gray-400 bg-gray-50' : getGradeColor(student.finalGrade)}`}>
-                        {student.status === 'Not Submitted'
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${student.status === 'Not Submitted' || student.status === 'Submitted' ? 'text-gray-400 bg-gray-50' : getGradeColor(student.finalGrade)}`}>
+                        {student.status === 'Not Submitted' || student.status === 'Submitted'
                           ? '--'
                           : (student.finalGrade !== null && student.finalGrade !== undefined
                             ? (student.finalGrade).toFixed(1)
