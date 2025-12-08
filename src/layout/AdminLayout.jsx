@@ -57,8 +57,8 @@ export default function AdminLayout() {
     <div className="flex h-screen bg-gray-100">
       {/* Sidebar */}
       <aside className="w-64 bg-white shadow-lg flex flex-col">
-        <div className="h-16 flex items-center justify-center border-b px-4">
-          <img src={FASMLogo} alt="FASM Logo" className="h-12 object-contain" />
+        <div className="h-20 flex items-center justify-center border-b px-4">
+          <img src={FASMLogo} alt="FASM Logo" className="h-16 w-full object-contain" />
         </div>
 
         <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
