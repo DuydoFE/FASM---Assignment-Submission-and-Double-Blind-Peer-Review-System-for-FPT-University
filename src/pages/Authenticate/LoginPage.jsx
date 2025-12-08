@@ -70,20 +70,34 @@ const LoginPage = () => {
       const fullUrl = window.location.href;
       const query = fullUrl.split('?').slice(1).join('&')
       const params = new URLSearchParams(query);
-      const isGoogleCallback = params.get("google"); 
-      const accessToken = params.get("accessToken"); 
-      const refreshToken = params.get("refreshToken"); 
+      const isGoogleCallback = params.get("google");
+      const accessToken = params.get("accessToken");
+      const refreshToken = params.get("refreshToken");
       
       if (isGoogleCallback) {
+        // Check if we have valid tokens from the URL (new login attempt)
+        if (!accessToken || !refreshToken) {
+          console.error("Google callback missing tokens");
+          toast.error("Google Login failed. Please try again.");
+          // Clear the URL parameters and stay on login page
+          window.history.replaceState({}, document.title, "/login");
+          return;
+        }
+        
         try {
           console.log("Detected Google callback, fetching user info...");
 
-          const res = await api.get('/account/me', {
-            withCredentials: true
-          });
-          
+          // First, store the new tokens from URL params
           localStorage.setItem("token", accessToken);
           localStorage.setItem("refreshToken", refreshToken);
+
+          // Now fetch user info using the new access token
+          const res = await api.get('/account/me', {
+            withCredentials: true,
+            headers: {
+              'Authorization': `Bearer ${accessToken}`
+            }
+          });
           
           dispatch(loginRedux(res.data.data));
           toast.success("Google Login successful!");
@@ -94,8 +108,12 @@ const LoginPage = () => {
           else navigate("/");
         } catch (err) {
           console.error("Failed to fetch user after Google callback:", err);
-          toast.error("Google Login failed.");
-          navigate("/login");
+          // Clear any stored tokens on failure
+          localStorage.removeItem("token");
+          localStorage.removeItem("refreshToken");
+          toast.error("Google Login failed. Your account may not be authorized.");
+          // Clear the URL parameters
+          window.history.replaceState({}, document.title, "/login");
         }
       }
     };

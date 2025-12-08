@@ -34,7 +34,13 @@ import { toast } from "react-toastify";
 import { ROLE } from "../constant/roleEnum";
 const ProtectedRoute = ({ children, role }) => {
   const user = getCurrentAccount();
-  if (!user || user?.roles[0] !== role) {
+  if (!user) {
+    // User is not logged in, redirect to login page without error message
+    // This handles the case when user logs out
+    return <Navigate to="/login" replace />;
+  }
+  if (user?.roles[0] !== role) {
+    // User is logged in but doesn't have the correct role
     toast.error("You don't have permission to access this page!");
     return <Navigate to="/" replace />;
   }
