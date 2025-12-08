@@ -8,6 +8,9 @@ import { toast } from "react-toastify";
 import { useState } from "react"; 
 import NotificationPopover from "./NotificationPopover"; 
 
+import fasmLogo from "../../assets/img/FASM.png"; 
+
+
 const Header = () => {
   const user = getCurrentAccount();
   const dispatch = useDispatch();
@@ -56,9 +59,14 @@ const Header = () => {
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-20">
           <div className="flex items-center space-x-8">
-            <Link to="/">
-              <span className="font-bold text-2xl text-white">FASM</span>
+            <Link to="/" className="flex items-center">
+              <img 
+                src={fasmLogo} 
+                alt="FASM Logo" 
+                className="h-16 w-auto object-contain"
+              />
             </Link>
+            
             <nav className="hidden md:flex items-center space-x-6">
               <Link to="/" className="text-zinc-300 hover:text-white flex items-center transition-colors">
                 <Home className="w-4 h-4 mr-1" /> Home
