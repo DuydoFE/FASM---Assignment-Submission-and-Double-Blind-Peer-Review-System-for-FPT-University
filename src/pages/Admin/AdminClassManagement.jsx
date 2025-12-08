@@ -34,6 +34,8 @@ export default function AdminClassManagement() {
     semesterId: "",
     courseId: "",
     sectionCode: "",
+    startDate: "",
+    endDate: "",
   });
 
   const [showUpdateForm, setShowUpdateForm] = useState(false);
@@ -44,7 +46,9 @@ export default function AdminClassManagement() {
     campusId: "",
     sectionCode: "",
     enrollmentPassword: "",
-    requiresApproval: true
+    requiresApproval: true,
+    startDate: "",
+    endDate: ""
   });
 
   const contextClass = {
@@ -113,6 +117,8 @@ export default function AdminClassManagement() {
         sectionCode: newClass.sectionCode.trim(),
         enrollmentPassword: "",
         requiresApproval: true,
+        startDate: new Date(newClass.startDate).toISOString(),
+        endDate: new Date(newClass.endDate).toISOString(),
       };
 
       await createCourseInstance(requestPayload);
@@ -181,7 +187,9 @@ export default function AdminClassManagement() {
       campusId: c.campusId,
       sectionCode: c.sectionCode || "",
       enrollmentPassword: c.enrollmentPassword || "",
-      requiresApproval: true
+      requiresApproval: true,
+      startDate: c.startDate ? new Date(c.startDate).toISOString().slice(0, 16) : "",
+      endDate: c.endDate ? new Date(c.endDate).toISOString().slice(0, 16) : ""
     });
     setShowUpdateForm(true);
   };
@@ -197,7 +205,16 @@ export default function AdminClassManagement() {
     }
 
     try {
-      await updateCourseInstance(updateClass);
+      const requestPayload = {
+        ...updateClass,
+        courseInstanceId: Number(updateClass.courseInstanceId),
+        courseId: Number(updateClass.courseId),
+        campusId: Number(updateClass.campusId),
+        semesterId: Number(updateClass.semesterId),
+        startDate: new Date(updateClass.startDate).toISOString(),
+        endDate: new Date(updateClass.endDate).toISOString()
+      };
+      await updateCourseInstance(requestPayload);
       toast.success("Class updated successfully!");
       setShowUpdateForm(false);
 
@@ -294,6 +311,22 @@ export default function AdminClassManagement() {
               {courses.map((course) => (<option key={course.courseId} value={course.courseId}>{course.name || course.courseName}</option>))}
             </select>
             <input type="text" name="sectionCode" value={newClass.sectionCode} onChange={handleNewClassChange} placeholder="ClassName" className="border rounded-lg p-3 flex-1 min-w-[150px]" />
+            <input
+              type="datetime-local"
+              name="startDate"
+              value={newClass.startDate}
+              onChange={handleNewClassChange}
+              className="border rounded-lg p-3 flex-1 min-w-[150px]"
+              placeholder="Start Date"
+            />
+            <input
+              type="datetime-local"
+              name="endDate"
+              value={newClass.endDate}
+              onChange={handleNewClassChange}
+              className="border rounded-lg p-3 flex-1 min-w-[150px]"
+              placeholder="End Date"
+            />
           </div>
 
           <div className="flex gap-4">
@@ -327,6 +360,22 @@ export default function AdminClassManagement() {
             </select>
 
             <input type="text" name="sectionCode" value={updateClass.sectionCode} onChange={handleUpdateClassChange} placeholder="Class Name" className="border rounded-lg p-3 flex-1 min-w-[150px]" />
+            <input
+              type="datetime-local"
+              name="startDate"
+              value={updateClass.startDate}
+              onChange={handleUpdateClassChange}
+              className="border rounded-lg p-3 flex-1 min-w-[150px]"
+              placeholder="Start Date"
+            />
+            <input
+              type="datetime-local"
+              name="endDate"
+              value={updateClass.endDate}
+              onChange={handleUpdateClassChange}
+              className="border rounded-lg p-3 flex-1 min-w-[150px]"
+              placeholder="End Date"
+            />
           </div>
 
           <div className="flex gap-4">
@@ -390,8 +439,8 @@ export default function AdminClassManagement() {
                         <button
                           disabled={c.isActive}
                           className={`font-semibold mr-2 ${c.isActive
-                              ? "text-gray-400 cursor-not-allowed"
-                              : "text-green-500 hover:text-green-700"
+                            ? "text-gray-400 cursor-not-allowed"
+                            : "text-green-500 hover:text-green-700"
                             }`}
                           onClick={() => !c.isActive && handleOpenUpdateForm(c)}
                         >
