@@ -145,7 +145,7 @@ const EditAssignmentModal = ({ isOpen, onClose, onSubmit, assignment }) => {
           if (isNaN(num)) {
             newValue = "";
           } else {
-            if (num < 0) num = 0;
+            if (num < 1) num = 1;
             if (num > 10) num = 10;
             num = Math.floor(num);
             newValue = String(num);
@@ -273,12 +273,19 @@ const EditAssignmentModal = ({ isOpen, onClose, onSubmit, assignment }) => {
       newErrors.peerWeight = 'Instructor and Peer weights must add up to 100%';
     }
 
-    // missingReviewPenalty validation (optional)
-    if (formData.missingReviewPenalty !== '' && formData.missingReviewPenalty !== undefined) {
+    // missingReviewPenalty validation (required)
+    if (!formData.missingReviewPenalty || formData.missingReviewPenalty === '') {
+      newErrors.missingReviewPenalty = 'Missing review penalty is required';
+    } else {
       const mp = Number(formData.missingReviewPenalty);
-      if (isNaN(mp) || mp < 0 || mp > 10) {
-        newErrors.missingReviewPenalty = 'Missing review penalty must be between 0 and 10';
+      if (isNaN(mp) || mp < 1 || mp > 10) {
+        newErrors.missingReviewPenalty = 'Missing review penalty must be between 1 and 10';
       }
+    }
+
+    // crossClassTag validation (required when allowCrossClass is true)
+    if (formData.allowCrossClass && !formData.crossClassTag.trim()) {
+      newErrors.crossClassTag = 'Cross-class tag is required when cross-class review is enabled';
     }
 
     setErrors(newErrors);
@@ -687,16 +694,19 @@ const EditAssignmentModal = ({ isOpen, onClose, onSubmit, assignment }) => {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Missing Review Penalty <span className="text-gray-400">(Optional)</span>
+                    Missing Review Penalty <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="number"
                     name="missingReviewPenalty"
                     value={formData.missingReviewPenalty}
                     onChange={handleChange}
-                    min="0"
+                    min="1"
                     max="10"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                    step="1"
+                    className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none ${
+                      errors.missingReviewPenalty ? 'border-red-500' : 'border-gray-300'
+                    }`}
                   />
                   {errors.missingReviewPenalty && (
                     <div className="flex items-center gap-1 mt-1 text-red-500 text-sm">
@@ -725,16 +735,24 @@ const EditAssignmentModal = ({ isOpen, onClose, onSubmit, assignment }) => {
                 {formData.allowCrossClass && (
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Cross-Class Tag <span className="text-gray-400">(Optional)</span>
+                      Cross-Class Tag <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="text"
                       name="crossClassTag"
                       value={formData.crossClassTag}
                       onChange={handleChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                      className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none ${
+                        errors.crossClassTag ? 'border-red-500' : 'border-gray-300'
+                      }`}
                       placeholder="Enter cross-class tag"
                     />
+                    {errors.crossClassTag && (
+                      <div className="flex items-center gap-1 mt-1 text-red-500 text-sm">
+                        <AlertCircle className="w-4 h-4" />
+                        <span>{errors.crossClassTag}</span>
+                      </div>
+                    )}
                     <p className="text-xs text-gray-500 mt-1">Tag to identify related assignments across classes</p>
                   </div>
                 )}

@@ -29,11 +29,15 @@ import InstructorRegradeRequest from "../pages/IntructorRegradeRequest/Intructor
 import InstructorSearchResultsPage from "../pages/InstructorSearchResultsPage/InstructorSearchResultsPage";
 import PeerReviewPage from "../pages/PeerReviewPage/PeerReviewPage";
 import ReviewSuccessPage from "../pages/PeerReviewPage/ReviewSuccessPage";
-import { getCurrentAccount } from "../utils/accountUtils";
+import { useCurrentAccount } from "../utils/accountUtils";
 import { toast } from "react-toastify";
 import { ROLE } from "../constant/roleEnum";
+import { useRef } from "react";
+
 const ProtectedRoute = ({ children, role }) => {
-  const user = getCurrentAccount();
+  const user = useCurrentAccount();
+  const hasShownToast = useRef(false);
+  
   if (!user) {
     // User is not logged in, redirect to login page without error message
     // This handles the case when user logs out
@@ -41,7 +45,11 @@ const ProtectedRoute = ({ children, role }) => {
   }
   if (user?.roles[0] !== role) {
     // User is logged in but doesn't have the correct role
-    toast.error("You don't have permission to access this page!");
+    // Use ref to prevent multiple toasts on re-renders
+    if (!hasShownToast.current) {
+      hasShownToast.current = true;
+      toast.error("You don't have permission to access this page!");
+    }
     return <Navigate to="/" replace />;
   }
   return children;
