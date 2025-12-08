@@ -103,11 +103,9 @@ const LoginPage = () => {
     handleGoogleCallback();
   }, []);
 
-  // --- PHẦN GIAO DIỆN MỚI (NEW UI) ---
   return (
     <div className="relative min-h-screen w-full flex items-center justify-center bg-black text-zinc-200 overflow-hidden font-sans">
       
-      {/* Background Aurora */}
       <Aurora
         className="absolute top-0 left-0 w-full h-full z-0"
         colorStops={['#0055FF', '#FF8C00', '#20BF55']}
