@@ -494,28 +494,33 @@ export default function AdminClassManagement() {
                         </span>
                       </td>
                       <td className="p-3">
-                        <button
-                          disabled={c.isActive}
-                          className={`font-semibold mr-2 ${c.isActive
-                              ? "text-gray-400 cursor-not-allowed"
-                              : "text-green-500 hover:text-green-700"
-                            }`}
-                          onClick={() => !c.isActive && handleOpenUpdateForm(c)}
-                        >
-                          Update
-                        </button>
-                        <button
-                          className="text-orange-500 hover:text-orange-700 font-semibold"
-                          onClick={() => handleViewDetail(c.courseInstanceId)}
-                        >
-                          View Detail
-                        </button>
-                        <button
-                          className="text-blue-500 hover:text-blue-700 font-semibold"
-                          onClick={() => handleToggleStatus(c.courseInstanceId, c.isActive)}
-                        >
-                          {c.isActive ? "Deactivate" : "Activate"}
-                        </button>
+                        <div className="flex flex-wrap gap-2">
+                          <button
+                            disabled={c.isActive}
+                            className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${c.isActive
+                                ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                                : "bg-green-50 text-green-600 hover:bg-green-100 border border-green-200"
+                              }`}
+                            onClick={() => !c.isActive && handleOpenUpdateForm(c)}
+                          >
+                            ✏️ Update
+                          </button>
+                          <button
+                            className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-orange-50 text-orange-600 hover:bg-orange-100 border border-orange-200 transition-all"
+                            onClick={() => handleViewDetail(c.courseInstanceId)}
+                          >
+                            👁️ View
+                          </button>
+                          <button
+                            className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${c.isActive
+                                ? "bg-red-50 text-red-600 hover:bg-red-100 border border-red-200"
+                                : "bg-blue-50 text-blue-600 hover:bg-blue-100 border border-blue-200"
+                              }`}
+                            onClick={() => handleToggleStatus(c.courseInstanceId, c.isActive)}
+                          >
+                            {c.isActive ? "🔒 Deactivate" : "🔓 Activate"}
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   );
