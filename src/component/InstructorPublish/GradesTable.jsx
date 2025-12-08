@@ -33,6 +33,19 @@ const GradesTable = ({
     }
   };
 
+  // Check if peer review was not graded for Submitted status
+  // When status is Submitted and instructorGrade equals finalGrade, it means peer review was not conducted
+  const isPeerReviewNotGraded = (student) => {
+    if (student.status !== 'Submitted') return false;
+    // If both instructor grade and final grade exist and are equal, peer review was not applied
+    if (student.instructorGrade !== null && student.instructorGrade !== undefined &&
+        student.finalGrade !== null && student.finalGrade !== undefined &&
+        student.instructorGrade === student.finalGrade) {
+      return true;
+    }
+    return false;
+  };
+
   const assignmentStatus = assignmentInfo?.status ?? assignmentInfo?.assignmentStatus ?? (filteredStudents && filteredStudents.length > 0 ? filteredStudents[0].assignmentStatus : undefined);
 
   // derive whether actions were already applied from assignmentInfo fields (common names)
@@ -186,24 +199,30 @@ const GradesTable = ({
                     <td className="px-6 py-4 text-sm text-gray-600">{student.studentCode}</td>
                     <td className="px-6 py-4 text-sm text-gray-800">{student.studentName}</td>
                     <td className="px-6 py-4 text-center">
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getGradeColor(student.peerReview)}`}>
-                        {student.peerReview !== null && student.peerReview !== undefined
-                          ? (student.peerReview).toFixed(1)
-                          : '--'}
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${student.status === 'Not Submitted' || isPeerReviewNotGraded(student) ? 'text-gray-400 bg-gray-50' : getGradeColor(student.peerReview)}`}>
+                        {student.status === 'Not Submitted' || isPeerReviewNotGraded(student)
+                          ? '--'
+                          : (student.peerReview !== null && student.peerReview !== undefined
+                            ? (student.peerReview).toFixed(1)
+                            : '--')}
                       </span>
                     </td>
                     <td className="px-6 py-4 text-center">
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getGradeColor(student.instructorGrade)}`}>
-                        {student.instructorGrade !== null && student.instructorGrade !== undefined
-                          ? (student.instructorGrade).toFixed(1)
-                          : '--'}
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${student.status === 'Not Submitted' ? 'text-gray-400 bg-gray-50' : getGradeColor(student.instructorGrade)}`}>
+                        {student.status === 'Not Submitted'
+                          ? '--'
+                          : (student.instructorGrade !== null && student.instructorGrade !== undefined
+                            ? (student.instructorGrade).toFixed(1)
+                            : '--')}
                       </span>
                     </td>
                     <td className="px-6 py-4 text-center">
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getGradeColor(student.finalGrade)}`}>
-                        {student.finalGrade !== null && student.finalGrade !== undefined
-                          ? (student.finalGrade).toFixed(1)
-                          : '--'}
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${student.status === 'Not Submitted' ? 'text-gray-400 bg-gray-50' : getGradeColor(student.finalGrade)}`}>
+                        {student.status === 'Not Submitted'
+                          ? '--'
+                          : (student.finalGrade !== null && student.finalGrade !== undefined
+                            ? (student.finalGrade).toFixed(1)
+                            : '--')}
                       </span>
                     </td>
                     <td className="px-6 py-4 text-center">
