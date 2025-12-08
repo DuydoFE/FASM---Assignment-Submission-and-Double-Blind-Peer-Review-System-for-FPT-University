@@ -47,7 +47,7 @@ const LoginPage = () => {
       console.log("Login success:", result);
       dispatch(loginRedux(result));
       toast.success("Login successful!");
-
+      
       localStorage.setItem("token", result.accessToken);
       localStorage.setItem("refreshToken", result.refreshToken);
 
@@ -73,7 +73,7 @@ const LoginPage = () => {
       const isGoogleCallback = params.get("google");
       const accessToken = params.get("accessToken");
       const refreshToken = params.get("refreshToken");
-
+      
       if (isGoogleCallback) {
         // Check if we have valid tokens from the URL (new login attempt)
         if (!accessToken || !refreshToken) {
@@ -106,7 +106,12 @@ const LoginPage = () => {
           window.history.replaceState({}, document.title, "/login");
           
           const roles = res.data.data.roles || [];
-
+          // Use setTimeout to ensure Redux state is updated before navigation
+          setTimeout(() => {
+            if (roles.includes("Admin")) navigate("/admin/dashboard");
+            else if (roles.includes("Instructor")) navigate("/instructor/dashboard");
+            else navigate("/");
+          }, 100);
         } catch (err) {
           console.error("Failed to fetch user after Google callback:", err);
           // Clear any stored tokens on failure
