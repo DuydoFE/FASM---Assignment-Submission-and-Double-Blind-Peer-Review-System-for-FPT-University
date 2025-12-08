@@ -65,7 +65,7 @@ const GradingRightColumn = ({
                                             min="0"
                                             max="10"
                                             step="0.1"
-                                            value={c.score}
+                                            value={c.score === null ? '' : c.score}
                                             onChange={(e) => {
                                                 let value = parseFloat(e.target.value);
                                                 if (isNaN(value)) value = null;
@@ -73,6 +73,7 @@ const GradingRightColumn = ({
                                                 updateCriteriaScore(c.criteriaId, 'score', value);
                                             }}
                                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                            placeholder="Enter score"
                                         />
                                     </div>
 
