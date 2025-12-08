@@ -116,16 +116,12 @@ const LoginPage = () => {
         speed={0.2}
       />
 
-      {/* --- WRAPPER HIỆU ỨNG VIỀN --- */}
       <div className="relative z-10 w-full max-w-4xl rounded-2xl overflow-hidden p-[2px] shadow-2xl animate-fade-in-up group">
         
-        {/* Layer Gradient Xoay (Chỉnh 10s cho chậm) */}
         <div className="absolute inset-[-100%] animate-[spin_10s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#FF8C00_0%,#0055FF_50%,#20BF55_100%)] opacity-70 group-hover:opacity-100 transition-opacity duration-500" />
         
-        {/* --- NỘI DUNG --- */}
         <div className="relative h-full w-full bg-zinc-950/90 backdrop-blur-xl rounded-2xl flex flex-col md:flex-row overflow-hidden">
           
-          {/* Cột Trái: Form Login Username/Password */}
           <div className="w-full md:w-1/2 p-8 md:p-12 flex flex-col items-center border-b md:border-b-0 md:border-r border-white/5">
             <img 
               src={fasmLogo} 
