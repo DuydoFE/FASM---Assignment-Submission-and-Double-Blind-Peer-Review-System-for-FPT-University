@@ -70,7 +70,7 @@ const InstructorGradingDetail = () => {
                 name: c.title ?? c.criteriaTitle ?? 'Untitled',
                 description: c.description ?? '',
                 weight: typeof c.weight === 'number' ? c.weight : parseFloat(c.weight) || 0,
-                score: 0,
+                score: null,
                 feedback: '',
                 order: index + 1,
                 aiSummary: null
