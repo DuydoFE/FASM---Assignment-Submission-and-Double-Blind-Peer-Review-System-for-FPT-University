@@ -62,7 +62,7 @@ const LoginPage = () => {
 
   const handleLoginGoogle = () => {
     window.location.href =
-      "https://api.fasm.site/api/account/google-login?returnUrl=https://fasm-fpt.site/";
+      "https://api.fasm.site/api/account/google-login?returnUrl=https://fasm-fpt.site/login?google=true";
   };
 
   useEffect(() => {
