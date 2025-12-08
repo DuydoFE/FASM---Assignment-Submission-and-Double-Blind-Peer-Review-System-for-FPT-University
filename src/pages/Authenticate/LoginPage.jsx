@@ -62,7 +62,7 @@ const LoginPage = () => {
 
   const handleLoginGoogle = () => {
     window.location.href =
-      "https://localhost:7104/api/account/google-login?returnUrl=http://localhost:5173/login?google=true";
+      "https://api.fasm.site/api/account/google-login?returnUrl=http://localhost:5173/login?google=true";
   };
 
   useEffect(() => {
