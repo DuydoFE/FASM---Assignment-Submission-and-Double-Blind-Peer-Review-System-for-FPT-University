@@ -14,6 +14,7 @@ import {
 
 export default function AdminClassManagement() {
   const navigate = useNavigate();
+const startDate = new Date(selectedDate).toISOString();
 
   const [classes, setClasses] = useState([]);
   const [campuses, setCampuses] = useState([]);
@@ -36,6 +37,8 @@ export default function AdminClassManagement() {
     sectionCode: "",
     startDate: "",
     endDate: "",
+    enrollmentPassword: "",
+    requiresApproval: true,
   });
 
   const [showUpdateForm, setShowUpdateForm] = useState(false);
@@ -100,42 +103,70 @@ export default function AdminClassManagement() {
   };
 
   const handleNewClassChange = (e) => {
-    setNewClass({ ...newClass, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+
+    setNewClass({
+      ...newClass,
+      [name]:
+        ["courseId", "campusId", "semesterId"].includes(name)
+          ? Number(value)
+          : name === "requiresApproval"
+            ? value === "true"
+            : value,
+    });
   };
 
+  const formatToISO = (input) => {
+  if (!input) return null;
+  const d = new Date(input);
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}T${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`;
+};
+
+
+
   const handleAddClass = async () => {
-    if (!newClass.campusId || !newClass.semesterId || !newClass.courseId || !newClass.sectionCode.trim()) {
-      toast.warn("Vui lòng điền đầy đủ thông tin!");
-      return;
-    }
+    const { campusId, semesterId, courseId, sectionCode, startDate, endDate } = newClass;
+
+    if (!campusId || !semesterId || !courseId || !sectionCode.trim())
+      return toast.warn("⚠ Vui lòng nhập đầy đủ thông tin!");
+    if (new Date(startDate) < new Date())
+      return toast.error("⛔ Start date cannot be earlier than the current time!");
+    const selectedSemester = semesters.find(s => s.semesterId === Number(semesterId));
+    if (selectedSemester && new Date(endDate) > new Date(selectedSemester.endDate))
+      return toast.error("⛔ End date cannot be later than the semester's end date!");
+    if (classes.some(c => c.sectionCode.toLowerCase() === sectionCode.toLowerCase()))
+      return toast.error("⛔ Class name already exists!");
+    const payload = {
+  courseId: Number(newClass.courseId),
+  campusId: Number(newClass.campusId),
+  semesterId: newClass.semesterId, // MUST be DB ID
+  sectionCode: newClass.sectionCode,
+  requiresApproval: true,
+  startDate: new Date(newClass.startDate).toISOString(),
+  endDate: new Date(newClass.endDate).toISOString()
+}
 
     try {
-      const requestPayload = {
-        courseId: Number(newClass.courseId),
-        campusId: Number(newClass.campusId),
-        semesterId: Number(newClass.semesterId),
-        sectionCode: newClass.sectionCode.trim(),
+      await createCourseInstance(payload);
+      toast.success("🎉 Class created successfully!");
+      setShowAddForm(false);
+      setNewClass({
+        campusId: "",
+        semesterId: "",
+        courseId: "",
+        sectionCode: "",
         enrollmentPassword: "",
         requiresApproval: true,
-        startDate: new Date(newClass.startDate).toISOString(),
-        endDate: new Date(newClass.endDate).toISOString(),
-      };
-
-      await createCourseInstance(requestPayload);
-
-      toast.success("Tạo lớp thành công!");
-
-      setShowAddForm(false);
-      setNewClass({ campusId: "", semesterId: "", courseId: "", sectionCode: "" });
+        startDate: "",
+        endDate: "",
+      });
 
       if (filters.campus) {
         const res = await getCourseInstancesByCampusId(Number(filters.campus));
-        setClasses(Array.isArray(res?.data) ? res.data : []);
+        setClasses(res.data || []);
       }
     } catch (err) {
-      console.error(err);
-      const msg = err.response?.data?.message || "Tạo lớp thất bại!";
-      toast.error(msg);
+      toast.error(err.response?.data?.message || "Fail to create!");
     }
   };
 
@@ -188,10 +219,16 @@ export default function AdminClassManagement() {
       sectionCode: c.sectionCode || "",
       enrollmentPassword: c.enrollmentPassword || "",
       requiresApproval: true,
-      startDate: c.startDate ? new Date(c.startDate).toISOString().slice(0, 16) : "",
-      endDate: c.endDate ? new Date(c.endDate).toISOString().slice(0, 16) : ""
+      startDate: toDatetimeLocal(c.startDate),
+      endDate: toDatetimeLocal(c.endDate)
     });
     setShowUpdateForm(true);
+  };
+
+  const toDatetimeLocal = (dateString) => {
+    if (!dateString) return "";
+    const date = new Date(dateString);
+    return date.toISOString().slice(0, 16);
   };
 
   const handleUpdateClassChange = (e) => {
@@ -206,14 +243,15 @@ export default function AdminClassManagement() {
 
     try {
       const requestPayload = {
-        ...updateClass,
-        courseInstanceId: Number(updateClass.courseInstanceId),
-        courseId: Number(updateClass.courseId),
-        campusId: Number(updateClass.campusId),
-        semesterId: Number(updateClass.semesterId),
-        startDate: new Date(updateClass.startDate).toISOString(),
-        endDate: new Date(updateClass.endDate).toISOString()
-      };
+  ...updateClass,
+  courseInstanceId: Number(updateClass.courseInstanceId),
+  courseId: Number(updateClass.courseId),
+  campusId: Number(updateClass.campusId),
+  semesterId: Number(updateClass.semesterId),
+  startDate: formatToISO(updateClass.startDate),
+  endDate: formatToISO(updateClass.endDate),
+};
+
       await updateCourseInstance(requestPayload);
       toast.success("Class updated successfully!");
       setShowUpdateForm(false);
@@ -302,10 +340,12 @@ export default function AdminClassManagement() {
               <option value="">Select Campus</option>
               {campuses.map((c) => (<option key={c.campusId} value={c.campusId}>{c.name || c.campusName}</option>))}
             </select>
-            <select name="semesterId" value={newClass.semesterId} onChange={handleNewClassChange} className="border rounded-lg p-3 flex-1 min-w-[150px]">
-              <option value="">Select Semester</option>
-              {semesters.map((s) => (<option key={s.semesterId} value={s.semesterId}>{s.name || s.semesterName}</option>))}
-            </select>
+            <select onChange={(e) => setNewClass({...newClass, semesterId: e.target.value})}>
+  {semesters.map(s => (
+    <option key={s.id} value={s.id}>{s.name}</option>
+  ))}
+</select>
+
             <select name="courseId" value={newClass.courseId || ""} onChange={handleNewClassChange} className="border rounded-lg p-3 flex-1 min-w-[150px]">
               <option value="">Select Course</option>
               {courses.map((course) => (<option key={course.courseId} value={course.courseId}>{course.name || course.courseName}</option>))}
@@ -315,17 +355,34 @@ export default function AdminClassManagement() {
               type="datetime-local"
               name="startDate"
               value={newClass.startDate}
+              min={(() => {
+                const now = new Date().toISOString().slice(0, 16);
+                const selectedSemester = semesters.find(s => s.semesterId === Number(newClass.semesterId));
+                const semesterStart = selectedSemester ? new Date(selectedSemester.startDate).toISOString().slice(0, 16) : now;
+
+                return semesterStart > now ? semesterStart : now;
+              })()}
+              max={(() => {
+                const selectedSemester = semesters.find(s => s.semesterId === Number(newClass.semesterId));
+                return selectedSemester ? new Date(selectedSemester.endDate).toISOString().slice(0, 16) : "";
+              })()}
               onChange={handleNewClassChange}
               className="border rounded-lg p-3 flex-1 min-w-[150px]"
-              placeholder="Start Date"
             />
             <input
               type="datetime-local"
               name="endDate"
               value={newClass.endDate}
+              min={newClass.startDate ? newClass.startDate : (() => {
+                const selectedSemester = semesters.find(s => s.semesterId === Number(newClass.semesterId));
+                return selectedSemester ? new Date(selectedSemester.startDate).toISOString().slice(0, 16) : "";
+              })()}
+              max={(() => {
+                const selectedSemester = semesters.find(s => s.semesterId === Number(newClass.semesterId));
+                return selectedSemester ? new Date(selectedSemester.endDate).toISOString().slice(0, 16) : "";
+              })()}
               onChange={handleNewClassChange}
               className="border rounded-lg p-3 flex-1 min-w-[150px]"
-              placeholder="End Date"
             />
           </div>
 
