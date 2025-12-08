@@ -184,13 +184,22 @@ const GradingTable = ({
                       <td className="px-6 py-4">
                         <span
                           className={`inline-flex items-center justify-center w-20 h-10 border-2 rounded-lg font-semibold ${getScoreStyle(
-                            student.instructorScore
+                            student.status === "Graded" ? student.instructorScore :
+                            (student.instructorScore === 0 || student.instructorScore === 0.0) ? null : student.instructorScore
                           )}`}
                         >
-                          {student.instructorScore !== null &&
-                          student.instructorScore !== undefined
-                            ? `${student.instructorScore.toFixed(1)}`
-                            : "--"}{" "}
+                          {student.status === "Graded"
+                            ? (student.instructorScore !== null &&
+                               student.instructorScore !== undefined
+                                ? `${student.instructorScore.toFixed(1)}`
+                                : "--")
+                            : ((student.status === "Submitted" || student.status === "Not Submitted") &&
+                               (student.instructorScore === 0 || student.instructorScore === 0.0)
+                                ? "--"
+                                : (student.instructorScore !== null &&
+                                   student.instructorScore !== undefined
+                                    ? `${student.instructorScore.toFixed(1)}`
+                                    : "--"))}{" "}
                           / {assignmentInfo?.maxScore || 10}
                         </span>
                       </td>
