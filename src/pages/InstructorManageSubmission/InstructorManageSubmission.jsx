@@ -55,16 +55,9 @@ const InstructorManageSubmission = () => {
     }
   };
 
-  const handleViewDetails = async (student) => {
+  const handleViewDetails = (student) => {
     if (!student.hasDetail) return;
-
-    try {
-      await submissionService.getSubmissionDetails(student.submissionId);
-      navigate(`/instructor/submission-detail/${student.submissionId}`);
-    } catch (error) {
-      console.error('Failed to fetch submission details:', error);
-      toast.error('Failed to load submission details. Please try again.');
-    }
+    navigate(`/instructor/submission-detail/${student.submissionId}`);
   };
 
   const getStatusColor = (status) => {

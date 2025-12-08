@@ -1,9 +1,10 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { Search, ListChecks, Upload } from "lucide-react";
-import ShinyText from "@/components/ShinyText";
 import BlurText from "@/components/BlurText";
 import SplitText from "@/components/SplitText";
+
+import fasmLogo from "../../assets/img/FASM.png"; 
 
 const handleAnimationComplete = () => {
   console.log("All letters have animated!");
@@ -14,20 +15,20 @@ const HomePage = () => {
     <div>
       <section className="min-h-[calc(100vh-150px)] flex flex-col items-center justify-center text-center overflow-hidden">
         <div className="container mx-auto px-4 flex flex-col items-center">
-          <ShinyText
-            text="FASM"
-            disabled={false}
-            speed={3}
-            className="text-[8rem] md:text-[12rem] font-extrabold mb-2 bg-gradient-to-r from-orange-500 via-amber-500 to-orange-600 bg-clip-text text-transparent leading-none"
+          
+         
+          <img 
+            src={fasmLogo} 
+            alt="FASM Logo" 
+         
+            className="h-48 md:h-80 w-auto object-contain mb-8 drop-shadow-2xl animate-fade-in-up" 
           />
 
-         
           <BlurText
             text="Fpt Assignment Submission & Management"
             className="text-2xl md:text-3xl font-bold text-zinc-300 mb-4"
           />
           
-
           <SplitText
             text="Fair Assessments, Transparent Grading"
             className="text-2xl font-semibold text-center"
@@ -43,9 +44,7 @@ const HomePage = () => {
             onLetterAnimationComplete={handleAnimationComplete}
           />
 
-        
           <div className="flex flex-col sm:flex-row justify-center gap-4 mt-10">
-          
             <Link
               to="/register"
               className="px-8 py-3 bg-white text-black hover:bg-zinc-200 rounded-lg font-semibold transition-all"

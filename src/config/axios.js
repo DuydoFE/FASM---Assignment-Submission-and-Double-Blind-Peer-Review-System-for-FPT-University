@@ -6,6 +6,7 @@ const baseUrl = import.meta.env.VITE_API_BASE_URL;
 const api = axios.create({
   baseURL: baseUrl,
   timeout: 3000000,
+  withCredentials: true, // Required to send/receive cookies for cross-origin requests
 });
 
 // Thêm token vào header trước mỗi request

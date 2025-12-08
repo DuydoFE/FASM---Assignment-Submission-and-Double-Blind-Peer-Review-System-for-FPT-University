@@ -1,46 +1,53 @@
-import React, { useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
-import { Search, Users, Trash2, Plus } from 'lucide-react';
-import { getCurrentAccount } from '../../utils/accountUtils';
-import { getStudentsInCourse, removeStudentFromCourse, addStudentToCourse } from '../../service/courseService';
-import { toast } from 'react-toastify';
-import AddStudentModal from '../../component/Student/AddStudentModal.jsx';
-import DeleteStudentModal from '../../component/Student/DeleteStudentModal.jsx';
+import React, { useState, useEffect } from "react";
+import { useLocation } from "react-router-dom";
+import { Search, Users, Trash2, Plus } from "lucide-react";
+import { getCurrentAccount } from "../../utils/accountUtils";
+import {
+  getStudentsInCourse,
+  removeStudentFromCourse,
+  addStudentToCourse,
+} from "../../service/courseService";
+import { toast } from "react-toastify";
+import AddStudentModal from "../../component/Student/AddStudentModal.jsx";
+import DeleteStudentModal from "../../component/Student/DeleteStudentModal.jsx";
 
 const InstructorManageClass = () => {
   const currentUser = getCurrentAccount();
   const location = useLocation();
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
   const [courseInfo, setCourseInfo] = useState(null);
   const [students, setStudents] = useState([]);
   const [deleting, setDeleting] = useState(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [studentCode, setStudentCode] = useState('');
-  const [modalError, setModalError] = useState('');
+  const [studentCode, setStudentCode] = useState("");
+  const [modalError, setModalError] = useState("");
   const [addingStudent, setAddingStudent] = useState(false);
   const [confirmDeleteModal, setConfirmDeleteModal] = useState(false);
   const [studentToDelete, setStudentToDelete] = useState(null);
- 
+
   const [courseInstanceId, setCourseInstanceId] = useState(() => {
     try {
       const fromState = location?.state?.courseInstanceId;
-      const fromStorage = sessionStorage.getItem('currentCourseInstanceId');
-      if (fromState !== undefined && fromState !== null) return String(fromState);
+      const fromStorage = sessionStorage.getItem("currentCourseInstanceId");
+      if (fromState !== undefined && fromState !== null)
+        return String(fromState);
       if (fromStorage) return String(fromStorage);
       return null;
     } catch (e) {
-      return location?.state?.courseInstanceId ? String(location.state.courseInstanceId) : null;
+      return location?.state?.courseInstanceId
+        ? String(location.state.courseInstanceId)
+        : null;
     }
   });
 
   const bgColors = [
-    'bg-blue-100 text-blue-800',
-    'bg-yellow-100 text-yellow-800',
-    'bg-green-100 text-green-800',
-    'bg-purple-100 text-purple-800',
-    'bg-red-100 text-red-800',
-    'bg-indigo-100 text-indigo-800'
+    "bg-blue-100 text-blue-800",
+    "bg-yellow-100 text-yellow-800",
+    "bg-green-100 text-green-800",
+    "bg-purple-100 text-purple-800",
+    "bg-red-100 text-red-800",
+    "bg-indigo-100 text-indigo-800",
   ];
 
   useEffect(() => {
@@ -56,7 +63,7 @@ const InstructorManageClass = () => {
         const mappedStudents = response.map((student, index) => ({
           id: student.studentName
             ? student.studentName.substring(0, 2).toUpperCase()
-            : 'ST',
+            : "ST",
           code: student.studentCode,
           name: student.studentName,
           email: student.studentEmail,
@@ -64,24 +71,28 @@ const InstructorManageClass = () => {
           enrolledAt: student.enrolledAt,
           courseStudentId: student.courseStudentId,
           userId: student.userId,
-          courseInstanceId: student.courseInstanceId
+          courseInstanceId: student.courseInstanceId,
         }));
 
         setStudents(mappedStudents);
 
         if (response.length > 0) {
           const apiId = String(response[0].courseInstanceId);
-          try { sessionStorage.setItem('currentCourseInstanceId', apiId); } catch (e) { /* ignore */ }
+          try {
+            sessionStorage.setItem("currentCourseInstanceId", apiId);
+          } catch (e) {
+            /* ignore */
+          }
           if (apiId !== String(courseInstanceId)) {
             setCourseInstanceId(apiId);
           }
           setCourseInfo({
             courseCode: response[0].courseCode,
-            className: response[0].courseInstanceName
+            className: response[0].courseInstanceName,
           });
         }
       } catch (error) {
-        console.error('Failed to fetch students:', error);
+        console.error("Failed to fetch students:", error);
       } finally {
         setLoading(false);
       }
@@ -100,22 +111,26 @@ const InstructorManageClass = () => {
 
   const handleAddStudent = async (e) => {
     e.preventDefault();
-    setModalError('');
+    setModalError("");
 
     if (!studentCode.trim()) {
-      setModalError('Please enter a student code');
+      setModalError("Please enter a student code");
       return;
     }
 
     try {
       setAddingStudent(true);
-      await addStudentToCourse(courseInstanceId, studentCode.trim(), currentUser.id);
+      await addStudentToCourse(
+        courseInstanceId,
+        studentCode.trim(),
+        currentUser.id
+      );
 
       const response = await getStudentsInCourse(courseInstanceId);
       const mappedStudents = response.map((student, index) => ({
         id: student.studentName
           ? student.studentName.substring(0, 2).toUpperCase()
-          : 'ST',
+          : "ST",
         code: student.studentCode,
         name: student.studentName,
         email: student.studentEmail,
@@ -123,16 +138,20 @@ const InstructorManageClass = () => {
         enrolledAt: student.enrolledAt,
         courseStudentId: student.courseStudentId,
         userId: student.userId,
-        courseInstanceId: student.courseInstanceId
+        courseInstanceId: student.courseInstanceId,
       }));
       setStudents(mappedStudents);
 
-      setStudentCode('');
+      setStudentCode("");
       setIsAddModalOpen(false);
-      toast.success('Student added successfully!');
+      toast.success("Student added successfully!");
     } catch (error) {
-      console.error('Failed to add student:', error);
-      toast.error('Failed to add student. Please try again.');
+      console.error("Failed to add student:", error);
+      toast.error(
+        error?.response?.data?.message ||
+          error?.response?.data?.error ||
+          "Failed to add student. Please try again."
+      );
     } finally {
       setAddingStudent(false);
     }
@@ -153,13 +172,21 @@ const InstructorManageClass = () => {
         studentToDelete.courseInstanceId,
         studentToDelete.courseStudentId
       );
-      setStudents(students.filter(s => s.courseStudentId !== studentToDelete.courseStudentId));
+      setStudents(
+        students.filter(
+          (s) => s.courseStudentId !== studentToDelete.courseStudentId
+        )
+      );
       setConfirmDeleteModal(false);
       setStudentToDelete(null);
-      toast.success('Student removed successfully!');
+      toast.success("Student removed successfully!");
     } catch (error) {
-      console.error('Failed to remove student:', error);
-      toast.error('Failed to remove student. Please try again.');
+      console.error("Failed to remove student:", error);
+      toast.error(
+        error?.response?.data?.message ||
+          error?.response?.data?.error ||
+          "Failed to delete student. Please try again."
+      );
     } finally {
       setDeleting(false);
     }
@@ -171,7 +198,11 @@ const InstructorManageClass = () => {
   };
 
   if (!courseInstanceId) {
-    return <div className="p-4 text-red-500">Invalid class ID. Please navigate from the class list.</div>;
+    return (
+      <div className="p-4 text-red-500">
+        Invalid class ID. Please navigate from the class list.
+      </div>
+    );
   }
 
   return (
