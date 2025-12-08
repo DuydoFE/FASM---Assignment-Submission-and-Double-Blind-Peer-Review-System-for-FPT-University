@@ -46,7 +46,7 @@ const LoginPage = () => {
       console.log("Login success:", result);
       dispatch(loginRedux(result));
       toast.success("Login successful!");
-      
+
       localStorage.setItem("token", result.accessToken);
       localStorage.setItem("refreshToken", result.refreshToken);
       if (result.roles?.includes("Admin")) navigate("/admin/dashboard");
@@ -68,9 +68,9 @@ const LoginPage = () => {
       const fullUrl = window.location.href;
       const query = fullUrl.split('?').slice(1).join('&')
       const params = new URLSearchParams(query);
-      const isGoogleCallback = params.get("google"); 
-      const accessToken = params.get("accessToken"); 
-      const refreshToken = params.get("refreshToken"); 
+      const isGoogleCallback = params.get("google");
+      const accessToken = params.get("accessToken");
+      const refreshToken = params.get("refreshToken");
       if (isGoogleCallback) {
         try {
           console.log("Detected Google callback, fetching user info...");
@@ -83,8 +83,7 @@ const LoginPage = () => {
           dispatch(loginRedux(res.data.data));
           toast.success("Google Login successful!");
           const roles = res.data.data.roles || [];
-          if (roles.includes("Admin")) navigate("/admin/dashboard");
-          else if (roles.includes("Instructor")) navigate("/instructor/dashboard");
+          if (roles.includes("Instructor")) navigate("/instructor/dashboard");
           else navigate("/");
         } catch (err) {
           console.error("Failed to fetch user after Google callback:", err);
