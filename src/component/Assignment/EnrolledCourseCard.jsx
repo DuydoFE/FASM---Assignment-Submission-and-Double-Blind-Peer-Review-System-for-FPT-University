@@ -79,10 +79,6 @@ const EnrolledCourseCard = ({
           <Eye className="w-4 h-4 mr-2" />
           View assignments
         </button>
-        <button className="flex items-center px-4 py-2 bg-white border border-gray-300 text-gray-700 font-semibold rounded-md hover:bg-gray-50 transition-colors">
-          <Info className="w-4 h-4 mr-2" />
-          Detail
-        </button>
       </div>
     </div>
   );

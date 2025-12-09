@@ -149,60 +149,20 @@ const StudentAssignmentPage = () => {
         <div className="mb-4 flex items-center text-sm text-gray-600">
           <span>My Assignment</span>
           <ChevronRight className="w-4 h-4 mx-1" />
-          <span className="font-semibold text-gray-800">My Assignmnent</span>
+          <span className="font-semibold text-gray-800">My Assignment</span>
         </div>
 
         <div className="bg-white rounded-lg shadow-sm p-8">
           <h1 className="text-2xl font-bold text-gray-800 mb-8">My Class</h1>
           {renderEnrolledCourses()}
 
-          <div className="py-8">
-            <h3 className="text-lg font-bold text-gray-800">Choose Class</h3>
-            <p className="text-sm text-gray-600 mb-4">Choose Class to join</p>
-            <div className="flex items-center space-x-4">
-              <div>
-                <label
-                  htmlFor="semester"
-                  className="block text-sm font-medium text-gray-700 mb-1"
-                >
-                  Semester *
-                </label>
-                <select
-                  id="semester"
-                  className="w-48 p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option>Fall 2025</option>
-                  <option>Spring 2026</option>
-                  <option>Summer 2026</option>
-                </select>
-              </div>
-              <div>
-                <label
-                  htmlFor="year"
-                  className="block text-sm font-medium text-gray-700 mb-1"
-                >
-                  Years *
-                </label>
-                <select
-                  id="year"
-                  className="w-48 p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option>2025</option>
-                  <option>2026</option>
-                  <option>2027</option>
-                </select>
-              </div>
-              <div className="self-end">
-                <button className="px-5 py-2 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700 transition-colors">
-                  Filters
-                </button>
-              </div>
-            </div>
-          </div>
-          <div>
+
+          <div className="mt-8">
             <h3 className="text-lg font-bold text-gray-800 mb-2">
-              Search results
+              Available Courses
             </h3>
+            <p className="text-sm text-gray-600 mb-4">Choose Class to join</p>
+            
             <div className="border rounded-lg">
               {isLoadingRegistrations && (
                 <p className="p-4 text-center">Loading courses...</p>
@@ -234,7 +194,6 @@ const StudentAssignmentPage = () => {
           </div>
         </div>
 
-        {/* Help Link */}
         <div className="text-center mt-8">
           <a
             href="#"
@@ -244,7 +203,7 @@ const StudentAssignmentPage = () => {
             Help ?
           </a>
         </div>
-        {/* Render Modal ở đây */}
+        
         <JoinClassModal
           isOpen={isModalOpen}
           onClose={handleCloseModal}
