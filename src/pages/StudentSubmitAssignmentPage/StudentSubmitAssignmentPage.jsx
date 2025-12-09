@@ -178,12 +178,11 @@ const StudentSubmitAssignmentPage = () => {
           <h1 className="text-3xl font-bold text-gray-900">
             {assignment.courseName}
           </h1>
-          <p className="text-gray-500 mt-1">Instructor: N/A</p>
+      
         </div>
 
         {/* Main Content Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Left Column: Assignment Details */}
           <div className="lg:col-span-2">
             <div className={`p-6 rounded-lg border ${statusStyle.card}`}>
               {/* Card Header */}
@@ -199,7 +198,6 @@ const StudentSubmitAssignmentPage = () => {
                     </p>
                   </div>
                 </div>
-                {/* Luôn hiển thị status từ API */}
                 {assignment.status && (
                   <div
                     className={`px-3 py-1 text-sm font-semibold rounded-full ${statusStyle.badge}`}
@@ -271,9 +269,7 @@ const StudentSubmitAssignmentPage = () => {
                   </p>
                 ) : (
                   <div className="space-y-6">
-                    {/* Bọc trong div space-y-6 để tạo khoảng cách giữa 2 thẻ */}
-
-                    {/* Card Review trong lớp (Giữ nguyên) */}
+                  
                     <PeerReviewCard
                       completed={completedReviews}
                       required={requiredReviews}
@@ -281,7 +277,6 @@ const StudentSubmitAssignmentPage = () => {
                       isReviewOpen={isReviewOpen}
                     />
 
-                    {/* Card Review khác lớp (MỚI THÊM) */}
                     {isReviewOpen && (
                       <CrossClassReviewCard
                         assignmentId={assignmentId}

@@ -145,7 +145,6 @@ const PeerReviewPage = () => {
           aiScore = fb.score || 0;
         }
 
-        // Đảm bảo AI cũng trả về đúng step 0.25 (phòng hờ)
         aiScore = Math.round(aiScore * 4) / 4;
 
         if (aiScore > criteria.maxScore) aiScore = criteria.maxScore;
@@ -470,7 +469,7 @@ const PeerReviewPage = () => {
                           )
                         }
                         onBlur={() => handleScoreBlur(criterion.criteriaId)}
-                        placeholder="0"
+                        placeholder=""
                         className={`w-20 text-center font-bold text-lg text-gray-900 border rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-400 ${
                           validationError &&
                           scores[criterion.criteriaId] === null
