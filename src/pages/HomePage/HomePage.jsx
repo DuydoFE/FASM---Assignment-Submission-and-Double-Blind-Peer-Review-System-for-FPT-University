@@ -16,11 +16,9 @@ const HomePage = () => {
       <section className="min-h-[calc(100vh-150px)] flex flex-col items-center justify-center text-center overflow-hidden">
         <div className="container mx-auto px-4 flex flex-col items-center">
           
-         
           <img 
             src={fasmLogo} 
             alt="FASM Logo" 
-         
             className="h-48 md:h-80 w-auto object-contain mb-8 drop-shadow-2xl animate-fade-in-up" 
           />
 
@@ -72,8 +70,13 @@ const HomePage = () => {
               grading process.
             </p>
           </div>
+
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-5xl mx-auto">
-            <div className="bg-white/5 rounded-lg border border-white/10 p-8 text-left shadow-lg hover:shadow-cyan-500/10 hover:-translate-y-1 transition-all duration-300">
+            
+            <Link 
+              to="/Search" 
+              className="block bg-white/5 rounded-lg border border-white/10 p-8 text-left shadow-lg hover:shadow-cyan-500/10 hover:-translate-y-1 transition-all duration-300"
+            >
               <div className="inline-flex items-center justify-center w-12 h-12 mb-6 rounded-lg bg-orange-500/10">
                 <Search className="w-6 h-6 text-orange-500" />
               </div>
@@ -83,9 +86,12 @@ const HomePage = () => {
               <p className="text-zinc-400">
                 Quickly find assignments, courses, and announcements.
               </p>
-            </div>
+            </Link>
 
-            <div className="bg-white/5 rounded-lg border border-white/10 p-8 text-left shadow-lg hover:shadow-purple-500/10 hover:-translate-y-1 transition-all duration-300">
+            <Link 
+              to="/my-assignments"
+              className="block bg-white/5 rounded-lg border border-white/10 p-8 text-left shadow-lg hover:shadow-purple-500/10 hover:-translate-y-1 transition-all duration-300"
+            >
               <div className="inline-flex items-center justify-center w-12 h-12 mb-6 rounded-lg bg-orange-500/10">
                 <ListChecks className="w-6 h-6 text-orange-500" />
               </div>
@@ -95,9 +101,12 @@ const HomePage = () => {
               <p className="text-zinc-400">
                 Keep track of all assignments, due dates, and instructions.
               </p>
-            </div>
+            </Link>
 
-            <div className="bg-white/5 rounded-lg border border-white/10 p-8 text-left shadow-lg hover:shadow-green-500/10 hover:-translate-y-1 transition-all duration-300">
+            <Link 
+              to="/my-assignments"
+              className="block bg-white/5 rounded-lg border border-white/10 p-8 text-left shadow-lg hover:shadow-green-500/10 hover:-translate-y-1 transition-all duration-300"
+            >
               <div className="inline-flex items-center justify-center w-12 h-12 mb-6 rounded-lg bg-orange-500/10">
                 <Upload className="w-6 h-6 text-orange-500" />
               </div>
@@ -107,7 +116,8 @@ const HomePage = () => {
               <p className="text-zinc-400">
                 Upload files, enter metadata, and tag with just a few clicks.
               </p>
-            </div>
+            </Link>
+
           </div>
         </div>
       </section>
