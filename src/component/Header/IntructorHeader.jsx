@@ -9,24 +9,11 @@ import { toast } from "react-toastify";
 import { useState } from "react";
 // Import component NotificationPopover đã tách riêng
 import NotificationPopover from "./NotificationPopover";
+import fasmLogo from "../../assets/img/FASM.png";
 
 const FasmLogo = () => (
-  <div className="flex items-center space-x-2">
-    <div className="bg-orange-500 p-2 rounded-md">
-      <svg
-        width="24"
-        height="24"
-        viewBox="0 0 24 24"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
-      >
-        <path
-          d="M4 4H20V18H4V4ZM6 8V16H18V8H6Z"
-          fill="white"
-        />
-      </svg>
-    </div>
-    <span className="font-bold text-2xl text-gray-800">FASM</span>
+  <div className="flex items-center">
+    <img src={fasmLogo} alt="FASM Logo" className="h-16 w-auto object-contain" />
   </div>
 );
 

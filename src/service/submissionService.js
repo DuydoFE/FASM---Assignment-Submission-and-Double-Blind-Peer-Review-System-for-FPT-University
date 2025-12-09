@@ -79,6 +79,22 @@ const getExportSubmissions = async (userId, classId, assignmentId) => {
     throw error.response?.data || new Error("Lỗi mạng hoặc server không phản hồi");
   }
 };
+const checkPlagiarism = async (assignmentId, file) => {
+  const formData = new FormData();
+  formData.append("file", file);
+
+  try {
+   
+    const response = await api.post(`/StudentReview/assignment/${assignmentId}/check-plagiarism`, formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Lỗi khi kiểm tra đạo văn:", error.response?.data || error.message);
+    throw error.response?.data || new Error("Lỗi mạng hoặc server không phản hồi");
+  }
+};
+
 
 
 export const submissionService = {
@@ -87,6 +103,7 @@ export const submissionService = {
   getSubmissionsByAssignment,
   getSubmissionDetails,
   getExportSubmissions, 
+  checkPlagiarism
 };
 
 

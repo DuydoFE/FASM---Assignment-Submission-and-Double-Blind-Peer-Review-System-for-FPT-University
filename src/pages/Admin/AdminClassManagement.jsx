@@ -99,34 +99,79 @@ export default function AdminClassManagement() {
     setFilters({ ...filters, [e.target.name]: e.target.value });
   };
 
+  const toDatetimeLocal = (dateString) => {
+    if (!dateString) return "";
+    const date = new Date(dateString);
+    return date.toISOString().slice(0, 16);
+  };
+
   const handleNewClassChange = (e) => {
-    setNewClass({ ...newClass, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    
+    // If semester is changed, auto-populate start and end dates from semester
+    if (name === "semesterId" && value) {
+      const selectedSemester = semesters.find(s => s.semesterId === Number(value));
+      if (selectedSemester && selectedSemester.startDate && selectedSemester.endDate) {
+        setNewClass({
+          ...newClass,
+          [name]: value,
+          startDate: toDatetimeLocal(selectedSemester.startDate),
+          endDate: toDatetimeLocal(selectedSemester.endDate)
+        });
+        return;
+      }
+    }
+    
+    setNewClass({ ...newClass, [name]: value });
   };
 
   const handleAddClass = async () => {
-    if (!newClass.campusId || !newClass.semesterId || !newClass.courseId || !newClass.sectionCode.trim()) {
-      toast.warn("Vui lòng điền đầy đủ thông tin!");
+    const { campusId, semesterId, courseId, sectionCode, startDate, endDate } = newClass;
+
+    if (!campusId || !semesterId || !courseId || !sectionCode.trim()) {
+      toast.warn("Vui lòng nhập đầy đủ thông tin!");
       return;
     }
 
+    if (!startDate || !endDate) {
+      toast.warn("Vui lòng chọn ngày bắt đầu và kết thúc!");
+      return;
+    }
+
+    // Validate dates are within semester range
+    const selectedSemester = semesters.find(s => s.semesterId === Number(semesterId));
+    if (selectedSemester) {
+      const semesterStart = new Date(selectedSemester.startDate);
+      const semesterEnd = new Date(selectedSemester.endDate);
+      const classStart = new Date(startDate);
+      const classEnd = new Date(endDate);
+
+      if (classStart < semesterStart) {
+        toast.error(`Ngày bắt đầu không thể trước ngày bắt đầu học kỳ (${semesterStart.toLocaleDateString('en-GB')})!`);
+        return;
+      }
+      if (classEnd > semesterEnd) {
+        toast.error(`Ngày kết thúc không thể sau ngày kết thúc học kỳ (${semesterEnd.toLocaleDateString('en-GB')})!`);
+        return;
+      }
+    }
+
+    const payload = {
+      courseId: Number(courseId),
+      campusId: Number(campusId),
+      semesterId: Number(semesterId),
+      sectionCode: sectionCode.trim(),
+      requiresApproval: true,
+      startDate: new Date(startDate).toISOString(),
+      endDate: new Date(endDate).toISOString(),
+      enrollmentPassword: ""
+    };
+
     try {
-      const requestPayload = {
-        courseId: Number(newClass.courseId),
-        campusId: Number(newClass.campusId),
-        semesterId: Number(newClass.semesterId),
-        sectionCode: newClass.sectionCode.trim(),
-        enrollmentPassword: "",
-        requiresApproval: true,
-        startDate: new Date(newClass.startDate).toISOString(),
-        endDate: new Date(newClass.endDate).toISOString(),
-      };
-
-      await createCourseInstance(requestPayload);
-
+      await createCourseInstance(payload);
       toast.success("Tạo lớp thành công!");
-
       setShowAddForm(false);
-      setNewClass({ campusId: "", semesterId: "", courseId: "", sectionCode: "" });
+      setNewClass({ campusId: "", semesterId: "", courseId: "", sectionCode: "", startDate: "", endDate: "" });
 
       if (filters.campus) {
         const res = await getCourseInstancesByCampusId(Number(filters.campus));
@@ -134,8 +179,7 @@ export default function AdminClassManagement() {
       }
     } catch (err) {
       console.error(err);
-      const msg = err.response?.data?.message || "Tạo lớp thất bại!";
-      toast.error(msg);
+      toast.error(err.response?.data?.message || "Tạo lớp thất bại!");
     }
   };
 
@@ -188,8 +232,8 @@ export default function AdminClassManagement() {
       sectionCode: c.sectionCode || "",
       enrollmentPassword: c.enrollmentPassword || "",
       requiresApproval: true,
-      startDate: c.startDate ? new Date(c.startDate).toISOString().slice(0, 16) : "",
-      endDate: c.endDate ? new Date(c.endDate).toISOString().slice(0, 16) : ""
+      startDate: toDatetimeLocal(c.startDate),
+      endDate: toDatetimeLocal(c.endDate)
     });
     setShowUpdateForm(true);
   };
@@ -212,8 +256,9 @@ export default function AdminClassManagement() {
         campusId: Number(updateClass.campusId),
         semesterId: Number(updateClass.semesterId),
         startDate: new Date(updateClass.startDate).toISOString(),
-        endDate: new Date(updateClass.endDate).toISOString()
+        endDate: new Date(updateClass.endDate).toISOString(),
       };
+
       await updateCourseInstance(requestPayload);
       toast.success("Class updated successfully!");
       setShowUpdateForm(false);
@@ -227,6 +272,16 @@ export default function AdminClassManagement() {
       const msg = err.response?.data?.message || "Class update failed!";
       toast.error(msg);
     }
+  };
+
+  // Get semester date constraints for date inputs
+  const getDateConstraints = (semesterId) => {
+    const selectedSemester = semesters.find(s => s.semesterId === Number(semesterId));
+    if (!selectedSemester) return { min: "", max: "" };
+    return {
+      min: toDatetimeLocal(selectedSemester.startDate),
+      max: toDatetimeLocal(selectedSemester.endDate)
+    };
   };
 
   return (
@@ -306,28 +361,61 @@ export default function AdminClassManagement() {
               <option value="">Select Semester</option>
               {semesters.map((s) => (<option key={s.semesterId} value={s.semesterId}>{s.name || s.semesterName}</option>))}
             </select>
-            <select name="courseId" value={newClass.courseId || ""} onChange={handleNewClassChange} className="border rounded-lg p-3 flex-1 min-w-[150px]">
+            <select name="courseId" value={newClass.courseId} onChange={handleNewClassChange} className="border rounded-lg p-3 flex-1 min-w-[150px]">
               <option value="">Select Course</option>
               {courses.map((course) => (<option key={course.courseId} value={course.courseId}>{course.name || course.courseName}</option>))}
             </select>
-            <input type="text" name="sectionCode" value={newClass.sectionCode} onChange={handleNewClassChange} placeholder="ClassName" className="border rounded-lg p-3 flex-1 min-w-[150px]" />
-            <input
-              type="datetime-local"
-              name="startDate"
-              value={newClass.startDate}
-              onChange={handleNewClassChange}
-              className="border rounded-lg p-3 flex-1 min-w-[150px]"
-              placeholder="Start Date"
-            />
-            <input
-              type="datetime-local"
-              name="endDate"
-              value={newClass.endDate}
-              onChange={handleNewClassChange}
-              className="border rounded-lg p-3 flex-1 min-w-[150px]"
-              placeholder="End Date"
-            />
+            <input type="text" name="sectionCode" value={newClass.sectionCode} onChange={handleNewClassChange} placeholder="Class Name" className="border rounded-lg p-3 flex-1 min-w-[150px]" />
           </div>
+
+          <div className="flex flex-wrap gap-4">
+            <div className="flex-1 min-w-[200px]">
+              <label className="block text-sm font-medium text-gray-600 mb-1">Start Date</label>
+              <input
+                type="datetime-local"
+                name="startDate"
+                value={newClass.startDate}
+                onChange={handleNewClassChange}
+                min={getDateConstraints(newClass.semesterId).min}
+                max={getDateConstraints(newClass.semesterId).max}
+                disabled={!newClass.semesterId}
+                className={`border rounded-lg p-3 w-full focus:outline-orange-400 ${!newClass.semesterId ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+              />
+            </div>
+            <div className="flex-1 min-w-[200px]">
+              <label className="block text-sm font-medium text-gray-600 mb-1">End Date</label>
+              <input
+                type="datetime-local"
+                name="endDate"
+                value={newClass.endDate}
+                onChange={handleNewClassChange}
+                min={getDateConstraints(newClass.semesterId).min}
+                max={getDateConstraints(newClass.semesterId).max}
+                disabled={!newClass.semesterId}
+                className={`border rounded-lg p-3 w-full focus:outline-orange-400 ${!newClass.semesterId ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+              />
+            </div>
+          </div>
+
+          {newClass.semesterId && (() => {
+            const sem = semesters.find(s => s.semesterId === Number(newClass.semesterId));
+            if (sem && sem.startDate && sem.endDate) {
+              return (
+                <div className="text-sm text-orange-600 bg-orange-50 p-3 rounded-lg">
+                  📅 Semester period: <strong>{new Date(sem.startDate).toLocaleDateString('en-GB')}</strong> - <strong>{new Date(sem.endDate).toLocaleDateString('en-GB')}</strong>
+                  <br />
+                  <span className="text-gray-500">You can only select dates within this range.</span>
+                </div>
+              );
+            }
+            return null;
+          })()}
+
+          {!newClass.semesterId && (
+            <div className="text-sm text-gray-500 italic">
+              Please select a semester first to enable date selection.
+            </div>
+          )}
 
           <div className="flex gap-4">
             <button onClick={handleAddClass} className="px-6 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition font-semibold shadow-sm">
@@ -360,22 +448,29 @@ export default function AdminClassManagement() {
             </select>
 
             <input type="text" name="sectionCode" value={updateClass.sectionCode} onChange={handleUpdateClassChange} placeholder="Class Name" className="border rounded-lg p-3 flex-1 min-w-[150px]" />
-            <input
-              type="datetime-local"
-              name="startDate"
-              value={updateClass.startDate}
-              onChange={handleUpdateClassChange}
-              className="border rounded-lg p-3 flex-1 min-w-[150px]"
-              placeholder="Start Date"
-            />
-            <input
-              type="datetime-local"
-              name="endDate"
-              value={updateClass.endDate}
-              onChange={handleUpdateClassChange}
-              className="border rounded-lg p-3 flex-1 min-w-[150px]"
-              placeholder="End Date"
-            />
+          </div>
+
+          <div className="flex flex-wrap gap-4">
+            <div className="flex-1 min-w-[200px]">
+              <label className="block text-sm font-medium text-gray-600 mb-1">Start Date</label>
+              <input
+                type="datetime-local"
+                name="startDate"
+                value={updateClass.startDate}
+                onChange={handleUpdateClassChange}
+                className="border rounded-lg p-3 w-full focus:outline-orange-400"
+              />
+            </div>
+            <div className="flex-1 min-w-[200px]">
+              <label className="block text-sm font-medium text-gray-600 mb-1">End Date</label>
+              <input
+                type="datetime-local"
+                name="endDate"
+                value={updateClass.endDate}
+                onChange={handleUpdateClassChange}
+                className="border rounded-lg p-3 w-full focus:outline-orange-400"
+              />
+            </div>
           </div>
 
           <div className="flex gap-4">
@@ -436,28 +531,33 @@ export default function AdminClassManagement() {
                         </span>
                       </td>
                       <td className="p-3">
-                        <button
-                          disabled={c.isActive}
-                          className={`font-semibold mr-2 ${c.isActive
-                            ? "text-gray-400 cursor-not-allowed"
-                            : "text-green-500 hover:text-green-700"
-                            }`}
-                          onClick={() => !c.isActive && handleOpenUpdateForm(c)}
-                        >
-                          Update
-                        </button>
-                        <button
-                          className="text-orange-500 hover:text-orange-700 font-semibold"
-                          onClick={() => handleViewDetail(c.courseInstanceId)}
-                        >
-                          View Detail
-                        </button>
-                        <button
-                          className="text-blue-500 hover:text-blue-700 font-semibold"
-                          onClick={() => handleToggleStatus(c.courseInstanceId, c.isActive)}
-                        >
-                          {c.isActive ? "Deactivate" : "Activate"}
-                        </button>
+                        <div className="flex flex-wrap gap-2">
+                          <button
+                            disabled={c.isActive}
+                            className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${c.isActive
+                                ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                                : "bg-green-50 text-green-600 hover:bg-green-100 border border-green-200"
+                              }`}
+                            onClick={() => !c.isActive && handleOpenUpdateForm(c)}
+                          >
+                            ✏️ Update
+                          </button>
+                          <button
+                            className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-orange-50 text-orange-600 hover:bg-orange-100 border border-orange-200 transition-all"
+                            onClick={() => handleViewDetail(c.courseInstanceId)}
+                          >
+                            👁️ View
+                          </button>
+                          <button
+                            className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${c.isActive
+                                ? "bg-red-50 text-red-600 hover:bg-red-100 border border-red-200"
+                                : "bg-blue-50 text-blue-600 hover:bg-blue-100 border border-blue-200"
+                              }`}
+                            onClick={() => handleToggleStatus(c.courseInstanceId, c.isActive)}
+                          >
+                            {c.isActive ? "🔒 Deactivate" : "🔓 Activate"}
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   );
