@@ -104,9 +104,7 @@ const AssignmentDetailPage = () => {
                   {courseInfo.title}
                 </h1>
                 <div className="flex items-center text-gray-500 mt-2 space-x-2">
-                  <span>{courseInfo.subject}</span>
-                  <span>•</span>
-                  <span>Instructor: {courseInfo.instructor}</span>
+                  <span>{courseInfo.subject}</span>              
                   <span>•</span>
                   <div className="flex items-center">
                     <Clock size={14} className="mr-1" />
