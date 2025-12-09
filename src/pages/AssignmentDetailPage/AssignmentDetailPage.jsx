@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import {
   ChevronRight,
@@ -6,20 +6,28 @@ import {
   BookCopy,
   CheckCircle,
   AlertTriangle,
-  Award,
   Filter,
-  ArrowUpDown,
 } from "lucide-react";
 import StatCard from "../../component/Assignment/StatCard";
 import AssignmentCard from "../../component/Assignment/AssignmentCard";
-import { assignmentService } from "../../service/assignmentService";
 import { useQuery } from "@tanstack/react-query";
 import { reviewService } from "../../service/reviewService";
 
 import PeerReviewInfoCard from "../../component/Assignment/PeerReviewInfoCard";
 
+const ASSIGNMENT_STATUSES = [
+  { value: "All", label: "All Status" },
+  { value: "Active", label: "Active" },
+  { value: "Upcoming", label: "Upcoming" },
+  { value: "InReview", label: "InReview" },
+  { value: "GradesPublished", label: "GradesPublished" },
+  { value: "Closed", label: "Closed" },
+  { value: "Cancelled", label: "Cancelled" },
+];
+
 const AssignmentDetailPage = () => {
   const { courseId } = useParams();
+  const [filterStatus, setFilterStatus] = useState("All");
 
   const {
     data: responseData,
@@ -27,13 +35,16 @@ const AssignmentDetailPage = () => {
     isError,
   } = useQuery({
     queryKey: ["assignmentsWithTracking", courseId],
-
     queryFn: () => reviewService.getAssignmentsWithTracking(courseId),
-
     enabled: !!courseId,
   });
 
   const assignments = responseData?.data || [];
+
+  const filteredAssignments = assignments.filter((assignment) => {
+    if (filterStatus === "All") return true;
+    return assignment.status === filterStatus;
+  });
 
   const courseInfo =
     assignments.length > 0
@@ -49,13 +60,9 @@ const AssignmentDetailPage = () => {
 
   const stats = {
     total: assignments.length,
-    submitted: assignments.filter((a) => a.submissionStatus === "Submitted")
-      .length,
-    dueSoon: assignments.filter((a) => a.daysUntilDeadline <= 3 && !a.isOverdue)
-      .length,
-    warning: assignments.filter(
-      (a) => a.daysUntilDeadline > 3 && a.daysUntilDeadline <= 7
-    ).length,
+    submitted: assignments.filter((a) => a.submissionStatus === "Submitted").length,
+    dueSoon: assignments.filter((a) => a.daysUntilDeadline <= 3 && !a.isOverdue).length,
+    warning: assignments.filter((a) => a.daysUntilDeadline > 3 && a.daysUntilDeadline <= 7).length,
   };
 
   if (isLoading) {
@@ -99,7 +106,7 @@ const AssignmentDetailPage = () => {
                 <div className="flex items-center text-gray-500 mt-2 space-x-2">
                   <span>{courseInfo.subject}</span>
                   <span>•</span>
-                  <span>Intructor: {courseInfo.instructor}</span>
+                  <span>Instructor: {courseInfo.instructor}</span>
                   <span>•</span>
                   <div className="flex items-center">
                     <Clock size={14} className="mr-1" />
@@ -115,7 +122,7 @@ const AssignmentDetailPage = () => {
           </div>
         )}
 
-        {/* Stats Grid - Dùng dữ liệu động */}
+        {/* Stats Grid */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
           <StatCard
             icon={BookCopy}
@@ -143,10 +150,15 @@ const AssignmentDetailPage = () => {
           />
         </div>
 
-        {/* Filter and Sort */}
-        <div className="bg-white p-4 rounded-lg border flex justify-between items-center mb-6">
-          <div className="flex items-center space-x-4">
-            <div>
+        {/* Filter Section Updated */}
+        <div className="bg-white p-4 rounded-lg border flex flex-col md:flex-row justify-between items-center mb-6 shadow-sm">
+          <div className="flex items-center space-x-2">
+            <Filter size={20} className="text-gray-500" />
+            <h3 className="font-semibold text-gray-700">Filter Assignments</h3>
+          </div>
+          
+          <div className="flex items-center mt-4 md:mt-0 space-x-4">
+            <div className="flex items-center">
               <label
                 htmlFor="status-filter"
                 className="text-sm font-medium text-gray-700 mr-2"
@@ -155,38 +167,28 @@ const AssignmentDetailPage = () => {
               </label>
               <select
                 id="status-filter"
-                className="p-2 border border-gray-300 rounded-md"
+                value={filterStatus}
+                onChange={(e) => setFilterStatus(e.target.value)}
+                className="block w-64 pl-3 pr-10 py-2 text-base text-gray-900 border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md border"
               >
-                <option>All</option>
-                <option>Đang mở</option>
-                <option>Sắp hết hạn</option>
+                {ASSIGNMENT_STATUSES.map((statusItem) => (
+                  <option key={statusItem.value} value={statusItem.value}>
+                    {statusItem.label}
+                  </option>
+                ))}
               </select>
             </div>
-            <div>
-              <label
-                htmlFor="deadline-filter"
-                className="text-sm font-medium text-gray-700 mr-2"
-              >
-                Deadline:
-              </label>
-              <select
-                id="deadline-filter"
-                className="p-2 border border-gray-300 rounded-md"
-              >
-                <option>Sắp hết hạn</option>
-                <option>Mới nhất</option>
-              </select>
+            
+            <div className="text-sm text-gray-500 whitespace-nowrap">
+              Result: <span className="font-medium text-gray-900">{filteredAssignments.length}</span> / {assignments.length}
             </div>
           </div>
-          <button className="flex items-center px-4 py-2 border rounded-md font-semibold text-gray-700 hover:bg-gray-100">
-            <ArrowUpDown size={16} className="mr-2" />
-            Sắp xếp
-          </button>
         </div>
 
+        {/* Assignments List */}
         <div className="space-y-6">
-          {assignments.length > 0 ? (
-            assignments.map((assignment) => (
+          {filteredAssignments.length > 0 ? (
+            filteredAssignments.map((assignment) => (
               <div key={assignment.assignmentId}>
                 <AssignmentCard assignment={assignment} courseId={courseId} />
                 {assignment.peerWeight > 0 && (
@@ -201,9 +203,11 @@ const AssignmentDetailPage = () => {
             ))
           ) : (
             <div className="text-center bg-white p-12 rounded-lg border">
-              <h3 className="text-xl font-semibold">Chưa có bài tập nào</h3>
+              <h3 className="text-xl font-semibold">No assignments found</h3>
               <p className="text-gray-600">
-                Hiện tại chưa có bài tập nào được giao cho lớp học này.
+                {assignments.length > 0 
+                  ? `No assignments found with status "${ASSIGNMENT_STATUSES.find(s => s.value === filterStatus)?.label}".`
+                  : "There are currently no assignments assigned to this class."}
               </p>
             </div>
           )}
