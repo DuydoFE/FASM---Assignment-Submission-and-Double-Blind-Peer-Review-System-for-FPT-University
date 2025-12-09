@@ -146,7 +146,6 @@ const AssignmentCard = ({ assignment, courseId }) => {
           Document
         </button>
 
-        {/* 👉 3. THÊM NÚT "VIEW FINAL SCORE" VỚI LOGIC ĐỘNG */}
         <button
           onClick={handleViewScore}
           disabled={assignment.status !== "GradesPublished"}

@@ -67,8 +67,7 @@ const CrossClassReviewPage = () => {
     fetchReviewData();
   }, [assignmentId]);
 
-  // ... (Giữ nguyên toàn bộ logic handleScoreChange, handleScoreBlur, weightedTotalScore, handleAutoScore, handleGenerateAiSummary) ...
-  const handleScoreChange = (criteriaId, value) => { /* Code cũ */
+  const handleScoreChange = (criteriaId, value) => { 
       if (value === "") { setScores((prev) => ({ ...prev, [criteriaId]: null })); return; }
       let newScore = parseFloat(value);
       const maxScore = reviewData.rubric.criteria.find((c) => c.criteriaId === criteriaId)?.maxScore;
@@ -77,7 +76,7 @@ const CrossClassReviewPage = () => {
         setScores((prevScores) => ({ ...prevScores, [criteriaId]: newScore }));
       }
   };
-  const handleScoreBlur = (criteriaId) => { /* Code cũ */ 
+  const handleScoreBlur = (criteriaId) => { 
       let currentScore = scores[criteriaId];
       if (currentScore === null || currentScore === "") return;
       let roundedScore = Math.round(currentScore * 4) / 4;
@@ -85,7 +84,7 @@ const CrossClassReviewPage = () => {
       if (maxScore !== undefined) { roundedScore = Math.max(0, Math.min(roundedScore, maxScore)); }
       if (roundedScore !== currentScore) { setScores((prevScores) => ({ ...prevScores, [criteriaId]: roundedScore, })); }
   };
-  const weightedTotalScore = useMemo(() => { /* Code cũ */
+  const weightedTotalScore = useMemo(() => { 
       const criteria = reviewData?.rubric?.criteria;
       if (!criteria || Object.keys(scores).length === 0) return 0;
       const totalPercent = criteria.reduce((acc, criterion) => {
@@ -98,7 +97,7 @@ const CrossClassReviewPage = () => {
       const scoreOnScale10 = totalPercent / 10;
       return parseFloat(scoreOnScale10.toFixed(2));
   }, [scores, reviewData]);
-  const handleAutoScore = () => { /* Code cũ */
+  const handleAutoScore = () => { 
       if (!aiSummaryData || !aiSummaryData.data?.feedbacks) { toast.error("No AI data available. Please generate a summary first."); return; }
       const newScores = { ...scores };
       const isErrorCase = aiSummaryData.statusCode === 400;
@@ -115,7 +114,7 @@ const CrossClassReviewPage = () => {
       setScores(newScores);
       if (isErrorCase) { toast.info("Submission is off-topic. System auto-filled 0 score."); } else { toast.success("Scores filled based on AI suggestions!"); }
   };
-  const handleGenerateAiSummary = async () => { /* Code cũ */
+  const handleGenerateAiSummary = async () => { 
       if (!reviewData?.submissionId) { toast.error("Submission ID not found for analysis."); return; }
       setIsGeneratingAi(true);
       setAiSummaryData(null);
@@ -129,7 +128,6 @@ const CrossClassReviewPage = () => {
   };
 
   const handleSubmitReview = async () => {
-    // Logic submit giữ nguyên vì API submit review dùng chung, backend sẽ tự biết đây là cross-class dựa trên ID của lần assign
     const isAllScoresFilled = Object.values(scores).every((score) => score !== null);
     if (!isAllScoresFilled) {
       const errorMessage = "Please enter scores for all criteria.";
@@ -191,12 +189,10 @@ const CrossClassReviewPage = () => {
           </div>
           <div className="flex justify-between items-center">
             <div>
-              {/* THAY ĐỔI Ở ĐÂY: Tiêu đề */}
               <h1 className="text-3xl font-bold text-gray-900">
                 Across-class Review - {reviewData.assignmentTitle}
               </h1>
             </div>
-            {/* Các nút bấm giữ nguyên */}
             <div className="flex space-x-2">
               <button onClick={() => navigate(-1)} className="flex items-center px-4 py-2 border rounded-md font-semibold text-gray-700 hover:bg-gray-100">
                 <ArrowLeft size={16} className="mr-2" /> Back
@@ -208,10 +204,8 @@ const CrossClassReviewPage = () => {
           </div>
         </div>
 
-        {/* PHẦN DƯỚI NÀY GIỮ NGUYÊN HOÀN TOÀN TỪ PEER REVIEW PAGE */}
         <div className="space-y-8">
-            {/* ... (Copy nguyên content phần hiển thị file, form chấm điểm, AI summary từ PeerReviewPage sang đây) ... */}
-            {/* Vì bạn bảo giao diện y chang nên mình không paste lại toàn bộ HTML để tránh dài dòng, bạn cứ copy paste 100% phần body từ PeerReviewPage sang nhé */}
+            
              <div className="bg-white p-4 rounded-lg border">
                 <div className="flex justify-between items-center">
                   <div className="flex items-center">
