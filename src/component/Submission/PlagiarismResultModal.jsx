@@ -13,20 +13,20 @@ const PlagiarismResultModal = ({ isOpen, onClose, data }) => {
   let statusBg = "bg-green-100";
   let statusBorder = "border-green-200";
   let Icon = CheckCircle;
-  let message = "Bài làm có độ trùng lặp thấp, an toàn để nộp.";
+  let message = "Low duplication of work, safe to submit.";
 
   if (isAboveThreshold) {
     statusColor = "text-red-600";
     statusBg = "bg-red-50";
     statusBorder = "border-red-200";
     Icon = AlertOctagon;
-    message = `Cảnh báo: Độ trùng lặp vượt quá ngưỡng cho phép (${threshold}%). Hãy xem lại bài làm!`;
+    message = `Warning: Duplicate count exceeds the allowable threshold (${threshold}%). Please review your work!`;
   } else if (percentage > 20) {
     statusColor = "text-yellow-600";
     statusBg = "bg-yellow-50";
     statusBorder = "border-yellow-200";
     Icon = AlertTriangle;
-    message = "Lưu ý: Có phát hiện trùng lặp nhưng vẫn nằm trong ngưỡng cho phép.";
+    message = "Note: There are duplicates detected but still within the allowable threshold.";
   }
 
   return (
@@ -34,7 +34,7 @@ const PlagiarismResultModal = ({ isOpen, onClose, data }) => {
       <div className="bg-white rounded-lg shadow-xl w-full max-w-md animate-in fade-in zoom-in duration-200">
         {/* Header */}
         <div className="flex justify-between items-center p-4 border-b">
-          <h3 className="text-lg font-semibold text-gray-800">Kết quả kiểm tra đạo văn</h3>
+          <h3 className="text-lg font-semibold text-gray-800">Plagiarism check results</h3>
           <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
             <X className="w-5 h-5" />
           </button>
@@ -57,7 +57,7 @@ const PlagiarismResultModal = ({ isOpen, onClose, data }) => {
           </div>
 
           <p className="text-sm text-gray-500">
-            Ngưỡng cho phép tối đa của bài tập này là: <span className="font-semibold text-gray-700">{threshold}%</span>
+            The maximum allowable threshold for this exercise is: <span className="font-semibold text-gray-700">{threshold}%</span>
           </p>
         </div>
 
@@ -67,7 +67,7 @@ const PlagiarismResultModal = ({ isOpen, onClose, data }) => {
             onClick={onClose}
             className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 font-medium text-sm transition-colors"
           >
-            Đã hiểu
+            Got it
           </button>
         </div>
       </div>
