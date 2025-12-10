@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Download, Eye, Star, ChevronDown } from 'lucide-react';
+import PeerReviewDetailModal from './PeerReviewDetailModal';
 
 const SubmissionLeftColumn = ({
     submissionDetails,
@@ -11,6 +12,7 @@ const SubmissionLeftColumn = ({
     getStatusBadge,
     calculateAveragePeerScore
 }) => {
+    const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
     const statusBadge = getStatusBadge(submissionDetails.status);
     const assignment = submissionDetails.assignment || {};
     const visibleReviews = showAllReviews ? peerReviews : peerReviews.slice(0, 3);
@@ -98,14 +100,21 @@ const SubmissionLeftColumn = ({
                             </svg>
                             <h2 className="font-semibold text-gray-900">Peer Reviews</h2>
                         </div>
+                        <button
+                            onClick={() => setIsDetailModalOpen(true)}
+                            className="flex items-center gap-1 px-3 py-1.5 text-sm text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors font-medium"
+                        >
+                            <Eye className="w-4 h-4" />
+                            View Detail
+                        </button>
                     </div>
                     <p className="text-sm text-gray-500 mb-3">
-                        Average Score: <span className="font-semibold text-blue-600">{(calculateAveragePeerScore() / 10).toFixed(1)}/10</span>
+                        Average Score: <span className="font-semibold text-blue-600">{parseFloat(calculateAveragePeerScore()).toFixed(1)}/10</span>
                     </p>
 
                     <div className="space-y-3">
                         {visibleReviews.map((review, index) => {
-                            const score10 = review.overallScore ? (review.overallScore / 10).toFixed(1) : "0.0";
+                            const score10 = review.overallScore ? parseFloat(review.overallScore).toFixed(1) : "0.0";
                             return (
                                 <div key={review.reviewId || index} className="p-3 border border-gray-200 rounded-lg">
                                     <div className="flex items-start justify-between mb-2">
@@ -140,6 +149,14 @@ const SubmissionLeftColumn = ({
                             <ChevronDown className="w-4 h-4" />
                         </button>
                     )}
+
+                    {/* Peer Review Detail Modal */}
+                    <PeerReviewDetailModal
+                        isOpen={isDetailModalOpen}
+                        onClose={() => setIsDetailModalOpen(false)}
+                        peerReviews={peerReviews}
+                        formatDateTime={formatDateTime}
+                    />
                 </div>
             )}
         </div>
