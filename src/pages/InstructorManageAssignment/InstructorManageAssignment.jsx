@@ -23,6 +23,7 @@ import { submissionService } from "../../service/submissionService";
 import CreateAssignmentModal from "../../component/Assignment/CreateAssignmentModal";
 import EditAssignmentModal from "../../component/Assignment/EditAssignmentModal";
 import DeleteAssignmentModal from "../../component/Assignment/DeleteAssignmentModal";
+import PublishAssignmentModal from "../../component/Assignment/PublishAssignmentModal";
 import ExportExcelModal from "../../component/Assignment/ExportExcelModal";
 import UpdateDeadlineModal from "../../component/Assignment/UpdateDeadlineModal";
 
@@ -54,6 +55,7 @@ const InstructorManageAssignment = () => {
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingAssignment, setEditingAssignment] = useState(null);
   const [showExportModal, setShowExportModal] = useState(false);
+  const [showPublishModal, setShowPublishModal] = useState(false);
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -239,12 +241,17 @@ const InstructorManageAssignment = () => {
     navigate(`/instructor/manage-submission/${assignment.assignmentId}`);
   };
 
-  const handlePublishAssignment = async (assignment) => {
+  const handlePublishClick = (assignment) => {
+    setSelectedAssignment(assignment);
+    setShowPublishModal(true);
+  };
+
+  const handlePublishConfirm = async (assignmentId) => {
     try {
-      await assignmentService.publishAssignment(
-        assignment.id || assignment.assignmentId
-      );
+      await assignmentService.publishAssignment(assignmentId);
       toast.success("Assignment published successfully!");
+      setShowPublishModal(false);
+      setSelectedAssignment(null);
       await fetchAssignments();
     } catch (error) {
       console.error("Failed to publish assignment:", error);
@@ -253,6 +260,11 @@ const InstructorManageAssignment = () => {
           "Failed to publish assignment. Please try again."
       );
     }
+  };
+
+  const handleClosePublishModal = () => {
+    setShowPublishModal(false);
+    setSelectedAssignment(null);
   };
 
   const getDropdownItems = (assignment) => [
@@ -265,7 +277,7 @@ const InstructorManageAssignment = () => {
                 <span>Publish Assignment</span>
               </div>
             ),
-            onClick: () => handlePublishAssignment(assignment),
+            onClick: () => handlePublishClick(assignment),
           },
         ]
       : []),
@@ -513,7 +525,15 @@ const InstructorManageAssignment = () => {
         onClose={() => setShowExportModal(false)}
         courseInfo={courseInfo}
         assignments={assignments}
-        classId={courseInstanceId} 
+        classId={courseInstanceId}
+      />
+
+      {/* Publish Assignment Modal */}
+      <PublishAssignmentModal
+        isOpen={showPublishModal}
+        onClose={handleClosePublishModal}
+        onConfirm={handlePublishConfirm}
+        assignment={selectedAssignment}
       />
     </div>
   );
