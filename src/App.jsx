@@ -7,8 +7,6 @@ import { persistor, store } from "./redux/store";
 import { PersistGate } from "redux-persist/integration/react";
 import AOS from "aos";
 import "aos/dist/aos.css";
-import { StateProvider } from "./Context/StateProvider";
-// 👉 1. Cập nhật import thành @tanstack/react-query
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ToastContainer } from "react-toastify";
 
@@ -27,9 +25,7 @@ function App() {
         <ToastContainer />
         <Provider store={store}>
           <PersistGate loading={null} persistor={persistor}>
-            <StateProvider>
-              <RouterProvider router={router} />
-            </StateProvider>
+            <RouterProvider router={router} />
           </PersistGate>
         </Provider>
       </QueryClientProvider>
