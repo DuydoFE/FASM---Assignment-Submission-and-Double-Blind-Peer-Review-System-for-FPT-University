@@ -94,7 +94,7 @@ const StudentAssignmentPage = () => {
       queryKey: ["studentCourseRegistrations", studentId],
     });
 
-    toast.success("Ghi danh vào lớp học thành công!");
+    toast.success("Enrolled in class successfully!");
   };
 
   const renderEnrolledCourses = () => {

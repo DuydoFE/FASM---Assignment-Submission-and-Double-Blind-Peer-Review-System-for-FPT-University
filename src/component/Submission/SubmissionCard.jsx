@@ -85,7 +85,7 @@ const SubmissionCard = ({
 
   const handleCheckPlagiarism = async () => {
     if (!selectedFile) {
-      toast.warn("Vui lòng chọn file để kiểm tra.");
+      toast.warn("Please select a file to check.");
       return;
     }
 
@@ -97,10 +97,10 @@ const SubmissionCard = ({
         setPlagiarismResult(result.data);
         setIsPlagiarismModalOpen(true);
       } else {
-        toast.error(result.message || "Không thể kiểm tra đạo văn.");
+        toast.error(result.message || "Unable to check plagiarism.");
       }
     } catch (error) {
-      toast.error(error.message || "Lỗi khi kết nối server.");
+      toast.error(error.message || "SeverError: Unable to connect to server.");
     } finally {
       setIsCheckingPlagiarism(false);
     }
