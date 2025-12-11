@@ -242,7 +242,7 @@ const InstructorGradingDetail = () => {
                     : '/instructor/manage-grading';
 
                 navigate(returnPath, {
-                    state: location.state
+                    state: location.state?.returnState ? { returnState: location.state.returnState } : undefined
                 });
             }, 800);
 
@@ -265,7 +265,7 @@ const InstructorGradingDetail = () => {
             : '/instructor/manage-grading';
 
         navigate(returnPath, {
-            state: location.state
+            state: location.state?.returnState ? { returnState: location.state.returnState } : undefined
         });
     };
 

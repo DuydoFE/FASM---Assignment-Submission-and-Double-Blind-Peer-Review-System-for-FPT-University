@@ -38,29 +38,23 @@ const InstructorManageGrading = () => {
   });
 
   const [showTable, setShowTable] = useState(false);
+  
+  // Store return state to use after data is loaded
+  const [pendingReturnState, setPendingReturnState] = useState(null);
 
   // Restore state when coming back from detail page
   useEffect(() => {
     if (location.state?.returnState) {
-      const { 
-        selectedCourseId: courseId, 
-        selectedClassId: classId, 
-        selectedAssignmentId: assignmentId,
-        showTable: wasShowingTable,
-        searchTerm: prevSearchTerm,
-        statusFilter: prevStatusFilter
-      } = location.state.returnState;
+      const returnState = location.state.returnState;
+      setPendingReturnState(returnState);
+      setSelectedCourseId(returnState.selectedCourseId || '');
+      setSearchTerm(returnState.searchTerm || '');
+      setStatusFilter(returnState.statusFilter || 'All');
       
-      setSelectedCourseId(courseId);
-      setSelectedClassId(classId);
-      setSelectedAssignmentId(assignmentId);
-      setShowTable(wasShowingTable);
-      setSearchTerm(prevSearchTerm || '');
-      setStatusFilter(prevStatusFilter || 'All');
-      
+      // Clear location state to prevent re-triggering
       window.history.replaceState({}, document.title);
     }
-  }, [location]);
+  }, []);
 
   useEffect(() => {
     fetchCourses();
@@ -75,6 +69,16 @@ const InstructorManageGrading = () => {
     }
   }, [selectedCourseId]);
 
+  // When classes are loaded and we have pending return state, set the class
+  useEffect(() => {
+    if (pendingReturnState && classes.length > 0 && pendingReturnState.selectedClassId) {
+      const classExists = classes.some(c => c.courseInstanceId == pendingReturnState.selectedClassId);
+      if (classExists) {
+        setSelectedClassId(pendingReturnState.selectedClassId);
+      }
+    }
+  }, [classes, pendingReturnState]);
+
   useEffect(() => {
     if (selectedClassId) {
       fetchAssignments();
@@ -84,12 +88,30 @@ const InstructorManageGrading = () => {
     }
   }, [selectedClassId]);
 
-  // Auto-fetch data when state is restored
+  // When assignments are loaded and we have pending return state, set the assignment and fetch data
   useEffect(() => {
-    if (location.state?.returnState && showTable && selectedCourseId && selectedClassId && selectedAssignmentId) {
-      handleViewMark();
+    if (pendingReturnState && assignments.length > 0 && pendingReturnState.selectedAssignmentId) {
+      const assignmentExists = assignments.some(a => a.assignmentId == pendingReturnState.selectedAssignmentId);
+      if (assignmentExists) {
+        setSelectedAssignmentId(pendingReturnState.selectedAssignmentId);
+      }
     }
-  }, [location.state]);
+  }, [assignments, pendingReturnState]);
+
+  // Auto-fetch table data when all selections are restored
+  useEffect(() => {
+    if (pendingReturnState &&
+        selectedCourseId &&
+        selectedClassId &&
+        selectedAssignmentId &&
+        pendingReturnState.selectedCourseId == selectedCourseId &&
+        pendingReturnState.selectedClassId == selectedClassId &&
+        pendingReturnState.selectedAssignmentId == selectedAssignmentId) {
+      // All selections are restored, now fetch the table data
+      handleViewMarkFromRestore();
+      setPendingReturnState(null); // Clear pending state after handling
+    }
+  }, [selectedCourseId, selectedClassId, selectedAssignmentId, pendingReturnState]);
 
   const fetchCourses = async () => {
     setLoading(prev => ({ ...prev, courses: true }));
@@ -127,20 +149,16 @@ const InstructorManageGrading = () => {
     }
   };
 
-  const handleViewMark = async () => {
-    if (!selectedCourseId || !selectedClassId || !selectedAssignmentId) {
-      toast.error('Please select Course, Class, and Assignment');
-      return;
-    }
-
+  // Helper function to fetch submission data (shared logic)
+  const fetchSubmissionData = async (courseId, classId, assignmentId) => {
     setLoading(prev => ({ ...prev, summary: true }));
     setShowTable(true);
     
     try {
       const response = await getSubmissionSummary({
-        courseId: selectedCourseId,
-        classId: selectedClassId,
-        assignmentId: selectedAssignmentId
+        courseId: courseId,
+        classId: classId,
+        assignmentId: assignmentId
       });
       
       const mappedStudents = response.map(submission => ({
@@ -161,7 +179,7 @@ const InstructorManageGrading = () => {
       
       setStudents(mappedStudents);
       
-      const assignmentData = assignments.find(a => a.assignmentId == selectedAssignmentId);
+      const assignmentData = assignments.find(a => a.assignmentId == assignmentId);
       if (assignmentData) {
         const submittedCount = mappedStudents.filter(s => s.status === 'Submitted' || s.status === 'Graded').length;
         const gradedCount = mappedStudents.filter(s => s.status === 'Graded').length;
@@ -185,6 +203,19 @@ const InstructorManageGrading = () => {
     } finally {
       setLoading(prev => ({ ...prev, summary: false }));
     }
+  };
+
+  const handleViewMark = async () => {
+    if (!selectedCourseId || !selectedClassId || !selectedAssignmentId) {
+      toast.error('Please select Course, Class, and Assignment');
+      return;
+    }
+    await fetchSubmissionData(selectedCourseId, selectedClassId, selectedAssignmentId);
+  };
+
+  // Called when restoring state from navigation - no validation needed
+  const handleViewMarkFromRestore = async () => {
+    await fetchSubmissionData(selectedCourseId, selectedClassId, selectedAssignmentId);
   };
 
   const handleStatusClick = () => {

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { searchInstructor } from "../../service/searchService";
+import { toast } from "react-toastify";
 import {
   Tabs,
   List,
@@ -38,6 +39,8 @@ const InstructorSearchResultsPage = () => {
         setData(result.data);
       } catch (error) {
         console.error(error);
+        const errorMessage = error.response?.data?.message || error.message || "Search failed. Please try again.";
+        toast.error(errorMessage);
       } finally {
         setLoading(false);
       }

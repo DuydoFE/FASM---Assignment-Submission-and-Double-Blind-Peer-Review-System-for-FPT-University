@@ -30,6 +30,13 @@ const SolveRegradeRequestModal = ({ request, onClose, onSubmit }) => {
 
             await reviewRegradeRequest(data);
 
+            // Show success toast message
+            if (decision === 'approve') {
+                toast.success('Approved regrade request successfully!');
+            } else {
+                toast.success('Rejected regrade request successfully!');
+            }
+
             // Gọi callback để update UI
             onSubmit(decision, feedback);
         } catch (error) {
