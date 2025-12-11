@@ -8,6 +8,8 @@ import {
   FileText,
   CalendarRange,
   CalendarDays,
+  GraduationCap,
+  ListChecks,
   LogOut
 } from "lucide-react";
 
@@ -42,11 +44,9 @@ export default function AdminLayout() {
       try {
         const persistor = persistStore(store);
         persistor.purge();
-      } catch (err) {
-      }
+      } catch (err) {}
 
       navigate("/login");
-
     } catch (error) {
       console.error("Logout error:", error);
       navigate("/login");
@@ -65,8 +65,7 @@ export default function AdminLayout() {
           <NavLink
             to="/admin/dashboard"
             className={({ isActive }) =>
-              `flex items-center gap-2 px-4 py-2 rounded-lg ${isActive ? "bg-orange-500 text-white" : "hover:bg-gray-200"
-              }`
+              `flex items-center gap-2 px-4 py-2 rounded-lg ${isActive ? "bg-orange-500 text-white" : "hover:bg-gray-200"}`
             }
           >
             <BarChart3 size={18} />
@@ -76,8 +75,7 @@ export default function AdminLayout() {
           <NavLink
             to="/admin/users"
             className={({ isActive }) =>
-              `flex items-center gap-2 px-4 py-2 rounded-lg ${isActive ? "bg-orange-500 text-white" : "hover:bg-gray-200"
-              }`
+              `flex items-center gap-2 px-4 py-2 rounded-lg ${isActive ? "bg-orange-500 text-white" : "hover:bg-gray-200"}`
             }
           >
             <Users size={18} />
@@ -87,8 +85,7 @@ export default function AdminLayout() {
           <NavLink
             to="/admin/classes"
             className={({ isActive }) =>
-              `flex items-center gap-2 px-4 py-2 rounded-lg ${isActive ? "bg-orange-500 text-white" : "hover:bg-gray-200"
-              }`
+              `flex items-center gap-2 px-4 py-2 rounded-lg ${isActive ? "bg-orange-500 text-white" : "hover:bg-gray-200"}`
             }
           >
             <ClipboardList size={18} />
@@ -96,21 +93,39 @@ export default function AdminLayout() {
           </NavLink>
 
           <NavLink
-            to="/admin/rubrics"
+            to="/admin/majors"
             className={({ isActive }) =>
-              `flex items-center gap-2 px-4 py-2 rounded-lg ${isActive ? "bg-orange-500 text-white" : "hover:bg-gray-200"
-              }`
+              `flex items-center gap-2 px-4 py-2 rounded-lg ${isActive ? "bg-orange-500 text-white" : "hover:bg-gray-200"}`
+            }
+          >
+            <GraduationCap size={18} />
+            Major Management
+          </NavLink>
+
+          <NavLink
+            to="/admin/courses"
+            className={({ isActive }) =>
+              `flex items-center gap-2 px-4 py-2 rounded-lg ${isActive ? "bg-orange-500 text-white" : "hover:bg-gray-200"}`
             }
           >
             <FileText size={18} />
+            Course Management
+          </NavLink>
+
+          <NavLink
+            to="/admin/rubrics"
+            className={({ isActive }) =>
+              `flex items-center gap-2 px-4 py-2 rounded-lg ${isActive ? "bg-orange-500 text-white" : "hover:bg-gray-200"}`
+            }
+          >
+            <ListChecks size={18} />
             Rubric Management
           </NavLink>
 
           <NavLink
             to="/admin/academicYears"
             className={({ isActive }) =>
-              `flex items-center gap-2 px-4 py-2 rounded-lg ${isActive ? "bg-orange-500 text-white" : "hover:bg-gray-200"
-              }`
+              `flex items-center gap-2 px-4 py-2 rounded-lg ${isActive ? "bg-orange-500 text-white" : "hover:bg-gray-200"}`
             }
           >
             <CalendarRange size={18} />
@@ -120,8 +135,7 @@ export default function AdminLayout() {
           <NavLink
             to="/admin/semesters"
             className={({ isActive }) =>
-              `flex items-center gap-2 px-4 py-2 rounded-lg ${isActive ? "bg-orange-500 text-white" : "hover:bg-gray-200"
-              }`
+              `flex items-center gap-2 px-4 py-2 rounded-lg ${isActive ? "bg-orange-500 text-white" : "hover:bg-gray-200"}`
             }
           >
             <CalendarDays size={18} />
@@ -131,8 +145,7 @@ export default function AdminLayout() {
           <NavLink
             to="/admin/systemSetting"
             className={({ isActive }) =>
-              `flex items-center gap-2 px-4 py-2 rounded-lg ${isActive ? "bg-orange-500 text-white" : "hover:bg-gray-200"
-              }`
+              `flex items-center gap-2 px-4 py-2 rounded-lg ${isActive ? "bg-orange-500 text-white" : "hover:bg-gray-200"}`
             }
           >
             <Settings size={18} />
