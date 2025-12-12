@@ -1,5 +1,4 @@
 import { createBrowserRouter, Navigate } from "react-router-dom";
-import Zustand from "../Zustand";
 import UseReactQuerry from "../component/UseReactQuerry";
 import Test from "../Test";
 import MainLayout from "../layout/MainLayout";
@@ -148,10 +147,6 @@ export const router = createBrowserRouter([
   {
     path: "/test",
     element: <Test />,
-  },
-  {
-    path: "/zustand",
-    element: <Zustand />,
   },
   {
     path: "/a",
