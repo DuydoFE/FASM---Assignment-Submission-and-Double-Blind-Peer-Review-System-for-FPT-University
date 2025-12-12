@@ -105,7 +105,6 @@ const InstructorManageAssignment = () => {
       setAssignments(mappedAssignments);
     } catch (error) {
       console.error("Failed to fetch assignments:", error);
-      toast.error("Failed to load assignments");
     } finally {
       setLoading(false);
     }
