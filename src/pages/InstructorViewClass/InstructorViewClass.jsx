@@ -253,8 +253,8 @@ const InstructorViewClass = () => {
                       key={cls.id}
                       className="hover:bg-gray-50 transition-colors cursor-pointer"
                       onClick={() => {
-                        try { sessionStorage.setItem('currentCourseInstanceId', String(cls.id)); } catch (e) { /* ignore */ }
-                        navigate(`/instructor/class-statistic/${cls.id}`);
+                        try { sessionStorage.setItem('currentCourseInstanceId', String(cls.courseInstanceId)); } catch (e) { /* ignore */ }
+                        navigate(`/instructor/class-statistic/${cls.courseInstanceId}`);
                       }}
                     >
                       <td className="py-4 px-6">
