@@ -205,15 +205,15 @@ export const router = createBrowserRouter([
         element: <ProtectedRoute role={ROLE.INSTRUCTOR}><InstructorClassDashBoard /></ProtectedRoute>,
       },
       {
-        path: "class-statistic/:id",
+        path: "class-statistic/:courseInstanceId",
         element: <ProtectedRoute role={ROLE.INSTRUCTOR}><InstructorClassDashBoard /></ProtectedRoute>,
       },
       {
-        path: "manage-class/:id",
+        path: "manage-class/:courseInstanceId",
         element: <ProtectedRoute role={ROLE.INSTRUCTOR}><InstructorManageClass /></ProtectedRoute>,
       },
       {
-        path: "manage-assignment/:id",
+        path: "manage-assignment/:courseInstanceId",
         element: <ProtectedRoute role={ROLE.INSTRUCTOR}><InstructorManageAssignment /></ProtectedRoute>,
       },
       {
