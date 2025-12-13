@@ -59,6 +59,8 @@ import AdminDashboard from "../pages/Admin/AdminDashboard";
 import AdminUserManagement from "../pages/Admin/AdminUserManagement";
 import AdminUserDetailsManagement from "../pages/Admin/AdminUserDetailsManagement";
 import AdminCreateUser from "../pages/Admin/AdminCreateUser";
+import AdminCourseManagement from "../pages/Admin/AdminCourseManagement";
+import AdminMajorManagement from "../pages/Admin/AdminMajorManagement";
 import AdminAcademicYearManagement from "../pages/Admin/AdminAcademicYearManagement";
 import AdminSemesterManagement from "../pages/Admin/AdminSemesterManagement";
 import AdminClassManagement from "../pages/Admin/AdminClassManagement";
@@ -257,6 +259,8 @@ export const router = createBrowserRouter([
     { path: "users", element: <AdminUserManagement /> },
     { path: "users/add", element: <AdminCreateUser /> },
     { path: "users/:id", element: <AdminUserDetailsManagement /> },
+    { path: "courses", element: <AdminCourseManagement /> },
+    { path: "majors", element: <AdminMajorManagement /> },
     { path: "academicYears", element: <AdminAcademicYearManagement /> },
     { path: "semesters", element: <AdminSemesterManagement /> },
     { path: "classes", element: <AdminClassManagement /> },
