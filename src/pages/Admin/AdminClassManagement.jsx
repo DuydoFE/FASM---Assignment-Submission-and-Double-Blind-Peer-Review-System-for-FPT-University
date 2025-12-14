@@ -19,6 +19,29 @@ export default function AdminClassManagement() {
   const [campuses, setCampuses] = useState([]);
   const [courses, setCourses] = useState([]);
   const [semesters, setSemesters] = useState([]);
+  const [confirmState, setConfirmState] = useState({
+    open: false,
+    title: "",
+    message: "",
+    onConfirm: null,
+  });
+  const openConfirm = ({ title, message, onConfirm }) => {
+    setConfirmState({
+      open: true,
+      title,
+      message,
+      onConfirm,
+    });
+  };
+
+  const closeConfirm = () => {
+    setConfirmState({
+      open: false,
+      title: "",
+      message: "",
+      onConfirm: null,
+    });
+  };
 
   const [filters, setFilters] = useState({
     campus: "",
@@ -95,6 +118,22 @@ export default function AdminClassManagement() {
     fetchData();
   }, [filters.campus]);
 
+  useEffect(() => {
+    document.body.style.overflow =
+      showAddForm || showUpdateForm ? "hidden" : "auto";
+  }, [showAddForm, showUpdateForm]);
+
+  useEffect(() => {
+    document.body.style.overflow =
+      showAddForm || showUpdateForm || confirmState.open
+        ? "hidden"
+        : "auto";
+
+    return () => {
+      document.body.style.overflow = "auto";
+    };
+  }, [showAddForm, showUpdateForm, confirmState.open]);
+
   const handleFilterChange = (e) => {
     setFilters({ ...filters, [e.target.name]: e.target.value });
   };
@@ -102,12 +141,22 @@ export default function AdminClassManagement() {
   const toDatetimeLocal = (dateString) => {
     if (!dateString) return "";
     const date = new Date(dateString);
-    return date.toISOString().slice(0, 16);
+
+    const pad = (n) => String(n).padStart(2, "0");
+
+    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+  };
+
+  const toISOWithLocalTime = (localDatetime) => {
+    const date = new Date(localDatetime);
+    return new Date(
+      date.getTime() - date.getTimezoneOffset() * 60000
+    ).toISOString();
   };
 
   const handleNewClassChange = (e) => {
     const { name, value } = e.target;
-    
+
     // If semester is changed, auto-populate start and end dates from semester
     if (name === "semesterId" && value) {
       const selectedSemester = semesters.find(s => s.semesterId === Number(value));
@@ -121,7 +170,7 @@ export default function AdminClassManagement() {
         return;
       }
     }
-    
+
     setNewClass({ ...newClass, [name]: value });
   };
 
@@ -162,8 +211,8 @@ export default function AdminClassManagement() {
       semesterId: Number(semesterId),
       sectionCode: sectionCode.trim(),
       requiresApproval: true,
-      startDate: new Date(startDate).toISOString(),
-      endDate: new Date(endDate).toISOString(),
+      startDate: toISOWithLocalTime(startDate),
+      endDate: toISOWithLocalTime(endDate),
       enrollmentPassword: ""
     };
 
@@ -203,24 +252,25 @@ export default function AdminClassManagement() {
     return matchSearch && matchCourse && matchSemester && matchStatus;
   });
 
-  const handleToggleStatus = async (courseInstanceId, isActive) => {
-    if (!window.confirm(`Are you sure you want to set class to ${isActive ? "Deactive" : "Active"}?`)) {
-      return;
-    }
+  const handleToggleStatus = (courseInstanceId, isActive) => {
+    openConfirm({
+      title: isActive ? "Deactivate Class" : "Activate Class",
+      message: `Are you sure you want to ${isActive ? "deactivate" : "activate"} this class?`,
+      onConfirm: async () => {
+        try {
+          await toggleCourseStatus(courseInstanceId);
+          toast.success("Status updated successfully!");
 
-    try {
-      await toggleCourseStatus(courseInstanceId);
-      toast.success("Status updated successfully!");
-
-      if (filters.campus) {
-        const res = await getCourseInstancesByCampusId(Number(filters.campus));
-        setClasses(Array.isArray(res?.data) ? res.data : []);
-      }
-    } catch (err) {
-      console.error(err);
-      const msg = err.response?.data?.message || "Update status failed!";
-      toast.error(msg);
-    }
+          if (filters.campus) {
+            const res = await getCourseInstancesByCampusId(Number(filters.campus));
+            setClasses(Array.isArray(res?.data) ? res.data : []);
+          }
+        } catch (err) {
+          console.error(err);
+          toast.error(err.response?.data?.message || "Update status failed!");
+        }
+      },
+    });
   };
 
   const handleOpenUpdateForm = (c) => {
@@ -320,7 +370,7 @@ export default function AdminClassManagement() {
         </select>
         <select name="course" value={filters.course} onChange={handleFilterChange} className="border rounded-lg p-3 text-gray-700 hover:border-orange-400 transition flex-1 min-w-[150px]">
           <option value="">All Courses</option>
-          {courses.map((course) => (<option key={course.courseId} value={course.courseId}>{course.name || course.courseName}</option>))}
+          {courses.map((course) => (<option key={course.courseId} value={course.courseId}>{course.courseCode}</option>))}
         </select>
         <select
           name="status"
@@ -350,136 +400,269 @@ export default function AdminClassManagement() {
       </div>
 
       {showAddForm && (
-        <div className="bg-white p-5 rounded-2xl shadow-md mt-4 space-y-4 animate-fade-in-down">
-          <h3 className="text-xl font-semibold text-gray-700">Create New Class</h3>
-          <div className="flex flex-wrap gap-4">
-            <select name="campusId" value={newClass.campusId} onChange={handleNewClassChange} className="border rounded-lg p-3 flex-1 min-w-[150px]">
-              <option value="">Select Campus</option>
-              {campuses.map((c) => (<option key={c.campusId} value={c.campusId}>{c.name || c.campusName}</option>))}
-            </select>
-            <select name="semesterId" value={newClass.semesterId} onChange={handleNewClassChange} className="border rounded-lg p-3 flex-1 min-w-[150px]">
-              <option value="">Select Semester</option>
-              {semesters.map((s) => (<option key={s.semesterId} value={s.semesterId}>{s.name || s.semesterName}</option>))}
-            </select>
-            <select name="courseId" value={newClass.courseId} onChange={handleNewClassChange} className="border rounded-lg p-3 flex-1 min-w-[150px]">
-              <option value="">Select Course</option>
-              {courses.map((course) => (<option key={course.courseId} value={course.courseId}>{course.name || course.courseName}</option>))}
-            </select>
-            <input type="text" name="sectionCode" value={newClass.sectionCode} onChange={handleNewClassChange} placeholder="Class Name" className="border rounded-lg p-3 flex-1 min-w-[150px]" />
-          </div>
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          {/* Overlay */}
+          <div
+            className="absolute inset-0 bg-black/50"
+            onClick={() => setShowAddForm(false)}
+          />
 
-          <div className="flex flex-wrap gap-4">
-            <div className="flex-1 min-w-[200px]">
-              <label className="block text-sm font-medium text-gray-600 mb-1">Start Date</label>
-              <input
-                type="datetime-local"
-                name="startDate"
-                value={newClass.startDate}
+          {/* Modal */}
+          <div className="relative bg-white w-full max-w-3xl p-6 rounded-2xl shadow-xl space-y-4 animate-fade-in-down">
+            <h3 className="text-xl font-semibold text-gray-700">Create New Class</h3>
+
+            <div className="flex flex-wrap gap-4">
+              <select
+                name="campusId"
+                value={newClass.campusId}
                 onChange={handleNewClassChange}
-                min={getDateConstraints(newClass.semesterId).min}
-                max={getDateConstraints(newClass.semesterId).max}
-                disabled={!newClass.semesterId}
-                className={`border rounded-lg p-3 w-full focus:outline-orange-400 ${!newClass.semesterId ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+                className="border rounded-lg p-3 flex-1 min-w-[150px]"
+              >
+                <option value="">Select Campus</option>
+                {campuses.map(c => (
+                  <option key={c.campusId} value={c.campusId}>
+                    {c.name || c.campusName}
+                  </option>
+                ))}
+              </select>
+
+              <select
+                name="semesterId"
+                value={newClass.semesterId}
+                onChange={handleNewClassChange}
+                className="border rounded-lg p-3 flex-1 min-w-[150px]"
+              >
+                <option value="">Select Semester</option>
+                {semesters.map(s => (
+                  <option key={s.semesterId} value={s.semesterId}>
+                    {s.name || s.semesterName}
+                  </option>
+                ))}
+              </select>
+
+              <select
+                name="courseId"
+                value={newClass.courseId}
+                onChange={handleNewClassChange}
+                className="border rounded-lg p-3 flex-1 min-w-[150px]"
+              >
+                <option value="">Select Course</option>
+                {courses
+                  .filter(course => course.isActive)
+                  .map(course => (
+                    <option key={course.courseId} value={course.courseId}>
+                      {course.courseCode}
+                    </option>
+                  ))}
+              </select>
+
+              <input
+                type="text"
+                name="sectionCode"
+                value={newClass.sectionCode}
+                onChange={handleNewClassChange}
+                placeholder="Class Name"
+                className="border rounded-lg p-3 flex-1 min-w-[150px]"
               />
             </div>
-            <div className="flex-1 min-w-[200px]">
-              <label className="block text-sm font-medium text-gray-600 mb-1">End Date</label>
-              <input
-                type="datetime-local"
-                name="endDate"
-                value={newClass.endDate}
-                onChange={handleNewClassChange}
-                min={getDateConstraints(newClass.semesterId).min}
-                max={getDateConstraints(newClass.semesterId).max}
-                disabled={!newClass.semesterId}
-                className={`border rounded-lg p-3 w-full focus:outline-orange-400 ${!newClass.semesterId ? 'bg-gray-100 cursor-not-allowed' : ''}`}
-              />
-            </div>
-          </div>
 
-          {newClass.semesterId && (() => {
-            const sem = semesters.find(s => s.semesterId === Number(newClass.semesterId));
-            if (sem && sem.startDate && sem.endDate) {
-              return (
-                <div className="text-sm text-orange-600 bg-orange-50 p-3 rounded-lg">
-                  📅 Semester period: <strong>{new Date(sem.startDate).toLocaleDateString('en-GB')}</strong> - <strong>{new Date(sem.endDate).toLocaleDateString('en-GB')}</strong>
-                  <br />
-                  <span className="text-gray-500">You can only select dates within this range.</span>
-                </div>
+            <div className="flex flex-wrap gap-4">
+              <div className="flex-1 min-w-[200px]">
+                <label className="block text-sm font-medium text-gray-600 mb-1">
+                  Start Date
+                </label>
+                <input
+                  type="datetime-local"
+                  name="startDate"
+                  value={newClass.startDate}
+                  onChange={handleNewClassChange}
+                  min={getDateConstraints(newClass.semesterId).min}
+                  max={getDateConstraints(newClass.semesterId).max}
+                  disabled={!newClass.semesterId}
+                  className={`border rounded-lg p-3 w-full ${!newClass.semesterId
+                    ? "bg-gray-100 cursor-not-allowed"
+                    : "focus:outline-orange-400"
+                    }`}
+                />
+              </div>
+
+              <div className="flex-1 min-w-[200px]">
+                <label className="block text-sm font-medium text-gray-600 mb-1">
+                  End Date
+                </label>
+                <input
+                  type="datetime-local"
+                  name="endDate"
+                  value={newClass.endDate}
+                  onChange={handleNewClassChange}
+                  min={getDateConstraints(newClass.semesterId).min}
+                  max={getDateConstraints(newClass.semesterId).max}
+                  disabled={!newClass.semesterId}
+                  className={`border rounded-lg p-3 w-full ${!newClass.semesterId
+                    ? "bg-gray-100 cursor-not-allowed"
+                    : "focus:outline-orange-400"
+                    }`}
+                />
+              </div>
+            </div>
+
+            {newClass.semesterId && (() => {
+              const sem = semesters.find(
+                s => s.semesterId === Number(newClass.semesterId)
               );
-            }
-            return null;
-          })()}
+              return sem ? (
+                <div className="text-sm text-orange-600 bg-orange-50 p-3 rounded-lg">
+                  📅 Semester period:{" "}
+                  <strong>
+                    {new Date(sem.startDate).toLocaleDateString("en-GB")}
+                  </strong>{" "}
+                  -{" "}
+                  <strong>
+                    {new Date(sem.endDate).toLocaleDateString("en-GB")}
+                  </strong>
+                </div>
+              ) : null;
+            })()}
 
-          {!newClass.semesterId && (
-            <div className="text-sm text-gray-500 italic">
-              Please select a semester first to enable date selection.
+            <div className="flex justify-end gap-4 pt-2">
+              <button
+                onClick={() => setShowAddForm(false)}
+                className="px-6 py-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 font-semibold"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() =>
+                  openConfirm({
+                    title: "Create Class",
+                    message: "Are you sure you want to create this class?",
+                    onConfirm: handleAddClass,
+                  })
+                }
+                className="px-6 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 font-semibold shadow"
+              >
+                Create
+              </button>
             </div>
-          )}
-
-          <div className="flex gap-4">
-            <button onClick={handleAddClass} className="px-6 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition font-semibold shadow-sm">
-              Create
-            </button>
-            <button onClick={() => setShowAddForm(false)} className="px-6 py-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 transition font-semibold">
-              Cancel
-            </button>
           </div>
         </div>
       )}
 
       {showUpdateForm && (
-        <div className="bg-white p-5 rounded-2xl shadow-md mt-4 space-y-4 animate-fade-in-down">
-          <h3 className="text-xl font-semibold text-gray-700">Update Class</h3>
-          <div className="flex flex-wrap gap-4">
-            <select name="campusId" value={updateClass.campusId} onChange={handleUpdateClassChange} className="border rounded-lg p-3 flex-1 min-w-[150px]">
-              <option value="">Select Campus</option>
-              {campuses.map(c => <option key={c.campusId} value={c.campusId}>{c.name || c.campusName}</option>)}
-            </select>
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          {/* Overlay */}
+          <div
+            className="absolute inset-0 bg-black/50"
+            onClick={() => setShowUpdateForm(false)}
+          />
 
-            <select name="semesterId" value={updateClass.semesterId} onChange={handleUpdateClassChange} className="border rounded-lg p-3 flex-1 min-w-[150px]">
-              <option value="">Select Semester</option>
-              {semesters.map(s => <option key={s.semesterId} value={s.semesterId}>{s.name || s.semesterName}</option>)}
-            </select>
+          {/* Modal */}
+          <div className="relative bg-white w-full max-w-3xl p-6 rounded-2xl shadow-xl space-y-4 animate-fade-in-down">
+            <h3 className="text-xl font-semibold text-gray-700">Update Class</h3>
 
-            <select name="courseId" value={updateClass.courseId} onChange={handleUpdateClassChange} className="border rounded-lg p-3 flex-1 min-w-[150px]">
-              <option value="">Select Course</option>
-              {courses.map(course => <option key={course.courseId} value={course.courseId}>{course.name || course.courseName}</option>)}
-            </select>
-
-            <input type="text" name="sectionCode" value={updateClass.sectionCode} onChange={handleUpdateClassChange} placeholder="Class Name" className="border rounded-lg p-3 flex-1 min-w-[150px]" />
-          </div>
-
-          <div className="flex flex-wrap gap-4">
-            <div className="flex-1 min-w-[200px]">
-              <label className="block text-sm font-medium text-gray-600 mb-1">Start Date</label>
-              <input
-                type="datetime-local"
-                name="startDate"
-                value={updateClass.startDate}
+            <div className="flex flex-wrap gap-4">
+              <select
+                name="campusId"
+                value={updateClass.campusId}
                 onChange={handleUpdateClassChange}
-                className="border rounded-lg p-3 w-full focus:outline-orange-400"
+                className="border rounded-lg p-3 flex-1 min-w-[150px]"
+              >
+                <option value="">Select Campus</option>
+                {campuses.map(c => (
+                  <option key={c.campusId} value={c.campusId}>
+                    {c.name || c.campusName}
+                  </option>
+                ))}
+              </select>
+
+              <select
+                name="semesterId"
+                value={updateClass.semesterId}
+                onChange={handleUpdateClassChange}
+                className="border rounded-lg p-3 flex-1 min-w-[150px]"
+              >
+                <option value="">Select Semester</option>
+                {semesters.map(s => (
+                  <option key={s.semesterId} value={s.semesterId}>
+                    {s.name || s.semesterName}
+                  </option>
+                ))}
+              </select>
+
+              <select
+                name="courseId"
+                value={updateClass.courseId}
+                onChange={handleUpdateClassChange}
+                className="border rounded-lg p-3 flex-1 min-w-[150px]"
+              >
+                <option value="">Select Course</option>
+                {courses
+                  .filter(course => course.isActive)
+                  .map(course => (
+                    <option key={course.courseId} value={course.courseId}>
+                      {course.courseCode}
+                    </option>
+                  ))}
+              </select>
+
+              <input
+                type="text"
+                name="sectionCode"
+                value={updateClass.sectionCode}
+                onChange={handleUpdateClassChange}
+                placeholder="Class Name"
+                className="border rounded-lg p-3 flex-1 min-w-[150px]"
               />
             </div>
-            <div className="flex-1 min-w-[200px]">
-              <label className="block text-sm font-medium text-gray-600 mb-1">End Date</label>
-              <input
-                type="datetime-local"
-                name="endDate"
-                value={updateClass.endDate}
-                onChange={handleUpdateClassChange}
-                className="border rounded-lg p-3 w-full focus:outline-orange-400"
-              />
-            </div>
-          </div>
 
-          <div className="flex gap-4">
-            <button onClick={handleUpdateClass} className="px-6 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition font-semibold shadow-sm">
-              Update
-            </button>
-            <button onClick={() => setShowUpdateForm(false)} className="px-6 py-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 transition font-semibold">
-              Cancel
-            </button>
+            <div className="flex flex-wrap gap-4">
+              <div className="flex-1 min-w-[200px]">
+                <label className="block text-sm font-medium text-gray-600 mb-1">
+                  Start Date
+                </label>
+                <input
+                  type="datetime-local"
+                  name="startDate"
+                  value={updateClass.startDate}
+                  onChange={handleUpdateClassChange}
+                  className="border rounded-lg p-3 w-full focus:outline-orange-400"
+                />
+              </div>
+
+              <div className="flex-1 min-w-[200px]">
+                <label className="block text-sm font-medium text-gray-600 mb-1">
+                  End Date
+                </label>
+                <input
+                  type="datetime-local"
+                  name="endDate"
+                  value={updateClass.endDate}
+                  onChange={handleUpdateClassChange}
+                  className="border rounded-lg p-3 w-full focus:outline-orange-400"
+                />
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-4 pt-2">
+              <button
+                onClick={() => setShowUpdateForm(false)}
+                className="px-6 py-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 font-semibold"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() =>
+                  openConfirm({
+                    title: "Update Class",
+                    message: "Are you sure you want to update this class?",
+                    onConfirm: handleUpdateClass,
+                  })
+                }
+                className="px-6 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 font-semibold shadow"
+              >
+                Update
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -513,7 +696,7 @@ export default function AdminClassManagement() {
                   return (
                     <tr key={c.courseInstanceId} className="border-b hover:bg-gray-50 transition">
                       <td className="p-3 font-medium text-gray-800">{c.sectionCode || c.courseName}</td>
-                      <td className="p-3">{c.courseName}</td>
+                      <td className="p-3">{c.courseCode}</td>
                       <td className="p-3">{c.semesterName}</td>
                       <td className="p-3">{c.campusName}</td>
                       <td className="p-3">{c.studentCount}</td>
@@ -535,8 +718,8 @@ export default function AdminClassManagement() {
                           <button
                             disabled={c.isActive}
                             className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${c.isActive
-                                ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                                : "bg-green-50 text-green-600 hover:bg-green-100 border border-green-200"
+                              ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                              : "bg-green-50 text-green-600 hover:bg-green-100 border border-green-200"
                               }`}
                             onClick={() => !c.isActive && handleOpenUpdateForm(c)}
                           >
@@ -550,8 +733,8 @@ export default function AdminClassManagement() {
                           </button>
                           <button
                             className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${c.isActive
-                                ? "bg-red-50 text-red-600 hover:bg-red-100 border border-red-200"
-                                : "bg-blue-50 text-blue-600 hover:bg-blue-100 border border-blue-200"
+                              ? "bg-red-50 text-red-600 hover:bg-red-100 border border-red-200"
+                              : "bg-blue-50 text-blue-600 hover:bg-blue-100 border border-blue-200"
                               }`}
                             onClick={() => handleToggleStatus(c.courseInstanceId, c.isActive)}
                           >
@@ -567,6 +750,44 @@ export default function AdminClassManagement() {
           ) : (<p className="p-6 text-center text-gray-500 font-medium">No classes found</p>)
         ) : (<p className="p-6 text-center text-gray-500 font-medium">Please select a campus first</p>)}
       </div>
+      {confirmState.open && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center">
+          {/* Overlay */}
+          <div
+            className="absolute inset-0 bg-black/50"
+            onClick={closeConfirm}
+          />
+
+          {/* Modal */}
+          <div className="relative bg-white w-full max-w-md p-6 rounded-2xl shadow-xl space-y-4 animate-fade-in-down">
+            <h3 className="text-lg font-semibold text-gray-800">
+              {confirmState.title || "Confirm"}
+            </h3>
+
+            <p className="text-gray-600">
+              {confirmState.message}
+            </p>
+
+            <div className="flex justify-end gap-3 pt-4">
+              <button
+                onClick={closeConfirm}
+                className="px-4 py-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 font-semibold"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  confirmState.onConfirm?.();
+                  closeConfirm();
+                }}
+                className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 font-semibold shadow"
+              >
+                Confirm
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

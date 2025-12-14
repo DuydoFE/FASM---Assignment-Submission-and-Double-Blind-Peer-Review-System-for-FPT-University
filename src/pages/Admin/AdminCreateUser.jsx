@@ -13,7 +13,7 @@ export default function AdminCreateUser() {
 
     const [newUser, setNewUser] = useState({
         campusId: 0,
-        majorId: 0,
+        majorId: null,
         username: "",
         password: "",
         email: "",
@@ -25,7 +25,28 @@ export default function AdminCreateUser() {
         isActive: true,
     });
 
-    const roles = ["Student", "Instructor"];
+    const [confirmOpen, setConfirmOpen] = useState(false);
+    const [confirmConfig, setConfirmConfig] = useState({
+        title: "",
+        message: "",
+        onConfirm: null,
+    });
+    const openConfirm = ({ title, message, onConfirm }) => {
+        setConfirmConfig({ title, message, onConfirm });
+        setConfirmOpen(true);
+    };
+
+    const closeConfirm = () => {
+        setConfirmOpen(false);
+        setConfirmConfig({ title: "", message: "", onConfirm: null });
+    };
+
+    const generateUsernameFromFirstName = (firstName) => {
+        return firstName
+            ?.trim()
+            .toLowerCase()
+            .replace(/\s+/g, "");
+    };
 
     useEffect(() => {
         getAllCampuses().then((res) => {
@@ -39,247 +60,268 @@ export default function AdminCreateUser() {
 
     const handleChange = (e) => {
         const { name, value } = e.target;
-        setNewUser({ ...newUser, [name]: value });
-    };
 
-    const resetForm = () => {
-        setNewUser({
-            campusId: 0,
-            majorId: 0,
-            username: "",
-            password: "",
-            email: "",
-            firstName: "",
-            lastName: "",
-            studentCode: "",
-            avatarUrl: "",
-            role: "",
-            isActive: true,
-        });
+        if (name === "role") {
+            setNewUser({
+                campusId: 0,
+                majorId: null,
+                username: "",
+                password: "",
+                email: "",
+                firstName: "",
+                lastName: "",
+                studentCode: "",
+                avatarUrl: "",
+                role: value,
+                isActive: true,
+            });
+            return;
+        }
+
+        setNewUser({ ...newUser, [name]: value });
     };
 
     const handleSave = async () => {
         try {
-            await createUser(newUser);
-
-            toast.success("User created successfully!", {
-                style: {
-                    borderRadius: "10px",
-                    background: "#fff7ed",
-                    color: "#9a3412",
-                    border: "1px solid #fdba74",
-                    padding: "16px 24px",
-                    fontWeight: "500",
-                },
-                iconTheme: {
-                    primary: "#ea580c",
-                    secondary: "#fff",
-                },
-            });
-
-            resetForm();
-
-        } catch (error) {
-            const status = error.response?.status;
-
-            const messages = {
-                400: "Invalid data. Please check all required fields.",
-                409: "Email or username already exists.",
+            const payload = {
+                ...newUser,
+                username:
+                    newUser.role === "Instructor"
+                        ? generateUsernameFromFirstName(newUser.firstName)
+                        : newUser.username,
             };
 
-            toast.error(messages[status] || "An unexpected error occurred. Please try again.", {
-                style: {
-                    borderRadius: "10px",
-                    background: "#fef2f2",
-                    color: "#b91c1c",
-                    border: "1px solid #fca5a5",
-                    padding: "16px 24px",
-                    fontWeight: "500",
-                },
-                iconTheme: {
-                    primary: "#b91c1c",
-                    secondary: "#fff",
-                },
+            await createUser(payload);
+
+            toast.success("User created successfully");
+
+            setNewUser({
+                campusId: 0,
+                majorId: null,
+                username: "",
+                password: "",
+                email: "",
+                firstName: "",
+                lastName: "",
+                studentCode: "",
+                avatarUrl: "",
+                role: "",
+                isActive: true,
             });
+        } catch {
+            toast.error("Create user failed");
         }
     };
 
     return (
-        <div className="p-8 bg-white min-h-screen">
-            {/* Toaster hiển thị toast */}
-            <Toaster position="top-right" reverseOrder={false} />
+        <div className="min-h-screen bg-gray-50 p-8">
+            <Toaster position="top-right" />
 
-            <button
-                onClick={() => navigate(-1)}
-                className="flex items-center gap-2 text-orange-600 hover:text-orange-800 mb-6"
-            >
-                <ArrowLeft size={20} /> Back
-            </button>
+            {/* Header */}
+            <div className="flex items-center gap-4 mb-8">
+                <button
+                    onClick={() =>
+                        openConfirm({
+                            title: "Leave page?",
+                            message: "All entered information will be lost. Are you sure you want to go back?",
+                            onConfirm: () => navigate(-1),
+                        })
+                    }
+                    className="flex items-center gap-2 text-orange-600 hover:text-orange-700 font-medium"
+                >
+                    <ArrowLeft size={18} /> Back
+                </button>
+                <h1 className="text-3xl font-bold text-gray-800">
+                    Create New User
+                </h1>
+            </div>
 
-            <h2 className="text-4xl font-bold text-orange-600 mb-8">
-                Create New User
-            </h2>
+            <div className="max-w-6xl mx-auto space-y-8">
 
-            <div className="bg-white shadow-lg rounded-xl p-8 grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Username */}
-                <div>
-                    <label className="text-gray-600 font-semibold">Username</label>
-                    <input
-                        type="text"
-                        name="username"
-                        value={newUser.username}
-                        onChange={handleChange}
-                        className="mt-1 w-full p-3 border rounded-lg shadow-sm"
-                    />
-                </div>
+                {/* ROLE CARD */}
+                <div className="bg-white rounded-2xl shadow-sm border p-6 max-w-md">
+                    <h3 className="text-lg font-semibold text-gray-700 mb-4">
+                        1. Select User Role
+                    </h3>
 
-                {/* Password */}
-                <div>
-                    <label className="text-gray-600 font-semibold">Password</label>
-                    <input
-                        type="password"
-                        name="password"
-                        value={newUser.password}
-                        onChange={handleChange}
-                        className="mt-1 w-full p-3 border rounded-lg shadow-sm"
-                    />
-                </div>
-
-                {/* Email */}
-                <div>
-                    <label className="text-gray-600 font-semibold">Email</label>
-                    <input
-                        type="email"
-                        name="email"
-                        value={newUser.email}
-                        onChange={handleChange}
-                        className="mt-1 w-full p-3 border rounded-lg shadow-sm"
-                    />
-                </div>
-
-                {/* First Name */}
-                <div>
-                    <label className="text-gray-600 font-semibold">First Name</label>
-                    <input
-                        type="text"
-                        name="firstName"
-                        value={newUser.firstName}
-                        onChange={handleChange}
-                        className="mt-1 w-full p-3 border rounded-lg shadow-sm"
-                    />
-                </div>
-
-                {/* Last Name */}
-                <div>
-                    <label className="text-gray-600 font-semibold">Last Name</label>
-                    <input
-                        type="text"
-                        name="lastName"
-                        value={newUser.lastName}
-                        onChange={handleChange}
-                        className="mt-1 w-full p-3 border rounded-lg shadow-sm"
-                    />
-                </div>
-
-                {/* Student Code */}
-                <div>
-                    <label className="text-gray-600 font-semibold">User Code</label>
-                    <input
-                        type="text"
-                        name="studentCode"
-                        value={newUser.studentCode}
-                        onChange={handleChange}
-                        className="mt-1 w-full p-3 border rounded-lg shadow-sm"
-                    />
-                </div>
-
-                {/* Avatar URL */}
-                <div>
-                    <label className="text-gray-600 font-semibold">Avatar URL</label>
-                    <input
-                        type="text"
-                        name="avatarUrl"
-                        value={newUser.avatarUrl}
-                        onChange={handleChange}
-                        className="mt-1 w-full p-3 border rounded-lg shadow-sm"
-                    />
-                </div>
-
-                {/* Role */}
-                <div>
-                    <label className="text-gray-600 font-semibold">Role</label>
                     <select
                         name="role"
                         value={newUser.role}
                         onChange={handleChange}
-                        className="mt-1 w-full p-3 border rounded-lg shadow-sm"
+                        className="w-full p-3 border rounded-xl focus:ring-2 focus:ring-orange-500 outline-none"
                     >
-                        <option value="">Select Role</option>
-                        {roles.map((r) => (
-                            <option key={r} value={r}>{r}</option>
-                        ))}
+                        <option value="">Choose role...</option>
+                        <option value="Student">Student</option>
+                        <option value="Instructor">Instructor</option>
                     </select>
+
+                    {!newUser.role && (
+                        <p className="text-sm text-gray-400 mt-3">
+                            Please select a role to continue
+                        </p>
+                    )}
                 </div>
 
-                {/* Campus */}
-                <div>
-                    <label className="text-gray-600 font-semibold">Campus</label>
-                    <select
-                        name="campusId"
-                        value={newUser.campusId}
-                        onChange={handleChange}
-                        className="mt-1 w-full p-3 border rounded-lg shadow-sm"
-                    >
-                        <option value={0}>Select Campus</option>
-                        {campuses.map((c) => (
-                            <option key={c.id || c.campusId} value={c.id || c.campusId}>
-                                {c.name || c.campusName}
-                            </option>
-                        ))}
-                    </select>
-                </div>
+                {/* FORM CARD */}
+                {newUser.role && (
+                    <div className="bg-white rounded-2xl shadow-sm border p-8">
+                        <h3 className="text-lg font-semibold text-gray-700 mb-6">
+                            2. User Information
+                        </h3>
 
-                {/* Major */}
-                <div>
-                    <label className="text-gray-600 font-semibold">Major</label>
-                    <select
-                        name="majorId"
-                        value={newUser.majorId}
-                        onChange={handleChange}
-                        className="mt-1 w-full p-3 border rounded-lg shadow-sm"
-                    >
-                        <option value={0}>Select Major</option>
-                        {majors.map((m) => (
-                            <option key={m.majorId} value={m.majorId}>
-                                {m.majorName}
-                            </option>
-                        ))}
-                    </select>
-                </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
-                {/* Status */}
-                <div>
-                    <label className="text-gray-600 font-semibold">Status</label>
-                    <select
-                        name="isActive"
-                        value={newUser.isActive}
-                        onChange={handleChange}
-                        className="mt-1 w-full p-3 border rounded-lg shadow-sm"
+                            {/* STUDENT ONLY */}
+                            {newUser.role === "Student" && (
+                                <>
+                                    <Input label="Username" name="username" value={newUser.username} onChange={handleChange} />
+                                    <Input label="Password" type="password" name="password" value={newUser.password} onChange={handleChange} />
+                                </>
+                            )}
+
+                            <Input label="Email" name="email" value={newUser.email} onChange={handleChange} />
+                            <Input label="First Name" name="firstName" value={newUser.firstName} onChange={handleChange} />
+                            <Input label="Last Name" name="lastName" value={newUser.lastName} onChange={handleChange} />
+                            <Input label="User Code" name="studentCode" value={newUser.studentCode} onChange={handleChange} />
+                            <Input label="Avatar URL" name="avatarUrl" value={newUser.avatarUrl} onChange={handleChange} />
+
+                            <Select
+                                label="Campus"
+                                name="campusId"
+                                value={newUser.campusId}
+                                onChange={handleChange}
+                                options={campuses.map(c => ({
+                                    value: c.id || c.campusId,
+                                    label: c.name || c.campusName
+                                }))}
+                            />
+
+                            {newUser.role === "Student" && (
+                                <Select
+                                    label="Major"
+                                    name="majorId"
+                                    value={newUser.majorId || 0}
+                                    onChange={handleChange}
+                                    options={majors.map(m => ({
+                                        value: m.majorId,
+                                        label: m.majorName
+                                    }))}
+                                />
+                            )}
+
+                            <Select
+                                label="Status"
+                                name="isActive"
+                                value={newUser.isActive}
+                                onChange={handleChange}
+                                options={[
+                                    { value: true, label: "Active" },
+                                    { value: false, label: "Inactive" }
+                                ]}
+                            />
+                        </div>
+                    </div>
+                )}
+
+                {/* ACTION */}
+                <div className="flex justify-end">
+                    <button
+                        onClick={() =>
+                            openConfirm({
+                                title: "Create new user?",
+                                message: "Are you sure you want to create this user with the provided information?",
+                                onConfirm: handleSave,
+                            })
+                        }
+                        disabled={!newUser.role}
+                        className="flex items-center gap-2 bg-orange-600 hover:bg-orange-700 text-white px-8 py-3 rounded-xl shadow-md disabled:opacity-50 transition"
                     >
-                        <option value={true}>Active</option>
-                        <option value={false}>Inactive</option>
-                    </select>
+                        <Save size={18} /> Save User
+                    </button>
                 </div>
             </div>
+            <ConfirmModal
+                open={confirmOpen}
+                title={confirmConfig.title}
+                message={confirmConfig.message}
+                onConfirm={confirmConfig.onConfirm}
+                onCancel={closeConfirm}
+            />
+        </div>
+    );
+}
 
-            {/* Save Button */}
-            <div className="mt-8 flex justify-end">
-                <button
-                    onClick={handleSave}
-                    className="flex items-center gap-2 bg-orange-600 text-white px-6 py-3 rounded-lg shadow-lg hover:bg-orange-700 transition"
-                >
-                    <Save size={20} /> Save
-                </button>
+/* ---------- Small UI Components ---------- */
+
+function Input({ label, ...props }) {
+    return (
+        <div>
+            <label className="block text-sm font-medium text-gray-600 mb-1">
+                {label}
+            </label>
+            <input
+                {...props}
+                className="w-full p-3 border rounded-xl focus:ring-2 focus:ring-orange-500 outline-none"
+            />
+        </div>
+    );
+}
+
+function Select({ label, options, ...props }) {
+    return (
+        <div>
+            <label className="block text-sm font-medium text-gray-600 mb-1">
+                {label}
+            </label>
+            <select
+                {...props}
+                className="w-full p-3 border rounded-xl focus:ring-2 focus:ring-orange-500 outline-none"
+            >
+                <option value={0}>Select {label}</option>
+                {options.map(o => (
+                    <option key={o.value} value={o.value}>
+                        {o.label}
+                    </option>
+                ))}
+            </select>
+        </div>
+    );
+}
+
+function ConfirmModal({ open, title, message, onConfirm, onCancel }) {
+    if (!open) return null;
+
+    return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+            {/* Overlay */}
+            <div className="absolute inset-0 bg-black/40 backdrop-blur-sm"></div>
+
+            {/* Modal */}
+            <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 z-10">
+                <h3 className="text-xl font-bold text-gray-800 mb-3">
+                    {title}
+                </h3>
+                <p className="text-gray-600 mb-6">
+                    {message}
+                </p>
+
+                <div className="flex justify-end gap-4">
+                    <button
+                        onClick={onCancel}
+                        className="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-100"
+                    >
+                        Cancel
+                    </button>
+                    <button
+                        onClick={() => {
+                            onConfirm();
+                            onCancel();
+                        }}
+                        className="px-4 py-2 rounded-lg bg-orange-600 text-white hover:bg-orange-700"
+                    >
+                        Confirm
+                    </button>
+                </div>
             </div>
         </div>
     );

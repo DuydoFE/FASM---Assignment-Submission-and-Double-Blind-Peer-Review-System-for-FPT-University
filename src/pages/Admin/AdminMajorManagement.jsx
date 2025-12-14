@@ -7,11 +7,24 @@ import {
   deleteMajor,
 } from "../../service/adminService";
 
+/* =========================
+   Modal Wrapper (OUTSIDE)
+   ========================= */
+const ModalWrapper = ({ children }) => (
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+    <div className="bg-white rounded-2xl shadow-xl p-6 w-full max-w-md">
+      {children}
+    </div>
+  </div>
+);
+
 export default function AdminMajorManagement() {
   const [majors, setMajors] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const [showAddForm, setShowAddForm] = useState(false);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+
   const [newMajor, setNewMajor] = useState({
     majorCode: "",
     majorName: "",
@@ -19,15 +32,18 @@ export default function AdminMajorManagement() {
 
   const [editingMajor, setEditingMajor] = useState(null);
 
-  // ------------------------------------------------------------
-  // Load Majors
-  // ------------------------------------------------------------
+  const [confirmAction, setConfirmAction] = useState(null);
+  // confirmAction = { type: "create" | "update" | "delete", payload?: any }
+
+  /* =========================
+     Load Majors
+     ========================= */
   const loadMajors = async () => {
     setLoading(true);
     try {
       const res = await getAllMajors();
       setMajors(res?.data || []);
-    } catch (err) {
+    } catch {
       toast.error("Failed to load majors");
     } finally {
       setLoading(false);
@@ -38,32 +54,9 @@ export default function AdminMajorManagement() {
     loadMajors();
   }, []);
 
-  // ------------------------------------------------------------
-  // Create Major
-  // ------------------------------------------------------------
-  const handleCreateMajor = async () => {
-    if (!newMajor.majorCode.trim() || !newMajor.majorName.trim()) {
-      toast.error("Please fill all fields");
-      return;
-    }
-
-    const toastId = toast.loading("Creating major...");
-
-    try {
-      await createMajor(newMajor);
-      toast.success("Major created successfully!", { id: toastId });
-
-      setNewMajor({ majorCode: "", majorName: "" });
-      setShowAddForm(false);
-      loadMajors();
-    } catch (err) {
-      toast.error("Failed to create major", { id: toastId });
-    }
-  };
-
-  // ------------------------------------------------------------
-  // Open Edit Form
-  // ------------------------------------------------------------
+  /* =========================
+     Open Edit Modal
+     ========================= */
   const openEdit = (major) => {
     setEditingMajor({
       majorId: major.majorId,
@@ -71,110 +64,64 @@ export default function AdminMajorManagement() {
       majorName: major.majorName,
       isActive: major.isActive,
     });
+    setShowEditModal(true);
   };
 
-  // ------------------------------------------------------------
-  // Update Major
-  // ------------------------------------------------------------
-  const handleUpdateMajor = () => {
-    toast(
-      (t) => (
-        <div>
-          <p className="font-semibold mb-2">Are you sure you want to make this change?</p>
-          <div className="flex gap-3">
-            <button
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg"
-              onClick={async () => {
-                toast.dismiss(t.id);
+  /* =========================
+     Confirm Action Handler
+     ========================= */
+  const handleConfirm = async () => {
+    try {
+      if (confirmAction.type === "create") {
+        await createMajor(newMajor);
+        toast.success("Major created successfully!");
+        setNewMajor({ majorCode: "", majorName: "" });
+        setShowAddModal(false);
+      }
 
-                const toastId = toast.loading("Updating major...");
-                try {
-                  await updateMajor(editingMajor);
-                  toast.success("Updated successfully!", { id: toastId });
-                  setEditingMajor(null);
-                  loadMajors();
-                } catch {
-                  toast.error("Update failed", { id: toastId });
-                }
-              }}
-            >
-              Yes
-            </button>
+      if (confirmAction.type === "update") {
+        await updateMajor(editingMajor);
+        toast.success("Updated successfully!");
+        setEditingMajor(null);
+        setShowEditModal(false);
+      }
 
-            <button
-              className="px-4 py-2 bg-gray-400 text-white rounded-lg"
-              onClick={() => toast.dismiss(t.id)}
-            >
-              No
-            </button>
-          </div>
-        </div>
-      ),
-      { duration: 5000 }
-    );
+      if (confirmAction.type === "delete") {
+        await deleteMajor(confirmAction.payload);
+        toast.success("Deleted successfully!");
+      }
+
+      loadMajors();
+    } catch {
+      toast.error("Action failed");
+    } finally {
+      setConfirmAction(null);
+    }
   };
-
-  // ------------------------------------------------------------
-  // Delete Major
-  // ------------------------------------------------------------
-  const handleDeleteMajor = (id) => {
-    toast(
-      (t) => (
-        <div>
-          <p className="font-semibold">Are you sure you want to delete?</p>
-
-          <div className="flex gap-3 mt-3">
-            <button
-              className="px-4 py-2 bg-red-600 text-white rounded-lg"
-              onClick={async () => {
-                toast.dismiss(t.id);
-
-                const toastId = toast.loading("Deleting...");
-
-                try {
-                  await deleteMajor(id);
-                  toast.success("Deleted successfully!", { id: toastId });
-                  loadMajors();
-                } catch {
-                  toast.error("Delete failed", { id: toastId });
-                }
-              }}
-            >
-              Yes
-            </button>
-
-            <button
-              className="px-4 py-2 bg-gray-400 text-white rounded-lg"
-              onClick={() => toast.dismiss(t.id)}
-            >
-              No
-            </button>
-          </div>
-        </div>
-      ),
-      { duration: 5000 }
-    );
-  };
-
-  // ------------------------------------------------------------
 
   return (
     <div className="bg-white p-6 rounded-2xl shadow-lg border border-gray-200">
       <Toaster position="top-right" />
 
-      <h2 className="text-3xl font-bold mb-6 text-orange-600">Major Management</h2>
+      <h2 className="text-3xl font-bold mb-6 text-orange-600">
+        Major Management
+      </h2>
 
       {/* Add Button */}
       <button
-        onClick={() => setShowAddForm(!showAddForm)}
-        className="bg-orange-500 text-white px-6 py-3 rounded-xl hover:bg-orange-600 shadow-sm mb-4"
+        onClick={() => setShowAddModal(true)}
+        className="bg-orange-500 text-white px-6 py-3 rounded-xl hover:bg-orange-600 mb-4"
       >
         Add New Major
       </button>
 
-      {/* Add Form */}
-      {showAddForm && (
-        <div className="mb-6 p-4 border border-gray-300 rounded-xl bg-orange-50">
+      {/* ================= ADD MODAL ================= */}
+      {showAddModal && (
+        <ModalWrapper>
+          <h3 className="text-xl font-semibold mb-4 text-orange-600">
+            Add New Major
+          </h3>
+
           <div className="flex flex-col gap-3">
             <input
               type="text"
@@ -183,7 +130,7 @@ export default function AdminMajorManagement() {
               onChange={(e) =>
                 setNewMajor({ ...newMajor, majorCode: e.target.value })
               }
-              className="border border-gray-300 p-2 rounded-lg"
+              className="border p-2 rounded-lg"
             />
 
             <input
@@ -193,50 +140,58 @@ export default function AdminMajorManagement() {
               onChange={(e) =>
                 setNewMajor({ ...newMajor, majorName: e.target.value })
               }
-              className="border border-gray-300 p-2 rounded-lg"
+              className="border p-2 rounded-lg"
             />
 
-            <div className="flex gap-3 mt-2">
+            <div className="flex justify-end gap-3 mt-4">
               <button
-                onClick={handleCreateMajor}
-                className="bg-green-600 text-white px-6 py-2 rounded-xl hover:bg-green-700"
+                onClick={() => setConfirmAction({ type: "create" })}
+                className="bg-green-600 text-white px-5 py-2 rounded-lg"
               >
                 Save
               </button>
 
               <button
-                onClick={() => setShowAddForm(false)}
-                className="bg-gray-500 text-white px-6 py-2 rounded-xl hover:bg-gray-600"
+                onClick={() => setShowAddModal(false)}
+                className="bg-gray-500 text-white px-5 py-2 rounded-lg"
               >
                 Cancel
               </button>
             </div>
           </div>
-        </div>
+        </ModalWrapper>
       )}
 
-      {/* Edit Form */}
-      {editingMajor && (
-        <div className="mb-6 p-4 border border-gray-300 rounded-xl bg-blue-50">
-          <h3 className="text-xl font-semibold mb-3 text-blue-700">Update Major</h3>
+      {/* ================= EDIT MODAL ================= */}
+      {showEditModal && editingMajor && (
+        <ModalWrapper>
+          <h3 className="text-xl font-semibold mb-4 text-blue-600">
+            Update Major
+          </h3>
 
           <div className="flex flex-col gap-3">
             <input
               type="text"
               value={editingMajor.majorCode}
               onChange={(e) =>
-                setEditingMajor({ ...editingMajor, majorCode: e.target.value })
+                setEditingMajor({
+                  ...editingMajor,
+                  majorCode: e.target.value,
+                })
               }
-              className="border border-gray-300 p-2 rounded-lg"
+              className="border p-2 rounded-lg"
             />
 
             <input
               type="text"
               value={editingMajor.majorName}
               onChange={(e) =>
-                setEditingMajor({ ...editingMajor, majorName: e.target.value })
+                setEditingMajor({
+                  ...editingMajor,
+                  majorName: e.target.value,
+                })
               }
-              className="border border-gray-300 p-2 rounded-lg"
+              className="border p-2 rounded-lg"
             />
 
             <select
@@ -247,45 +202,69 @@ export default function AdminMajorManagement() {
                   isActive: e.target.value === "true",
                 })
               }
-              className="border border-gray-300 p-2 rounded-lg"
+              className="border p-2 rounded-lg"
             >
               <option value="true">Active</option>
               <option value="false">Deactive</option>
             </select>
 
-            <div className="flex gap-3 mt-2">
+            <div className="flex justify-end gap-3 mt-4">
               <button
-                onClick={handleUpdateMajor}
-                className="px-5 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                onClick={() => setConfirmAction({ type: "update" })}
+                className="bg-blue-600 text-white px-5 py-2 rounded-lg"
               >
                 Save
               </button>
 
               <button
-                onClick={() => setEditingMajor(null)}
-                className="px-5 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600"
+                onClick={() => {
+                  setShowEditModal(false);
+                  setEditingMajor(null);
+                }}
+                className="bg-gray-500 text-white px-5 py-2 rounded-lg"
               >
                 Cancel
               </button>
             </div>
           </div>
-        </div>
+        </ModalWrapper>
       )}
 
-      {/* Table */}
+      {/* ================= CONFIRM MODAL ================= */}
+      {confirmAction && (
+        <ModalWrapper>
+          <h3 className="text-lg font-semibold mb-4 text-red-600">
+            Are you sure?
+          </h3>
+
+          <p className="mb-6">This action cannot be undone.</p>
+
+          <div className="flex justify-end gap-3">
+            <button
+              className="bg-gray-400 text-white px-5 py-2 rounded-lg"
+              onClick={() => setConfirmAction(null)}
+            >
+              Cancel
+            </button>
+
+            <button
+              className="bg-red-600 text-white px-5 py-2 rounded-lg"
+              onClick={handleConfirm}
+            >
+              Confirm
+            </button>
+          </div>
+        </ModalWrapper>
+      )}
+
+      {/* ================= TABLE ================= */}
       <div className="overflow-hidden rounded-xl border border-gray-200">
         <table className="w-full border-collapse">
           <thead>
             <tr className="bg-orange-50">
-              <th className="p-3 text-left border-b font-semibold text-gray-700">
-                Code
-              </th>
-              <th className="p-3 text-left border-b font-semibold text-gray-700">
-                Name
-              </th>
-              <th className="p-3 text-left border-b font-semibold w-40">
-                Actions
-              </th>
+              <th className="p-3 text-left border-b">Code</th>
+              <th className="p-3 text-left border-b">Name</th>
+              <th className="p-3 text-left border-b w-40">Actions</th>
             </tr>
           </thead>
 
@@ -304,21 +283,28 @@ export default function AdminMajorManagement() {
               </tr>
             ) : (
               majors.map((item) => (
-                <tr key={item.majorId} className="border-b hover:bg-orange-50">
+                <tr
+                  key={item.majorId}
+                  className="border-b hover:bg-orange-50"
+                >
                   <td className="p-3">{item.majorCode}</td>
                   <td className="p-3">{item.majorName}</td>
-
                   <td className="p-3 flex gap-2">
                     <button
                       onClick={() => openEdit(item)}
-                      className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600"
+                      className="bg-blue-500 text-white px-4 py-2 rounded-lg"
                     >
                       Edit
                     </button>
 
                     <button
-                      onClick={() => handleDeleteMajor(item.majorId)}
-                      className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600"
+                      onClick={() =>
+                        setConfirmAction({
+                          type: "delete",
+                          payload: item.majorId,
+                        })
+                      }
+                      className="bg-red-500 text-white px-4 py-2 rounded-lg"
                     >
                       Delete
                     </button>

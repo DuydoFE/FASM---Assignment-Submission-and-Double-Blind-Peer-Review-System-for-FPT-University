@@ -246,86 +246,221 @@ export default function AdminSemesterManagement() {
 
       {/* Add New Semester Form */}
       {showAddForm && (
-        <div className="grid grid-cols-4 gap-3 mb-6">
-          <select
-            className="border p-3 rounded-xl"
-            value={newSemester.academicYearId}
-            onChange={(e) =>
-              setNewSemester({ ...newSemester, academicYearId: Number(e.target.value) })
-            }
-          >
-            <option value="">Select Academic Year</option>
-            {academicYears.map((year) => (
-              <option key={year.academicYearId} value={year.academicYearId}>
-                {year.name}
-              </option>
-            ))}
-          </select>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-2xl shadow-lg w-96 relative">
+            <h3 className="text-xl font-semibold mb-4 text-orange-600">Add New Semester</h3>
 
-          <select
-            className="border p-3 rounded-xl"
-            value={newSemester.name}
-            onChange={(e) => {
-              const updatedName = e.target.value;
+            {/* Close button */}
+            <button
+              className="absolute top-3 right-3 text-gray-500 hover:text-gray-700"
+              onClick={() => setShowAddForm(false)}
+            >
+              ✕
+            </button>
 
-              const selectedYear = academicYears.find(
-                (y) => y.academicYearId === Number(newSemester.academicYearId)
-              );
+            <div className="grid grid-cols-1 gap-4">
+              <select
+                className="border p-3 rounded-xl w-full"
+                value={newSemester.academicYearId}
+                onChange={(e) =>
+                  setNewSemester({ ...newSemester, academicYearId: Number(e.target.value) })
+                }
+              >
+                <option value="">Select Academic Year</option>
+                {academicYears.map((year) => (
+                  <option key={year.academicYearId} value={year.academicYearId}>
+                    {year.name}
+                  </option>
+                ))}
+              </select>
 
-              const dates = getPresetDates(updatedName.split(" ")[0], selectedYear);
+              <select
+                className="border p-3 rounded-xl w-full"
+                value={newSemester.name}
+                onChange={(e) => {
+                  const updatedName = e.target.value;
 
-              setNewSemester({
-                ...newSemester,
-                name: updatedName,
-                startDate: dates.startDate,
-                endDate: dates.endDate,
-              });
-            }}
-          >
-            <option value="">Select Semester Name</option>
-            {newSemester.academicYearId &&
-              semesterOptions(
-                academicYears.find(
-                  (y) => y.academicYearId === newSemester.academicYearId
-                )?.name
-              ).map((option) => (
-                <option
-                  key={option}
-                  value={option}
-                  disabled={semesters.some(
-                    (s) =>
-                      s.name === option &&
-                      s.academicYearId === newSemester.academicYearId
-                  )}
+                  const selectedYear = academicYears.find(
+                    (y) => y.academicYearId === Number(newSemester.academicYearId)
+                  );
+
+                  const dates = getPresetDates(updatedName.split(" ")[0], selectedYear);
+
+                  setNewSemester({
+                    ...newSemester,
+                    name: updatedName,
+                    startDate: dates.startDate,
+                    endDate: dates.endDate,
+                  });
+                }}
+              >
+                <option value="">Select Semester Name</option>
+                {newSemester.academicYearId &&
+                  semesterOptions(
+                    academicYears.find(
+                      (y) => y.academicYearId === newSemester.academicYearId
+                    )?.name
+                  ).map((option) => (
+                    <option
+                      key={option}
+                      value={option}
+                      disabled={semesters.some(
+                        (s) =>
+                          s.name === option &&
+                          s.academicYearId === newSemester.academicYearId
+                      )}
+                    >
+                      {option}
+                    </option>
+                  ))}
+              </select>
+
+              <input
+                type="datetime-local"
+                className="border p-3 rounded-xl w-full bg-gray-100 cursor-not-allowed"
+                value={newSemester.startDate}
+                readOnly
+              />
+
+              <input
+                type="datetime-local"
+                className="border p-3 rounded-xl w-full bg-gray-100 cursor-not-allowed"
+                value={newSemester.endDate}
+                readOnly
+              />
+
+              <button
+                onClick={handleSubmit}
+                className="bg-green-500 text-white px-6 py-3 rounded-xl hover:bg-green-600 w-full"
+              >
+                Save
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Semester Modal */}
+      {editing && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-2xl shadow-lg w-96 relative">
+            <h3 className="text-xl font-semibold mb-4 text-orange-600">Edit Semester</h3>
+
+            {/* Close button */}
+            <button
+              className="absolute top-3 right-3 text-gray-500 hover:text-gray-700"
+              onClick={() => setEditing(null)}
+            >
+              ✕
+            </button>
+
+            <div className="grid grid-cols-1 gap-4">
+              {/* Academic Year Dropdown */}
+              <select
+                className="border p-3 rounded-xl w-full"
+                value={editing.academicYearId}
+                onChange={(e) => {
+                  const yearId = Number(e.target.value);
+                  const selectedYear = academicYears.find(y => y.academicYearId === yearId);
+                  const semesterShortName = editing.name.split(" ")[0] || "";
+                  const dates = getPresetDates(semesterShortName, selectedYear);
+
+                  setEditing({
+                    ...editing,
+                    academicYearId: yearId,
+                    startDate: dates.startDate,
+                    endDate: dates.endDate,
+                  });
+                }}
+              >
+                <option value="">Select Academic Year</option>
+                {academicYears.map(year => (
+                  <option key={year.academicYearId} value={year.academicYearId}>
+                    {year.name}
+                  </option>
+                ))}
+              </select>
+
+              {/* Semester Name Dropdown */}
+              <select
+                className="border p-3 rounded-xl w-full"
+                value={editing.name}
+                onChange={(e) => {
+                  const updatedName = e.target.value;
+                  const selectedYear = academicYears.find(
+                    y => y.academicYearId === editing.academicYearId
+                  );
+                  const shortName = updatedName.split(" ")[0];
+                  const dates = getPresetDates(shortName, selectedYear);
+
+                  setEditing({
+                    ...editing,
+                    name: updatedName,
+                    startDate: dates.startDate,
+                    endDate: dates.endDate,
+                  });
+                }}
+              >
+                <option value="">Select Semester Name</option>
+                {editing.academicYearId &&
+                  semesterOptions(
+                    academicYears.find(
+                      y => y.academicYearId === editing.academicYearId
+                    )?.name
+                  ).map(option => (
+                    <option
+                      key={option}
+                      value={option}
+                      disabled={semesters.some(
+                        s =>
+                          s.name === option &&
+                          s.academicYearId === editing.academicYearId &&
+                          s.semesterId !== editing.semesterId
+                      )}
+                    >
+                      {option}
+                    </option>
+                  ))}
+              </select>
+
+              {/* Start & End Date (readonly) */}
+              <input
+                type="datetime-local"
+                className="border p-3 rounded-xl w-full bg-gray-100 cursor-not-allowed"
+                value={editing.startDate || ""}
+                readOnly
+              />
+              <input
+                type="datetime-local"
+                className="border p-3 rounded-xl w-full bg-gray-100 cursor-not-allowed"
+                value={editing.endDate || ""}
+                readOnly
+              />
+
+              {/* Action buttons */}
+              <div className="flex gap-3">
+                <button
+                  onClick={() =>
+                    setConfirmModal({
+                      isOpen: true,
+                      type: "edit",
+                      semesterId: editing.semesterId,
+                      callback: handleSaveEdit,
+                    })
+                  }
+                  className="bg-green-500 text-white px-6 py-3 rounded-xl hover:bg-green-600 flex-1"
                 >
-                  {option}
-                </option>
-              ))}
-          </select>
-
-          <input
-            type="datetime-local"
-            value={newSemester.startDate}
-            onChange={(e) =>
-              setNewSemester({ ...newSemester, startDate: e.target.value })
-            }
-          />
-
-          <input
-            type="datetime-local"
-            value={newSemester.endDate}
-            onChange={(e) =>
-              setNewSemester({ ...newSemester, endDate: e.target.value })
-            }
-          />
-
-
-          <button
-            onClick={handleSubmit}
-            className="col-span-4 bg-green-500 text-white px-6 py-3 rounded-xl hover:bg-green-600"
-          >
-            Save
-          </button>
+                  Save
+                </button>
+                <button
+                  onClick={() => setEditing(null)}
+                  className="bg-gray-300 text-black px-6 py-3 rounded-xl hover:bg-gray-400 flex-1"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       )}
 

@@ -7,6 +7,8 @@ import {
   getAllMajors,
   importUsers,
 } from "../../service/adminService";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 export default function AdminUserManagement() {
   const navigate = useNavigate();
@@ -65,6 +67,7 @@ export default function AdminUserManagement() {
 
   return (
     <div className="p-8 bg-white min-h-screen">
+      <ToastContainer />
       {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
         <h2 className="text-4xl font-bold text-orange-600">User Management</h2>
@@ -81,14 +84,31 @@ export default function AdminUserManagement() {
               if (!file) return;
 
               try {
+                const beforeImportCount = users.length;
                 await importUsers(file);
-                alert("Import users successfully!");
-
                 const allUsers = await getAllUsers();
-                setUsers(Array.isArray(allUsers?.data) ? allUsers.data : []);
+                const updatedUsers = Array.isArray(allUsers?.data)
+                  ? allUsers.data
+                  : [];
+                setUsers(updatedUsers);
+                const afterImportCount = updatedUsers.length;
+                const newUsersAdded = afterImportCount - beforeImportCount;
+                toast.success(
+                  <>
+                    <div className="font-semibold">Import users successfully!</div>
+                    <div>New users added: {newUsersAdded}</div>
+                  </>,
+                  {
+                    position: "top-right",
+                    autoClose: 4000,
+                  }
+                );
               } catch (err) {
                 console.error(err);
-                alert("Failed to import users.");
+                toast.error("Failed to import users.", {
+                  position: "top-right",
+                  autoClose: 4000,
+                });
               } finally {
                 e.target.value = "";
               }
