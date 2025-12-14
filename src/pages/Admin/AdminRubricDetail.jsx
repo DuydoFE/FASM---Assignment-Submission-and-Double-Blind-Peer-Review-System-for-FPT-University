@@ -28,6 +28,12 @@ export default function AdminRubricDetail() {
         scoringType: "Scale",
         scoreLabel: "0-10",
     });
+    const [confirmConfig, setConfirmConfig] = useState({
+        open: false,
+        title: "",
+        message: "",
+        onConfirm: null,
+    });
 
     const fetchRubric = async () => {
         try {
@@ -126,8 +132,48 @@ export default function AdminRubricDetail() {
         setShowEditModal(true);
     };
 
-    const handleUpdateCriteria = async (e) => {
+    const handleUpdateCriteria = (e) => {
         e.preventDefault();
+
+        setConfirmConfig({
+            open: true,
+            title: "Save Changes",
+            message: "Are you sure you want to save these changes?",
+            onConfirm: async () => {
+                await confirmUpdateCriteria();
+                setConfirmConfig({ open: false });
+            },
+        });
+    };
+
+    const handleDeleteCriteria = (criteriaId) => {
+        setConfirmConfig({
+            open: true,
+            title: "Delete Criteria",
+            message: "Are you sure you want to delete this criteria?",
+            onConfirm: async () => {
+                try {
+                    const res = await deleteCriteriaTemplate(criteriaId);
+                    if (res?.statusCode === 200) {
+                        toast.success("Criteria deleted successfully");
+                        setRubric((prev) => ({
+                            ...prev,
+                            criteriaTemplates: prev.criteriaTemplates.filter(
+                                (c) => c.criteriaTemplateId !== criteriaId
+                            ),
+                        }));
+                    } else {
+                        toast.error(res?.message || "Failed to delete criteria");
+                    }
+                } catch (err) {
+                    toast.error("Server error deleting criteria");
+                }
+                setConfirmConfig({ open: false });
+            },
+        });
+    };
+
+    const confirmUpdateCriteria = async () => {
         const currentWeight = Number(currentCriteria?.weight) || 0;
         const usedWithoutCurrent = Math.max(0, usedWeight - currentWeight);
         const editAvailable = Math.max(0, 100 - usedWithoutCurrent);
@@ -148,6 +194,7 @@ export default function AdminRubricDetail() {
                 templateId: rubric.templateId,
                 ...criteriaForm,
             };
+
             const res = await updateCriteriaTemplate(payload);
             if (res?.statusCode === 200) {
                 toast.success("Criteria updated successfully");
@@ -155,34 +202,16 @@ export default function AdminRubricDetail() {
                 setRubric((prev) => ({
                     ...prev,
                     criteriaTemplates: prev.criteriaTemplates.map((c) =>
-                        c.criteriaTemplateId === currentCriteria.criteriaTemplateId ? { ...c, ...criteriaForm } : c
+                        c.criteriaTemplateId === currentCriteria.criteriaTemplateId
+                            ? { ...c, ...criteriaForm }
+                            : c
                     ),
                 }));
             } else {
                 toast.error(res?.message || "Failed to update criteria");
             }
         } catch (err) {
-            console.error(err);
             toast.error("Server error updating criteria");
-        }
-    };
-
-    const handleDeleteCriteria = async (criteriaId) => {
-        if (!window.confirm("Are you sure to delete this criteria?")) return;
-        try {
-            const res = await deleteCriteriaTemplate(criteriaId);
-            if (res?.statusCode === 200) {
-                toast.success("Criteria deleted successfully");
-                setRubric((prev) => ({
-                    ...prev,
-                    criteriaTemplates: prev.criteriaTemplates.filter((c) => c.criteriaTemplateId !== criteriaId),
-                }));
-            } else {
-                toast.error(res?.message || "Failed to delete criteria");
-            }
-        } catch (err) {
-            console.error(err);
-            toast.error("Server error deleting criteria");
         }
     };
 
@@ -253,24 +282,40 @@ export default function AdminRubricDetail() {
 
             {rubric.criteriaTemplates && rubric.criteriaTemplates.length > 0 ? (
                 <div className="overflow-x-auto">
-                    <table className="min-w-full border border-gray-200 rounded-lg overflow-hidden">
-                        <thead className="bg-orange-100 text-left">
+                    <table className="min-w-full border border-gray-200 rounded-lg overflow-hidden table-fixed">
+                        <thead className="bg-orange-100">
                             <tr>
-                                <th className="p-3">Title</th>
-                                <th className="p-3">Max Score</th>
-                                <th className="p-3">Weight</th>
-                                <th className="p-3">Description</th>
-                                <th className="p-3">Actions</th>
+                                <th className="p-3 w-[20%] text-left">Title</th>
+                                <th className="p-3 w-[10%] text-center">Max Score</th>
+                                <th className="p-3 w-[10%] text-center">Weight</th>
+                                <th className="p-3 w-[40%] text-left">Description</th>
+                                <th className="p-3 w-[20%] text-center">Actions</th>
                             </tr>
                         </thead>
+
                         <tbody>
                             {rubric.criteriaTemplates.map((c, idx) => (
-                                <tr key={c.criteriaTemplateId} className={idx % 2 === 0 ? "bg-white" : "bg-gray-50"}>
-                                    <td className="p-3 font-medium">{c.title}</td>
-                                    <td className="p-3 text-center">{c.maxScore}</td>
-                                    <td className="p-3 text-center">{c.weight}%</td>
-                                    <td className="p-3">{c.description}</td>
-                                    <td className="p-3 space-x-2">
+                                <tr
+                                    key={c.criteriaTemplateId}
+                                    className={idx % 2 === 0 ? "bg-white" : "bg-gray-50"}
+                                >
+                                    <td className="p-3 font-medium break-words">
+                                        {c.title}
+                                    </td>
+
+                                    <td className="p-3 text-center">
+                                        {c.maxScore}
+                                    </td>
+
+                                    <td className="p-3 text-center">
+                                        {c.weight}%
+                                    </td>
+
+                                    <td className="p-3 break-words">
+                                        {c.description || "-"}
+                                    </td>
+
+                                    <td className="p-3 text-center space-x-3">
                                         <button
                                             className="text-blue-600 hover:underline"
                                             onClick={() => {
@@ -510,6 +555,34 @@ export default function AdminRubricDetail() {
                                     setShowConfirmModal(false);
                                 }}
                                 className="px-4 py-2 bg-blue-600 text-white rounded"
+                            >
+                                Confirm
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+            {confirmConfig.open && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60]">
+                    <div className="bg-white rounded-xl shadow-lg p-6 w-full max-w-sm">
+                        <h3 className="text-lg font-semibold mb-3">
+                            {confirmConfig.title}
+                        </h3>
+                        <p className="text-gray-600 mb-6">
+                            {confirmConfig.message}
+                        </p>
+
+                        <div className="flex justify-end gap-3">
+                            <button
+                                onClick={() => setConfirmConfig({ open: false })}
+                                className="px-4 py-2 border rounded"
+                            >
+                                Cancel
+                            </button>
+
+                            <button
+                                onClick={confirmConfig.onConfirm}
+                                className="px-4 py-2 bg-red-600 text-white rounded"
                             >
                                 Confirm
                             </button>

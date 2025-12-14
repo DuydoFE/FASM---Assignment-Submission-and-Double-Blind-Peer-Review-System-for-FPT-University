@@ -29,6 +29,22 @@ export default function AdminUserDetailsManagement() {
     studentCode: "",
     avatarUrl: "",
   });
+  const isStudent = user?.roles?.includes("STUDENT");
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [confirmConfig, setConfirmConfig] = useState({
+    title: "",
+    message: "",
+    onConfirm: null,
+  });
+  const openConfirm = ({ title, message, onConfirm }) => {
+    setConfirmConfig({ title, message, onConfirm });
+    setConfirmOpen(true);
+  };
+
+  const closeConfirm = () => {
+    setConfirmOpen(false);
+    setConfirmConfig({ title: "", message: "", onConfirm: null });
+  };
 
   const loadData = async () => {
     if (!id) return;
@@ -98,8 +114,8 @@ export default function AdminUserDetailsManagement() {
     try {
       const payload = {
         userId: user.id,
-        campusId: form.campusId ?? 0,
-        majorId: form.majorId ?? 0,
+        campusId: form.campusId || null,
+        majorId: isStudent ? form.majorId : null,
         username: form.username,
         email: form.email,
         firstName: form.firstName,
@@ -136,14 +152,31 @@ export default function AdminUserDetailsManagement() {
       <Toaster position="top-right" />
 
       <button
-        onClick={() => navigate(-1)}
+        onClick={() =>
+          openConfirm({
+            title: "Leave page?",
+            message: "Unsaved changes will be lost. Are you sure you want to go back?",
+            onConfirm: () => navigate(-1),
+          })
+        }
         className="flex items-center gap-2 text-orange-600 hover:text-orange-800 mb-6"
       >
         <ArrowLeft size={20} /> Back
       </button>
 
       <h2 className="text-4xl font-bold text-orange-600 mb-4 flex items-center gap-2">
-        User Details <Edit size={24} className="cursor-pointer" onClick={() => setEditing(!editing)} />
+        User Details
+        <Edit
+          size={24}
+          className="cursor-pointer"
+          onClick={() =>
+            openConfirm({
+              title: "Edit user?",
+              message: "Are you sure you want to edit this user information?",
+              onConfirm: () => setEditing(true),
+            })
+          }
+        />
       </h2>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -167,8 +200,15 @@ export default function AdminUserDetailsManagement() {
             </div>
 
             <button
-              onClick={handleToggleStatus}
-              className={`mt-5 w-full py-2 rounded-xl text-white font-semibold shadow ${user.isActive ? "bg-red-500 hover:bg-red-600" : "bg-green-500 hover:bg-green-600"}`}
+              onClick={() =>
+                openConfirm({
+                  title: user.isActive ? "Deactivate user?" : "Activate user?",
+                  message: `Are you sure you want to ${user.isActive ? "deactivate" : "activate"} this user?`,
+                  onConfirm: handleToggleStatus,
+                })
+              }
+              className={`mt-5 w-full py-2 rounded-xl text-white font-semibold shadow ${user.isActive ? "bg-red-500 hover:bg-red-600" : "bg-green-500 hover:bg-green-600"
+                }`}
             >
               {user.isActive ? "Deactivate User" : "Activate User"}
             </button>
@@ -196,7 +236,16 @@ export default function AdminUserDetailsManagement() {
             <h3 className="text-xl font-bold text-orange-600 mb-6">Basic Information</h3>
 
             {editing ? (
-              <form onSubmit={handleUpdateSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  openConfirm({
+                    title: "Save changes?",
+                    message: "Are you sure you want to save these changes?",
+                    onConfirm: () => handleUpdateSubmit(e),
+                  });
+                }}
+              >
                 {/* Campus & Major */}
                 <div>
                   <label className="block text-gray-500 text-sm mb-1">Campus</label>
@@ -212,19 +261,33 @@ export default function AdminUserDetailsManagement() {
                   </select>
                 </div>
 
-                <div>
-                  <label className="block text-gray-500 text-sm mb-1">Major</label>
-                  <select
-                    value={form.majorId}
-                    onChange={(e) => setForm({ ...form, majorId: Number(e.target.value) })}
-                    className="w-full border rounded-lg p-2 text-gray-800 bg-white"
-                  >
-                    <option value={0}>Select Major</option>
-                    {majors.map((m) => (
-                      <option key={m.majorId} value={m.majorId}>{m.majorName}</option>
-                    ))}
-                  </select>
-                </div>
+                {isStudent && (
+                  <div>
+                    <label className="block text-gray-500 text-sm mb-1">
+                      Major <span className="text-gray-400">(Required)</span>
+                    </label>
+
+                    <select
+                      value={form.majorId ?? ""}
+                      required
+                      onChange={(e) =>
+                        setForm({
+                          ...form,
+                          majorId: Number(e.target.value),
+                        })
+                      }
+                      className="w-full border rounded-lg p-2 text-gray-800 bg-white"
+                    >
+                      <option value="">Select Major</option>
+
+                      {majors.map((m) => (
+                        <option key={m.majorId} value={m.majorId}>
+                          {m.majorName}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
 
                 {/* Other fields */}
                 <div>
@@ -244,7 +307,7 @@ export default function AdminUserDetailsManagement() {
                   <input type="text" value={form.lastName} onChange={(e) => setForm({ ...form, lastName: e.target.value })} className="w-full border rounded-lg p-2" required />
                 </div>
                 <div>
-                  <label className="block text-gray-500 text-sm mb-1">Student Code</label>
+                  <label className="block text-gray-500 text-sm mb-1">User Code</label>
                   <input type="text" value={form.studentCode} onChange={(e) => setForm({ ...form, studentCode: e.target.value })} className="w-full border rounded-lg p-2" />
                 </div>
                 <div>
@@ -263,7 +326,7 @@ export default function AdminUserDetailsManagement() {
                 <InfoCard icon={<BookOpen />} label="Major" value={majors.find(m => m.majorId === user.majorId)?.majorName || "N/A"} />
                 <InfoCard icon={<Mail />} label="Email" value={user.email} />
                 <InfoCard icon={<User2 />} label="Username" value={user.username} />
-                <InfoCard icon={<BadgeCheck />} label="Student Code" value={user.studentCode} />
+                <InfoCard icon={<BadgeCheck />} label="User Code" value={user.studentCode} />
                 <InfoCard icon={<Calendar />} label="Created At" value={new Date(user.createdAt).toLocaleString()} />
               </div>
             )}
@@ -326,6 +389,13 @@ export default function AdminUserDetailsManagement() {
           </div>
         </div>
       </div>
+      <ConfirmModal
+        open={confirmOpen}
+        title={confirmConfig.title}
+        message={confirmConfig.message}
+        onConfirm={confirmConfig.onConfirm}
+        onCancel={closeConfirm}
+      />
     </div>
   );
 }
@@ -337,6 +407,41 @@ function InfoCard({ label, value, icon }) {
       <div>
         <p className="text-sm text-gray-500">{label}</p>
         <p className="text-gray-800 font-medium">{value}</p>
+      </div>
+    </div>
+  );
+}
+
+function ConfirmModal({ open, title, message, onConfirm, onCancel }) {
+  if (!open) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      {/* Overlay */}
+      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm"></div>
+
+      {/* Modal */}
+      <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 z-10">
+        <h3 className="text-xl font-bold text-gray-800 mb-3">{title}</h3>
+        <p className="text-gray-600 mb-6">{message}</p>
+
+        <div className="flex justify-end gap-4">
+          <button
+            onClick={onCancel}
+            className="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-100"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={() => {
+              onConfirm();
+              onCancel();
+            }}
+            className="px-4 py-2 rounded-lg bg-orange-600 text-white hover:bg-orange-700"
+          >
+            Confirm
+          </button>
+        </div>
       </div>
     </div>
   );

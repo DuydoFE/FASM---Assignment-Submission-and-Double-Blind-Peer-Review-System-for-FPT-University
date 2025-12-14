@@ -28,12 +28,12 @@ export default function AdminClassDetailsManagement() {
   const [confirmModal, setConfirmModal] = useState({ show: false, user: null, type: "student" });
   const isActive = classInfo?.status === "Active";
   const [addStudentModal, setAddStudentModal] = useState({ show: false });
-  const [studentList, setStudentList] = useState([]);
-  const [newStudent, setNewStudent] = useState({ userId: "", studentCode: "" });
+  const [newStudent, setNewStudent] = useState({ studentCode: "" });
 
   const [addInstructorModal, setAddInstructorModal] = useState({ show: false });
   const [instructorList, setInstructorList] = useState([]);
   const [newInstructor, setNewInstructor] = useState({ userId: "" });
+  const hasInstructor = instructors.length > 0;
 
   const contextClass = {
     success: "bg-green-50 text-green-600 border border-green-200",
@@ -158,16 +158,16 @@ export default function AdminClassDetailsManagement() {
       return;
     }
 
-    if (!newStudent.userId && !newStudent.studentCode)
-      return toast.warn("⚠️ Please select a student or enter student code!");
+    if (!newStudent.studentCode)
+      return toast.warn("⚠️ Please enter student code!");
 
     try {
       setLoading(true);
 
       await createCourseStudent({
         courseInstanceId: id,
-        userId: newStudent.userId ? Number(newStudent.userId) : 0,
-        studentCode: newStudent.studentCode || "",
+        userId: 0,
+        studentCode: newStudent.studentCode,
         status: "Enrolled",
         changedByUserId,
       });
@@ -187,6 +187,10 @@ export default function AdminClassDetailsManagement() {
   };
 
   const handleAddInstructor = async () => {
+    if (instructors.length > 0) {
+      toast.warn("⚠️ This class already has an instructor!");
+      return;
+    }
     if (classInfo?.isActive) {
       toast.error("⚠️ Cannot add instructors while the class is Active.");
       return;
@@ -217,9 +221,7 @@ export default function AdminClassDetailsManagement() {
     }
   };
 
-  const openAddStudentModal = async () => {
-    const students = await fetchUsersByRole("Student");
-    setStudentList(students);
+  const openAddStudentModal = () => {
     setAddStudentModal({ show: true });
   };
 
@@ -257,7 +259,7 @@ export default function AdminClassDetailsManagement() {
 
       <div className="bg-white p-4 rounded-xl shadow-md space-y-2">
         <p><strong>Class Name:</strong> {classInfo.className || classInfo.sectionCode}</p>
-        <p><strong>Course:</strong> {classInfo.courseName}</p>
+        <p><strong>Course:</strong> {classInfo.courseCode}</p>
         <p><strong>Status:</strong> {classInfo.isActive ? "Active" : "Deactive"}</p>
         <p><strong>Semester:</strong> {classInfo.semesterName}</p>
       </div>
@@ -273,12 +275,21 @@ export default function AdminClassDetailsManagement() {
 
         <button
           onClick={openAddInstructorModal}
-          disabled={isClassActive}
-          className={`px-4 py-2 rounded ${isClassActive ? "bg-gray-300 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700 text-white"}`}
+          disabled={isClassActive || hasInstructor}
+          className={`px-4 py-2 rounded ${isClassActive || hasInstructor
+            ? "bg-gray-300 cursor-not-allowed"
+            : "bg-blue-600 hover:bg-blue-700 text-white"
+            }`}
         >
           Add Instructor
         </button>
       </div>
+
+      {hasInstructor && (
+        <p className="text-sm text-red-500 mt-1">
+          ⚠️ This class already has an instructor.
+        </p>
+      )}
 
       {/* STUDENT LIST */}
       <div className="bg-white p-4 rounded-xl shadow-md space-y-4">
@@ -329,10 +340,11 @@ export default function AdminClassDetailsManagement() {
                   <td className={`p-2 font-medium ${u.status === "Active" ? "text-green-600" : "text-red-500"}`}>{u.status}</td>
                   <td className="p-2">
                     <button
-                      onClick={() => setConfirmModal({ show: true, user: u, type: "student" })}
-                      className={`text-red-500 hover:underline font-medium ${isClassActive ? "cursor-not-allowed opacity-50" : ""
-                        }`}
                       disabled={isClassActive}
+                      className={`px-3 py-1 ${isClassActive
+                        ? "bg-gray-300 cursor-not-allowed"
+                        : "bg-red-500 hover:bg-red-600 text-white"
+                        } rounded`}
                     >
                       Remove
                     </button>
@@ -430,18 +442,6 @@ export default function AdminClassDetailsManagement() {
             <h3 className="text-lg font-bold text-green-600">➕ Add Student</h3>
 
             <div className="space-y-2">
-              <select
-                value={newStudent.userId}
-                onChange={(e) => setNewStudent({ ...newStudent, userId: e.target.value })}
-                className="w-full p-2 border rounded focus:border-green-500 outline-none"
-              >
-                <option value="">Select Student</option>
-                {studentList.map((s) => (
-                  <option key={s.id} value={s.id}>
-                    {s.firstName} {s.lastName} - {s.email}
-                  </option>
-                ))}
-              </select>
 
               <input
                 type="text"
