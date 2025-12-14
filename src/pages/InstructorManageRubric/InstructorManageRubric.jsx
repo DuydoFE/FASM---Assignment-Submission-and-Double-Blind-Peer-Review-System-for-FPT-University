@@ -41,7 +41,6 @@ const InstructorManageRubric = () => {
             setTemplates(formattedTemplates);
         } catch (error) {
             console.error('Failed to fetch templates:', error);
-            toast.error('Failed to load rubric templates');
         } finally {
             setTemplatesLoading(false);
         }
@@ -69,7 +68,6 @@ const InstructorManageRubric = () => {
                 setRubrics(formattedRubrics);
             } catch (error) {
                 console.error('Failed to fetch rubrics:', error);
-                toast.error('Failed to load rubrics');
             } finally {
                 setLoading(false);
             }
