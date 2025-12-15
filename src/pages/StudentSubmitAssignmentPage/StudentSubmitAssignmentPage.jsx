@@ -178,7 +178,6 @@ const StudentSubmitAssignmentPage = () => {
           <h1 className="text-3xl font-bold text-gray-900">
             {assignment.courseName}
           </h1>
-      
         </div>
 
         {/* Main Content Grid */}
@@ -269,7 +268,6 @@ const StudentSubmitAssignmentPage = () => {
                   </p>
                 ) : (
                   <div className="space-y-6">
-                  
                     <PeerReviewCard
                       completed={completedReviews}
                       required={requiredReviews}

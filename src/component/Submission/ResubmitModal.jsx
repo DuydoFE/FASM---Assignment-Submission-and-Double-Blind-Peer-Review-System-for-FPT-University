@@ -16,22 +16,21 @@ const ResubmitModal = ({
   const [newKeywords, setNewKeywords] = useState('');
   const fileInputRef = useRef(null);
 
-  const [isCheckingPlagiarism, setIsCheckingPlagiarism] = useState(false);
-  const [plagiarismResult, setPlagiarismResult] = useState(null);
-  const [isPlagiarismModalOpen, setIsPlagiarismModalOpen] = useState(false);
+  const [isCheckingSubmission, setIsCheckingSubmission] = useState(false);
+  const [submissionCheckResult, setSubmissionCheckResult] = useState(null);
+  const [isResultModalOpen, setIsResultModalOpen] = useState(false);
 
   useEffect(() => {
-    // Cập nhật keywords ban đầu khi modal được mở
     if (isOpen) {
       setNewKeywords(initialKeywords || '');
-      setNewFile(null); // Reset file mỗi khi mở modal
-      setPlagiarismResult(null); // Reset kết quả check cũ
+      setNewFile(null); 
+      setSubmissionCheckResult(null); 
     }
   }, [isOpen, initialKeywords]);
 
   const handleFileChange = (event) => {
     setNewFile(event.target.files[0]);
-    setPlagiarismResult(null); 
+    setSubmissionCheckResult(null); 
   };
 
   const handleConfirmSubmit = () => {
@@ -39,31 +38,35 @@ const ResubmitModal = ({
       toast.warn("Please select a new file to resubmit.");
       return;
     }
-    // Gọi hàm onSubmit được truyền từ cha
     onSubmit({ file: newFile, keywords: newKeywords });
   };
 
-  const handleCheckPlagiarism = async () => {
+
+  const handleCheckSubmission = async () => {
     if (!newFile) {
-      toast.warn("Please upload a new file to check for plagiarism.");
+      toast.warn("Please upload a new file to check.");
       return;
     }
 
-    setIsCheckingPlagiarism(true);
+    setIsCheckingSubmission(true);
     try {
-      // Gọi service check đạo văn
       const result = await submissionService.checkPlagiarism(assignmentId, newFile);
       
       if (result.statusCode === 200 || result.statusCode === 100) {
-        setPlagiarismResult(result.data);
-        setIsPlagiarismModalOpen(true);
+   
+        setSubmissionCheckResult({
+            ...result.data,
+            errors: result.errors || [],
+            warnings: result.warnings || []
+        });
+        setIsResultModalOpen(true);
       } else {
-        toast.error(result.message || "Unable to check plagiarism.");
+        toast.error(result.message || "Unable to check submission.");
       }
     } catch (error) {
       toast.error(error.message || "Server connection error.");
     } finally {
-      setIsCheckingPlagiarism(false);
+      setIsCheckingSubmission(false);
     }
   };
 
@@ -82,7 +85,7 @@ const ResubmitModal = ({
             </button>
           </div>
 
-          <div
+           <div
             className={`mt-4 border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
               newFile 
                 ? "border-blue-300 bg-blue-50" 
@@ -125,17 +128,18 @@ const ResubmitModal = ({
              <div>
               {newFile && (
                 <button
-                  onClick={handleCheckPlagiarism}
-                  disabled={isCheckingPlagiarism || isSubmitting}
+                  onClick={handleCheckSubmission}
+                  disabled={isCheckingSubmission || isSubmitting}
                   className="flex items-center text-indigo-600 hover:text-indigo-800 text-sm font-semibold transition-colors bg-indigo-50 px-3 py-2 rounded-md hover:bg-indigo-100"
-                  title="Check for duplicates of newly selected file"
+                  title="Check for validity and duplicates"
                 >
-                  {isCheckingPlagiarism ? (
+                  {isCheckingSubmission ? (
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                   ) : (
                     <ScanSearch className="w-4 h-4 mr-2" />
                   )}
-                  {isCheckingPlagiarism ? "Checking..." : "Check Plagiarism"}
+                  {/* Đổi text hiển thị */}
+                  {isCheckingSubmission ? "Checking..." : "Check Submission"}
                 </button>
               )}
             </div>
@@ -150,7 +154,7 @@ const ResubmitModal = ({
               </button>
               <button
                 onClick={handleConfirmSubmit}
-                disabled={isSubmitting || !newFile || isCheckingPlagiarism}
+                disabled={isSubmitting || !newFile || isCheckingSubmission}
                 className="px-4 py-2 bg-green-600 text-white font-semibold rounded-md hover:bg-green-700 disabled:bg-gray-400 flex items-center"
               >
                 {isSubmitting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
@@ -163,9 +167,9 @@ const ResubmitModal = ({
 
       <div className="relative z-[60]">
         <PlagiarismResultModal 
-          isOpen={isPlagiarismModalOpen} 
-          onClose={() => setIsPlagiarismModalOpen(false)} 
-          data={plagiarismResult} 
+          isOpen={isResultModalOpen} 
+          onClose={() => setIsResultModalOpen(false)} 
+          data={submissionCheckResult} 
         />
       </div>
     </>

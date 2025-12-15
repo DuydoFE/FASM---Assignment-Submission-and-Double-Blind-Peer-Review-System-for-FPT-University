@@ -1,10 +1,5 @@
 import api from "../config/axios";
 
-/**
- * Lấy danh sách tất cả assignment của một lớp học (course instance).
- * @param {number | string} courseInstanceId - ID của lớp học.
- * @returns {Promise<Array<Object>>} - Một promise trả về mảng các assignment.
- */
 export const getAssignmentsByCourseInstanceId = async (courseInstanceId) => {
   try {
     const response = await api.get(`/Assignment/course-instance/${courseInstanceId}`);
