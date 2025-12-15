@@ -163,8 +163,10 @@ const InstructorDashboard = () => {
           <div className="grid grid-cols-3 gap-6">
             {!loading && courses
               .filter(course =>
-                course.courseCode.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                course.courseInstanceName.toLowerCase().includes(searchTerm.toLowerCase())
+                // Only show courses with status 'active' (Ongoing)
+                course.status === 'active' &&
+                (course.courseCode.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                course.courseInstanceName.toLowerCase().includes(searchTerm.toLowerCase()))
               )
               .map((course) => (
                 <div

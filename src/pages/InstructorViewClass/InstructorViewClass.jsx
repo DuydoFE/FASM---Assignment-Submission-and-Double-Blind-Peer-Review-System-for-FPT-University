@@ -252,8 +252,9 @@ const InstructorViewClass = () => {
                   {filteredClasses.map((cls) => (
                     <tr
                       key={cls.id}
-                      className="hover:bg-gray-50 transition-colors cursor-pointer"
+                      className={`hover:bg-gray-50 transition-colors ${cls.status !== 'Upcoming' ? 'cursor-pointer' : 'cursor-not-allowed opacity-60'}`}
                       onClick={() => {
+                        if (cls.status === 'Upcoming') return;
                         try { sessionStorage.setItem('currentCourseInstanceId', String(cls.courseInstanceId)); } catch (e) { /* ignore */ }
                         navigate(`/instructor/class-statistic/${cls.courseInstanceId}`);
                       }}
