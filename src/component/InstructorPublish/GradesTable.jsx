@@ -23,11 +23,11 @@ const GradesTable = ({
   const getStatusStyle = (status) => {
     switch (status) {
       case 'Graded':
-        return 'bg-green-100 text-green-800';
+        return 'bg-green-100 text-green-700';
       case 'Submitted':
-        return 'bg-blue-100 text-blue-800';
+        return 'bg-blue-100 text-blue-700';
       case 'Not Submitted':
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-red-100 text-red-700';
       default:
         return 'bg-gray-100 text-gray-800';
     }

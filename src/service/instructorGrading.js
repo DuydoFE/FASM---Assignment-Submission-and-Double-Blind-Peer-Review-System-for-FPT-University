@@ -65,8 +65,33 @@ export const autoGradeZero = async (assignmentId) => {
     }
 };
 
+export const exportSubmissionsExcel = async (assignmentId) => {
+    if (!assignmentId) {
+        throw new Error("assignmentId is required");
+    }
+
+    try {
+        const response = await api.get(
+            `/instructor/InstructorSubmission/export/all/${assignmentId}`,
+            {
+                responseType: "blob",
+            }
+        );
+
+        return response.data;
+    } catch (error) {
+        const message =
+            error?.response?.data?.message ||
+            "Export Submissions Failed";
+
+        console.error("Export Submissions Failed:", message);
+        throw new Error(message);
+    }
+};
+
 export const instructorGradingService = {
     publishGrades,
     gradeSubmission,
-    autoGradeZero
+    autoGradeZero,
+    exportSubmissionsExcel
 };
