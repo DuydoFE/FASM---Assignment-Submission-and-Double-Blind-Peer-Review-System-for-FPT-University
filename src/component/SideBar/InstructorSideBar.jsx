@@ -7,7 +7,7 @@ const InstructorSideBar = () => {
   const params = useParams();
 
   const storedId = typeof window !== 'undefined' ? sessionStorage.getItem('currentCourseInstanceId') : null;
-  const courseInstanceId = params?.id || location.state?.courseInstanceId || storedId || null;
+  const courseInstanceId = params?.courseInstanceId || params?.id || location.state?.courseInstanceId || storedId || null;
 
   const menuItems = [
     {
