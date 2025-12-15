@@ -32,7 +32,6 @@ const PlagiarismResultModal = ({ isOpen, onClose, data }) => {
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm p-4 animate-in fade-in duration-200">
       <div className="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden flex flex-col max-h-[90vh]">
-        {/* Header */}
         <div className="flex justify-between items-center p-4 border-b">
           <h3 className="text-lg font-bold text-gray-800">
             Submission Check Results
@@ -148,5 +147,4 @@ const PlagiarismResultModal = ({ isOpen, onClose, data }) => {
     </div>
   );
 };
-
 export default PlagiarismResultModal;

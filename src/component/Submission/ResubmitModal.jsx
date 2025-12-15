@@ -118,7 +118,7 @@ const ResubmitModal = ({
                 id="resubmit-keywords"
                 value={newKeywords}
                 onChange={(e) => setNewKeywords(e.target.value)}
-                className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 text-black placeholder-gray-500"
                 placeholder="Ví dụ: react, redux, api,..."
               />
             </div>

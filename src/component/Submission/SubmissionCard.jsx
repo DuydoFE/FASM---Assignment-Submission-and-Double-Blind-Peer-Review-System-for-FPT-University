@@ -187,8 +187,6 @@ const SubmissionCard = ({
       </>
     );
   }
-
-  // Giao diện khi CHƯA NỘP BÀI
   return (
     <div className="bg-white p-6 rounded-lg border border-gray-200">
       <div className="flex items-center mb-3">
@@ -244,7 +242,7 @@ const SubmissionCard = ({
             id="keywords"
             value={keywords}
             onChange={(e) => setKeywords(e.target.value)}
-            className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50"
+            className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50 text-black placeholder-gray-500"
             placeholder="Ví dụ: react, redux, api,..."
             disabled={!isSubmissionActive}
           />
