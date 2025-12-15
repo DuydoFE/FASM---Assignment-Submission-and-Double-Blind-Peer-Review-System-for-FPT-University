@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useParams } from "react-router-dom";
 import { Search, Users, Trash2, Plus } from "lucide-react";
 import { getCurrentAccount } from "../../utils/accountUtils";
 import {
@@ -15,6 +15,7 @@ import DeleteStudentModal from "../../component/Student/DeleteStudentModal.jsx";
 const InstructorManageClass = () => {
   const currentUser = getCurrentAccount();
   const location = useLocation();
+  const params = useParams();
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
   const [courseInfo, setCourseInfo] = useState(null);
@@ -28,20 +29,7 @@ const InstructorManageClass = () => {
   const [confirmDeleteModal, setConfirmDeleteModal] = useState(false);
   const [studentToDelete, setStudentToDelete] = useState(null);
 
-  const [courseInstanceId, setCourseInstanceId] = useState(() => {
-    try {
-      const fromState = location?.state?.courseInstanceId;
-      const fromStorage = sessionStorage.getItem("currentCourseInstanceId");
-      if (fromState !== undefined && fromState !== null)
-        return String(fromState);
-      if (fromStorage) return String(fromStorage);
-      return null;
-    } catch (e) {
-      return location?.state?.courseInstanceId
-        ? String(location.state.courseInstanceId)
-        : null;
-    }
-  });
+  const courseInstanceId = params.courseInstanceId || location?.state?.courseInstanceId || sessionStorage.getItem("currentCourseInstanceId");
 
   const bgColors = [
     "bg-blue-100 text-blue-800",

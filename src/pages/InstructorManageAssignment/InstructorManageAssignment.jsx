@@ -10,7 +10,7 @@ import {
   FileSpreadsheet,
 } from "lucide-react";
 import { toast } from "react-toastify";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation, useParams } from "react-router-dom";
 import { Dropdown } from "antd";
 import {
   getAssignmentsByCourseInstanceId,
@@ -31,21 +31,9 @@ import UpdateDeadlineModal from "../../component/Assignment/UpdateDeadlineModal"
 const InstructorManageAssignment = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const params = useParams();
 
-  const [courseInstanceId, setCourseInstanceId] = useState(() => {
-    try {
-      const fromState = location?.state?.courseInstanceId;
-      const fromStorage = sessionStorage.getItem("currentCourseInstanceId");
-      if (fromState !== undefined && fromState !== null)
-        return String(fromState);
-      if (fromStorage) return String(fromStorage);
-      return null;
-    } catch (e) {
-      return location?.state?.courseInstanceId
-        ? String(location.state.courseInstanceId)
-        : null;
-    }
-  });
+  const courseInstanceId = params.courseInstanceId || location?.state?.courseInstanceId || sessionStorage.getItem("currentCourseInstanceId");
 
   const [assignments, setAssignments] = useState([]);
   const [courseInstanceData, setCourseInstanceData] = useState(null);

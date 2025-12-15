@@ -217,7 +217,7 @@ export const router = createBrowserRouter([
         element: <ProtectedRoute role={ROLE.INSTRUCTOR}><InstructorManageAssignment /></ProtectedRoute>,
       },
       {
-        path: "manage-rubric",
+        path: "manage-rubric/:courseInstanceId",
         element: <ProtectedRoute role={ROLE.INSTRUCTOR}><InstructorManageRubric /></ProtectedRoute>,
       },
       {
