@@ -42,6 +42,12 @@ export default function AdminCourseManagement() {
     isActive: true,
   });
 
+  const [originalCourse, setOriginalCourse] = useState(null);
+  const isChanged =
+    editCourse.courseCode !== originalCourse?.courseCode ||
+    editCourse.courseName !== originalCourse?.courseName ||
+    editCourse.isActive !== originalCourse?.isActive;
+
   /* ================= LOAD ================= */
   const loadCourses = async () => {
     setLoading(true);
@@ -77,13 +83,13 @@ export default function AdminCourseManagement() {
 
     const id = toast.loading("Creating course...");
     try {
-      await createCourse(newCourse);
-      toast.success("Created successfully!", { id });
+      const res = await createCourse(newCourse);
+      toast.success(res?.message || "Created successfully!", { id });
       setShowAddModal(false);
       setNewCourse({ courseCode: "", courseName: "", isActive: true });
       loadCourses();
-    } catch {
-      toast.error("Create failed", { id });
+    } catch (err) {
+      toast.error(err?.response?.data?.message || "Create failed", { id });
     }
   };
 
@@ -94,12 +100,12 @@ export default function AdminCourseManagement() {
       onConfirm: async () => {
         const id = toast.loading("Updating...");
         try {
-          await updateCourse(editCourse);
-          toast.success("Updated successfully!", { id });
+          const res = await updateCourse(editCourse);
+          toast.success(res?.message || "Updated successfully!", { id });
           setShowEditModal(false);
           loadCourses();
-        } catch {
-          toast.error("Update failed", { id });
+        } catch (err) {
+          toast.error(err?.response?.data?.message || "Update failed", { id });
         }
       },
     });
@@ -112,11 +118,11 @@ export default function AdminCourseManagement() {
       onConfirm: async () => {
         const id = toast.loading("Deleting...");
         try {
-          await deleteCourse(courseId);
-          toast.success("Deleted successfully!", { id });
+          const res = await deleteCourse(courseId);
+          toast.success(res?.message || "Deleted successfully!", { id });
           loadCourses();
-        } catch {
-          toast.error("Delete failed", { id });
+        } catch (err) {
+          toast.error(err?.response?.data?.message || "Delete failed", { id });
         }
       },
     });
@@ -187,6 +193,7 @@ export default function AdminCourseManagement() {
                       className="bg-blue-500 text-white px-4 py-2 rounded-lg"
                       onClick={() => {
                         setEditCourse(c);
+                        setOriginalCourse(c);
                         setShowEditModal(true);
                       }}
                     >
@@ -211,6 +218,7 @@ export default function AdminCourseManagement() {
         <ModalWrapper>
           <h3 className="text-xl font-semibold mb-4">Create Course</h3>
 
+          <label className="block mb-1 font-medium">Course Code</label>
           <input
             className="border p-3 rounded-lg w-full mb-3"
             placeholder="Course Code"
@@ -220,6 +228,7 @@ export default function AdminCourseManagement() {
             }
           />
 
+          <label className="block mb-1 font-medium">Course Name</label>
           <input
             className="border p-3 rounded-lg w-full mb-3"
             placeholder="Course Name"
@@ -229,6 +238,7 @@ export default function AdminCourseManagement() {
             }
           />
 
+          <label className="block mb-1 font-medium">Status</label>
           <select
             className="border p-3 rounded-lg w-full mb-4"
             value={newCourse.isActive}
@@ -265,6 +275,7 @@ export default function AdminCourseManagement() {
         <ModalWrapper>
           <h3 className="text-xl font-semibold mb-4">Update Course</h3>
 
+          <label className="block mb-1 font-medium">Course Code</label>
           <input
             className="border p-3 rounded-lg w-full mb-3"
             value={editCourse.courseCode}
@@ -273,6 +284,7 @@ export default function AdminCourseManagement() {
             }
           />
 
+          <label className="block mb-1 font-medium">Course Name</label>
           <input
             className="border p-3 rounded-lg w-full mb-3"
             value={editCourse.courseName}
@@ -281,6 +293,7 @@ export default function AdminCourseManagement() {
             }
           />
 
+          <label className="block mb-1 font-medium">Status</label>
           <select
             className="border p-3 rounded-lg w-full mb-4"
             value={editCourse.isActive}
@@ -297,8 +310,9 @@ export default function AdminCourseManagement() {
 
           <div className="flex justify-end gap-3">
             <button
-              className="bg-blue-600 text-white px-4 py-2 rounded"
+              className={`px-4 py-2 rounded text-white ${isChanged ? 'bg-blue-600' : 'bg-gray-400 cursor-not-allowed'}`}
               onClick={handleUpdate}
+              disabled={!isChanged}
             >
               Save
             </button>

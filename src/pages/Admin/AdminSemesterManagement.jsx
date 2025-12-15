@@ -8,6 +8,14 @@ import {
 } from "../../service/adminService";
 import toast, { Toaster } from "react-hot-toast";
 
+const getApiMessage = (errorOrResponse) => {
+  if (!errorOrResponse) return "Unknown error";
+  if (errorOrResponse.response?.data?.message) return errorOrResponse.response.data.message;
+  if (errorOrResponse?.data?.message) return errorOrResponse.data.message;
+  if (errorOrResponse.message) return errorOrResponse.message;
+  return "Unknown error";
+};
+
 export default function AdminSemesterManagement() {
   const [semesters, setSemesters] = useState([]);
   const [academicYears, setAcademicYears] = useState([]);
@@ -36,8 +44,8 @@ export default function AdminSemesterManagement() {
     try {
       const res = await getAllSemesters();
       if (res?.data) setSemesters(res.data);
-    } catch {
-      toast.error("Failed to load semesters");
+    } catch (err) {
+      toast.error(getApiMessage(err));
     }
   };
 
@@ -45,8 +53,8 @@ export default function AdminSemesterManagement() {
     try {
       const res = await getAllAcademicYears();
       if (res?.data) setAcademicYears(res.data);
-    } catch {
-      toast.error("Failed to load academic years");
+    } catch (err) {
+      toast.error(getApiMessage(err));
     }
   };
 
@@ -155,28 +163,39 @@ export default function AdminSemesterManagement() {
     };
 
     try {
-      await createSemester(payload);
-      toast.success("Semester created!");
+      const res = await createSemester(payload);
+      toast.success(getApiMessage(res));
       loadSemesters();
       setShowAddForm(false);
     } catch (err) {
-      toast.error(err?.response?.data?.message || "Error creating semester");
+      toast.error(getApiMessage(err));
     }
   };
 
   const handleDelete = async (id) => {
     try {
-      await deleteSemester(id);
-      setSemesters(semesters.filter((s) => s.semesterId !== id));
-      toast.success("Semester deleted successfully");
-    } catch {
-      toast.error("Failed to delete semester");
+      const res = await deleteSemester(id);
+      toast.success(getApiMessage(res));
+    } catch (err) {
+      toast.error(getApiMessage(err));
     }
   };
 
   const normalizeDate = (value) => {
     if (!value) return null;
     return value.length === 16 ? value + ":00" : value;
+  };
+
+  const hasChanged = (currentEdit) => {
+    const original = semesters.find(s => s.semesterId === currentEdit.semesterId);
+    if (!original) return false;
+
+    return (
+      original.academicYearId !== currentEdit.academicYearId ||
+      original.name !== currentEdit.name ||
+      (original.startDate?.slice(0, 16) || "") !== (currentEdit.startDate || "") ||
+      (original.endDate?.slice(0, 16) || "") !== (currentEdit.endDate || "")
+    );
   };
 
   const handleSaveEdit = async () => {
@@ -204,10 +223,10 @@ export default function AdminSemesterManagement() {
           )
         );
         setEditing(null);
-        toast.success("Semester updated successfully");
+        toast.success(getApiMessage(res));
       }
     } catch {
-      toast.error("Failed to update semester");
+      toast.error(getApiMessage(err));
     }
   };
 
@@ -259,6 +278,8 @@ export default function AdminSemesterManagement() {
             </button>
 
             <div className="grid grid-cols-1 gap-4">
+              {/* Academic Year */}
+              <label className="font-medium">Academic Year</label>
               <select
                 className="border p-3 rounded-xl w-full"
                 value={newSemester.academicYearId}
@@ -274,6 +295,8 @@ export default function AdminSemesterManagement() {
                 ))}
               </select>
 
+              {/* Semester Name */}
+              <label className="font-medium">Semester Name</label>
               <select
                 className="border p-3 rounded-xl w-full"
                 value={newSemester.name}
@@ -315,6 +338,8 @@ export default function AdminSemesterManagement() {
                   ))}
               </select>
 
+              {/* Start Date */}
+              <label className="font-medium">Start Date</label>
               <input
                 type="datetime-local"
                 className="border p-3 rounded-xl w-full bg-gray-100 cursor-not-allowed"
@@ -322,6 +347,8 @@ export default function AdminSemesterManagement() {
                 readOnly
               />
 
+              {/* End Date */}
+              <label className="font-medium">End Date</label>
               <input
                 type="datetime-local"
                 className="border p-3 rounded-xl w-full bg-gray-100 cursor-not-allowed"
@@ -355,7 +382,8 @@ export default function AdminSemesterManagement() {
             </button>
 
             <div className="grid grid-cols-1 gap-4">
-              {/* Academic Year Dropdown */}
+              {/* Academic Year */}
+              <label className="font-medium">Academic Year</label>
               <select
                 className="border p-3 rounded-xl w-full"
                 value={editing.academicYearId}
@@ -381,7 +409,8 @@ export default function AdminSemesterManagement() {
                 ))}
               </select>
 
-              {/* Semester Name Dropdown */}
+              {/* Semester Name */}
+              <label className="font-medium">Semester Name</label>
               <select
                 className="border p-3 rounded-xl w-full"
                 value={editing.name}
@@ -423,13 +452,17 @@ export default function AdminSemesterManagement() {
                   ))}
               </select>
 
-              {/* Start & End Date (readonly) */}
+              {/* Start Date */}
+              <label className="font-medium">Start Date</label>
               <input
                 type="datetime-local"
                 className="border p-3 rounded-xl w-full bg-gray-100 cursor-not-allowed"
                 value={editing.startDate || ""}
                 readOnly
               />
+
+              {/* End Date */}
+              <label className="font-medium">End Date</label>
               <input
                 type="datetime-local"
                 className="border p-3 rounded-xl w-full bg-gray-100 cursor-not-allowed"
@@ -448,7 +481,10 @@ export default function AdminSemesterManagement() {
                       callback: handleSaveEdit,
                     })
                   }
-                  className="bg-green-500 text-white px-6 py-3 rounded-xl hover:bg-green-600 flex-1"
+                  className={`bg-green-500 text-white px-6 py-3 rounded-xl flex-1 hover:bg-green-600
+              ${!hasChanged(editing) ? "opacity-50 cursor-not-allowed hover:bg-green-500" : ""}
+            `}
+                  disabled={!hasChanged(editing)}
                 >
                   Save
                 </button>

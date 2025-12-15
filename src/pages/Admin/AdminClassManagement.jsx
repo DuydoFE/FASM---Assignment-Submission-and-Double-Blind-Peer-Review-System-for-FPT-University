@@ -74,6 +74,8 @@ export default function AdminClassManagement() {
     endDate: ""
   });
 
+  const [originalUpdateClass, setOriginalUpdateClass] = useState(null);
+
   const contextClass = {
     success: "bg-green-50 text-green-600 border border-green-200",
     error: "bg-red-50 text-red-600 border border-red-200",
@@ -274,7 +276,7 @@ export default function AdminClassManagement() {
   };
 
   const handleOpenUpdateForm = (c) => {
-    setUpdateClass({
+    const mappedData = {
       courseInstanceId: c.courseInstanceId,
       courseId: c.courseId,
       semesterId: c.semesterId,
@@ -284,8 +286,24 @@ export default function AdminClassManagement() {
       requiresApproval: true,
       startDate: toDatetimeLocal(c.startDate),
       endDate: toDatetimeLocal(c.endDate)
-    });
+    };
+
+    setUpdateClass(mappedData);
+    setOriginalUpdateClass(mappedData);
     setShowUpdateForm(true);
+  };
+
+  const isUpdateChanged = () => {
+    if (!originalUpdateClass) return false;
+
+    return (
+      originalUpdateClass.courseId !== updateClass.courseId ||
+      originalUpdateClass.semesterId !== updateClass.semesterId ||
+      originalUpdateClass.campusId !== updateClass.campusId ||
+      originalUpdateClass.sectionCode !== updateClass.sectionCode ||
+      originalUpdateClass.startDate !== updateClass.startDate ||
+      originalUpdateClass.endDate !== updateClass.endDate
+    );
   };
 
   const handleUpdateClassChange = (e) => {
@@ -401,69 +419,84 @@ export default function AdminClassManagement() {
 
       {showAddForm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
-          {/* Overlay */}
           <div
             className="absolute inset-0 bg-black/50"
             onClick={() => setShowAddForm(false)}
           />
 
-          {/* Modal */}
           <div className="relative bg-white w-full max-w-3xl p-6 rounded-2xl shadow-xl space-y-4 animate-fade-in-down">
             <h3 className="text-xl font-semibold text-gray-700">Create New Class</h3>
 
             <div className="flex flex-wrap gap-4">
-              <select
-                name="campusId"
-                value={newClass.campusId}
-                onChange={handleNewClassChange}
-                className="border rounded-lg p-3 flex-1 min-w-[150px]"
-              >
-                <option value="">Select Campus</option>
-                {campuses.map(c => (
-                  <option key={c.campusId} value={c.campusId}>
-                    {c.name || c.campusName}
-                  </option>
-                ))}
-              </select>
+              <div className="flex-1 min-w-[150px]">
+                <label className="block text-sm font-medium text-gray-600 mb-1">
+                  Campus
+                </label>
+                <select
+                  name="campusId"
+                  value={newClass.campusId}
+                  onChange={handleNewClassChange}
+                  className="border rounded-lg p-3 w-full"
+                >
+                  <option value="">Select Campus</option>
+                  {campuses.map(c => (
+                    <option key={c.campusId} value={c.campusId}>
+                      {c.name || c.campusName}
+                    </option>
+                  ))}
+                </select>
+              </div>
 
-              <select
-                name="semesterId"
-                value={newClass.semesterId}
-                onChange={handleNewClassChange}
-                className="border rounded-lg p-3 flex-1 min-w-[150px]"
-              >
-                <option value="">Select Semester</option>
-                {semesters.map(s => (
-                  <option key={s.semesterId} value={s.semesterId}>
-                    {s.name || s.semesterName}
-                  </option>
-                ))}
-              </select>
+              <div className="flex-1 min-w-[150px]">
+                <label className="block text-sm font-medium text-gray-600 mb-1">
+                  Semester
+                </label>
+                <select
+                  name="semesterId"
+                  value={newClass.semesterId}
+                  onChange={handleNewClassChange}
+                  className="border rounded-lg p-3 w-full"
+                >
+                  <option value="">Select Semester</option>
+                  {semesters.map(s => (
+                    <option key={s.semesterId} value={s.semesterId}>
+                      {s.name || s.semesterName}
+                    </option>
+                  ))}
+                </select>
+              </div>
 
-              <select
-                name="courseId"
-                value={newClass.courseId}
-                onChange={handleNewClassChange}
-                className="border rounded-lg p-3 flex-1 min-w-[150px]"
-              >
-                <option value="">Select Course</option>
-                {courses
-                  .filter(course => course.isActive)
-                  .map(course => (
+              <div className="flex-1 min-w-[150px]">
+                <label className="block text-sm font-medium text-gray-600 mb-1">
+                  Course
+                </label>
+                <select
+                  name="courseId"
+                  value={newClass.courseId}
+                  onChange={handleNewClassChange}
+                  className="border rounded-lg p-3 w-full"
+                >
+                  <option value="">Select Course</option>
+                  {courses.filter(c => c.isActive).map(course => (
                     <option key={course.courseId} value={course.courseId}>
                       {course.courseCode}
                     </option>
                   ))}
-              </select>
+                </select>
+              </div>
 
-              <input
-                type="text"
-                name="sectionCode"
-                value={newClass.sectionCode}
-                onChange={handleNewClassChange}
-                placeholder="Class Name"
-                className="border rounded-lg p-3 flex-1 min-w-[150px]"
-              />
+              <div className="flex-1 min-w-[150px]">
+                <label className="block text-sm font-medium text-gray-600 mb-1">
+                  Class Name
+                </label>
+                <input
+                  type="text"
+                  name="sectionCode"
+                  value={newClass.sectionCode}
+                  onChange={handleNewClassChange}
+                  className="border rounded-lg p-3 w-full"
+                />
+              </div>
             </div>
 
             <div className="flex flex-wrap gap-4">
@@ -479,10 +512,7 @@ export default function AdminClassManagement() {
                   min={getDateConstraints(newClass.semesterId).min}
                   max={getDateConstraints(newClass.semesterId).max}
                   disabled={!newClass.semesterId}
-                  className={`border rounded-lg p-3 w-full ${!newClass.semesterId
-                    ? "bg-gray-100 cursor-not-allowed"
-                    : "focus:outline-orange-400"
-                    }`}
+                  className="border rounded-lg p-3 w-full"
                 />
               </div>
 
@@ -498,31 +528,10 @@ export default function AdminClassManagement() {
                   min={getDateConstraints(newClass.semesterId).min}
                   max={getDateConstraints(newClass.semesterId).max}
                   disabled={!newClass.semesterId}
-                  className={`border rounded-lg p-3 w-full ${!newClass.semesterId
-                    ? "bg-gray-100 cursor-not-allowed"
-                    : "focus:outline-orange-400"
-                    }`}
+                  className="border rounded-lg p-3 w-full"
                 />
               </div>
             </div>
-
-            {newClass.semesterId && (() => {
-              const sem = semesters.find(
-                s => s.semesterId === Number(newClass.semesterId)
-              );
-              return sem ? (
-                <div className="text-sm text-orange-600 bg-orange-50 p-3 rounded-lg">
-                  📅 Semester period:{" "}
-                  <strong>
-                    {new Date(sem.startDate).toLocaleDateString("en-GB")}
-                  </strong>{" "}
-                  -{" "}
-                  <strong>
-                    {new Date(sem.endDate).toLocaleDateString("en-GB")}
-                  </strong>
-                </div>
-              ) : null;
-            })()}
 
             <div className="flex justify-end gap-4 pt-2">
               <button
@@ -550,69 +559,84 @@ export default function AdminClassManagement() {
 
       {showUpdateForm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
-          {/* Overlay */}
           <div
             className="absolute inset-0 bg-black/50"
             onClick={() => setShowUpdateForm(false)}
           />
 
-          {/* Modal */}
           <div className="relative bg-white w-full max-w-3xl p-6 rounded-2xl shadow-xl space-y-4 animate-fade-in-down">
             <h3 className="text-xl font-semibold text-gray-700">Update Class</h3>
 
             <div className="flex flex-wrap gap-4">
-              <select
-                name="campusId"
-                value={updateClass.campusId}
-                onChange={handleUpdateClassChange}
-                className="border rounded-lg p-3 flex-1 min-w-[150px]"
-              >
-                <option value="">Select Campus</option>
-                {campuses.map(c => (
-                  <option key={c.campusId} value={c.campusId}>
-                    {c.name || c.campusName}
-                  </option>
-                ))}
-              </select>
+              <div className="flex-1 min-w-[150px]">
+                <label className="block text-sm font-medium text-gray-600 mb-1">
+                  Campus
+                </label>
+                <select
+                  name="campusId"
+                  value={updateClass.campusId}
+                  onChange={handleUpdateClassChange}
+                  className="border rounded-lg p-3 w-full"
+                >
+                  <option value="">Select Campus</option>
+                  {campuses.map(c => (
+                    <option key={c.campusId} value={c.campusId}>
+                      {c.name || c.campusName}
+                    </option>
+                  ))}
+                </select>
+              </div>
 
-              <select
-                name="semesterId"
-                value={updateClass.semesterId}
-                onChange={handleUpdateClassChange}
-                className="border rounded-lg p-3 flex-1 min-w-[150px]"
-              >
-                <option value="">Select Semester</option>
-                {semesters.map(s => (
-                  <option key={s.semesterId} value={s.semesterId}>
-                    {s.name || s.semesterName}
-                  </option>
-                ))}
-              </select>
+              <div className="flex-1 min-w-[150px]">
+                <label className="block text-sm font-medium text-gray-600 mb-1">
+                  Semester
+                </label>
+                <select
+                  name="semesterId"
+                  value={updateClass.semesterId}
+                  onChange={handleUpdateClassChange}
+                  className="border rounded-lg p-3 w-full"
+                >
+                  <option value="">Select Semester</option>
+                  {semesters.map(s => (
+                    <option key={s.semesterId} value={s.semesterId}>
+                      {s.name || s.semesterName}
+                    </option>
+                  ))}
+                </select>
+              </div>
 
-              <select
-                name="courseId"
-                value={updateClass.courseId}
-                onChange={handleUpdateClassChange}
-                className="border rounded-lg p-3 flex-1 min-w-[150px]"
-              >
-                <option value="">Select Course</option>
-                {courses
-                  .filter(course => course.isActive)
-                  .map(course => (
+              <div className="flex-1 min-w-[150px]">
+                <label className="block text-sm font-medium text-gray-600 mb-1">
+                  Course
+                </label>
+                <select
+                  name="courseId"
+                  value={updateClass.courseId}
+                  onChange={handleUpdateClassChange}
+                  className="border rounded-lg p-3 w-full"
+                >
+                  <option value="">Select Course</option>
+                  {courses.filter(c => c.isActive).map(course => (
                     <option key={course.courseId} value={course.courseId}>
                       {course.courseCode}
                     </option>
                   ))}
-              </select>
+                </select>
+              </div>
 
-              <input
-                type="text"
-                name="sectionCode"
-                value={updateClass.sectionCode}
-                onChange={handleUpdateClassChange}
-                placeholder="Class Name"
-                className="border rounded-lg p-3 flex-1 min-w-[150px]"
-              />
+              <div className="flex-1 min-w-[150px]">
+                <label className="block text-sm font-medium text-gray-600 mb-1">
+                  Class Name
+                </label>
+                <input
+                  type="text"
+                  name="sectionCode"
+                  value={updateClass.sectionCode}
+                  onChange={handleUpdateClassChange}
+                  className="border rounded-lg p-3 w-full"
+                />
+              </div>
             </div>
 
             <div className="flex flex-wrap gap-4">
@@ -625,7 +649,7 @@ export default function AdminClassManagement() {
                   name="startDate"
                   value={updateClass.startDate}
                   onChange={handleUpdateClassChange}
-                  className="border rounded-lg p-3 w-full focus:outline-orange-400"
+                  className="border rounded-lg p-3 w-full"
                 />
               </div>
 
@@ -638,7 +662,7 @@ export default function AdminClassManagement() {
                   name="endDate"
                   value={updateClass.endDate}
                   onChange={handleUpdateClassChange}
-                  className="border rounded-lg p-3 w-full focus:outline-orange-400"
+                  className="border rounded-lg p-3 w-full"
                 />
               </div>
             </div>
@@ -651,6 +675,7 @@ export default function AdminClassManagement() {
                 Cancel
               </button>
               <button
+                disabled={!isUpdateChanged()}
                 onClick={() =>
                   openConfirm({
                     title: "Update Class",
@@ -658,7 +683,11 @@ export default function AdminClassManagement() {
                     onConfirm: handleUpdateClass,
                   })
                 }
-                className="px-6 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 font-semibold shadow"
+                className={`px-6 py-2 rounded-lg font-semibold shadow transition
+    ${!isUpdateChanged()
+                    ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                    : "bg-green-500 text-white hover:bg-green-600"
+                  }`}
               >
                 Update
               </button>

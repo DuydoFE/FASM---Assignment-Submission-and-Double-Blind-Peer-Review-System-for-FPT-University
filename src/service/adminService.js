@@ -1,7 +1,7 @@
 import api from "../config/axios";
 import axios from "axios";
 
-const API_BASE_URL = "https://api.fasm.site";
+const API_BASE_URL = "https://localhost:7104/api";
 
 // Lấy thông tin user theo ID
 export const getUserById = async (id) => {
@@ -231,9 +231,7 @@ export const getCourseInstancesByCampusId = async (campusId) => {
 
 // Tạo lớp học mới
 export const createCourseInstance = async (payload) => {
-  const res = await axios.post(`${API_BASE_URL}/api/CourseInstance`, payload, {
-    headers: { "Content-Type": "application/json", Authorization: `Bearer ${localStorage.getItem("token")}` },
-  });
+  const res = await api.post(`/CourseInstance`, payload);
   return res.data;
 };
 
