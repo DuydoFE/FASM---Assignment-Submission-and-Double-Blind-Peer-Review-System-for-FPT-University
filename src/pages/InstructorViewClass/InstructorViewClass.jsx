@@ -30,12 +30,13 @@ const InstructorViewClass = () => {
 
         const formattedClasses = coursesData.map(course => ({
           id: course.id,
+          courseInstanceId: course.courseInstanceId,
           name: course.courseInstanceName,
           code: course.courseCode,
           className: course.courseInstanceName,
           studentCount: course.studentCount,
           status: course.courseInstanceStatus,
-          statusText: course.courseInstanceStatus, 
+          statusText: course.courseInstanceStatus,
           semester: course.semesterName,
           enrollmentKey: course.enrollmentKey || ''
         }));
@@ -251,8 +252,9 @@ const InstructorViewClass = () => {
                   {filteredClasses.map((cls) => (
                     <tr
                       key={cls.id}
-                      className="hover:bg-gray-50 transition-colors cursor-pointer"
+                      className={`hover:bg-gray-50 transition-colors ${cls.status !== 'Upcoming' ? 'cursor-pointer' : 'cursor-not-allowed opacity-60'}`}
                       onClick={() => {
+                        if (cls.status === 'Upcoming') return;
                         try { sessionStorage.setItem('currentCourseInstanceId', String(cls.courseInstanceId)); } catch (e) { /* ignore */ }
                         navigate(`/instructor/class-statistic/${cls.courseInstanceId}`);
                       }}
