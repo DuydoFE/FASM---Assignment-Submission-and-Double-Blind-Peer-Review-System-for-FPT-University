@@ -7,6 +7,8 @@ export default function AdminSystemSetting() {
   const [loading, setLoading] = useState(true);
   const [editingId, setEditingId] = useState(null);
   const [editForm, setEditForm] = useState({ configValue: "", description: "" });
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [pendingConfig, setPendingConfig] = useState(null);
 
   useEffect(() => {
     fetchConfigs();
@@ -47,15 +49,14 @@ export default function AdminSystemSetting() {
         description: config.description,
         updatedByUserId: 1
       };
-
-      await updateConfig(request);
-
-      toast.success("✅ Configuration updated successfully!");
+      const res = await updateConfig(request);
+      toast.success(res?.data?.message || "Configuration updated successfully!");
       setEditingId(null);
       fetchConfigs();
     } catch (err) {
       console.error(err);
-      toast.error("❌ Failed to update configuration.");
+      const errorMsg = err?.response?.data?.message || "Failed to update configuration.";
+      toast.error(errorMsg);
     }
   };
 
@@ -108,8 +109,15 @@ export default function AdminSystemSetting() {
                 </p>
                 <div className="flex justify-end space-x-2 mt-2">
                   <button
-                    onClick={() => handleSave(config)}
-                    className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition"
+                    onClick={() => {
+                      setPendingConfig(config);
+                      setShowConfirm(true);
+                    }}
+                    disabled={editForm.configValue === config.configValue}
+                    className={`px-4 py-2 rounded-lg text-white transition ${editForm.configValue === config.configValue
+                      ? "bg-gray-400 cursor-not-allowed"
+                      : "bg-green-500 hover:bg-green-600"
+                      }`}
                   >
                     Save
                   </button>
@@ -171,6 +179,45 @@ export default function AdminSystemSetting() {
           </table>
         </div>
       </div>
+      {showConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          {/* Overlay – disable background */}
+          <div className="absolute inset-0 bg-black bg-opacity-50"></div>
+
+          {/* Modal */}
+          <div className="relative bg-white rounded-xl shadow-lg p-6 w-full max-w-md z-10">
+            <h3 className="text-lg font-semibold text-gray-800 mb-3">
+              Confirm Update
+            </h3>
+            <p className="text-gray-600 mb-6">
+              Are you sure you want to update this configuration?
+            </p>
+
+            <div className="flex justify-end space-x-3">
+              <button
+                onClick={() => {
+                  setShowConfirm(false);
+                  setPendingConfig(null);
+                }}
+                className="px-4 py-2 rounded-lg bg-gray-300 text-gray-700 hover:bg-gray-400"
+              >
+                Cancel
+              </button>
+
+              <button
+                onClick={() => {
+                  handleSave(pendingConfig);
+                  setShowConfirm(false);
+                  setPendingConfig(null);
+                }}
+                className="px-4 py-2 rounded-lg bg-green-500 text-white hover:bg-green-600"
+              >
+                Confirm
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

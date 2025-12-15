@@ -24,7 +24,7 @@ export default function AdminRubricDetail() {
         title: "",
         description: "",
         weight: 0,
-        maxScore: 0,
+        maxScore: 10,
         scoringType: "Scale",
         scoreLabel: "0-10",
     });
@@ -97,7 +97,7 @@ export default function AdminRubricDetail() {
         }
 
         try {
-            const payload = { ...criteriaForm, templateId: rubric.templateId };
+            const payload = { ...criteriaForm, templateId: rubric.templateId, maxScore: 10 };
             const res = await createCriteriaTemplate(payload);
             if (res?.statusCode === 201 || res?.statusCode === 200) {
                 toast.success("Criteria created successfully");
@@ -402,26 +402,6 @@ export default function AdminRubricDetail() {
                                     />
                                     <p className="text-xs text-gray-500 mt-1">You can use up to <b>{availableWeight}%</b> weight.</p>
                                 </div>
-                                <div className="w-1/2">
-                                    <label className="font-medium">Max Score</label>
-                                    <input
-                                        type="number"
-                                        required
-                                        placeholder="Max Score"
-                                        className="border rounded p-3 w-full mt-1 focus:ring-2 focus:ring-orange-400 focus:outline-none"
-                                        min={0}
-                                        max={10}
-                                        value={criteriaForm.maxScore}
-                                        onChange={(e) => {
-                                            let v = Number(e.target.value);
-                                            if (isNaN(v)) v = 0;
-                                            if (v < 0) v = 0;
-                                            if (v > 10) v = 10;
-                                            setCriteriaForm({ ...criteriaForm, maxScore: v });
-                                        }}
-                                    />
-                                    <p className="text-xs text-gray-500 mt-1">Allowed range: 0 - 10</p>
-                                </div>
                             </div>
 
                             {/* Actions */}
@@ -444,6 +424,7 @@ export default function AdminRubricDetail() {
                     <div className="bg-white rounded-xl shadow-lg p-6 w-full max-w-lg">
                         <h3 className="text-xl font-semibold mb-4 border-b pb-2">Edit Criteria</h3>
                         <form className="space-y-4" onSubmit={handleUpdateCriteria}>
+                            {/* Title */}
                             <div>
                                 <label className="font-medium">Title</label>
                                 <input
@@ -452,72 +433,87 @@ export default function AdminRubricDetail() {
                                     placeholder="Enter title"
                                     className="border rounded p-3 w-full mt-1"
                                     value={criteriaForm.title}
-                                    onChange={(e) => setCriteriaForm({ ...criteriaForm, title: e.target.value })}
+                                    onChange={(e) =>
+                                        setCriteriaForm({ ...criteriaForm, title: e.target.value })
+                                    }
                                 />
                             </div>
 
+                            {/* Description */}
                             <div>
                                 <label className="font-medium">Description</label>
                                 <textarea
                                     placeholder="Enter description"
                                     className="border rounded p-3 w-full mt-1"
                                     value={criteriaForm.description}
-                                    onChange={(e) => setCriteriaForm({ ...criteriaForm, description: e.target.value })}
+                                    onChange={(e) =>
+                                        setCriteriaForm({ ...criteriaForm, description: e.target.value })
+                                    }
                                 />
                             </div>
 
-                            <div className="flex gap-3">
-                                <div className="w-1/2">
-                                    <label className="font-medium">Weight (%)</label>
-                                    {/* allow up to available + current item weight so user can keep same value */}
-                                    <input
-                                        type="number"
-                                        required
-                                        placeholder="Weight"
-                                        className="border rounded p-3 w-full mt-1"
-                                        min={0}
-                                        max={Math.min(100, availableWeight + (currentCriteria?.weight || 0))}
-                                        value={criteriaForm.weight}
-                                        onChange={(e) => {
-                                            let val = Number(e.target.value);
-                                            const maxAllowed = Math.min(100, availableWeight + (currentCriteria?.weight || 0));
-                                            if (isNaN(val)) val = 0;
-                                            if (val > maxAllowed) val = maxAllowed;
-                                            if (val < 0) val = 0;
-                                            setCriteriaForm({ ...criteriaForm, weight: val });
-                                        }}
-                                    />
-                                    <p className="text-xs text-gray-500 mt-1">You can use up to <b>{Math.min(100, availableWeight + (currentCriteria?.weight || 0))}%</b> for this item.</p>
-                                </div>
-                                <div className="w-1/2">
-                                    <label className="font-medium">Max Score</label>
-                                    <input
-                                        type="number"
-                                        required
-                                        placeholder="Max Score"
-                                        className="border rounded p-3 w-full mt-1 focus:ring-2 focus:ring-orange-400 focus:outline-none"
-                                        min={0}
-                                        max={10}
-                                        value={criteriaForm.maxScore}
-                                        onChange={(e) => {
-                                            let v = Number(e.target.value);
-                                            if (isNaN(v)) v = 0;
-                                            if (v < 0) v = 0;
-                                            if (v > 10) v = 10;
-                                            setCriteriaForm({ ...criteriaForm, maxScore: v });
-                                        }}
-                                    />
-                                    <p className="text-xs text-gray-500 mt-1">Allowed range: 0 - 10</p>
-                                </div>
+                            {/* Weight */}
+                            <div className="w-1/2">
+                                <label className="font-medium">Weight (%)</label>
+                                <input
+                                    type="number"
+                                    required
+                                    placeholder="Weight"
+                                    className="border rounded p-3 w-full mt-1"
+                                    min={0}
+                                    max={Math.min(100, availableWeight + (currentCriteria?.weight || 0))}
+                                    value={criteriaForm.weight}
+                                    onChange={(e) => {
+                                        let val = Number(e.target.value);
+                                        const maxAllowed = Math.min(
+                                            100,
+                                            availableWeight + (currentCriteria?.weight || 0)
+                                        );
+                                        if (isNaN(val)) val = 0;
+                                        if (val > maxAllowed) val = maxAllowed;
+                                        if (val < 0) val = 0;
+                                        setCriteriaForm({ ...criteriaForm, weight: val });
+                                    }}
+                                />
+                                <p className="text-xs text-gray-500 mt-1">
+                                    You can use up to{" "}
+                                    <b>{Math.min(100, availableWeight + (currentCriteria?.weight || 0))}%</b>{" "}
+                                    for this item.
+                                </p>
                             </div>
+
+                            {/* Actions */}
                             <div className="flex justify-end gap-3 mt-4">
-                                <button type="button" className="px-4 py-2 border rounded" onClick={() => setShowEditModal(false)}>Cancel</button>
-                                <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded">Save Changes</button>
+                                <button
+                                    type="button"
+                                    className="px-4 py-2 border rounded"
+                                    onClick={() => setShowEditModal(false)}
+                                >
+                                    Cancel
+                                </button>
+
+                                <button
+                                    type="submit"
+                                    className={`px-4 py-2 bg-blue-600 text-white rounded ${criteriaForm.title === currentCriteria?.title &&
+                                            criteriaForm.description === currentCriteria?.description &&
+                                            criteriaForm.weight === currentCriteria?.weight
+                                            ? "opacity-50 cursor-not-allowed"
+                                            : ""
+                                        }`}
+                                    disabled={
+                                        criteriaForm.title === currentCriteria?.title &&
+                                        criteriaForm.description === currentCriteria?.description &&
+                                        criteriaForm.weight === currentCriteria?.weight
+                                    }
+                                >
+                                    Save Changes
+                                </button>
                             </div>
                         </form>
                     </div>
                 </div>
             )}
+
             {showConfirmModal && (
                 <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
                     <div className="bg-white rounded-xl shadow-lg p-6 w-full max-w-sm">

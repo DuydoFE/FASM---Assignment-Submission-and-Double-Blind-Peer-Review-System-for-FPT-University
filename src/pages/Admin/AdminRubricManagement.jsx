@@ -75,10 +75,20 @@ export default function AdminRubricManagement() {
     }
   };
 
+  const isChanged =
+    currentRubric &&
+    (newRubric.title !== currentRubric.title ||
+      newRubric.majorId !== currentRubric.majorId ||
+      newRubric.isPublic !== currentRubric.isPublic);
+
+  const getApiMessage = (res, defaultMsg = "Operation failed") => {
+    return res?.message || defaultMsg;
+  };
+
   const handleCreateRubric = async (e) => {
     e.preventDefault();
     if (!newRubric.title.trim()) {
-      toast.error("Please enter a title.");
+      toast.error("Please enter a title."); // Vẫn giữ validation FE
       return;
     }
     if (!newRubric.majorId) {
@@ -95,12 +105,12 @@ export default function AdminRubricManagement() {
       const res = await createRubricTemplate(payload);
 
       if (res?.statusCode === 200 || res?.statusCode === 201) {
-        toast.success("Rubric created successfully!");
+        toast.success(getApiMessage(res, "Rubric created successfully!"));
         setShowCreateModal(false);
         setNewRubric({ title: "", majorId: 0, isPublic: true });
         await loadRubrics();
       } else {
-        toast.error(res?.message || "Failed to create rubric.");
+        toast.error(getApiMessage(res, "Failed to create rubric."));
       }
     } catch (err) {
       console.error(err.response?.data || err);
@@ -119,33 +129,43 @@ export default function AdminRubricManagement() {
       const payload = { templateId: currentRubric.id, title: newRubric.title };
       const res = await updateRubricTemplate(payload);
       if (res?.statusCode === 200) {
-        toast.success("Rubric updated successfully!");
+        toast.success(getApiMessage(res, "Rubric updated successfully!"));
         setShowEditModal(false);
         await loadRubrics();
       } else {
-        toast.error(res?.message || "Failed to update rubric.");
+        toast.error(getApiMessage(res, "Failed to update rubric."));
       }
     } catch (err) {
       toast.error("Server error updating rubric.");
     }
   };
 
+  const [deleteTarget, setDeleteTarget] = useState(null);
+
   const handleDeleteRubric = async (id) => {
-    const confirmed = window.confirm("Are you sure you want to delete this rubric?");
-    if (!confirmed) return;
+    const rubric = rubrics.find((r) => r.id === id);
+    setDeleteTarget(rubric);
+  };
+
+  const confirmDeleteRubric = async () => {
+    if (!deleteTarget) return;
 
     try {
-      const res = await deleteRubricTemplate(id);
+      const res = await deleteRubricTemplate(deleteTarget.id);
       if (res?.statusCode === 200) {
-        toast.success("Rubric deleted successfully!");
-        setRubrics(rubrics.filter((r) => r.id !== id));
+        toast.success(getApiMessage(res, "Rubric deleted successfully!"));
+        setRubrics(rubrics.filter((r) => r.id !== deleteTarget.id));
       } else {
-        toast.error(res?.message || "Failed to delete rubric.");
+        toast.error(getApiMessage(res, "Failed to delete rubric."));
       }
     } catch (err) {
       toast.error("Server error deleting rubric.");
+    } finally {
+      setDeleteTarget(null);
     }
   };
+
+  const cancelDeleteRubric = () => setDeleteTarget(null);
 
   const openEditModal = (rubric) => {
     setCurrentRubric(rubric);
@@ -267,6 +287,8 @@ export default function AdminRubricManagement() {
           <div className="bg-white rounded-xl shadow-lg p-6 w-full max-w-lg">
             <h3 className="text-xl font-semibold mb-4 border-b pb-2">Create New Rubric</h3>
             <form className="space-y-3" onSubmit={handleCreateRubric}>
+              {/* Title */}
+              <label className="block font-medium">Rubric Title</label>
               <input
                 type="text"
                 required
@@ -277,6 +299,7 @@ export default function AdminRubricManagement() {
               />
 
               {/* Major Dropdown */}
+              <label className="block font-medium mt-2">Major</label>
               <select
                 required
                 value={newRubric.majorId}
@@ -316,6 +339,8 @@ export default function AdminRubricManagement() {
           <div className="bg-white rounded-xl shadow-lg p-6 w-full max-w-lg">
             <h3 className="text-xl font-semibold mb-4 border-b pb-2">Edit Rubric</h3>
             <form className="space-y-3" onSubmit={handleUpdateRubric}>
+              {/* Title */}
+              <label className="block font-medium">Rubric Title</label>
               <input
                 type="text"
                 required
@@ -324,6 +349,7 @@ export default function AdminRubricManagement() {
                 placeholder="Rubric Title"
                 className="border rounded p-3 w-full"
               />
+
               <div className="flex justify-end gap-3 mt-4">
                 <button
                   type="button"
@@ -332,11 +358,42 @@ export default function AdminRubricManagement() {
                 >
                   Cancel
                 </button>
-                <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded">
+                <button
+                  type="submit"
+                  className={`px-4 py-2 text-white rounded ${isChanged ? "bg-blue-600 hover:bg-blue-700" : "bg-gray-400 cursor-not-allowed"
+                    }`}
+                  disabled={!isChanged}
+                >
                   Save Changes
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* DELETE CONFIRM MODAL */}
+      {deleteTarget && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl shadow-lg p-6 w-full max-w-sm text-center">
+            <h3 className="text-lg font-semibold mb-4">Confirm Delete</h3>
+            <p className="mb-4">
+              Are you sure you want to delete <span className="font-bold">{deleteTarget.title}</span>?
+            </p>
+            <div className="flex justify-center gap-3">
+              <button
+                onClick={cancelDeleteRubric}
+                className="px-4 py-2 border rounded"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDeleteRubric}
+                className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+              >
+                Delete
+              </button>
+            </div>
           </div>
         </div>
       )}

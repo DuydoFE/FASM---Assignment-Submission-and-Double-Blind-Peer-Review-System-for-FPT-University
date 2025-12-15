@@ -29,6 +29,9 @@ export default function AdminClassDetailsManagement() {
   const isActive = classInfo?.status === "Active";
   const [addStudentModal, setAddStudentModal] = useState({ show: false });
   const [newStudent, setNewStudent] = useState({ studentCode: "" });
+  const getApiMessage = (res, fallback = "") => {
+    return res?.data?.message || res?.message || fallback;
+  };
 
   const [addInstructorModal, setAddInstructorModal] = useState({ show: false });
   const [instructorList, setInstructorList] = useState([]);
@@ -91,28 +94,25 @@ export default function AdminClassDetailsManagement() {
 
     setLoading(true);
     try {
-      if (confirmModal.type === "student") {
-        await deleteCourseStudent(
+      const res = confirmModal.type === "student"
+        ? await deleteCourseStudent(
           confirmModal.user.userId,
           id,
           confirmModal.user.courseStudentId
-        );
-        toast.success(`✅ Removed student: ${confirmModal.user.studentName}`);
-      } else if (confirmModal.type === "instructor") {
-        await deleteCourseInstructor(
+        )
+        : await deleteCourseInstructor(
           confirmModal.user.courseInstructorId,
           confirmModal.user.courseInstanceId,
           confirmModal.user.instructorId || confirmModal.user.userId
         );
-        toast.success(`✅ Removed instructor: ${confirmModal.user.instructorName}`);
-      }
+
+      toast.success(`✅ ${getApiMessage(res, "Removed successfully!")}`);
 
       await refreshData();
       setConfirmModal({ show: false, user: null, type: "student" });
     } catch (err) {
       console.error(err);
-      const errorMsg = err?.response?.data?.message || "Remove failed!";
-      toast.error(`❌ ${errorMsg}`);
+      toast.error(`❌ ${err?.response?.data?.message || err?.message || "Remove failed!"}`);
     } finally {
       setLoading(false);
     }
@@ -127,14 +127,13 @@ export default function AdminClassDetailsManagement() {
 
     try {
       setLoading(true);
-      await importStudentsFromExcel(id, file, changedByUserId);
-      toast.success("✅ Import students successful!");
+      const res = await importStudentsFromExcel(id, file, changedByUserId);
+      toast.success(`✅ ${getApiMessage(res, "Import students successful!")}`);
       setFile(null);
       await refreshData();
     } catch (err) {
       console.error(err);
-      const errorMsg = err?.response?.data?.message || "Import failed!";
-      toast.error(`❌ ${errorMsg}`);
+      toast.error(`❌ ${err?.response?.data?.message || err?.message || "Import failed!"}`);
     } finally {
       setLoading(false);
     }
@@ -158,29 +157,22 @@ export default function AdminClassDetailsManagement() {
       return;
     }
 
-    if (!newStudent.studentCode)
-      return toast.warn("⚠️ Please enter student code!");
-
     try {
       setLoading(true);
-
-      await createCourseStudent({
+      const res = await createCourseStudent({
         courseInstanceId: id,
         userId: 0,
         studentCode: newStudent.studentCode,
         status: "Enrolled",
         changedByUserId,
       });
-
-      toast.success("✅ Student added successfully!");
+      toast.success(`✅ ${getApiMessage(res, "Student added successfully!")}`);
       setAddStudentModal({ show: false });
       setNewStudent({ userId: "", studentCode: "" });
-
       await refreshData();
     } catch (err) {
       console.error(err);
-      const errorMsg = err?.response?.data?.message || "Failed to add student!";
-      toast.error(`❌ ${errorMsg}`);
+      toast.error(`❌ ${err?.response?.data?.message || err?.message || "Failed to add student!"}`);
     } finally {
       setLoading(false);
     }
@@ -195,27 +187,21 @@ export default function AdminClassDetailsManagement() {
       toast.error("⚠️ Cannot add instructors while the class is Active.");
       return;
     }
-    if (!newInstructor.userId) return toast.warn("⚠️ Please select an instructor!");
 
     try {
       setLoading(true);
-
-      await createCourseInstructor({
+      const res = await createCourseInstructor({
         courseInstanceId: id,
         userId: Number(newInstructor.userId),
         isMainInstructor: true,
       });
-
-      toast.success("✅ Instructor added successfully!");
-
+      toast.success(`✅ ${getApiMessage(res, "Instructor added successfully!")}`);
       setAddInstructorModal({ show: false });
       setNewInstructor({ userId: "" });
-
       await refreshData();
     } catch (err) {
       console.error(err);
-      const errorMsg = err?.response?.data?.message || "Failed to add instructor!";
-      toast.error(`❌ ${errorMsg}`);
+      toast.error(`❌ ${err?.response?.data?.message || err?.message || "Failed to add instructor!"}`);
     } finally {
       setLoading(false);
     }
@@ -340,6 +326,7 @@ export default function AdminClassDetailsManagement() {
                   <td className={`p-2 font-medium ${u.status === "Active" ? "text-green-600" : "text-red-500"}`}>{u.status}</td>
                   <td className="p-2">
                     <button
+                      onClick={() => setConfirmModal({ show: true, user: u, type: "student" })}
                       disabled={isClassActive}
                       className={`px-3 py-1 ${isClassActive
                         ? "bg-gray-300 cursor-not-allowed"

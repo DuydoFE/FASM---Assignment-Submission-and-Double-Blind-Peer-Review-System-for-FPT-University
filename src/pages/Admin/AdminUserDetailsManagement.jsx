@@ -235,92 +235,8 @@ export default function AdminUserDetailsManagement() {
           <div className="bg-white shadow-lg rounded-2xl p-6">
             <h3 className="text-xl font-bold text-orange-600 mb-6">Basic Information</h3>
 
-            {editing ? (
-              <form
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  openConfirm({
-                    title: "Save changes?",
-                    message: "Are you sure you want to save these changes?",
-                    onConfirm: () => handleUpdateSubmit(e),
-                  });
-                }}
-              >
-                {/* Campus & Major */}
-                <div>
-                  <label className="block text-gray-500 text-sm mb-1">Campus</label>
-                  <select
-                    value={form.campusId}
-                    onChange={(e) => setForm({ ...form, campusId: Number(e.target.value) })}
-                    className="w-full border rounded-lg p-2 text-gray-800 bg-white"
-                  >
-                    <option value={0}>Select Campus</option>
-                    {campuses.map((c) => (
-                      <option key={c.campusId} value={c.campusId}>{c.campusName}</option>
-                    ))}
-                  </select>
-                </div>
-
-                {isStudent && (
-                  <div>
-                    <label className="block text-gray-500 text-sm mb-1">
-                      Major <span className="text-gray-400">(Required)</span>
-                    </label>
-
-                    <select
-                      value={form.majorId ?? ""}
-                      required
-                      onChange={(e) =>
-                        setForm({
-                          ...form,
-                          majorId: Number(e.target.value),
-                        })
-                      }
-                      className="w-full border rounded-lg p-2 text-gray-800 bg-white"
-                    >
-                      <option value="">Select Major</option>
-
-                      {majors.map((m) => (
-                        <option key={m.majorId} value={m.majorId}>
-                          {m.majorName}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                )}
-
-                {/* Other fields */}
-                <div>
-                  <label className="block text-gray-500 text-sm mb-1">Username</label>
-                  <input type="text" value={form.username} onChange={(e) => setForm({ ...form, username: e.target.value })} className="w-full border rounded-lg p-2" required />
-                </div>
-                <div>
-                  <label className="block text-gray-500 text-sm mb-1">Email</label>
-                  <input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} className="w-full border rounded-lg p-2" required />
-                </div>
-                <div>
-                  <label className="block text-gray-500 text-sm mb-1">First Name</label>
-                  <input type="text" value={form.firstName} onChange={(e) => setForm({ ...form, firstName: e.target.value })} className="w-full border rounded-lg p-2" required />
-                </div>
-                <div>
-                  <label className="block text-gray-500 text-sm mb-1">Last Name</label>
-                  <input type="text" value={form.lastName} onChange={(e) => setForm({ ...form, lastName: e.target.value })} className="w-full border rounded-lg p-2" required />
-                </div>
-                <div>
-                  <label className="block text-gray-500 text-sm mb-1">User Code</label>
-                  <input type="text" value={form.studentCode} onChange={(e) => setForm({ ...form, studentCode: e.target.value })} className="w-full border rounded-lg p-2" />
-                </div>
-                <div>
-                  <label className="block text-gray-500 text-sm mb-1">Avatar URL</label>
-                  <input type="text" value={form.avatarUrl} onChange={(e) => setForm({ ...form, avatarUrl: e.target.value })} className="w-full border rounded-lg p-2" />
-                </div>
-
-                <div className="col-span-2 flex justify-end gap-4 mt-4">
-                  <button type="button" onClick={() => setEditing(false)} className="px-4 py-2 rounded-lg border border-gray-300 text-gray-700">Cancel</button>
-                  <button type="submit" className="px-4 py-2 rounded-lg bg-orange-600 text-white hover:bg-orange-700">Save</button>
-                </div>
-              </form>
-            ) : (
+            {/* Khi editing = false, hiển thị info user */}
+            {!editing ? (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <InfoCard icon={<School />} label="Campus" value={campuses.find(c => c.campusId === user.campusId)?.campusName || "N/A"} />
                 <InfoCard icon={<BookOpen />} label="Major" value={majors.find(m => m.majorId === user.majorId)?.majorName || "N/A"} />
@@ -328,6 +244,170 @@ export default function AdminUserDetailsManagement() {
                 <InfoCard icon={<User2 />} label="Username" value={user.username} />
                 <InfoCard icon={<BadgeCheck />} label="User Code" value={user.studentCode} />
                 <InfoCard icon={<Calendar />} label="Created At" value={new Date(user.createdAt).toLocaleString()} />
+              </div>
+            ) : null}
+
+            {/* Modal edit */}
+            {editing && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center">
+                {/* Overlay */}
+                <div
+                  className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+                  onClick={() => setEditing(false)}
+                ></div>
+
+                {/* Modal */}
+                <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-2xl p-6 z-10">
+                  <h3 className="text-xl font-bold text-orange-600 mb-4">Edit User</h3>
+                  <form
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      openConfirm({
+                        title: "Save changes?",
+                        message: "Are you sure you want to save these changes?",
+                        onConfirm: () => handleUpdateSubmit(e),
+                      });
+                    }}
+                  >
+                    {/* Campus */}
+                    <div>
+                      <label className="block text-gray-500 text-sm mb-1">Campus</label>
+                      <select
+                        value={form.campusId}
+                        onChange={(e) => setForm({ ...form, campusId: Number(e.target.value) })}
+                        className="w-full border rounded-lg p-2 text-gray-800 bg-white"
+                      >
+                        <option value={0}>Select Campus</option>
+                        {campuses.map((c) => (
+                          <option key={c.campusId} value={c.campusId}>
+                            {c.campusName}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* Major (nếu student) */}
+                    {isStudent && (
+                      <div className="mt-2">
+                        <label className="block text-gray-500 text-sm mb-1">
+                          Major <span className="text-gray-400">(Required)</span>
+                        </label>
+                        <select
+                          value={form.majorId ?? ""}
+                          required
+                          onChange={(e) => setForm({ ...form, majorId: Number(e.target.value) })}
+                          className="w-full border rounded-lg p-2 text-gray-800 bg-white"
+                        >
+                          <option value="">Select Major</option>
+                          {majors.map((m) => (
+                            <option key={m.majorId} value={m.majorId}>
+                              {m.majorName}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
+
+                    {/* Other fields */}
+                    <div className="mt-2">
+                      <label className="block text-gray-500 text-sm mb-1">Username</label>
+                      <input
+                        type="text"
+                        value={form.username}
+                        onChange={(e) => setForm({ ...form, username: e.target.value })}
+                        className="w-full border rounded-lg p-2"
+                        required
+                      />
+                    </div>
+                    <div className="mt-2">
+                      <label className="block text-gray-500 text-sm mb-1">Email</label>
+                      <input
+                        type="email"
+                        value={form.email}
+                        onChange={(e) => setForm({ ...form, email: e.target.value })}
+                        className="w-full border rounded-lg p-2"
+                        required
+                      />
+                    </div>
+                    <div className="mt-2">
+                      <label className="block text-gray-500 text-sm mb-1">First Name</label>
+                      <input
+                        type="text"
+                        value={form.firstName}
+                        onChange={(e) => setForm({ ...form, firstName: e.target.value })}
+                        className="w-full border rounded-lg p-2"
+                        required
+                      />
+                    </div>
+                    <div className="mt-2">
+                      <label className="block text-gray-500 text-sm mb-1">Last Name</label>
+                      <input
+                        type="text"
+                        value={form.lastName}
+                        onChange={(e) => setForm({ ...form, lastName: e.target.value })}
+                        className="w-full border rounded-lg p-2"
+                        required
+                      />
+                    </div>
+                    <div className="mt-2">
+                      <label className="block text-gray-500 text-sm mb-1">User Code</label>
+                      <input
+                        type="text"
+                        value={form.studentCode}
+                        onChange={(e) => setForm({ ...form, studentCode: e.target.value })}
+                        className="w-full border rounded-lg p-2"
+                      />
+                    </div>
+                    <div className="mt-2">
+                      <label className="block text-gray-500 text-sm mb-1">Avatar URL</label>
+                      <input
+                        type="text"
+                        value={form.avatarUrl}
+                        onChange={(e) => setForm({ ...form, avatarUrl: e.target.value })}
+                        className="w-full border rounded-lg p-2"
+                      />
+                    </div>
+
+                    {/* Buttons */}
+                    <div className="flex justify-end gap-4 mt-4">
+                      <button
+                        type="button"
+                        onClick={() => setEditing(false)}
+                        className="px-4 py-2 rounded-lg border border-gray-300 text-gray-700"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="submit"
+                        disabled={JSON.stringify(form) === JSON.stringify({
+                          campusId: user.campusId ?? 0,
+                          majorId: user.majorId ?? 0,
+                          username: user.username ?? "",
+                          email: user.email ?? "",
+                          firstName: user.firstName ?? "",
+                          lastName: user.lastName ?? "",
+                          studentCode: user.studentCode ?? "",
+                          avatarUrl: user.avatarUrl ?? "",
+                        })}
+                        className={`px-4 py-2 rounded-lg text-white ${JSON.stringify(form) === JSON.stringify({
+                          campusId: user.campusId ?? 0,
+                          majorId: user.majorId ?? 0,
+                          username: user.username ?? "",
+                          email: user.email ?? "",
+                          firstName: user.firstName ?? "",
+                          lastName: user.lastName ?? "",
+                          studentCode: user.studentCode ?? "",
+                          avatarUrl: user.avatarUrl ?? "",
+                        })
+                            ? "bg-gray-400 cursor-not-allowed"
+                            : "bg-orange-600 hover:bg-orange-700"
+                          }`}
+                      >
+                        Save
+                      </button>
+                    </div>
+                  </form>
+                </div>
               </div>
             )}
           </div>

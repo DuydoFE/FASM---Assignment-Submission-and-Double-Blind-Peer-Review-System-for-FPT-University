@@ -31,6 +31,7 @@ export default function AdminMajorManagement() {
   });
 
   const [editingMajor, setEditingMajor] = useState(null);
+  const [originalMajor, setOriginalMajor] = useState(null);
 
   const [confirmAction, setConfirmAction] = useState(null);
   // confirmAction = { type: "create" | "update" | "delete", payload?: any }
@@ -43,8 +44,10 @@ export default function AdminMajorManagement() {
     try {
       const res = await getAllMajors();
       setMajors(res?.data || []);
-    } catch {
-      toast.error("Failed to load majors");
+    } catch (error) {
+      const errorMessage =
+        error?.response?.data?.message || "Failed to load majors";
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -58,13 +61,32 @@ export default function AdminMajorManagement() {
      Open Edit Modal
      ========================= */
   const openEdit = (major) => {
-    setEditingMajor({
+    const majorCopy = {
       majorId: major.majorId,
       majorCode: major.majorCode,
       majorName: major.majorName,
       isActive: major.isActive,
-    });
+    };
+    setEditingMajor(majorCopy);
+    setOriginalMajor(majorCopy);
     setShowEditModal(true);
+  };
+
+  const isUnchanged =
+    editingMajor &&
+    originalMajor &&
+    editingMajor.majorCode === originalMajor.majorCode &&
+    editingMajor.majorName === originalMajor.majorName &&
+    editingMajor.isActive === originalMajor.isActive;
+
+
+  const getMessageFromResponse = (res) => {
+    return (
+      res?.data?.message ||
+      res?.data?.data?.message ||
+      res?.message ||
+      ""
+    );
   };
 
   /* =========================
@@ -72,28 +94,36 @@ export default function AdminMajorManagement() {
      ========================= */
   const handleConfirm = async () => {
     try {
+      let res;
+
       if (confirmAction.type === "create") {
-        await createMajor(newMajor);
-        toast.success("Major created successfully!");
+        res = await createMajor(newMajor);
+        toast.success(getMessageFromResponse(res));
         setNewMajor({ majorCode: "", majorName: "" });
         setShowAddModal(false);
       }
 
       if (confirmAction.type === "update") {
-        await updateMajor(editingMajor);
-        toast.success("Updated successfully!");
+        res = await updateMajor(editingMajor);
+        toast.success(getMessageFromResponse(res));
         setEditingMajor(null);
+        setOriginalMajor(null);
         setShowEditModal(false);
       }
 
       if (confirmAction.type === "delete") {
-        await deleteMajor(confirmAction.payload);
-        toast.success("Deleted successfully!");
+        res = await deleteMajor(confirmAction.payload);
+        toast.success(getMessageFromResponse(res));
       }
 
-      loadMajors();
-    } catch {
-      toast.error("Action failed");
+      await loadMajors();
+    } catch (error) {
+      const errorMessage =
+        error?.response?.data?.message ||
+        error?.response?.data?.data?.message ||
+        error?.message ||
+        "Action failed";
+      toast.error(errorMessage);
     } finally {
       setConfirmAction(null);
     }
@@ -123,6 +153,7 @@ export default function AdminMajorManagement() {
           </h3>
 
           <div className="flex flex-col gap-3">
+            <label className="font-medium">Major Code</label>
             <input
               type="text"
               placeholder="Major Code"
@@ -133,6 +164,7 @@ export default function AdminMajorManagement() {
               className="border p-2 rounded-lg"
             />
 
+            <label className="font-medium">Major Name</label>
             <input
               type="text"
               placeholder="Major Name"
@@ -170,6 +202,7 @@ export default function AdminMajorManagement() {
           </h3>
 
           <div className="flex flex-col gap-3">
+            <label className="font-medium">Major Code</label>
             <input
               type="text"
               value={editingMajor.majorCode}
@@ -182,6 +215,7 @@ export default function AdminMajorManagement() {
               className="border p-2 rounded-lg"
             />
 
+            <label className="font-medium">Major Name</label>
             <input
               type="text"
               value={editingMajor.majorName}
@@ -194,6 +228,7 @@ export default function AdminMajorManagement() {
               className="border p-2 rounded-lg"
             />
 
+            <label className="font-medium">Status</label>
             <select
               value={editingMajor.isActive}
               onChange={(e) =>
@@ -211,7 +246,11 @@ export default function AdminMajorManagement() {
             <div className="flex justify-end gap-3 mt-4">
               <button
                 onClick={() => setConfirmAction({ type: "update" })}
-                className="bg-blue-600 text-white px-5 py-2 rounded-lg"
+                className={`px-5 py-2 rounded-lg text-white ${isUnchanged
+                  ? "bg-gray-400 cursor-not-allowed"
+                  : "bg-blue-600 hover:bg-blue-700"
+                  }`}
+                disabled={isUnchanged}
               >
                 Save
               </button>
@@ -220,6 +259,7 @@ export default function AdminMajorManagement() {
                 onClick={() => {
                   setShowEditModal(false);
                   setEditingMajor(null);
+                  setOriginalMajor(null);
                 }}
                 className="bg-gray-500 text-white px-5 py-2 rounded-lg"
               >

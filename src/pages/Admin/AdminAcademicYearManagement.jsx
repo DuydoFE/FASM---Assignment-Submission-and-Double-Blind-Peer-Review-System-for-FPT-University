@@ -7,7 +7,15 @@ import {
 } from "../../service/adminService";
 import { Toaster, toast } from "react-hot-toast";
 
-/* ================= MODAL (ĐẶT NGOÀI COMPONENT) ================= */
+/* ================= HELPER ================= */
+const getErrorMessage = (error, defaultMsg = "Something went wrong") => {
+  if (error?.response?.data?.message) return error.response.data.message;
+  if (error?.response?.data?.errors) return error.response.data.errors.join(", ");
+  if (error?.message) return error.message;
+  return defaultMsg;
+};
+
+/* ================= MODAL ================= */
 const Modal = ({ children, onClose }) => (
   <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
     <div className="bg-white rounded-2xl shadow-xl p-6 w-full max-w-lg relative">
@@ -50,7 +58,10 @@ const ConfirmModal = ({ title, message, onConfirm, onCancel }) => (
 export default function AdminAcademicYearManagement() {
   const [years, setYears] = useState([]);
   const [loading, setLoading] = useState(true);
+
   const [showAddForm, setShowAddForm] = useState(false);
+  const [showEditForm, setShowEditForm] = useState(false);
+
   const [newYearData, setNewYearData] = useState({
     campusId: 1,
     name: "",
@@ -60,6 +71,8 @@ export default function AdminAcademicYearManagement() {
 
   const [editingId, setEditingId] = useState(null);
   const [editingValues, setEditingValues] = useState({});
+  const [originalValues, setOriginalValues] = useState({});
+
   const [confirmConfig, setConfirmConfig] = useState(null);
 
   /* ================= UTIL ================= */
@@ -93,8 +106,8 @@ export default function AdminAcademicYearManagement() {
     try {
       const res = await getAllAcademicYears();
       setYears((res?.data || []).map(mapYear));
-    } catch {
-      toast.error("Failed to load academic years");
+    } catch (error) {
+      toast.error(getErrorMessage(error, "Failed to load academic years"));
     } finally {
       setLoading(false);
     }
@@ -105,63 +118,66 @@ export default function AdminAcademicYearManagement() {
   }, []);
 
   /* ================= ADD ================= */
-  const handleYearNameChange = (value) => {
+  const handleYearNameChange = (value, isEdit = false) => {
     if (!/^\d{0,4}$/.test(value)) return;
 
-    setNewYearData((prev) => ({ ...prev, name: value }));
-
+    const updated = { name: value };
     if (value.length === 4) {
-      setNewYearData((prev) => ({
-        ...prev,
-        startDate: `${value}-01-01T00:00`,
-        endDate: `${value}-12-31T23:59`,
-      }));
+      updated.startDate = `${value}-01-01T00:00`;
+      updated.endDate = `${value}-12-31T23:59`;
+    }
+
+    if (isEdit) {
+      setEditingValues((prev) => ({ ...prev, ...updated }));
+    } else {
+      setNewYearData((prev) => ({ ...prev, ...updated }));
     }
   };
 
   const handleAddNewYear = async () => {
-    if (!/^\d{4}$/.test(newYearData.name)) {
-      toast.error("Year must be in format YYYY (e.g., 2025)");
-      return;
-    }
+  if (!/^\d{4}$/.test(newYearData.name)) {
+    toast.error("Year must be in format YYYY (e.g., 2025)");
+    return;
+  }
 
-    const toastId = toast.loading("Adding new academic year...");
-    try {
-      await createAcademicYear(newYearData);
-      toast.success("New academic year added successfully", { id: toastId });
-      setShowAddForm(false);
-      setNewYearData({ campusId: 1, name: "", startDate: "", endDate: "" });
-      loadYears();
-    } catch {
-      toast.error("Failed to add new academic year", { id: toastId });
-    }
-  };
+  const toastId = toast.loading("Processing...");
+  try {
+    const res = await createAcademicYear(newYearData);
+    const msg = res?.data?.message || "New academic year added successfully";
+    toast.success(msg, { id: toastId });
+
+    setShowAddForm(false);
+    setNewYearData({ campusId: 1, name: "", startDate: "", endDate: "" });
+    loadYears();
+  } catch (error) {
+    toast.error(getErrorMessage(error, "Failed to add new academic year"), { id: toastId });
+  }
+};
 
   /* ================= EDIT ================= */
   const handleEdit = (year) => {
     setEditingId(year.id);
-    setEditingValues({
+    const editValues = {
       name: year.name,
       startDate: formatForEdit(year.startDate),
       endDate: formatForEdit(year.endDate),
-    });
+    };
+    setEditingValues(editValues);
+    setOriginalValues(editValues);
+    setShowEditForm(true);
   };
 
-  const handleEditYearNameChange = (value) => {
-    if (!/^\d{0,4}$/.test(value)) return;
-
-    if (value.length === 4) {
-      setEditingValues({
-        name: value,
-        startDate: `${value}-01-01T00:00`,
-        endDate: `${value}-12-31T23:59`,
-      });
-    } else {
-      setEditingValues((prev) => ({ ...prev, name: value }));
-    }
+  const hasChanges = () => {
+    return (
+      editingValues.name !== originalValues.name ||
+      editingValues.startDate !== originalValues.startDate ||
+      editingValues.endDate !== originalValues.endDate
+    );
   };
 
   const handleSaveEdit = () => {
+    if (!hasChanges()) return;
+
     setConfirmConfig({
       title: "Update Academic Year",
       message: "Are you sure you want to save these changes?",
@@ -182,9 +198,10 @@ export default function AdminAcademicYearManagement() {
 
           toast.success("Academic year updated successfully", { id: toastId });
           setEditingId(null);
+          setShowEditForm(false);
           loadYears();
-        } catch {
-          toast.error("Failed to update academic year", { id: toastId });
+        } catch (error) {
+          toast.error(getErrorMessage(error, "Failed to update academic year"), { id: toastId });
         }
       },
     });
@@ -203,8 +220,8 @@ export default function AdminAcademicYearManagement() {
           await deleteAcademicYear(id);
           toast.success("Academic year deleted successfully", { id: toastId });
           loadYears();
-        } catch {
-          toast.error("Failed to delete academic year", { id: toastId });
+        } catch (error) {
+          toast.error(getErrorMessage(error, "Failed to delete academic year"), { id: toastId });
         }
       },
     });
@@ -226,10 +243,52 @@ export default function AdminAcademicYearManagement() {
         Add New Academic Year
       </button>
 
+      <table className="w-full mt-6 text-center">
+        <thead className="bg-orange-50">
+          <tr>
+            <th className="p-3">Academic Year</th>
+            <th className="p-3">Start Date</th>
+            <th className="p-3">End Date</th>
+            <th className="p-3">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {loading ? (
+            <tr>
+              <td colSpan="4" className="p-4 text-center">Loading...</td>
+            </tr>
+          ) : (
+            years.map((y) => (
+              <tr key={y.id}>
+                <td className="p-3">{y.name}</td>
+                <td className="p-3">{formatDate(y.startDate)}</td>
+                <td className="p-3">{formatDate(y.endDate)}</td>
+                <td className="p-3 flex justify-center gap-2">
+                  <button
+                    onClick={() => handleEdit(y)}
+                    className="bg-blue-500 text-white px-3 py-1 rounded"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => handleDelete(y.id)}
+                    className="bg-red-500 text-white px-3 py-1 rounded"
+                  >
+                    Delete
+                  </button>
+                </td>
+              </tr>
+            ))
+          )}
+        </tbody>
+      </table>
+
+      {/* ================= ADD FORM MODAL ================= */}
       {showAddForm && (
         <Modal onClose={() => setShowAddForm(false)}>
           <h3 className="text-xl font-bold mb-4 text-orange-600">Add Academic Year</h3>
 
+          <label className="block text-gray-700 mb-1">Academic Year</label>
           <input
             value={newYearData.name}
             onChange={(e) => handleYearNameChange(e.target.value)}
@@ -237,6 +296,7 @@ export default function AdminAcademicYearManagement() {
             className="border p-2 rounded-lg w-full mb-3"
           />
 
+          <label className="block text-gray-700 mb-1">Start Date</label>
           <input
             type="datetime-local"
             disabled
@@ -244,6 +304,7 @@ export default function AdminAcademicYearManagement() {
             className="border p-2 rounded-lg w-full mb-3 bg-gray-100"
           />
 
+          <label className="block text-gray-700 mb-1">End Date</label>
           <input
             type="datetime-local"
             disabled
@@ -274,59 +335,53 @@ export default function AdminAcademicYearManagement() {
         </Modal>
       )}
 
-      <table className="w-full border mt-6">
-        <thead className="bg-orange-50">
-          <tr>
-            <th className="p-3">Academic Year</th>
-            <th className="p-3">Start Date</th>
-            <th className="p-3">End Date</th>
-            <th className="p-3">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {loading ? (
-            <tr><td colSpan="4" className="text-center p-4">Loading...</td></tr>
-          ) : (
-            years.map((y) => (
-              <tr key={y.id} className="border-t">
-                <td className="p-3">
-                  {editingId === y.id ? (
-                    <input
-                      value={editingValues.name}
-                      onChange={(e) => handleEditYearNameChange(e.target.value)}
-                      className="border p-2 rounded-lg w-full"
-                    />
-                  ) : y.name}
-                </td>
-                <td className="p-3">{formatDate(y.startDate)}</td>
-                <td className="p-3">{formatDate(y.endDate)}</td>
-                <td className="p-3 flex gap-2">
-                  {editingId === y.id ? (
-                    <>
-                      <button
-                        onClick={handleSaveEdit}
-                        className="bg-green-500 text-white px-3 py-2 rounded"
-                      >
-                        Save
-                      </button>
-                      <button onClick={() => setEditingId(null)} className="bg-gray-500 text-white px-3 py-2 rounded">
-                        Cancel
-                      </button>
-                    </>
-                  ) : (
-                    <button onClick={() => handleEdit(y)} className="bg-blue-500 text-white px-3 py-2 rounded">
-                      Edit
-                    </button>
-                  )}
-                  <button onClick={() => handleDelete(y.id)} className="bg-red-500 text-white px-3 py-2 rounded">
-                    Delete
-                  </button>
-                </td>
-              </tr>
-            ))
-          )}
-        </tbody>
-      </table>
+      {/* ================= EDIT FORM MODAL ================= */}
+      {showEditForm && (
+        <Modal onClose={() => setShowEditForm(false)}>
+          <h3 className="text-xl font-bold mb-4 text-orange-600">Edit Academic Year</h3>
+
+          <label className="block text-gray-700 mb-1">Academic Year</label>
+          <input
+            value={editingValues.name}
+            onChange={(e) => handleYearNameChange(e.target.value, true)}
+            placeholder="Academic Year (e.g., 2025)"
+            className="border p-2 rounded-lg w-full mb-3"
+          />
+
+          <label className="block text-gray-700 mb-1">Start Date</label>
+          <input
+            type="datetime-local"
+            disabled
+            value={editingValues.startDate}
+            className="border p-2 rounded-lg w-full mb-3 bg-gray-100"
+          />
+
+          <label className="block text-gray-700 mb-1">End Date</label>
+          <input
+            type="datetime-local"
+            disabled
+            value={editingValues.endDate}
+            className="border p-2 rounded-lg w-full mb-4 bg-gray-100"
+          />
+
+          <div className="flex justify-end gap-3">
+            <button
+              onClick={() => setShowEditForm(false)}
+              className="bg-gray-300 px-4 py-2 rounded-lg"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleSaveEdit}
+              className={`px-4 py-2 rounded-lg text-white ${hasChanges() ? "bg-green-500" : "bg-gray-400 cursor-not-allowed"
+                }`}
+              disabled={!hasChanges()}
+            >
+              Save
+            </button>
+          </div>
+        </Modal>
+      )}
 
       {confirmConfig && (
         <ConfirmModal
