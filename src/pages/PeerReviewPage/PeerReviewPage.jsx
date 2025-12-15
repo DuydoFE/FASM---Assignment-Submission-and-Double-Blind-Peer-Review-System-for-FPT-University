@@ -54,11 +54,18 @@ const PeerReviewPage = () => {
           );
           setScores(initialScores);
         } else {
+
           throw new Error("Invalid grading data returned.");
         }
       } catch (err) {
         console.error(err);
-        setError("Unable to load assignment for grading. Please try again.");
+        if (err.response && err.response.data && err.response.data.message) {
+            setError(err.response.data.message);
+        } else if (err.message && err.message !== "Invalid grading data returned.") {
+            setError(err.message);
+        } else {
+            setError("Unable to load assignment for grading. Please try again.");
+        }
       } finally {
         setIsLoading(false);
       }

@@ -25,15 +25,15 @@ const SubmissionCard = ({
   const [selectedFile, setSelectedFile] = useState(null);
   const [keywords, setKeywords] = useState("");
   const fileInputRef = useRef(null);
-  
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isModalOpen, setModalOpen] = useState(false);
 
-  const [isCheckingPlagiarism, setIsCheckingPlagiarism] = useState(false);
-  const [plagiarismResult, setPlagiarismResult] = useState(null);
-  const [isPlagiarismModalOpen, setIsPlagiarismModalOpen] = useState(false);
+  const [isCheckingSubmission, setIsCheckingSubmission] = useState(false);
+  const [submissionCheckResult, setSubmissionCheckResult] = useState(null);
+  const [isResultModalOpen, setIsResultModalOpen] = useState(false);
 
-  const isSubmissionActive = assignmentStatus === 'Active';
+  const isSubmissionActive = assignmentStatus === "Active";
 
   const handleCreate = async () => {
     if (!selectedFile) {
@@ -71,8 +71,8 @@ const SubmissionCard = ({
       );
       if (result.statusCode === 200) {
         toast.success(result.message || "Update submission successful!");
-        setModalOpen(false); 
-        onSubmissionSuccess(); 
+        setModalOpen(false);
+        onSubmissionSuccess();
       } else {
         toast.error(result.message || "Update failed.");
       }
@@ -83,26 +83,33 @@ const SubmissionCard = ({
     }
   };
 
-  const handleCheckPlagiarism = async () => {
+  const handleCheckSubmission = async () => {
     if (!selectedFile) {
       toast.warn("Please select a file to check.");
       return;
     }
 
-    setIsCheckingPlagiarism(true);
+    setIsCheckingSubmission(true);
     try {
-      const result = await submissionService.checkPlagiarism(assignmentId, selectedFile);
-      
+      const result = await submissionService.checkPlagiarism(
+        assignmentId,
+        selectedFile
+      );
+
       if (result.statusCode === 200 || result.statusCode === 100) {
-        setPlagiarismResult(result.data);
-        setIsPlagiarismModalOpen(true);
+        setSubmissionCheckResult({
+          ...result.data,
+          errors: result.errors || [],
+          warnings: result.warnings || [],
+        });
+        setIsResultModalOpen(true);
       } else {
-        toast.error(result.message || "Unable to check plagiarism.");
+        toast.error(result.message || "Unable to check submission.");
       }
     } catch (error) {
-      toast.error(error.message || "SeverError: Unable to connect to server.");
+      toast.error(error.message || "ServerError: Unable to connect to server.");
     } finally {
-      setIsCheckingPlagiarism(false);
+      setIsCheckingSubmission(false);
     }
   };
 
@@ -149,14 +156,14 @@ const SubmissionCard = ({
               <Download className="w-4 h-4 mr-2" />
               Download
             </a>
-            
+
             <button
               onClick={() => setModalOpen(true)}
-              disabled={!isSubmissionActive} 
+              disabled={!isSubmissionActive}
               className={`flex-1 flex items-center justify-center px-4 py-2 text-white font-semibold rounded-md ${
                 isSubmissionActive
-                  ? 'bg-green-600 hover:bg-green-700'
-                  : 'bg-gray-400 cursor-not-allowed'
+                  ? "bg-green-600 hover:bg-green-700"
+                  : "bg-gray-400 cursor-not-allowed"
               }`}
             >
               {isSubmissionActive ? (
@@ -175,13 +182,11 @@ const SubmissionCard = ({
           onSubmit={handleUpdate}
           initialKeywords={initialSubmission.keywords}
           isSubmitting={isSubmitting}
-          assignmentId={assignmentId} 
+          assignmentId={assignmentId}
         />
       </>
     );
   }
-
-  // Giao diện khi CHƯA NỘP BÀI (Initial Submit Mode)
   return (
     <div className="bg-white p-6 rounded-lg border border-gray-200">
       <div className="flex items-center mb-3">
@@ -194,9 +199,13 @@ const SubmissionCard = ({
 
       <div
         className={`mt-4 border-2 border-dashed rounded-lg p-8 text-center ${
-            isSubmissionActive ? 'border-gray-300 cursor-pointer hover:border-blue-500' : 'border-gray-200 bg-gray-50'
+          isSubmissionActive
+            ? "border-gray-300 cursor-pointer hover:border-blue-500"
+            : "border-gray-200 bg-gray-50"
         }`}
-        onClick={isSubmissionActive ? () => fileInputRef.current.click() : undefined}
+        onClick={
+          isSubmissionActive ? () => fileInputRef.current.click() : undefined
+        }
       >
         <input
           type="file"
@@ -211,12 +220,19 @@ const SubmissionCard = ({
             <span>{selectedFile.name}</span>
           </div>
         ) : (
-          <p className="text-gray-500">{isSubmissionActive ? 'Kéo thả hoặc nhấn để chọn tệp' : 'Submission is not active'}</p>
+          <p className="text-gray-500">
+            {isSubmissionActive
+              ? "Kéo thả hoặc nhấn để chọn tệp"
+              : "Submission is not active"}
+          </p>
         )}
       </div>
 
       <div className="mt-4">
-        <label htmlFor="keywords" className="block text-sm font-medium text-gray-700 mb-1">
+        <label
+          htmlFor="keywords"
+          className="block text-sm font-medium text-gray-700 mb-1"
+        >
           Keywords
         </label>
         <div className="relative">
@@ -226,7 +242,7 @@ const SubmissionCard = ({
             id="keywords"
             value={keywords}
             onChange={(e) => setKeywords(e.target.value)}
-            className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50"
+            className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50 text-black placeholder-gray-500"
             placeholder="Ví dụ: react, redux, api,..."
             disabled={!isSubmissionActive}
           />
@@ -235,40 +251,56 @@ const SubmissionCard = ({
 
       <div className="mt-4 flex gap-3">
         <button
-            onClick={handleCheckPlagiarism}
-            disabled={!isSubmissionActive || isSubmitting || isCheckingPlagiarism || !selectedFile}
-            className={`flex-1 flex items-center justify-center px-4 py-2 text-indigo-700 bg-indigo-50 border border-indigo-200 font-semibold rounded-md transition-colors ${
-                (isSubmissionActive && selectedFile) ? 'hover:bg-indigo-100 hover:border-indigo-300' : 'opacity-50 cursor-not-allowed bg-gray-50 text-gray-400 border-gray-200'
-            }`}
+          onClick={handleCheckSubmission}
+          disabled={
+            !isSubmissionActive ||
+            isSubmitting ||
+            isCheckingSubmission ||
+            !selectedFile
+          }
+          className={`flex-1 flex items-center justify-center px-4 py-2 text-indigo-700 bg-indigo-50 border border-indigo-200 font-semibold rounded-md transition-colors ${
+            isSubmissionActive && selectedFile
+              ? "hover:bg-indigo-100 hover:border-indigo-300"
+              : "opacity-50 cursor-not-allowed bg-gray-50 text-gray-400 border-gray-200"
+          }`}
         >
-             {isCheckingPlagiarism ? (
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-            ) : (
-              <ScanSearch className="w-4 h-4 mr-2" />
-            )}
-            {isCheckingPlagiarism ? "Checking..." : "Check Plagiarism"}
+          {isCheckingSubmission ? (
+            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+          ) : (
+            <ScanSearch className="w-4 h-4 mr-2" />
+          )}
+          {isCheckingSubmission ? "Checking..." : "Check Submission"}
         </button>
 
         <button
-            onClick={handleCreate}
-            disabled={!isSubmissionActive || isSubmitting || isCheckingPlagiarism || !selectedFile}
-            className={`flex-1 flex items-center justify-center px-4 py-2 text-white font-semibold rounded-md ${
-                isSubmissionActive ? 'bg-blue-600 hover:bg-blue-700' : 'bg-gray-400 cursor-not-allowed'
-            }`}
+          onClick={handleCreate}
+          disabled={
+            !isSubmissionActive ||
+            isSubmitting ||
+            isCheckingSubmission ||
+            !selectedFile
+          }
+          className={`flex-1 flex items-center justify-center px-4 py-2 text-white font-semibold rounded-md ${
+            isSubmissionActive
+              ? "bg-blue-600 hover:bg-blue-700"
+              : "bg-gray-400 cursor-not-allowed"
+          }`}
         >
-            {isSubmitting ? (
+          {isSubmitting ? (
             <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-            ) : (
-                isSubmissionActive ? <Upload className="w-4 h-4 mr-2" /> : <Lock className="w-4 h-4 mr-2" />
-            )}
-            {isSubmitting ? "Submitting..." : "Submit"}
+          ) : isSubmissionActive ? (
+            <Upload className="w-4 h-4 mr-2" />
+          ) : (
+            <Lock className="w-4 h-4 mr-2" />
+          )}
+          {isSubmitting ? "Submitting..." : "Submit"}
         </button>
       </div>
 
-      <PlagiarismResultModal 
-        isOpen={isPlagiarismModalOpen} 
-        onClose={() => setIsPlagiarismModalOpen(false)} 
-        data={plagiarismResult} 
+      <PlagiarismResultModal
+        isOpen={isResultModalOpen}
+        onClose={() => setIsResultModalOpen(false)}
+        data={submissionCheckResult}
       />
     </div>
   );

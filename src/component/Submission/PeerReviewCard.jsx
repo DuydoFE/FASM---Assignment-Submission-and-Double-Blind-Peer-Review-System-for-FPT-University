@@ -8,9 +8,8 @@ const PeerReviewCard = ({
   reviewDeadline,
   isReviewOpen,
 }) => {
-  const remaining = required - completed;
-  const progressPercentage = required > 0 ? (completed / required) * 100 : 0;
-
+  const remaining = Math.max(0, required - completed);
+  const progressPercentage = required > 0 ? Math.min(100, (completed / required) * 100) : 0;
   const navigate = useNavigate();
   const { courseId, assignmentId } = useParams();
 
@@ -71,17 +70,18 @@ const PeerReviewCard = ({
       </div>
 
       <div className="space-y-3">
+       
         <button
           onClick={handleStartReview}
-          disabled={!isReviewOpen || completed >= required}
+          disabled={!isReviewOpen} 
           className="w-full flex items-center justify-center px-4 py-2 bg-orange-500 text-white font-semibold rounded-md hover:bg-orange-600 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
         >
           <Shuffle className="w-4 h-4 mr-2" />
           {!isReviewOpen
             ? "Review has not started"
             : completed >= required
-            ? "Completed"
-            : "Peers Review"}
+            ? "Review More" 
+            : "Peers Review"} 
         </button>
 
         <button
