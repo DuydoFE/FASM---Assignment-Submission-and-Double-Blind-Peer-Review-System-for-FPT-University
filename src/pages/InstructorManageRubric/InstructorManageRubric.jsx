@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { Search, Eye, Loader, Pencil } from 'lucide-react';
 import { getRubricTemplatesByUserId, getRubricByUserId } from '../../service/rubricService';
 import { toast } from 'react-toastify';
@@ -9,6 +9,7 @@ import { getCurrentAccount } from '../../utils/accountUtils';
 const InstructorManageRubric = () => {
     const currentUser = getCurrentAccount();
     const navigate = useNavigate();
+    const { courseInstanceId: urlCourseInstanceId } = useParams();
     const [searchQuery, setSearchQuery] = useState('');
     const [rubricSearchQuery, setRubricSearchQuery] = useState('');
     const [rubrics, setRubrics] = useState([]);
@@ -55,11 +56,11 @@ const InstructorManageRubric = () => {
             try {
                 setLoading(true);
                 
-                // Get courseInstanceId from sessionStorage
-                const courseInstanceId = sessionStorage.getItem('currentCourseInstanceId');
+                // Get courseInstanceId from URL parameter first, fallback to sessionStorage
+                const courseInstanceId = urlCourseInstanceId || sessionStorage.getItem('currentCourseInstanceId');
                 
                 if (!courseInstanceId) {
-                    console.error('No courseInstanceId found in sessionStorage');
+                    console.error('No courseInstanceId found in URL or sessionStorage');
                     setLoading(false);
                     return;
                 }
@@ -84,7 +85,7 @@ const InstructorManageRubric = () => {
         };
 
         fetchRubrics();
-    }, []);
+    }, [urlCourseInstanceId]);
 
     const filteredRubrics = rubrics.filter(rubric => {
         const query = rubricSearchQuery.toLowerCase();

@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
 import {
   getAssignmentsOverview,
   getSubmissionStatistics,
@@ -11,6 +12,7 @@ import SubmissionStatusChart from "../../component/InstructorDashboard/Submissio
 import ScoreDistributionChart from "../../component/InstructorDashboard/ScoreDistributionChart";
 
 const InstructorClassDashboard = () => {
+  const { courseInstanceId } = useParams();
   const currentUser = getCurrentAccount();
   const [courseInstanceData, setCourseInstanceData] = useState(null);
   const [assignmentStatusData, setAssignmentStatusData] = useState([
@@ -59,9 +61,6 @@ const InstructorClassDashboard = () => {
   useEffect(() => {
     const fetchOverview = async () => {
       try {
-        const courseInstanceId = sessionStorage.getItem(
-          "currentCourseInstanceId"
-        );
         if (!currentUser?.id || !courseInstanceId) {
           console.warn(
             "Skipping assignments overview fetch: missing userId or courseInstanceId"
@@ -145,7 +144,7 @@ const InstructorClassDashboard = () => {
     };
 
     fetchOverview();
-  }, [currentUser]);
+  }, [currentUser, courseInstanceId]);
 
   return (
     <div className="max-w-7xl mx-auto px-6 py-8">

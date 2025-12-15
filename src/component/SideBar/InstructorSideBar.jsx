@@ -32,7 +32,7 @@ const InstructorSideBar = () => {
       id: 'rubric',
       label: 'Rubric',
       icon: FileText,
-      path: '/instructor/manage-rubric',
+      path: `/instructor/manage-rubric/${courseInstanceId}`,
     },
     {
       id: 'grading',
