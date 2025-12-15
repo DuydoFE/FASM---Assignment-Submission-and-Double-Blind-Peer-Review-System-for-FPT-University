@@ -12,6 +12,7 @@ import {
   Bot,
   Loader2,
   Zap,
+  MessageSquare,
 } from "lucide-react";
 
 import { reviewService } from "../../service/reviewService";
@@ -24,6 +25,8 @@ const PeerReviewPage = () => {
 
   const [reviewData, setReviewData] = useState(null);
   const [scores, setScores] = useState({});
+  const [criteriaFeedbacks, setCriteriaFeedbacks] = useState({});
+
   const [comment, setComment] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -53,18 +56,29 @@ const PeerReviewPage = () => {
             {}
           );
           setScores(initialScores);
-        } else {
 
+          const initialFeedbacks = data.rubric.criteria.reduce(
+            (acc, criterion) => {
+              acc[criterion.criteriaId] = "";
+              return acc;
+            },
+            {}
+          );
+          setCriteriaFeedbacks(initialFeedbacks);
+        } else {
           throw new Error("Invalid grading data returned.");
         }
       } catch (err) {
         console.error(err);
         if (err.response && err.response.data && err.response.data.message) {
-            setError(err.response.data.message);
-        } else if (err.message && err.message !== "Invalid grading data returned.") {
-            setError(err.message);
+          setError(err.response.data.message);
+        } else if (
+          err.message &&
+          err.message !== "Invalid grading data returned."
+        ) {
+          setError(err.message);
         } else {
-            setError("Unable to load assignment for grading. Please try again.");
+          setError("Unable to load assignment for grading. Please try again.");
         }
       } finally {
         setIsLoading(false);
@@ -78,9 +92,7 @@ const PeerReviewPage = () => {
       setScores((prev) => ({ ...prev, [criteriaId]: null }));
       return;
     }
-
     let newScore = parseFloat(value);
-
     const maxScore = reviewData.rubric.criteria.find(
       (c) => c.criteriaId === criteriaId
     )?.maxScore;
@@ -93,25 +105,27 @@ const PeerReviewPage = () => {
 
   const handleScoreBlur = (criteriaId) => {
     let currentScore = scores[criteriaId];
-
     if (currentScore === null || currentScore === "") return;
-
     let roundedScore = Math.round(currentScore * 4) / 4;
-
     const maxScore = reviewData.rubric.criteria.find(
       (c) => c.criteriaId === criteriaId
     )?.maxScore;
-
     if (maxScore !== undefined) {
       roundedScore = Math.max(0, Math.min(roundedScore, maxScore));
     }
-
     if (roundedScore !== currentScore) {
       setScores((prevScores) => ({
         ...prevScores,
         [criteriaId]: roundedScore,
       }));
     }
+  };
+
+  const handleCriteriaFeedbackChange = (criteriaId, value) => {
+    setCriteriaFeedbacks((prev) => ({
+      ...prev,
+      [criteriaId]: value,
+    }));
   };
 
   const weightedTotalScore = useMemo(() => {
@@ -135,7 +149,6 @@ const PeerReviewPage = () => {
       toast.error("No AI data available. Please generate a summary first.");
       return;
     }
-
     const newScores = { ...scores };
     const isErrorCase = aiSummaryData.statusCode === 400;
 
@@ -143,7 +156,6 @@ const PeerReviewPage = () => {
       const criteria = reviewData.rubric.criteria.find(
         (c) => c.criteriaId === fb.criteriaId
       );
-
       if (criteria) {
         let aiScore = 0;
         if (isErrorCase) {
@@ -151,18 +163,13 @@ const PeerReviewPage = () => {
         } else {
           aiScore = fb.score || 0;
         }
-
         aiScore = Math.round(aiScore * 4) / 4;
-
         if (aiScore > criteria.maxScore) aiScore = criteria.maxScore;
         if (aiScore < 0) aiScore = 0;
-
         newScores[fb.criteriaId] = aiScore;
       }
     });
-
     setScores(newScores);
-
     if (isErrorCase) {
       toast.info("Submission is off-topic. System auto-filled 0 score.");
     } else {
@@ -181,7 +188,6 @@ const PeerReviewPage = () => {
       const response = await reviewService.generateAiReview(
         reviewData.submissionId
       );
-
       if (response.statusCode === 200 || response.statusCode === 400) {
         setAiSummaryData(response);
         if (response.statusCode === 400) {
@@ -203,53 +209,53 @@ const PeerReviewPage = () => {
   };
 
   const handleSubmitReview = async () => {
-  // 1. Validation điểm số (giữ nguyên logic cũ của bạn)
-  const isAllScoresFilled = Object.values(scores).every((score) => score !== null);
-  if (!isAllScoresFilled) {
-    const errorMessage = "Please enter scores for all criteria.";
-    setValidationError(errorMessage);
-    toast.error(errorMessage);
-    return;
-  }
-  setValidationError(null);
+    const isAllScoresFilled = Object.values(scores).every(
+      (score) => score !== null
+    );
+    if (!isAllScoresFilled) {
+      const errorMessage = "Please enter scores for all criteria.";
+      setValidationError(errorMessage);
+      toast.error(errorMessage);
+      return;
+    }
+    setValidationError(null);
 
-  try {
-    if (!reviewData) return;
+    try {
+      if (!reviewData) return;
 
-    // 2. Gọi API submit (giữ nguyên logic cũ)
-    const payload = {
-      reviewAssignmentId: reviewData.reviewAssignmentId,
-      reviewerUserId: user?.userId,
-      generalFeedback: comment,
-      criteriaFeedbacks: reviewData.rubric.criteria.map((c) => ({
-        criteriaId: c.criteriaId,
-        score: scores[c.criteriaId] || 0,
-        feedback: "",
-      })),
-    };
-    await reviewService.submitPeerReview(payload);
-
-    
-    navigate("/review-success", {
-      state: {
-        assignmentTitle: reviewData.assignmentTitle,
-        studentName: reviewData.studentName,
+      const payload = {
+        reviewAssignmentId: reviewData.reviewAssignmentId,
+        reviewerUserId: user?.userId,
+        generalFeedback: comment,
         criteriaFeedbacks: reviewData.rubric.criteria.map((c) => ({
           criteriaId: c.criteriaId,
-          criteriaName: c.title || c.criteriaName || "Tiêu chí", 
           score: scores[c.criteriaId] || 0,
-          maxScore: c.maxScore,
+          feedback: criteriaFeedbacks[c.criteriaId] || "",
         })),
-        totalScore: weightedTotalScore, 
-        generalFeedback: comment, 
-      },
-    });
+      };
 
-  } catch (err) {
-    console.error(err);
-    toast.error("Error sending score, please try again!");
-  }
-};
+      await reviewService.submitPeerReview(payload);
+
+      navigate("/review-success", {
+        state: {
+          assignmentTitle: reviewData.assignmentTitle,
+          studentName: reviewData.studentName,
+          criteriaFeedbacks: reviewData.rubric.criteria.map((c) => ({
+            criteriaId: c.criteriaId,
+            criteriaName: c.title || c.criteriaName || "Tiêu chí",
+            score: scores[c.criteriaId] || 0,
+            maxScore: c.maxScore,
+            feedback: criteriaFeedbacks[c.criteriaId] || "",
+          })),
+          totalScore: weightedTotalScore,
+          generalFeedback: comment,
+        },
+      });
+    } catch (err) {
+      console.error(err);
+      toast.error("Error sending score, please try again!");
+    }
+  };
 
   if (isLoading)
     return <div className="p-8 text-center text-xl">Finding Assignment...</div>;
@@ -259,7 +265,6 @@ const PeerReviewPage = () => {
   return (
     <div className="bg-gray-50 min-h-screen p-8">
       <div className="max-w-7xl mx-auto">
-        {/* Header */}
         <div className="mb-6">
           <div className="flex items-center text-sm text-gray-600 mb-4">
             <Link
@@ -272,23 +277,15 @@ const PeerReviewPage = () => {
             <span className="font-semibold text-gray-800">Peer Review</span>
           </div>
           <div className="flex justify-between items-center">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">
-                Peer Review - {reviewData.assignmentTitle}
-              </h1>
-            </div>
-            <div className="flex space-x-2">
-              <button
-                onClick={() => navigate(-1)}
-                className="flex items-center px-4 py-2 border rounded-md font-semibold text-gray-700 hover:bg-gray-100"
-              >
-                <ArrowLeft size={16} className="mr-2" />
-                Back
-              </button>
-              <button className="flex items-center px-4 py-2 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700">
-                <Star size={16} className="mr-2" /> Review
-              </button>
-            </div>
+            <h1 className="text-3xl font-bold text-gray-900">
+              Peer Review - {reviewData.assignmentTitle}
+            </h1>
+            <button
+              onClick={() => navigate(-1)}
+              className="flex items-center px-4 py-2 border rounded-md font-semibold text-gray-700 hover:bg-gray-100"
+            >
+              <ArrowLeft size={16} className="mr-2" /> Back
+            </button>
           </div>
         </div>
 
@@ -314,13 +311,11 @@ const PeerReviewPage = () => {
                 <p className="font-bold text-gray-900 mr-4 truncate text-base">
                   {reviewData.fileName ?? "submission.pdf"}
                 </p>
-
                 <div className="ml-auto flex space-x-2">
                   <a
                     href={reviewData.fileUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    title="Preview file"
                     className="p-2 hover:bg-gray-100 rounded-full text-gray-700"
                   >
                     <Eye size={18} />
@@ -328,7 +323,6 @@ const PeerReviewPage = () => {
                   <a
                     href={reviewData.fileUrl}
                     download={reviewData.fileName}
-                    title="Download file"
                     className="p-2 hover:bg-gray-100 rounded-full text-gray-700"
                   >
                     <Download size={18} />
@@ -343,25 +337,20 @@ const PeerReviewPage = () => {
               <button
                 onClick={handleAutoScore}
                 disabled={!aiSummaryData}
-                className={`flex items-center px-4 py-2 border rounded-md font-semibold text-sm ${
-                  !aiSummaryData
-                    ? "text-gray-400 border-gray-200 cursor-not-allowed"
-                    : "text-blue-600 border-blue-200 hover:bg-blue-50"
-                }`}
+                className="flex items-center px-4 py-2 border rounded-md font-semibold text-sm text-blue-600 border-blue-200 hover:bg-blue-50 disabled:text-gray-400 disabled:border-gray-200"
               >
-                <Sparkles size={14} className="mr-2" />
-                Auto Score
+                <Sparkles size={14} className="mr-2" /> Auto Score
               </button>
               <button
                 onClick={handleGenerateAiSummary}
                 disabled={isGeneratingAi}
-                className="flex items-center px-4 py-2 bg-green-600 text-white rounded-md font-semibold hover:bg-green-700 text-sm disabled:bg-green-400 disabled:cursor-not-allowed"
+                className="flex items-center px-4 py-2 bg-green-600 text-white rounded-md font-semibold hover:bg-green-700 text-sm disabled:bg-green-400"
               >
                 {isGeneratingAi ? (
                   <Loader2 size={14} className="mr-2 animate-spin" />
                 ) : (
                   <Bot size={14} className="mr-2" />
-                )}
+                )}{" "}
                 Create Summary AI
               </button>
               <button
@@ -369,18 +358,18 @@ const PeerReviewPage = () => {
                   setScores({});
                   setComment("");
                   setAiSummaryData(null);
+                  setCriteriaFeedbacks({});
                 }}
                 className="flex items-center px-4 py-2 border rounded-md font-semibold text-gray-700 hover:bg-gray-100 text-sm"
               >
-                <RotateCcw size={14} className="mr-2" />
-                Reset
+                <RotateCcw size={14} className="mr-2" /> Reset
               </button>
             </div>
 
             <div className="grid grid-cols-12 gap-4 px-4 pb-2 border-b font-bold text-gray-600">
-              <div className="col-span-7">Form Grading</div>
-              <div className="col-span-3">AI Summary</div>
-              <div className="col-span-2 text-center">Score Input</div>
+              <div className="col-span-5">Form Grading</div>
+              <div className="col-span-5">AI Summary</div>
+              <div className="col-span-2 text-center">Score</div>
             </div>
 
             <div className="divide-y">
@@ -391,115 +380,128 @@ const PeerReviewPage = () => {
                 return (
                   <div
                     key={criterion.criteriaId}
-                    className="grid grid-cols-12 gap-4 p-4 items-center"
+                    className="grid grid-cols-12 gap-4 p-4"
                   >
-                    <div className="col-span-5">
-                      <h4 className="font-bold text-gray-900">
-                        {criterion.title || criterion.criteriaName}
-                      </h4>
-                      <p className="text-sm text-gray-700 mt-1 font-medium">
-                        {criterion.description}
-                      </p>
-                      <div className="mt-2 flex items-center">
-                        <div className="w-full bg-gray-200 rounded-full h-1.5">
-                          <div
-                            className="bg-blue-600 h-1.5 rounded-full"
-                            style={{ width: `${criterion.weight}%` }}
-                          ></div>
+                    <div className="col-span-5 flex flex-col">
+                      <div>
+                        <h4 className="font-bold text-gray-900">
+                          {criterion.title || criterion.criteriaName}
+                        </h4>
+                        <p className="text-sm text-gray-700 mt-1 font-medium">
+                          {criterion.description}
+                        </p>
+                        <div className="mt-2 flex items-center mb-3">
+                          <div className="w-full bg-gray-200 rounded-full h-1.5">
+                            <div
+                              className="bg-blue-600 h-1.5 rounded-full"
+                              style={{ width: `${criterion.weight}%` }}
+                            ></div>
+                          </div>
+                          <span className="ml-3 text-sm font-bold text-blue-700">
+                            {criterion.weight}%
+                          </span>
                         </div>
-                        <span className="ml-3 text-sm font-bold text-blue-700">
-                          {criterion.weight}%
-                        </span>
+                      </div>
+
+                      <div className="mt-auto pt-2">
+                        <label className="flex items-center text-xs font-bold text-gray-800 mb-1">
+                          <MessageSquare size={12} className="mr-1" />
+                          Specific Feedback
+                        </label>
+                        <textarea
+                          rows={3}
+                          className="w-full p-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white text-gray-900 placeholder-gray-500"
+                          placeholder="Your feedback for this criterion..."
+                          value={criteriaFeedbacks[criterion.criteriaId] || ""}
+                          onChange={(e) =>
+                            handleCriteriaFeedbackChange(
+                              criterion.criteriaId,
+                              e.target.value
+                            )
+                          }
+                        />
                       </div>
                     </div>
 
-                    <div className="col-span-5">
+                    {/* Middle Column: AI */}
+                    <div className="col-span-5 border-l pl-4">
                       {isGeneratingAi ? (
-                        <div className="flex items-center text-gray-700 font-medium">
+                        <div className="flex items-center text-gray-700 font-medium mt-2">
                           <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                           <span>Analyzing...</span>
                         </div>
                       ) : aiFeedbackForItem ? (
-                        <div>
+                        <div className="mt-1">
                           <div className="flex items-center mb-1">
+                            <Bot size={14} className="text-blue-600 mr-2" />
                             <span className="font-bold text-gray-900 text-sm">
-                              {aiFeedbackForItem.title}
-                            </span>
-                            <span className="ml-2 text-xs font-bold text-gray-700 bg-gray-200 px-1.5 py-0.5 rounded">
-                              {criterion.weight}%
+                              AI Suggestions
                             </span>
                           </div>
-
                           <p
                             className={`text-sm ${
                               aiSummaryData.statusCode === 400 ||
-                              aiFeedbackForItem.summary.includes("⚠") ||
-                              aiFeedbackForItem.summary.includes(
-                                "Unable to evaluate"
-                              )
-                                ? "text-red-700 font-medium bg-red-50 p-2 rounded border border-red-200"
-                                : "text-gray-900 font-medium"
+                              aiFeedbackForItem.summary.includes("⚠")
+                                ? "text-red-700 bg-red-50 p-2 rounded border border-red-200"
+                                : "text-gray-800 bg-blue-50 p-2 rounded border border-blue-100"
                             }`}
                           >
                             {aiFeedbackForItem.summary}
                           </p>
                         </div>
                       ) : (
-                        <div className="text-center text-gray-900">
-                          <Zap
-                            size={24}
-                            className="mx-auto mb-1 text-gray-700"
-                          />
-                          <p className="text-sm font-bold">No AI summary yet</p>
-                          <p className="text-xs font-medium text-gray-600">
-                            Click 'Create Summary AI' to analyze
+                        <div className="text-center text-gray-500 py-4">
+                          <p className="text-xs italic">
+                            No AI summary available
                           </p>
                         </div>
                       )}
                     </div>
 
-                    <div className="col-span-2 flex items-center justify-center">
-                      <input
-                        type="number"
-                        min="0"
-                        max={criterion.maxScore}
-                        step="0.25"
-                        value={
-                          scores[criterion.criteriaId] === null
-                            ? ""
-                            : scores[criterion.criteriaId]
-                        }
-                        onChange={(e) =>
-                          handleScoreChange(
-                            criterion.criteriaId,
-                            e.target.value
-                          )
-                        }
-                        onBlur={() => handleScoreBlur(criterion.criteriaId)}
-                        placeholder=""
-                        className={`w-20 text-center font-bold text-lg text-gray-900 border rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-400 ${
-                          validationError &&
-                          scores[criterion.criteriaId] === null
-                            ? "border-red-500 ring-red-200"
-                            : "border-gray-400"
-                        } [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none`}
-                      />
-
-                      <span className="text-gray-900 text-lg font-bold ml-2">
-                        / {criterion.maxScore}
+                    {/* Right Column: Score */}
+                    <div className="col-span-2 flex flex-col items-center justify-start pt-2">
+                      <span className="text-xs font-bold text-gray-500 mb-1">
+                        Score
                       </span>
+                      <div className="flex items-center">
+                        <input
+                          type="number"
+                          min="0"
+                          max={criterion.maxScore}
+                          step="0.25"
+                          value={
+                            scores[criterion.criteriaId] === null
+                              ? ""
+                              : scores[criterion.criteriaId]
+                          }
+                          onChange={(e) =>
+                            handleScoreChange(
+                              criterion.criteriaId,
+                              e.target.value
+                            )
+                          }
+                          onBlur={() => handleScoreBlur(criterion.criteriaId)}
+                          className={`w-20 text-center font-bold text-lg text-gray-900 border rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                            validationError &&
+                            scores[criterion.criteriaId] === null
+                              ? "border-red-500 ring-red-200"
+                              : "border-gray-400"
+                          }`}
+                        />
+                        <span className="text-gray-500 text-sm font-bold ml-2">
+                          / {criterion.maxScore}
+                        </span>
+                      </div>
                     </div>
                   </div>
                 );
               })}
             </div>
           </div>
-
           {aiSummaryData && (
             <div className="bg-white p-6 rounded-lg border animate-fade-in">
               <h3 className="text-lg font-bold text-gray-800 flex items-center mb-4">
-                <Bot className="w-6 h-6 mr-3 text-blue-600" />
-                AI Overview
+                <Bot className="w-6 h-6 mr-3 text-blue-600" /> AI Overview
               </h3>
               <div
                 className={`p-4 rounded-lg border ${
@@ -508,23 +510,7 @@ const PeerReviewPage = () => {
                     : "bg-blue-50 border-blue-200"
                 }`}
               >
-                {aiSummaryData.statusCode === 200 && (
-                  <p className="font-semibold">
-                    Suggested Total Score:{" "}
-                    <span className="text-blue-600 font-bold text-xl">
-                      {aiSummaryData.data?.totalScore}
-                    </span>{" "}
-                    / 100
-                  </p>
-                )}
-
-                <p
-                  className={`mt-2 ${
-                    aiSummaryData.statusCode === 400
-                      ? "text-red-700"
-                      : "text-gray-700"
-                  }`}
-                >
+                <p className="text-gray-700">
                   {aiSummaryData.data?.overallComment || aiSummaryData.message}
                 </p>
               </div>
@@ -542,13 +528,13 @@ const PeerReviewPage = () => {
             </div>
             <div className="mt-6">
               <label className="font-bold text-gray-800 mb-2 block">
-                Comment
+                General Feedback
               </label>
               <textarea
                 value={comment}
                 onChange={(e) => setComment(e.target.value)}
                 className="w-full p-3 border rounded-md h-32 focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 placeholder-gray-500"
-                placeholder="Enter feedback for the student..."
+                placeholder="Enter general feedback for the student..."
               />
             </div>
           </div>
@@ -558,8 +544,7 @@ const PeerReviewPage = () => {
               onClick={handleSubmitReview}
               className="flex items-center px-6 py-3 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700"
             >
-              <Send size={18} className="mr-2" />
-              Send Review
+              <Send size={18} className="mr-2" /> Send Review
             </button>
           </div>
         </div>

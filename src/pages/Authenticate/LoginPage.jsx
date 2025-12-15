@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, Eye, EyeOff } from "lucide-react";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
@@ -35,6 +35,8 @@ const LoginPage = () => {
 
   const navigate = useNavigate();
   const dispatch = useDispatch();
+
+  const [showPassword, setShowPassword] = useState(false);
 
 
   const handleLogin = async () => {
@@ -168,14 +170,25 @@ const LoginPage = () => {
                   className="w-full p-3 bg-zinc-900/50 border border-white/10 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500 transition-all"
                 />
               </div>
-              <div>
+                <div className="relative">
                 <input
-                  type="password"
+                  type={showPassword ? "text" : "password"} 
                   placeholder="Nhập mật khẩu"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full p-3 bg-zinc-900/50 border border-white/10 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500 transition-all"
+                  className="w-full p-3 pr-10 bg-zinc-900/50 border border-white/10 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500 transition-all"
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-zinc-400 hover:text-white transition-colors"
+                >
+                  {showPassword ? (
+                    <EyeOff size={20} />
+                  ) : (
+                    <Eye size={20} />
+                  )}
+                </button>
               </div>
               
               <div className="flex justify-end">
