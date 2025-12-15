@@ -54,7 +54,17 @@ const InstructorManageRubric = () => {
         const fetchRubrics = async () => {
             try {
                 setLoading(true);
-                const data = await getRubricByUserId(currentUser.id);
+                
+                // Get courseInstanceId from sessionStorage
+                const courseInstanceId = sessionStorage.getItem('currentCourseInstanceId');
+                
+                if (!courseInstanceId) {
+                    console.error('No courseInstanceId found in sessionStorage');
+                    setLoading(false);
+                    return;
+                }
+
+                const data = await getRubricByUserId(currentUser.id, courseInstanceId);
 
                 const formattedRubrics = data.map(rubric => ({
                     ...rubric,
