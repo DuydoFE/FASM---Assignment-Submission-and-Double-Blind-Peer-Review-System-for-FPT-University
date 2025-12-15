@@ -20,6 +20,7 @@ import {
   assignmentService,
 } from "../../service/assignmentService";
 import { submissionService } from "../../service/submissionService";
+import { getCourseInstanceById } from "../../service/courseInstanceService";
 import CreateAssignmentModal from "../../component/Assignment/CreateAssignmentModal";
 import EditAssignmentModal from "../../component/Assignment/EditAssignmentModal";
 import DeleteAssignmentModal from "../../component/Assignment/DeleteAssignmentModal";
@@ -47,6 +48,7 @@ const InstructorManageAssignment = () => {
   });
 
   const [assignments, setAssignments] = useState([]);
+  const [courseInstanceData, setCourseInstanceData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showUpdateDeadlineModal, setShowUpdateDeadlineModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -110,9 +112,23 @@ const InstructorManageAssignment = () => {
     }
   };
 
+  const fetchCourseInstanceData = async () => {
+    try {
+      const response = await getCourseInstanceById(courseInstanceId);
+      console.log("Course Instance API Response:", response);
+      // API might return { data: {...} } or directly the data
+      const data = response.data || response;
+      console.log("Course Instance Data:", data);
+      setCourseInstanceData(data);
+    } catch (error) {
+      console.error("Failed to fetch course instance data:", error);
+    }
+  };
+
   useEffect(() => {
     if (courseInstanceId) {
       fetchAssignments();
+      fetchCourseInstanceData();
     }
   }, [courseInstanceId]);
 
@@ -355,14 +371,19 @@ const InstructorManageAssignment = () => {
     return "text-gray-900";
   };
 
-  const courseInfo =
-    assignments.length > 0
-      ? {
-          courseCode: assignments[0].courseCode,
-          sectionCode: assignments[0].sectionCode,
-          totalStudents: 35, // You can get this from API if available
-        }
-      : null;
+  const courseInfo = courseInstanceData
+    ? {
+        courseCode: courseInstanceData.courseCode,
+        sectionCode: courseInstanceData.courseInstanceName,
+        totalStudents: 35, // You can get this from API if available
+      }
+    : assignments.length > 0
+    ? {
+        courseCode: assignments[0].courseCode,
+        sectionCode: assignments[0].sectionCode,
+        totalStudents: 35,
+      }
+    : null;
 
   return (
     <div className="p-8">
@@ -375,11 +396,11 @@ const InstructorManageAssignment = () => {
           <div className="flex items-center space-x-4">
             <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium">
               Course:{" "}
-              {assignments.length > 0 ? assignments[0].courseCode : "N/A"}
+              {courseInstanceData?.courseCode || "N/A"}
             </span>
             <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium">
               Class:{" "}
-              {assignments.length > 0 ? assignments[0].sectionCode : "N/A"}
+              {courseInstanceData?.sectionCode || "N/A"}
             </span>
           </div>
         </div>

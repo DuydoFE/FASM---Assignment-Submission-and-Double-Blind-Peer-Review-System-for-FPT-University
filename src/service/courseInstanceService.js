@@ -29,3 +29,13 @@ export const getClassesByUser = async (userId, courseId) => {
   }
 };
 
+export const getCourseInstanceById = async (courseInstanceId) => {
+  try {
+    const response = await api.get(`/CourseInstance/${courseInstanceId}`);
+    return response.data.data;
+  } catch (error) {
+    console.error("Get Course Instance Failed:", error);
+    throw error;
+  }
+};
+

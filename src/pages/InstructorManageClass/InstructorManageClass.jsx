@@ -7,6 +7,7 @@ import {
   removeStudentFromCourse,
   addStudentToCourse,
 } from "../../service/courseService";
+import { getCourseInstanceById } from "../../service/courseInstanceService";
 import { toast } from "react-toastify";
 import AddStudentModal from "../../component/Student/AddStudentModal.jsx";
 import DeleteStudentModal from "../../component/Student/DeleteStudentModal.jsx";
@@ -17,6 +18,7 @@ const InstructorManageClass = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
   const [courseInfo, setCourseInfo] = useState(null);
+  const [courseInstanceData, setCourseInstanceData] = useState(null);
   const [students, setStudents] = useState([]);
   const [deleting, setDeleting] = useState(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -49,6 +51,23 @@ const InstructorManageClass = () => {
     "bg-red-100 text-red-800",
     "bg-indigo-100 text-indigo-800",
   ];
+
+  const fetchCourseInstanceData = async () => {
+    try {
+      const response = await getCourseInstanceById(courseInstanceId);
+      console.log("Course Instance API Response:", response);
+      // API might return { data: {...} } or directly the data
+      const data = response.data || response;
+      console.log("Course Instance Data:", data);
+      setCourseInstanceData(data);
+      setCourseInfo({
+        courseCode: data.courseCode,
+        className: data.sectionCode,
+      });
+    } catch (error) {
+      console.error("Failed to fetch course instance data:", error);
+    }
+  };
 
   useEffect(() => {
     const fetchStudents = async () => {
@@ -86,11 +105,10 @@ const InstructorManageClass = () => {
           if (apiId !== String(courseInstanceId)) {
             setCourseInstanceId(apiId);
           }
-          setCourseInfo({
-            courseCode: response[0].courseCode,
-            className: response[0].courseInstanceName,
-          });
         }
+        
+        // Fetch course instance data separately
+        await fetchCourseInstanceData();
       } catch (error) {
         console.error("Failed to fetch students:", error);
       } finally {
@@ -211,16 +229,12 @@ const InstructorManageClass = () => {
         <div>
           <h2 className="text-2xl font-bold text-gray-900">Student List</h2>
           <div className="flex items-center mt-2 space-x-4">
-            {courseInfo && (
-              <>
-                <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium">
-                  Course: {courseInfo.courseCode}
-                </span>
-                <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium">
-                  Class: {courseInfo.className}
-                </span>
-              </>
-            )}
+            <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium">
+              Course: {courseInstanceData?.courseCode || "N/A"}
+            </span>
+            <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium">
+              Class: {courseInstanceData?.sectionCode || "N/A"}
+            </span>
             <span className="text-gray-500 text-sm flex items-center">
               <Users className="w-4 h-4 mr-1" />
               {students.length} students

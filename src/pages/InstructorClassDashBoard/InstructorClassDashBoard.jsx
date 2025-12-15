@@ -5,12 +5,14 @@ import {
   getAssignmentsDistribution,
 } from "../../service/instructorStatistic";
 import { getCurrentAccount } from "../../utils/accountUtils";
+import { getCourseInstanceById } from "../../service/courseInstanceService";
 import AssignmentStatusChart from "../../component/InstructorDashboard/AssignmentStatusChart";
 import SubmissionStatusChart from "../../component/InstructorDashboard/SubmissionStatusChart";
 import ScoreDistributionChart from "../../component/InstructorDashboard/ScoreDistributionChart";
 
 const InstructorClassDashboard = () => {
   const currentUser = getCurrentAccount();
+  const [courseInstanceData, setCourseInstanceData] = useState(null);
   const [assignmentStatusData, setAssignmentStatusData] = useState([
     { value: 0, name: "Draft" },
     { value: 0, name: "Upcoming" },
@@ -41,6 +43,19 @@ const InstructorClassDashboard = () => {
     new Array(10).fill(0)
   );
 
+  const fetchCourseInstanceData = async (courseInstanceId) => {
+    try {
+      const response = await getCourseInstanceById(courseInstanceId);
+      console.log("Course Instance API Response:", response);
+      // API might return { data: {...} } or directly the data
+      const data = response.data || response;
+      console.log("Course Instance Data:", data);
+      setCourseInstanceData(data);
+    } catch (error) {
+      console.error("Failed to fetch course instance data:", error);
+    }
+  };
+
   useEffect(() => {
     const fetchOverview = async () => {
       try {
@@ -53,6 +68,9 @@ const InstructorClassDashboard = () => {
           );
           return;
         }
+
+        // Fetch course instance data
+        await fetchCourseInstanceData(courseInstanceId);
 
         const res = await getAssignmentsOverview(
           currentUser.id,
@@ -131,6 +149,19 @@ const InstructorClassDashboard = () => {
 
   return (
     <div className="max-w-7xl mx-auto px-6 py-8">
+      {/* Header with Course Info */}
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-gray-900 mb-4">Class Statistics</h1>
+        <div className="flex items-center space-x-4">
+          <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium">
+            Course: {courseInstanceData?.courseCode || "N/A"}
+          </span>
+          <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium">
+            Class: {courseInstanceData?.sectionCode || "N/A"}
+          </span>
+        </div>
+      </div>
+
       {/* Hàng đầu tiên */}
       <div className="grid grid-cols-12 gap-6">
         <div className="col-span-9">
