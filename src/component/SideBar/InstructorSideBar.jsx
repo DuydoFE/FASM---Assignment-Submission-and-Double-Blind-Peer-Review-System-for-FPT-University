@@ -36,15 +36,15 @@ const InstructorSideBar = () => {
     },
     {
       id: 'grading',
-      label: 'Grading',
+      label: 'Grading Score',
       icon: BarChart3,
       path: '/instructor/manage-grading',
     },
     {
       id: 'publish',
-      label: 'Publish Mark',
+      label: 'Publish Score',
       icon: Upload,
-      path: '/instructor/publish-mark',
+      path: '/instructor/publish-score',
     },
   ];
 

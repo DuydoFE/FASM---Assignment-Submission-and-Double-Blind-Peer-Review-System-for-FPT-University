@@ -1,5 +1,5 @@
 import React from "react";
-import { Search, ChevronDown, Loader2 } from "lucide-react";
+import { Search, ChevronDown, Loader2, AlertCircle } from "lucide-react";
 
 const GradingTable = ({
   assignmentInfo,
@@ -10,6 +10,8 @@ const GradingTable = ({
   filteredStudents,
   loading,
   onGradeClick,
+  onAutoGradeZero,
+  students,
 }) => {
   const formatDateTime = (dateString) => {
     if (!dateString) return { date: "--", time: "" };
@@ -272,6 +274,29 @@ const GradingTable = ({
           </table>
         )}
       </div>
+
+      {/* Action Button: Auto Grade Zero - only show when assignment is Closed or Cancelled */}
+      {assignmentStatus && ['Closed', 'Cancelled'].includes(assignmentStatus) && (
+        <div className="flex justify-end mt-6">
+          <button
+            onClick={onAutoGradeZero}
+            disabled={loading.autoGrading || (students && students.filter(s => s.status === 'Not Submitted').length === 0)}
+            className="px-6 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors font-medium flex items-center disabled:bg-gray-300 disabled:cursor-not-allowed"
+          >
+            {loading.autoGrading ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Grading...
+              </>
+            ) : (
+              <>
+                <AlertCircle className="w-4 h-4 mr-2" />
+                Auto Grade Zero
+              </>
+            )}
+          </button>
+        </div>
+      )}
     </>
   );
 };

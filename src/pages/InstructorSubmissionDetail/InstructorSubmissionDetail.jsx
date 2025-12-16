@@ -200,7 +200,7 @@ const InstructorSubmissionDetail = () => {
               {submissionData?.studentName || 'N/A'}
             </h1>
             <p className="text-gray-500">
-              Student ID: {submissionData?.studentCode || 'N/A'}
+              Student Code: {submissionData?.studentCode || 'N/A'}
             </p>
           </div>
         </div>

@@ -7,10 +7,12 @@ import { getClassesByUser } from '../../service/courseInstanceService';
 import { getAssignmentsByCourseInstanceId } from '../../service/assignmentService';
 import { getSubmissionSummary } from '../../service/instructorSubmission';
 import { getCurrentAccount } from '../../utils/accountUtils';
+import { autoGradeZero } from '../../service/instructorGrading';
 
 import GradingFilterSection from '../../component/InstructorGrading/GradingFilterSection';
 import GradingEmptyState from '../../component/InstructorGrading/GradingEmptyState';
 import GradingTable from '../../component/InstructorGrading/GradingTable';
+import AutoGradeZeroModal from '../../component/InstructorGrading/AutoGradeZeroModal';
 
 const InstructorManageGrading = () => {
   const currentUser = getCurrentAccount();
@@ -34,10 +36,12 @@ const InstructorManageGrading = () => {
     courses: false,
     classes: false,
     assignments: false,
-    summary: false
+    summary: false,
+    autoGrading: false
   });
 
   const [showTable, setShowTable] = useState(false);
+  const [showAutoGradeModal, setShowAutoGradeModal] = useState(false);
   
   // Store return state to use after data is loaded
   const [pendingReturnState, setPendingReturnState] = useState(null);
@@ -254,6 +258,37 @@ const InstructorManageGrading = () => {
     });
   };
 
+  const handleAutoGradeZero = () => {
+    if (!selectedAssignmentId) {
+      toast.error('Please select an assignment first');
+      return;
+    }
+
+    const notSubmittedCount = students.filter(s => s.status === 'Not Submitted').length;
+    if (notSubmittedCount === 0) {
+      toast.info('No students with "Not Submitted" status to grade');
+      return;
+    }
+
+    setShowAutoGradeModal(true);
+  };
+
+  const confirmAutoGradeZero = async () => {
+    setShowAutoGradeModal(false);
+    setLoading(prev => ({ ...prev, autoGrading: true }));
+    
+    try {
+      await autoGradeZero(selectedAssignmentId);
+      toast.success('Auto-graded all non-submitted assignments with 0 points!');
+      await handleViewMarkFromRestore();
+    } catch (error) {
+      console.error('Error auto-grading:', error);
+      toast.error('Failed to auto-grade submissions. Please try again.');
+    } finally {
+      setLoading(prev => ({ ...prev, autoGrading: false }));
+    }
+  };
+
   return (
     <div className="min-h-screen bg-white-50 p-6">
       <div className="max-w-7xl mx-auto">
@@ -291,8 +326,18 @@ const InstructorManageGrading = () => {
             filteredStudents={filteredStudents}
             loading={loading}
             onGradeClick={handleGradeClick}
+            onAutoGradeZero={handleAutoGradeZero}
+            students={students}
           />
         )}
+
+        <AutoGradeZeroModal
+          isOpen={showAutoGradeModal}
+          onClose={() => setShowAutoGradeModal(false)}
+          onConfirm={confirmAutoGradeZero}
+          loading={loading.autoGrading}
+          notSubmittedCount={assignmentInfo?.notSubmitted || students.filter(s => s.status === 'Not Submitted').length}
+        />
       </div>
     </div>
   );
