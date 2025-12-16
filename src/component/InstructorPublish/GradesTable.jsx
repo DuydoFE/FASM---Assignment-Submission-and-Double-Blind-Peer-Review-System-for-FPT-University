@@ -244,28 +244,9 @@ const GradesTable = ({
         )}
       </div>
 
-      {/* Action Buttons: only show when assignment is Closed or Cancelled */}
+      {/* Action Button: Publish Grades - only show when assignment is Closed or Cancelled */}
       {['Closed', 'Cancelled'].includes(assignmentStatus) && (
-        <div className="flex justify-end space-x-4 mt-6">
-          <button
-            onClick={onAutoGradeZero}
-            disabled={loading.autoGrading || assignmentInfo?.notSubmitted === 0}
-            title={'Assignment is closed or cancelled'}
-            className="px-6 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors font-medium flex items-center disabled:bg-gray-300 disabled:cursor-not-allowed"
-          >
-            {loading.autoGrading ? (
-              <>
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Grading...
-              </>
-            ) : (
-              <>
-                <AlertCircle className="w-4 h-4 mr-2" />
-                Auto Grade Zero
-              </>
-            )}
-          </button>
-
+        <div className="flex justify-end mt-6">
           <button
             onClick={onPublishGrades}
             disabled={loading.publishing}
