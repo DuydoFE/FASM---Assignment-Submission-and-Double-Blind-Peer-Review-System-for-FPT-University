@@ -29,7 +29,7 @@ const SubmissionLeftColumn = ({
                 </div>
                 <div className="space-y-2 text-sm">
                     <p><span className="text-gray-600">Full Name:</span> <span className="font-medium">{submissionDetails.studentName || 'N/A'}</span></p>
-                    <p><span className="text-gray-600">Student ID:</span> <span className="font-medium">{submissionDetails.studentCode || 'N/A'}</span></p>
+                    <p><span className="text-gray-600">Student Code:</span> <span className="font-medium">{submissionDetails.studentCode || 'N/A'}</span></p>
                     <p><span className="text-gray-600">Course:</span> <span className="font-medium">{submissionDetails.courseName || 'N/A'}</span></p>
                     <p><span className="text-gray-600">Class:</span> <span className="font-medium">{submissionDetails.className || 'N/A'}</span></p>
                 </div>

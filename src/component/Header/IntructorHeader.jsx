@@ -1,5 +1,5 @@
-import { Link, useNavigate } from "react-router-dom";
-import { LogOut, User, Search } from 'lucide-react';
+import { Link, useNavigate, useLocation } from "react-router-dom";
+import { LogOut, User, Search } from "lucide-react";
 import { getCurrentAccount } from "../../utils/accountUtils";
 import { useDispatch } from "react-redux";
 import { Dropdown, Menu, Avatar, Button } from "antd";
@@ -10,10 +10,15 @@ import { useState } from "react";
 // Import component NotificationPopover đã tách riêng
 import NotificationPopover from "./NotificationPopover";
 import fasmLogo from "../../assets/img/FASM.png";
+import PillNav from "../../components/PillNav";
 
 const FasmLogo = () => (
   <div className="flex items-center">
-    <img src={fasmLogo} alt="FASM Logo" className="h-16 w-auto object-contain" />
+    <img
+      src={fasmLogo}
+      alt="FASM Logo"
+      className="h-16 w-auto object-contain"
+    />
   </div>
 );
 
@@ -21,11 +26,21 @@ const InstructorHeader = () => {
   const user = getCurrentAccount();
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const location = useLocation();
   const [searchValue, setSearchValue] = useState("");
 
+  // Navigation items for PillNav
+  const navItems = [
+    { label: "Dashboard", href: "/instructor/dashboard" },
+    { label: "My Classes", href: "/instructor/my-classes" },
+    { label: "Regrade Requests", href: "/instructor/regrade-request" },
+  ];
+
   const handleSearch = (e) => {
-    if (e.key === 'Enter' && searchValue.trim()) {
-      navigate(`/instructor/search?query=${encodeURIComponent(searchValue.trim())}`);
+    if (e.key === "Enter" && searchValue.trim()) {
+      navigate(
+        `/instructor/search?query=${encodeURIComponent(searchValue.trim())}`
+      );
     }
   };
 
@@ -33,7 +48,7 @@ const InstructorHeader = () => {
     // Clear local storage first to prevent re-authentication with old tokens
     localStorage.removeItem("token");
     localStorage.removeItem("refreshToken");
-    
+
     try {
       // Call backend logout API to clear the HTTP-only cookie
       await logoutApi();
@@ -44,7 +59,9 @@ const InstructorHeader = () => {
       console.error("Logout error:", error);
       // Still logout locally even if API call fails
       dispatch(logoutAction());
-      toast.warning("Logged out locally. Please clear browser cookies if issues persist.");
+      toast.warning(
+        "Logged out locally. Please clear browser cookies if issues persist."
+      );
       navigate("/login");
     }
   };
@@ -81,25 +98,17 @@ const InstructorHeader = () => {
               <FasmLogo />
             </Link>
 
-            <nav className="flex items-center space-x-6">
-              <Link
-                to="/instructor/dashboard"
-                className="text-gray-600 hover:text-orange-500 transition-colors font-medium"
-              >
-                Dashboard
-              </Link>
-              <Link
-                to="/instructor/my-classes"
-                className="text-gray-600 hover:text-orange-500 transition-colors font-medium"
-              >
-                My Classes
-              </Link>
-              <Link
-                to="/instructor/regrade-request"
-                className="text-gray-600 hover:text-orange-500 transition-colors font-medium"
-              >
-                Regrade Requests
-              </Link>
+            <nav className="flex items-center">
+              <PillNav
+                items={navItems}
+                activeHref="/"
+                className="custom-nav"
+                ease="power2.easeOut"
+                baseColor="#000000"
+                pillColor="#ffffff"
+                hoveredPillTextColor="#ffffff"
+                pillTextColor="#000000"
+              />
             </nav>
           </div>
 
@@ -115,7 +124,7 @@ const InstructorHeader = () => {
                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all"
               />
             </div>
-            
+
             {/* Component NotificationPopover được gọi ở đây */}
             {user && <NotificationPopover user={user} />}
 
