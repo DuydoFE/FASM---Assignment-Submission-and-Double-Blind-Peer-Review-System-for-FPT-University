@@ -95,6 +95,70 @@ const CreateAssignmentModal = ({ isOpen, onClose, onSubmit, courseInstanceId }) 
         }
       }
 
+      // Handle instructor weight and auto-calculate peer weight
+      else if (name === "instructorWeight") {
+        if (value === "") {
+          newValue = "";
+          setFormData(prev => ({
+            ...prev,
+            instructorWeight: "",
+            peerWeight: ""
+          }));
+          if (errors.instructorWeight || errors.peerWeight) {
+            setErrors(prev => ({ ...prev, instructorWeight: '', peerWeight: '' }));
+          }
+          return;
+        } else {
+          let num = Number(value);
+          if (num < 0) num = 0;
+          if (num > 100) num = 100;
+          newValue = num;
+          const peerWeightValue = 100 - num;
+          
+          setFormData(prev => ({
+            ...prev,
+            instructorWeight: num,
+            peerWeight: peerWeightValue
+          }));
+          if (errors.instructorWeight || errors.peerWeight) {
+            setErrors(prev => ({ ...prev, instructorWeight: '', peerWeight: '' }));
+          }
+          return;
+        }
+      }
+
+      // Handle peer weight and auto-calculate instructor weight
+      else if (name === "peerWeight") {
+        if (value === "") {
+          newValue = "";
+          setFormData(prev => ({
+            ...prev,
+            instructorWeight: "",
+            peerWeight: ""
+          }));
+          if (errors.instructorWeight || errors.peerWeight) {
+            setErrors(prev => ({ ...prev, instructorWeight: '', peerWeight: '' }));
+          }
+          return;
+        } else {
+          let num = Number(value);
+          if (num < 0) num = 0;
+          if (num > 100) num = 100;
+          newValue = num;
+          const instructorWeightValue = 100 - num;
+          
+          setFormData(prev => ({
+            ...prev,
+            instructorWeight: instructorWeightValue,
+            peerWeight: num
+          }));
+          if (errors.instructorWeight || errors.peerWeight) {
+            setErrors(prev => ({ ...prev, instructorWeight: '', peerWeight: '' }));
+          }
+          return;
+        }
+      }
+
       // Other numeric inputs
       else {
         newValue = value === "" ? "" : Number(value);
@@ -592,89 +656,95 @@ const CreateAssignmentModal = ({ isOpen, onClose, onSubmit, courseInstanceId }) 
               </h3>
 
               <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Grading Scale <span className="text-red-500">*</span>
-                  </label>
-                  <select
-                    name="gradingScale"
-                    value={formData.gradingScale}
-                    onChange={handleChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none"
-                  >
-                    <option value="Scale10">Scale 10</option>
-                    <option value="PassFail">Pass/Fail</option>
-                  </select>
-                </div>
-
-                {formData.gradingScale === 'PassFail' && (
+                {/* Left Column - Grading Scale and Pass Threshold */}
+                <div className="space-y-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Pass Threshold <span className="text-red-500">*</span>
+                      Grading Scale <span className="text-red-500">*</span>
                     </label>
                     <select
-                      name="passThreshold"
-                      value={formData.passThreshold}
+                      name="gradingScale"
+                      value={formData.gradingScale}
                       onChange={handleChange}
-                      className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none ${errors.passThreshold ? 'border-red-500' : 'border-gray-300'
-                        }`}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none"
                     >
-                      <option value="">Select pass threshold</option>
-                      <option value="0">≥ 0.0</option>
-                      <option value="4">≥ 4.0</option>
-                      <option value="5">≥ 5.0</option>
+                      <option value="Scale10">Scale 10</option>
+                      <option value="PassFail">Pass/Fail</option>
                     </select>
-                    {errors.passThreshold && (
+                  </div>
+
+                  {formData.gradingScale === 'PassFail' && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Pass Threshold <span className="text-red-500">*</span>
+                      </label>
+                      <select
+                        name="passThreshold"
+                        value={formData.passThreshold}
+                        onChange={handleChange}
+                        className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none ${errors.passThreshold ? 'border-red-500' : 'border-gray-300'
+                          }`}
+                      >
+                        <option value="">Select pass threshold</option>
+                        <option value="0">≥ 0.0</option>
+                        <option value="4">≥ 4.0</option>
+                        <option value="5">≥ 5.0</option>
+                      </select>
+                      {errors.passThreshold && (
+                        <div className="flex items-center gap-1 mt-1 text-red-500 text-sm">
+                          <AlertCircle className="w-4 h-4" />
+                          <span>{errors.passThreshold}</span>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {/* Right Column - Instructor Weight and Peer Weight */}
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Instructor Weight (%) <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="number"
+                      name="instructorWeight"
+                      value={formData.instructorWeight}
+                      onChange={handleChange}
+                      min="0"
+                      max="100"
+                      className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none ${errors.instructorWeight ? 'border-red-500' : 'border-gray-300'
+                        }`}
+                    />
+                    {errors.instructorWeight && (
                       <div className="flex items-center gap-1 mt-1 text-red-500 text-sm">
                         <AlertCircle className="w-4 h-4" />
-                        <span>{errors.passThreshold}</span>
+                        <span>{errors.instructorWeight}</span>
                       </div>
                     )}
                   </div>
-                )}
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Instructor Weight (%) <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="number"
-                    name="instructorWeight"
-                    value={formData.instructorWeight}
-                    onChange={handleChange}
-                    min="0"
-                    max="100"
-                    className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none ${errors.instructorWeight ? 'border-red-500' : 'border-gray-300'
-                      }`}
-                  />
-                  {errors.instructorWeight && (
-                    <div className="flex items-center gap-1 mt-1 text-red-500 text-sm">
-                      <AlertCircle className="w-4 h-4" />
-                      <span>{errors.instructorWeight}</span>
-                    </div>
-                  )}
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Peer Weight (%) <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="number"
-                    name="peerWeight"
-                    value={formData.peerWeight}
-                    onChange={handleChange}
-                    min="0"
-                    max="100"
-                    className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none ${errors.peerWeight ? 'border-red-500' : 'border-gray-300'
-                      }`}
-                  />
-                  {errors.peerWeight && (
-                    <div className="flex items-center gap-1 mt-1 text-red-500 text-sm">
-                      <AlertCircle className="w-4 h-4" />
-                      <span>{errors.peerWeight}</span>
-                    </div>
-                  )}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Peer Weight (%) <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="number"
+                      name="peerWeight"
+                      value={formData.peerWeight}
+                      onChange={handleChange}
+                      min="0"
+                      max="100"
+                      className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none ${errors.peerWeight ? 'border-red-500' : 'border-gray-300'
+                        }`}
+                    />
+                    {errors.peerWeight && (
+                      <div className="flex items-center gap-1 mt-1 text-red-500 text-sm">
+                        <AlertCircle className="w-4 h-4" />
+                        <span>{errors.peerWeight}</span>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
