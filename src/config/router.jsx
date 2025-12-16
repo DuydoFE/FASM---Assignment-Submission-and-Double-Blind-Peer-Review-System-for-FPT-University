@@ -240,7 +240,7 @@ export const router = createBrowserRouter([
         element: <ProtectedRoute role={ROLE.INSTRUCTOR}><InstructorManageGrading /></ProtectedRoute>,
       },
       {
-        path: "publish-mark",
+        path: "publish-score",
         element: <ProtectedRoute role={ROLE.INSTRUCTOR}><InstructorPublishMark /></ProtectedRoute>,
       },
     ],
