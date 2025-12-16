@@ -100,8 +100,8 @@ const GradingRightColumn = ({
                                     ) : !aiError && !c.aiSummary ? (
                                         <div className="text-gray-500 text-center">
                                             <Zap className="w-8 h-8 mx-auto text-gray-400 mb-2" />
-                                            <p className="font-semibold">Chưa có AI Summary</p>
-                                            <p className="text-xs mt-1">Nhấn nút 'Summary By AI' để tạo phân tích tự động</p>
+                                            <p className="font-semibold">No AI Summary yet.</p>
+                                            <p className="text-xs mt-1">Press the 'Summary By AI' button to generate an automated analysis.</p>
                                         </div>
                                     ) : (
                                         <div className="space-y-2">
@@ -174,7 +174,7 @@ const GradingRightColumn = ({
                         placeholder="Nhập nhận xét tổng quan về bài làm của sinh viên..."
                     />
                     <p className="text-xs text-gray-500 mt-2">
-                        Nhận xét này sẽ được hiển thị cùng với điểm tổng kết cho sinh viên
+                        This comment will be displayed along with the student's overall grade.
                     </p>
                 </div>
             </div>
