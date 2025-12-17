@@ -241,20 +241,6 @@ const StudentAssignmentPage = () => {
               transition={{ duration: 0.6, delay: 0.2 }}
               className="flex items-center gap-3 mb-3"
             >
-              <motion.img
-                src={FASMLogo}
-                alt="FASM Logo"
-                className="w-12 h-12 object-contain"
-                animate={{
-                  rotate: [0, 5, -5, 0],
-                  scale: [1, 1.05, 1]
-                }}
-                transition={{
-                  duration: 3,
-                  repeat: Infinity,
-                  repeatType: "reverse"
-                }}
-              />
               <h1 className="text-3xl font-bold">My Classes</h1>
             </motion.div>
             <motion.p
@@ -279,8 +265,22 @@ const StudentAssignmentPage = () => {
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.5, delay: 0.3 }}
-            className="text-2xl font-bold text-gray-800 mb-6"
+            className="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-3"
           >
+            <motion.img
+              src={FASMLogo}
+              alt="FASM Logo"
+              className="w-12 h-12 object-contain"
+              animate={{
+                rotate: [0, 5, -5, 0],
+                scale: [1, 1.05, 1]
+              }}
+              transition={{
+                duration: 3,
+                repeat: Infinity,
+                repeatType: "reverse"
+              }}
+            />
             Enrolled Classes
           </motion.h2>
           
