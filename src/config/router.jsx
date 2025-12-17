@@ -38,13 +38,10 @@ const ProtectedRoute = ({ children, role }) => {
   const hasShownToast = useRef(false);
   
   if (!user) {
-    // User is not logged in, redirect to login page without error message
-    // This handles the case when user logs out
     return <Navigate to="/login" replace />;
   }
   if (user?.roles[0] !== role) {
-    // User is logged in but doesn't have the correct role
-    // Use ref to prevent multiple toasts on re-renders
+   
     if (!hasShownToast.current) {
       hasShownToast.current = true;
       toast.error("You don't have permission to access this page!");
@@ -82,7 +79,7 @@ import PeerReviewHistoryPage from "@/pages/PeerReviewPage/PeerReviewHistoryPage"
 export const router = createBrowserRouter([
   {
     path: "/",
-    element: <MainLayout />,
+    element: <ProtectedRoute role={ROLE.STUDENT}><MainLayout /></ProtectedRoute>,
     children: [
       {
         index: true,
