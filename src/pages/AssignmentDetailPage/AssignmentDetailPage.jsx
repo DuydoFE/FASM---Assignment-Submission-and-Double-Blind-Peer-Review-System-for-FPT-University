@@ -12,6 +12,7 @@ import StatCard from "../../component/Assignment/StatCard";
 import AssignmentCard from "../../component/Assignment/AssignmentCard";
 import { useQuery } from "@tanstack/react-query";
 import { reviewService } from "../../service/reviewService";
+import { getCourseInstanceById } from "../../service/courseInstanceService";
 
 import PeerReviewInfoCard from "../../component/Assignment/PeerReviewInfoCard";
 
@@ -28,6 +29,17 @@ const ASSIGNMENT_STATUSES = [
 const AssignmentDetailPage = () => {
   const { courseId } = useParams();
   const [filterStatus, setFilterStatus] = useState("All");
+
+  // Fetch course instance details
+  const {
+    data: courseInstanceData,
+    isLoading: isLoadingCourseInstance,
+    isError: isErrorCourseInstance,
+  } = useQuery({
+    queryKey: ["courseInstance", courseId],
+    queryFn: () => getCourseInstanceById(courseId),
+    enabled: !!courseId,
+  });
 
   const {
     data: responseData,
@@ -65,11 +77,11 @@ const AssignmentDetailPage = () => {
     warning: assignments.filter((a) => a.daysUntilDeadline > 3 && a.daysUntilDeadline <= 7).length,
   };
 
-  if (isLoading) {
+  if (isLoading || isLoadingCourseInstance) {
     return <div className="text-center p-8">Loading class data...</div>;
   }
 
-  if (isError) {
+  if (isError || isErrorCourseInstance) {
     return (
       <div className="text-center p-8 text-red-500">
         The exercise list could not be loaded.
@@ -87,7 +99,7 @@ const AssignmentDetailPage = () => {
           </Link>
           <ChevronRight className="w-4 h-4 mx-1" />
           <span className="font-semibold text-gray-800">
-            {courseInfo?.code || courseId}
+            {courseInstanceData?.courseCode || courseInfo?.code || courseId} - {courseInstanceData?.courseName || courseInfo?.title}
           </span>
         </div>
 
