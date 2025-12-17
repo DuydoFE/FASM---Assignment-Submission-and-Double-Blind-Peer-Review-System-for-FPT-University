@@ -31,9 +31,15 @@ const UpdateDeadlineModal = ({ isOpen, onClose, onSave, assignment }) => {
       return;
     }
 
-    // Format the date to the expected format
-    const formattedDate = newDeadline.toISOString().split('T')[0]; // YYYY-MM-DD
-    const formattedTime = newDeadline.toTimeString().substring(0, 5); // HH:MM
+    // Format as local datetime without timezone conversion
+    const year = newDeadline.getFullYear();
+    const month = String(newDeadline.getMonth() + 1).padStart(2, '0');
+    const day = String(newDeadline.getDate()).padStart(2, '0');
+    const formattedDate = `${year}-${month}-${day}`; // YYYY-MM-DD
+    
+    const hours = String(newDeadline.getHours()).padStart(2, '0');
+    const minutes = String(newDeadline.getMinutes()).padStart(2, '0');
+    const formattedTime = `${hours}:${minutes}`; // HH:MM
 
     onSave(formattedDate, formattedTime);
   };
