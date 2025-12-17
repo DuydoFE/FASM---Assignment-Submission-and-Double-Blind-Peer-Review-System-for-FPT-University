@@ -52,6 +52,23 @@ const ProtectedRoute = ({ children, role }) => {
   return children;
 };
 
+const PublicRoute = ({ children }) => {
+  const user = useCurrentAccount();
+  
+  if (user) {
+    // User is already logged in, redirect to appropriate dashboard
+    if (user.roles[0] === "Instructor") {
+      return <Navigate to="/instructor/dashboard" replace />;
+    } else if (user.roles[0] === "Admin") {
+      return <Navigate to="/admin/dashboard" replace />;
+    } else if (user.roles[0] === "Student") {
+      return <Navigate to="/" replace />;
+    }
+  }
+  
+  return children;
+};
+
 import AdminLayout from "../layout/AdminLayout";
 import AdminDashboard from "../pages/Admin/AdminDashboard";
 import AdminUserManagement from "../pages/Admin/AdminUserManagement";
@@ -139,7 +156,7 @@ export const router = createBrowserRouter([
   },
   {
     path: "/login",
-    element: <LoginPage />,
+    element: <PublicRoute><LoginPage /></PublicRoute>,
   },
   {
     path: "/access-denied",
