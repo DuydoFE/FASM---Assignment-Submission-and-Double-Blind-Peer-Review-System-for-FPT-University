@@ -104,10 +104,9 @@ const InstructorManageAssignment = () => {
     try {
       const response = await getCourseInstanceById(courseInstanceId);
       console.log("Course Instance API Response:", response);
-      // API might return { data: {...} } or directly the data
-      const data = response.data || response;
-      console.log("Course Instance Data:", data);
-      setCourseInstanceData(data);
+      // getCourseInstanceById already returns response.data.data
+      console.log("Course Instance Data:", response);
+      setCourseInstanceData(response);
     } catch (error) {
       console.error("Failed to fetch course instance data:", error);
     }
@@ -362,13 +361,17 @@ const InstructorManageAssignment = () => {
   const courseInfo = courseInstanceData
     ? {
         courseCode: courseInstanceData.courseCode,
-        sectionCode: courseInstanceData.courseInstanceName,
+        courseName: courseInstanceData.courseName,
+        sectionCode: courseInstanceData.sectionCode,
+        campusName: courseInstanceData.campusName,
         totalStudents: 35, // You can get this from API if available
       }
     : assignments.length > 0
     ? {
         courseCode: assignments[0].courseCode,
+        courseName: assignments[0].courseName || "",
         sectionCode: assignments[0].sectionCode,
+        campusName: "",
         totalStudents: 35,
       }
     : null;

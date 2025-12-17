@@ -1,8 +1,8 @@
-import { Link, useNavigate } from "react-router-dom";
-import { LogOut, User, Search } from 'lucide-react';
+import { Link, useNavigate, useLocation } from "react-router-dom";
+import { LogOut, User, Search } from "lucide-react";
 import { getCurrentAccount } from "../../utils/accountUtils";
 import { useDispatch } from "react-redux";
-import { Dropdown, Menu, Avatar, Button } from "antd";
+import { Dropdown, Menu, Avatar, Button, Input } from "antd";
 import { logout as logoutAction } from "../../redux/features/userSlice";
 import { logout as logoutApi } from "../../service/userService";
 import { toast } from "react-toastify";
@@ -10,10 +10,15 @@ import { useState } from "react";
 // Import component NotificationPopover đã tách riêng
 import NotificationPopover from "./NotificationPopover";
 import fasmLogo from "../../assets/img/FASM.png";
+import PillNav from "../../components/PillNav";
 
 const FasmLogo = () => (
   <div className="flex items-center">
-    <img src={fasmLogo} alt="FASM Logo" className="h-16 w-auto object-contain" />
+    <img
+      src={fasmLogo}
+      alt="FASM Logo"
+      className="h-16 w-auto object-contain"
+    />
   </div>
 );
 
@@ -21,11 +26,43 @@ const InstructorHeader = () => {
   const user = getCurrentAccount();
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const location = useLocation();
   const [searchValue, setSearchValue] = useState("");
 
+  // Navigation items for PillNav
+  const navItems = [
+    { label: "Dashboard", href: "/instructor/dashboard" },
+    { label: "My Classes", href: "/instructor/my-classes" },
+    { label: "Regrade Requests", href: "/instructor/regrade-request" },
+  ];
+
+  // Determine active href based on current location
+  const getActiveHref = () => {
+    const currentPath = location.pathname;
+    
+    // Check exact matches first
+    const exactMatch = navItems.find(item => item.href === currentPath);
+    if (exactMatch) {
+      console.log('Exact match found:', exactMatch.href, 'for path:', currentPath);
+      return exactMatch.href;
+    }
+    
+    // Check if current path starts with any nav item href (for sub-routes)
+    const partialMatch = navItems.find(item => currentPath.startsWith(item.href));
+    if (partialMatch) {
+      console.log('Partial match found:', partialMatch.href, 'for path:', currentPath);
+      return partialMatch.href;
+    }
+    
+    console.log('No match found for path:', currentPath);
+    return currentPath;
+  };
+
   const handleSearch = (e) => {
-    if (e.key === 'Enter' && searchValue.trim()) {
-      navigate(`/instructor/search?query=${encodeURIComponent(searchValue.trim())}`);
+    if (e.key === "Enter" && searchValue.trim()) {
+      navigate(
+        `/instructor/search?query=${encodeURIComponent(searchValue.trim())}`
+      );
     }
   };
 
@@ -33,7 +70,7 @@ const InstructorHeader = () => {
     // Clear local storage first to prevent re-authentication with old tokens
     localStorage.removeItem("token");
     localStorage.removeItem("refreshToken");
-    
+
     try {
       // Call backend logout API to clear the HTTP-only cookie
       await logoutApi();
@@ -44,7 +81,9 @@ const InstructorHeader = () => {
       console.error("Logout error:", error);
       // Still logout locally even if API call fails
       dispatch(logoutAction());
-      toast.warning("Logged out locally. Please clear browser cookies if issues persist.");
+      toast.warning(
+        "Logged out locally. Please clear browser cookies if issues persist."
+      );
       navigate("/login");
     }
   };
@@ -81,41 +120,35 @@ const InstructorHeader = () => {
               <FasmLogo />
             </Link>
 
-            <nav className="flex items-center space-x-6">
-              <Link
-                to="/instructor/dashboard"
-                className="text-gray-600 hover:text-orange-500 transition-colors font-medium"
-              >
-                Dashboard
-              </Link>
-              <Link
-                to="/instructor/my-classes"
-                className="text-gray-600 hover:text-orange-500 transition-colors font-medium"
-              >
-                My Classes
-              </Link>
-              <Link
-                to="/instructor/regrade-request"
-                className="text-gray-600 hover:text-orange-500 transition-colors font-medium"
-              >
-                Regrade Requests
-              </Link>
+            <nav className="flex items-center">
+              <PillNav
+                items={navItems}
+                activeHref={getActiveHref()}
+                className="custom-nav"
+                ease="power2.easeOut"
+                baseColor="#ffffff"
+                pillColor="#000000"
+                hoveredPillTextColor="#000000"
+                pillTextColor="#ffffff"
+              />
             </nav>
           </div>
 
           <div className="flex items-center space-x-4">
-            <div className="relative w-64">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Search..."
-                value={searchValue}
-                onChange={(e) => setSearchValue(e.target.value)}
-                onKeyDown={handleSearch}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all"
-              />
-            </div>
-            
+            <Input
+              placeholder="Search..."
+              prefix={<Search className="w-5 h-5 text-gray-700" />}
+              value={searchValue}
+              onChange={(e) => setSearchValue(e.target.value)}
+              onKeyDown={handleSearch}
+              size="large"
+              className="w-80"
+              style={{
+                borderRadius: '8px',
+                fontSize: '16px',
+              }}
+            />
+
             {/* Component NotificationPopover được gọi ở đây */}
             {user && <NotificationPopover user={user} />}
 

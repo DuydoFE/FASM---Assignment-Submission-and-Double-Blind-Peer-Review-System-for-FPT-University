@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Search, Eye, Loader2, MoreVertical, RefreshCw, CheckCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import { Dropdown } from 'antd';
+import { Dropdown, Input } from 'antd';
 import { getRegradeRequestsForInstructor } from '../../service/regradeService';
 import { getCurrentAccount } from '../../utils/accountUtils';
 import SolveRegradeRequestModal from '../../component/RegradeRequest/SolveRegradeRequestModal';
@@ -214,16 +214,18 @@ const InstructorRegradeRequest = () => {
                 {/* Header */}
                 <div className="flex justify-between items-center mb-6">
                     <h1 className="text-2xl font-bold text-gray-900">Regrade Requests</h1>
-                    <div className="relative">
-                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                        <input
-                            type="text"
-                            placeholder="Search by name, email..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            className="pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-64"
-                        />
-                    </div>
+                    <Input
+                        placeholder="Search by name, email..."
+                        prefix={<Search className="w-5 h-5 text-gray-400" />}
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        size="large"
+                        className="w-80"
+                        style={{
+                            borderRadius: '8px',
+                            fontSize: '16px',
+                        }}
+                    />
                 </div>
 
                 {/* Stats Cards */}

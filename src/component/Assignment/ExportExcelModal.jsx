@@ -162,7 +162,7 @@ const ExportExcelModal = ({
               <div>
                 <span className="text-sm text-gray-600">Course:</span>
                 <span className="ml-2 font-medium text-blue-600">
-                  {courseInfo?.courseCode || "N/A"}
+                  {courseInfo?.courseCode || "N/A"} 
                 </span>
               </div>
 
