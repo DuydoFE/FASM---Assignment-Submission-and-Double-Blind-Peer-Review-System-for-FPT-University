@@ -5,7 +5,7 @@ import { toast } from 'react-toastify';
 import { getCurrentAccount } from '../../utils/accountUtils';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
-import { Input } from "antd";
+import { Input, Select } from "antd";
 
 const { TextArea } = Input;
 
@@ -492,20 +492,18 @@ const CreateAssignmentModal = ({ isOpen, onClose, onSubmit, courseInstanceId }) 
                     Loading rubrics...
                   </div>
                 ) : (
-                  <select
-                    name="rubricTemplateId"
-                    value={formData.rubricTemplateId}
-                    onChange={handleChange}
-                    className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none ${errors.rubricTemplateId ? 'border-red-500' : 'border-gray-300'
-                      }`}
-                  >
-                    <option value="">Select a rubric</option>
-                    {rubrics.map((rubric) => (
-                      <option key={rubric.templateId} value={String(rubric.templateId)}>
-                        {rubric.title || `Rubric #${rubric.templateId}`}
-                      </option>
-                    ))}
-                  </select>
+                  <Select
+                    placeholder="Select a rubric"
+                    value={formData.rubricTemplateId || undefined}
+                    onChange={(value) => handleChange({ target: { name: 'rubricTemplateId', value } })}
+                    status={errors.rubricTemplateId ? 'error' : ''}
+                    className="w-full"
+                    size="large"
+                    options={rubrics.map((rubric) => ({
+                      label: rubric.title || `Rubric #${rubric.templateId}`,
+                      value: String(rubric.templateId)
+                    }))}
+                  />
                 )}
                 {errors.rubricTemplateId && (
                   <div className="flex items-center gap-1 mt-1 text-red-500 text-sm">
@@ -666,15 +664,16 @@ const CreateAssignmentModal = ({ isOpen, onClose, onSubmit, courseInstanceId }) 
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Grading Scale <span className="text-red-500">*</span>
                     </label>
-                    <select
-                      name="gradingScale"
+                    <Select
                       value={formData.gradingScale}
-                      onChange={handleChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none"
-                    >
-                      <option value="Scale10">Scale 10</option>
-                      <option value="PassFail">Pass/Fail</option>
-                    </select>
+                      onChange={(value) => handleChange({ target: { name: 'gradingScale', value } })}
+                      className="w-full"
+                      size="large"
+                      options={[
+                        { label: 'Scale 10', value: 'Scale10' },
+                        { label: 'Pass/Fail', value: 'PassFail' }
+                      ]}
+                    />
                   </div>
 
                   {formData.gradingScale === 'PassFail' && (
@@ -682,18 +681,19 @@ const CreateAssignmentModal = ({ isOpen, onClose, onSubmit, courseInstanceId }) 
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         Pass Threshold <span className="text-red-500">*</span>
                       </label>
-                      <select
-                        name="passThreshold"
-                        value={formData.passThreshold}
-                        onChange={handleChange}
-                        className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none ${errors.passThreshold ? 'border-red-500' : 'border-gray-300'
-                          }`}
-                      >
-                        <option value="">Select pass threshold</option>
-                        <option value="0">≥ 0.0</option>
-                        <option value="4">≥ 4.0</option>
-                        <option value="5">≥ 5.0</option>
-                      </select>
+                      <Select
+                        placeholder="Select pass threshold"
+                        value={formData.passThreshold || undefined}
+                        onChange={(value) => handleChange({ target: { name: 'passThreshold', value } })}
+                        status={errors.passThreshold ? 'error' : ''}
+                        className="w-full"
+                        size="large"
+                        options={[
+                          { label: '≥ 0.0', value: '0' },
+                          { label: '≥ 4.0', value: '4' },
+                          { label: '≥ 5.0', value: '5' }
+                        ]}
+                      />
                       {errors.passThreshold && (
                         <div className="flex items-center gap-1 mt-1 text-red-500 text-sm">
                           <AlertCircle className="w-4 h-4" />
