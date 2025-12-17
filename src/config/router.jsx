@@ -34,19 +34,21 @@ import { toast } from "react-toastify";
 import { ROLE } from "../constant/roleEnum";
 import { useRef } from "react";
 
-const ProtectedRoute = ({ children, role, allowGuest = false }) => {
+const ProtectedRoute = ({ children, role, allowGuest = false, requireAuth = false }) => {
   const user = useCurrentAccount();
   const location = useLocation();
   const hasShownToast = useRef(false);
   
-  // Allow guest access if allowGuest is true
-  if (allowGuest && !user) {
+  // Allow guest access if allowGuest is true and requireAuth is false
+  if (allowGuest && !user && !requireAuth) {
     return children;
   }
   
+  // If requireAuth is true, always require login
   if (!user) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/login" state={{ from: location }} replace />;
   }
+  
   if (user?.roles[0] !== role) {
     if (!hasShownToast.current) {
       hasShownToast.current = true;
@@ -110,51 +112,51 @@ export const router = createBrowserRouter([
       },
       {
         path: "profile",
-        element: <ProfilePage />,
+        element: <ProtectedRoute role={ROLE.STUDENT} requireAuth={true}><ProfilePage /></ProtectedRoute>,
       },
       {
         path: "studentdashboard",
-        element: <StudentDashBoard />,
+        element: <ProtectedRoute role={ROLE.STUDENT} requireAuth={true}><StudentDashBoard /></ProtectedRoute>,
       },
       {
         path: "my-assignments",
-        element: <StudentAssignmentPage />,
+        element: <ProtectedRoute role={ROLE.STUDENT} requireAuth={true}><StudentAssignmentPage /></ProtectedRoute>,
       },
       {
         path: "assignment/:courseId",
-        element: <AssignmentDetailPage />,
+        element: <ProtectedRoute role={ROLE.STUDENT} requireAuth={true}><AssignmentDetailPage /></ProtectedRoute>,
       },
       {
         path: "assignment/:courseId/:assignmentId",
-        element: <StudentSubmitAssignmentPage />,
+        element: <ProtectedRoute role={ROLE.STUDENT} requireAuth={true}><StudentSubmitAssignmentPage /></ProtectedRoute>,
       },
       {
         path: "assignment/:courseId/:assignmentId/review",
-        element: <PeerReviewPage />,
+        element: <ProtectedRoute role={ROLE.STUDENT} requireAuth={true}><PeerReviewPage /></ProtectedRoute>,
       },
       {
         path: "assignment/:courseId/:assignmentId/cross-review",
-        element: <CrossClassReviewPage />,
+        element: <ProtectedRoute role={ROLE.STUDENT} requireAuth={true}><CrossClassReviewPage /></ProtectedRoute>,
       },
       {
         path: "/review-success",
-        element: <ReviewSuccessPage />,
+        element: <ProtectedRoute role={ROLE.STUDENT} requireAuth={true}><ReviewSuccessPage /></ProtectedRoute>,
       },
       {
         path: "assignment/:courseId/:assignmentId/scores",
-        element: <ViewScorePage />,
+        element: <ProtectedRoute role={ROLE.STUDENT} requireAuth={true}><ViewScorePage /></ProtectedRoute>,
       },
       {
         path: "regrade-request",
-        element: <ViewRequestHistoryPage />,
+        element: <ProtectedRoute role={ROLE.STUDENT} requireAuth={true}><ViewRequestHistoryPage /></ProtectedRoute>,
       },
        {
-        path: "search", 
-        element: <SearchResultsPage />,
+        path: "search",
+        element: <ProtectedRoute role={ROLE.STUDENT} requireAuth={true}><SearchResultsPage /></ProtectedRoute>,
       },
       {
         path: "assignment/:courseId/:assignmentId/review-history",
-        element: <PeerReviewHistoryPage />,
+        element: <ProtectedRoute role={ROLE.STUDENT} requireAuth={true}><PeerReviewHistoryPage /></ProtectedRoute>,
       },
 
     ],
