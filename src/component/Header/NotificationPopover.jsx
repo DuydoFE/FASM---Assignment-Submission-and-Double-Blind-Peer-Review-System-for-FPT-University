@@ -35,6 +35,8 @@ const getTypeStyles = (type) => {
       return "bg-amber-500/10 text-amber-400 border-amber-500/20";
     case "RegradeRequest":
       return "bg-amber-500/10 text-amber-400 border-amber-500/20";
+    case "InstructorAssigned":
+      return "bg-emerald-500/10 text-emerald-400 border-emerald-500/20";
     default:
       return "bg-zinc-500/10 text-zinc-400 border-zinc-500/20";
   }
@@ -76,6 +78,9 @@ const NotificationPopover = ({ user }) => {
 
   const handleNavigate = (item) => {
     const { courseId, assignmentId, type } = item;
+    
+    console.log("Notification type:", type, "Full item:", item);
+    console.log("Current URL:", window.location.href);
 
     switch (type) {
       case "AssignmentNew":
@@ -108,7 +113,16 @@ const NotificationPopover = ({ user }) => {
         navigate(`/instructor/regrade-request`);
         break;
 
+      case "InstructorAssigned":
+        console.log("InstructorAssigned case matched - navigating to /instructor/my-classes");
+        console.log("About to call navigate with:", "/instructor/my-classes");
+        console.log("Using window.location.href to force navigation");
+        window.location.href = "/instructor/my-classes";
+        console.log("Window location set");
+        break;
+
       default:
+        console.log("Default case - navigating to my-assignments");
         navigate("/my-assignments");
     }
   };
