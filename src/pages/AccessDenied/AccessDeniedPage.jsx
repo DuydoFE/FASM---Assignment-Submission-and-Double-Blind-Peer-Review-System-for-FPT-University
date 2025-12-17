@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { ShieldAlert, Home, LogOut, Lock } from "lucide-react";
 import { useCurrentAccount } from "../../utils/accountUtils";
 import { useEffect, useState } from "react";
@@ -6,12 +6,28 @@ import FASMLogo from "../../assets/img/FASM.png";
 
 const AccessDeniedPage = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const user = useCurrentAccount();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  // Determine required role based on the previous URL
+  const getRequiredRole = () => {
+    const from = location.state?.from?.pathname || document.referrer;
+    
+    if (from.includes('/instructor')) {
+      return 'Instructor';
+    } else if (from.includes('/admin')) {
+      return 'Admin';
+    } else {
+      return 'Student';
+    }
+  };
+
+  const requiredRole = getRequiredRole();
 
   const handleGoHome = () => {
     if (user?.roles[0] === "Instructor") {
@@ -105,7 +121,7 @@ const AccessDeniedPage = () => {
           {/* Message Box */}
           <div className="bg-white border-l-4 border-red-500 rounded-lg p-6 mb-8 shadow-md">
             <p className="text-gray-700 text-base leading-relaxed">
-              This page is restricted to <span className="font-bold text-red-600">Student</span> role only. 
+              This page is restricted to <span className="font-bold text-red-600">{requiredRole}</span> role only.
               Please navigate back to your dashboard or sign out to switch to a different account.
             </p>
           </div>

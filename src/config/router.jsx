@@ -1,4 +1,4 @@
-import { createBrowserRouter, Navigate } from "react-router-dom";
+import { createBrowserRouter, Navigate, useLocation } from "react-router-dom";
 import UseReactQuerry from "../component/UseReactQuerry";
 import Test from "../Test";
 import MainLayout from "../layout/MainLayout";
@@ -36,6 +36,7 @@ import { useRef } from "react";
 
 const ProtectedRoute = ({ children, role }) => {
   const user = useCurrentAccount();
+  const location = useLocation();
   const hasShownToast = useRef(false);
   
   if (!user) {
@@ -46,7 +47,7 @@ const ProtectedRoute = ({ children, role }) => {
       hasShownToast.current = true;
       toast.error("You don't have permission to access this page!");
     }
-    return <Navigate to="/access-denied" replace />;
+    return <Navigate to="/access-denied" state={{ from: location }} replace />;
   }
   return children;
 };
