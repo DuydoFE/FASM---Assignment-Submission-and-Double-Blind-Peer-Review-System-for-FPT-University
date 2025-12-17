@@ -1,20 +1,18 @@
 import React from 'react';
-import { Plus, X } from 'lucide-react';
-import { Input } from 'antd';
+import { Plus } from 'lucide-react';
+import { Input, Modal, Button } from 'antd';
 
-const AddStudentModal = ({ 
-  isOpen, 
-  onClose, 
-  onSubmit, 
-  studentCode, 
-  setStudentCode, 
-  modalError, 
-  setModalError, 
+const AddStudentModal = ({
+  isOpen,
+  onClose,
+  onSubmit,
+  studentCode,
+  setStudentCode,
+  modalError,
+  setModalError,
   addingStudent,
-  courseInfo 
+  courseInfo
 }) => {
-  if (!isOpen) return null;
-
   const handleSubmit = (e) => {
     e.preventDefault();
     onSubmit(e);
@@ -27,21 +25,37 @@ const AddStudentModal = ({
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-bold text-gray-900">
-            Add Student into Course: {courseInfo?.courseCode} - Class: {courseInfo?.className}
-          </h2>
-          <button
+    <Modal
+      open={isOpen}
+      onCancel={handleClose}
+      width={600}
+      title={
+        <h2 className="text-xl font-bold text-gray-900">
+          Add Student into Course: {courseInfo?.courseCode} - Class: {courseInfo?.className}
+        </h2>
+      }
+      footer={
+        <div className="flex gap-3 justify-end">
+          <Button
             onClick={handleClose}
-            className="text-gray-400 hover:text-gray-600"
+            disabled={addingStudent}
           >
-            <X className="w-5 h-5" />
-          </button>
+            Cancel
+          </Button>
+          <Button
+            type="primary"
+            onClick={handleSubmit}
+            disabled={addingStudent}
+            loading={addingStudent}
+            icon={<Plus className="w-4 h-4" />}
+            className="bg-blue-500 hover:bg-blue-600"
+          >
+            {addingStudent ? 'Adding...' : 'Add'}
+          </Button>
         </div>
-
-        <form onSubmit={handleSubmit}>
+      }
+    >
+      <form onSubmit={handleSubmit}>
           <div className="mb-4">
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Student Code
@@ -62,28 +76,8 @@ const AddStudentModal = ({
               <p className="text-red-500 text-sm mt-2">{modalError}</p>
             )}
           </div>
-
-          <div className="flex gap-3 justify-end">
-            <button
-              type="button"
-              onClick={handleClose}
-              className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 disabled:opacity-50"
-              disabled={addingStudent}
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 disabled:opacity-50 flex items-center gap-2"
-              disabled={addingStudent}
-            >
-              <Plus className="w-4 h-4" />
-              {addingStudent ? 'Adding...' : 'Add'}
-            </button>
-          </div>
         </form>
-      </div>
-    </div>
+    </Modal>
   );
 };
 

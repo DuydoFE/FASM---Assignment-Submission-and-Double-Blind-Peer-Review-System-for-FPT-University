@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { ChevronDown, Loader2, AlertCircle } from "lucide-react";
-import { Input } from "antd";
+import { Input, Button } from "antd";
 
 const { Search } = Input;
 
@@ -308,21 +308,17 @@ const GradesTable = ({
       {/* Action Button: Publish Grades - only show when assignment is Closed or Cancelled */}
       {["Closed", "Cancelled"].includes(assignmentStatus) && (
         <div className="flex justify-end mt-6">
-          <button
+          <Button
             onClick={onPublishGrades}
             disabled={loading.publishing}
             title={"Assignment is closed or cancelled"}
-            className="px-6 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg transition-colors font-medium flex items-center disabled:bg-gray-300 disabled:cursor-not-allowed"
+            type="primary"
+            size="large"
+            className="bg-orange-500 hover:!bg-orange-600"
+            icon={loading.publishing ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
           >
-            {loading.publishing ? (
-              <>
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Publishing...
-              </>
-            ) : (
-              "Publish Scores"
-            )}
-          </button>
+            {loading.publishing ? "Publishing..." : "Publish Scores"}
+          </Button>
         </div>
       )}
     </>

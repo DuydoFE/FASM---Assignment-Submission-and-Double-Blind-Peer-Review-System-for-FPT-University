@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { X, Plus, FileText, AlertCircle, Upload, File } from 'lucide-react';
+import { Plus, FileText, AlertCircle, Upload, File, X } from 'lucide-react';
 import { getRubricTemplatesByUserId } from '../../service/rubricService';
 import { toast } from 'react-toastify';
 import { getCurrentAccount } from '../../utils/accountUtils';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
-import { Input, Select } from "antd";
+import { Input, Select, Checkbox, Modal, Button } from "antd";
 
 const { TextArea } = Input;
 
@@ -407,25 +407,42 @@ const CreateAssignmentModal = ({ isOpen, onClose, onSubmit, courseInstanceId }) 
     }
   };
 
-  if (!isOpen) return null;
-
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-hidden flex flex-col">
-        <div className="flex justify-between items-center p-6 border-b border-gray-200">
-          <div className="flex items-center gap-3">
-            <div className="bg-blue-100 p-2 rounded-lg">
-              <FileText className="w-6 h-6 text-blue-600" />
-            </div>
-            <h2 className="text-2xl font-bold text-gray-900">Create New Assignment</h2>
+    <Modal
+      open={isOpen}
+      onCancel={onClose}
+      width={800}
+      title={
+        <div className="flex items-center gap-3">
+          <div className="bg-blue-100 p-2 rounded-lg">
+            <FileText className="w-6 h-6 text-blue-600" />
           </div>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition-colors">
-            <X className="w-6 h-6" />
-          </button>
+          <span className="text-2xl font-bold text-gray-900">Create New Assignment</span>
         </div>
-
-        <div className="flex-1 overflow-y-auto">
-          <div className="p-6 space-y-6">
+      }
+      footer={
+        <div className="flex gap-3 justify-end">
+          <Button
+            onClick={onClose}
+            className="px-6 py-2.5"
+          >
+            Cancel
+          </Button>
+          <Button
+            type="primary"
+            onClick={handleSubmit}
+            icon={<Plus className="w-5 h-5" />}
+            className="px-6 py-2.5 bg-blue-500 hover:bg-blue-600"
+          >
+            Create Assignment
+          </Button>
+        </div>
+      }
+      styles={{
+        body: { maxHeight: 'calc(90vh - 200px)', overflowY: 'auto' }
+      }}
+    >
+      <div className="space-y-6">
 
             {/* BASIC INFORMATION */}
             <div className="space-y-4">
@@ -808,19 +825,16 @@ const CreateAssignmentModal = ({ isOpen, onClose, onSubmit, courseInstanceId }) 
               </div>
 
               <div className="space-y-3">
-                <label className="flex items-center space-x-3 cursor-pointer group">
-                  <input
-                    type="checkbox"
-                    name="allowCrossClass"
-                    checked={formData.allowCrossClass}
-                    onChange={handleChange}
-                    className="w-5 h-5 text-blue-500 border-gray-300 rounded focus:ring-blue-500"
-                  />
+                <Checkbox
+                  name="allowCrossClass"
+                  checked={formData.allowCrossClass}
+                  onChange={(e) => handleChange(e)}
+                >
                   <div>
-                    <span className="text-sm font-medium text-gray-900 group-hover:text-blue-600">Allow Cross-Class Review</span>
+                    <span className="text-sm font-medium text-gray-900">Allow Cross-Class Review</span>
                     <p className="text-xs text-gray-500">Students can peer review submissions from other classes</p>
                   </div>
-                </label>
+                </Checkbox>
 
                 {formData.allowCrossClass && (
                   <div>
@@ -847,29 +861,8 @@ const CreateAssignmentModal = ({ isOpen, onClose, onSubmit, courseInstanceId }) 
                 )}
               </div>
             </div>
-
-          </div>
-        </div>
-
-        <div className="border-t border-gray-200 p-6 bg-gray-50 flex gap-3 justify-end">
-          <button
-            type="button"
-            onClick={onClose}
-            className="px-6 py-2.5 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 font-medium transition-colors"
-          >
-            Cancel
-          </button>
-          <button
-            type="button"
-            onClick={handleSubmit}
-            className="px-6 py-2.5 bg-blue-500 text-white rounded-lg hover:bg-blue-600 font-medium flex items-center gap-2 transition-colors"
-          >
-            <Plus className="w-5 h-5" />
-            Create Assignment
-          </button>
-        </div>
       </div>
-    </div>
+    </Modal>
   );
 };
 

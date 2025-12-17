@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { X, CheckCircle } from 'lucide-react';
-import { Input } from 'antd';
+import { Modal, Button, Input } from 'antd';
+import { CheckCircle } from 'lucide-react';
 import { completeRegradeRequest } from '../../service/regradeService';
 import { toast } from 'react-toastify';
 import { getCurrentAccount } from '../../utils/accountUtils';
@@ -39,28 +39,42 @@ const CompleteRegradeRequestModal = ({ request, onClose, onSubmit }) => {
     };
 
     return (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-                {/* Header */}
-                <div className="flex items-center justify-between p-6 border-b border-gray-200">
-                    <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
-                            <CheckCircle className="w-6 h-6 text-green-600" />
-                        </div>
-                        <div>
-                            <h2 className="text-xl font-bold text-gray-900">Mark as Complete</h2>
-                        </div>
+        <Modal
+            open={true}
+            onCancel={onClose}
+            width={800}
+            title={
+                <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                        <CheckCircle className="w-6 h-6 text-green-600" />
                     </div>
-                    <button
-                        onClick={onClose}
-                        className="text-gray-400 hover:text-gray-600 transition-colors"
-                    >
-                        <X className="w-6 h-6" />
-                    </button>
+                    <div>
+                        <h2 className="text-xl font-bold text-gray-900">Mark as Complete</h2>
+                    </div>
                 </div>
-
-                {/* Content */}
-                <div className="p-6">
+            }
+            footer={[
+                <Button
+                    key="cancel"
+                    onClick={onClose}
+                    disabled={isSubmitting}
+                >
+                    Cancel
+                </Button>,
+                <Button
+                    key="submit"
+                    type="primary"
+                    onClick={handleSubmit}
+                    disabled={!reason.trim() || isSubmitting}
+                    loading={isSubmitting}
+                    className="bg-green-600 hover:!bg-green-700"
+                    icon={<CheckCircle className="w-4 h-4" />}
+                >
+                    Mark as Complete
+                </Button>
+            ]}
+        >
+            <div>
                     {/* Student Info */}
                     <div className="bg-gray-50 rounded-lg p-4 mb-6">
                         <h3 className="text-sm font-semibold text-gray-700 mb-3">Student Information</h3>
@@ -118,27 +132,8 @@ const CompleteRegradeRequestModal = ({ request, onClose, onSubmit }) => {
                         </p>
                     </div>
 
-                    {/* Actions */}
-                    <div className="flex gap-3 justify-end">
-                        <button
-                            onClick={onClose}
-                            className="px-6 py-2.5 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 transition-colors"
-                            disabled={isSubmitting}
-                        >
-                            Cancel
-                        </button>
-                        <button
-                            onClick={handleSubmit}
-                            disabled={!reason.trim() || isSubmitting}
-                            className="px-6 py-2.5 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center gap-2"
-                        >
-                            <CheckCircle className="w-4 h-4" />
-                            {isSubmitting ? 'Completing...' : 'Mark as Complete'}
-                        </button>
-                    </div>
-                </div>
             </div>
-        </div>
+        </Modal>
     );
 };
 

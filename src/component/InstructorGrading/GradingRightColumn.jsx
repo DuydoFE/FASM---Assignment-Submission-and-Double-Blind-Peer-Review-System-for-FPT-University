@@ -1,6 +1,6 @@
 import React from 'react';
 import { Loader2, Sparkles, Zap, AlertTriangle } from 'lucide-react';
-import { Input } from 'antd';
+import { Input, Button } from 'antd';
 
 const { TextArea } = Input;
 
@@ -26,18 +26,15 @@ const GradingRightColumn = ({
                         <span className="text-xl mr-2">📋</span>
                         <h2 className="font-semibold text-gray-900 text-lg">Grading Criteria</h2>
                     </div>
-                    <button
+                    <Button
                         onClick={handleAiSummary}
                         disabled={isAiLoading}
-                        className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white font-semibold rounded-lg hover:bg-purple-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+                        type="primary"
+                        className="bg-purple-600 hover:!bg-purple-700"
+                        icon={isAiLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Sparkles className="w-5 h-5" />}
                     >
-                        {isAiLoading ? (
-                            <Loader2 className="w-5 h-5 animate-spin" />
-                        ) : (
-                            <Sparkles className="w-5 h-5" />
-                        )}
-                        <span>Summary By AI</span>
-                    </button>
+                        Summary By AI
+                    </Button>
                 </div>
 
                 <div className="space-y-6">
@@ -190,23 +187,16 @@ const GradingRightColumn = ({
 
             {/* Action Buttons */}
             <div className="flex gap-3">
-                <button
+                <Button
                     onClick={handleSubmitGrade}
                     disabled={submitting}
-                    className="flex-1 bg-orange-500 hover:bg-orange-600 text-white font-semibold py-3 px-6 rounded-lg transition-colors flex items-center justify-center gap-2 disabled:bg-gray-300 disabled:cursor-not-allowed"
+                    type="primary"
+                    size="large"
+                    className="flex-1 bg-orange-500 hover:!bg-orange-600"
+                    icon={submitting ? <Loader2 className="w-5 h-5 animate-spin" /> : <span>📋</span>}
                 >
-                    {submitting ? (
-                        <>
-                            <Loader2 className="w-5 h-5 animate-spin" />
-                            <span>Submitting...</span>
-                        </>
-                    ) : (
-                        <>
-                            <span>📋</span>
-                            <span>{submitButtonText}</span>
-                        </>
-                    )}
-                </button>
+                    {submitting ? "Submitting..." : submitButtonText}
+                </Button>
             </div>
         </div>
     );

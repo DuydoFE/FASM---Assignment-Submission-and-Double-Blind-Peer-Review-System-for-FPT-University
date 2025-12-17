@@ -295,7 +295,7 @@ const InstructorGradingDetail = () => {
         }
     };
 
-    const submitButtonText = submissionDetails?.status?.toLowerCase() === 'graded' ? 'Update Grade' : 'Submit Grade';
+    const submitButtonText = submissionDetails?.status?.toLowerCase() === 'graded' ? 'Update Score' : 'Submit Score';
 
     if (loading) {
         return (
