@@ -1,5 +1,8 @@
 import React from "react";
-import { Search, ChevronDown, Loader2, AlertCircle } from "lucide-react";
+import { ChevronDown, Loader2, AlertCircle } from "lucide-react";
+import { Input } from "antd";
+
+const { Search } = Input;
 
 const GradingTable = ({
   assignmentInfo,
@@ -31,10 +34,7 @@ const GradingTable = ({
   const getScoreStyle = (instructorScore) => {
     if (instructorScore === null || instructorScore === undefined)
       return "border-gray-300 text-gray-400";
-    const normalizedScore = instructorScore / 10;
-    if (normalizedScore >= 8) return "border-green-500 text-green-600";
-    if (normalizedScore >= 6.5) return "border-green-400 text-green-500";
-    return "border-red-400 text-red-500";
+    return "border-green-400 text-green-500";
   };
 
   const getStatusStyle = (status) => {
@@ -120,16 +120,15 @@ const GradingTable = ({
 
       {/* Search Bar */}
       <div className="mb-6">
-        <div className="relative">
-          <Search className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
-          <input
-            type="text"
-            placeholder="Search students..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-        </div>
+        <Search
+        placeholder="Search students..."
+        value={searchTerm}
+        onChange={(e) => setSearchTerm(e.target.value)}
+        allowClear
+        size="large"
+        className="w-full"
+        style={{ height: 38 }}
+      />
       </div>
 
       {/* Table */}

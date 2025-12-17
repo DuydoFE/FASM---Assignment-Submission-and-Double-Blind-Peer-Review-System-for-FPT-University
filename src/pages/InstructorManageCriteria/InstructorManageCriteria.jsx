@@ -246,7 +246,7 @@ function InstructorManageCriteria() {
                             {(assignmentStatus === 'Draft' || assignmentStatus === 'Upcoming') && (
                                 <button
                                     onClick={handleEditRubric}
-                                    className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2.5 rounded-lg hover:bg-indigo-700 transition-colors font-medium shadow-sm"
+                                    className="flex items-center gap-2 bg-blue-500 text-white px-4 py-2.5 rounded-lg hover:bg-blue-600 transition-colors font-medium shadow-sm"
                                 >
                                     <Pencil size={18} />
                                     <span>Edit Rubric</span>
@@ -306,7 +306,7 @@ function InstructorManageCriteria() {
                     {(assignmentStatus === 'Draft') && totalWeight < 100 && (
                         <button
                             onClick={() => setShowAddModal(true)}
-                            className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors"
+                            className="flex items-center gap-2 bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors"
                         >
                             <Plus size={20} />
                             Add Criterion
