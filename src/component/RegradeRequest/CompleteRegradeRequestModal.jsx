@@ -1,8 +1,11 @@
 import React, { useState } from 'react';
 import { X, CheckCircle } from 'lucide-react';
+import { Input } from 'antd';
 import { completeRegradeRequest } from '../../service/regradeService';
 import { toast } from 'react-toastify';
 import { getCurrentAccount } from '../../utils/accountUtils';
+
+const { TextArea } = Input;
 
 const CompleteRegradeRequestModal = ({ request, onClose, onSubmit }) => {
     const [reason, setReason] = useState('');
@@ -67,7 +70,7 @@ const CompleteRegradeRequestModal = ({ request, onClose, onSubmit }) => {
                                 <p className="text-sm font-medium text-gray-900">{request.name}</p>
                             </div>
                             <div>
-                                <p className="text-xs text-gray-500">Student ID</p>
+                                <p className="text-xs text-gray-500">Student Code</p>
                                 <p className="text-sm font-medium text-gray-900">{request.mssv}</p>
                             </div>
                             <div className="col-span-2">
@@ -100,12 +103,15 @@ const CompleteRegradeRequestModal = ({ request, onClose, onSubmit }) => {
                         <label className="block text-sm font-semibold text-gray-700 mb-2">
                             Completion Reason <span className="text-red-500">*</span>
                         </label>
-                        <textarea
+                        <TextArea
                             value={reason}
                             onChange={(e) => setReason(e.target.value)}
                             placeholder="Please provide details about how this request was completed..."
-                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 resize-none"
-                            rows="5"
+                            rows={5}
+                            style={{
+                                borderRadius: '8px',
+                                fontSize: '15px',
+                            }}
                         />
                         <p className="text-xs text-gray-500 mt-2">
                             Describe what actions were taken to complete this regrade request

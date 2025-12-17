@@ -1,5 +1,8 @@
 import React from 'react';
 import { Loader2, Sparkles, Zap, AlertTriangle } from 'lucide-react';
+import { Input } from 'antd';
+
+const { TextArea } = Input;
 
 const GradingRightColumn = ({
     criteriaList,
@@ -81,12 +84,15 @@ const GradingRightColumn = ({
                                         <label className="block text-sm font-medium text-gray-700 mb-2">
                                             Feedback
                                         </label>
-                                        <textarea
+                                        <TextArea
                                             value={c.feedback}
                                             onChange={(e) => updateCriteriaScore(c.criteriaId, 'feedback', e.target.value)}
-                                            rows="4"
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
+                                            rows={4}
                                             placeholder="Enter your detailed comment..."
+                                            style={{
+                                                borderRadius: '8px',
+                                                fontSize: '15px',
+                                            }}
                                         />
                                     </div>
                                 </div>
@@ -166,12 +172,15 @@ const GradingRightColumn = ({
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                         Overall Comments for Student
                     </label>
-                    <textarea
+                    <TextArea
                         value={generalFeedback}
                         onChange={(e) => setGeneralFeedback(e.target.value)}
-                        rows="6"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
+                        rows={6}
                         placeholder="Enter a general comment on the student's submission..."
+                        style={{
+                            borderRadius: '8px',
+                            fontSize: '15px',
+                        }}
                     />
                     <p className="text-xs text-gray-500 mt-2">
                         This comment will be displayed along with the student's overall grade.

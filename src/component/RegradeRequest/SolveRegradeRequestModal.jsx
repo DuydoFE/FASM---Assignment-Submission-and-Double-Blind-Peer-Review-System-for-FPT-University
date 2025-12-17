@@ -1,8 +1,11 @@
 import React, { useState } from 'react';
 import { X, CheckCircle, Info, AlertCircle } from 'lucide-react';
+import { Input } from 'antd';
 import { reviewRegradeRequest } from '../../service/regradeService';
 import { getCurrentAccount } from '../../utils/accountUtils';
 import { toast } from 'react-toastify';
+
+const { TextArea } = Input;
 
 const SolveRegradeRequestModal = ({ request, onClose, onSubmit }) => {
     const currentUser = getCurrentAccount();
@@ -153,7 +156,7 @@ const SolveRegradeRequestModal = ({ request, onClose, onSubmit }) => {
                     {/* Reason for Student */}
                     <div>
                         <h3 className="font-semibold text-gray-900 mb-3">Reason for Student</h3>
-                        <textarea
+                        <TextArea
                             value={feedback}
                             onChange={(e) => {
                                 setFeedback(e.target.value);
@@ -163,8 +166,12 @@ const SolveRegradeRequestModal = ({ request, onClose, onSubmit }) => {
                             }}
                             disabled={isSubmitting}
                             placeholder="Enter detailed reason for the student about your decision..."
-                            className={`w-full h-32 p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none text-sm disabled:bg-gray-100 disabled:cursor-not-allowed ${showError ? 'border-red-500' : 'border-gray-300'
-                                }`}
+                            rows={5}
+                            status={showError ? 'error' : ''}
+                            style={{
+                                borderRadius: '8px',
+                                fontSize: '15px',
+                            }}
                         />
                         {showError && (
                             <p className="text-red-600 text-sm mt-2 flex items-center gap-1">
