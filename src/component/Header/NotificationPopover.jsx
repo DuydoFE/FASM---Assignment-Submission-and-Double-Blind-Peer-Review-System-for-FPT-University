@@ -78,9 +78,6 @@ const NotificationPopover = ({ user }) => {
 
   const handleNavigate = (item) => {
     const { courseId, assignmentId, type } = item;
-    
-    console.log("Notification type:", type, "Full item:", item);
-    console.log("Current URL:", window.location.href);
 
     switch (type) {
       case "AssignmentNew":
@@ -114,11 +111,7 @@ const NotificationPopover = ({ user }) => {
         break;
 
       case "InstructorAssigned":
-        console.log("InstructorAssigned case matched - navigating to /instructor/my-classes");
-        console.log("About to call navigate with:", "/instructor/my-classes");
-        console.log("Using window.location.href to force navigation");
-        window.location.href = "/instructor/my-classes";
-        console.log("Window location set");
+        navigate("/instructor/my-classes");
         break;
 
       default:
