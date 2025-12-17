@@ -128,13 +128,19 @@ const InstructorManageAssignment = () => {
     try {
       const [year, month, day] = newDeadline.split("-");
       const [hours, minutes] = newTime.split(":");
-      const deadlineDate = new Date(year, month - 1, day, hours, minutes);
+      
+      // Format as local datetime string without timezone conversion
+      const seconds = "00";
+      const localDateTimeString = `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
 
       await assignmentService.extendDeadline(
         selectedAssignment.id,
-        deadlineDate.toISOString()
+        localDateTimeString
       );
 
+      // Create Date object for display purposes only
+      const deadlineDate = new Date(year, month - 1, day, hours, minutes);
+      
       setAssignments((prev) =>
         prev.map((a) =>
           a.id === selectedAssignment.id

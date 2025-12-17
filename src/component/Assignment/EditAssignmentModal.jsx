@@ -200,17 +200,18 @@ const EditAssignmentModal = ({ isOpen, onClose, onSubmit, assignment }) => {
 
   const handleDateTimeChange = (name, date) => {
     if (date) {
-      // Format without UTC conversion to preserve local time
+      // Format as local datetime string without timezone conversion
       const year = date.getFullYear();
       const month = String(date.getMonth() + 1).padStart(2, '0');
       const day = String(date.getDate()).padStart(2, '0');
       const hours = String(date.getHours()).padStart(2, '0');
       const minutes = String(date.getMinutes()).padStart(2, '0');
-      const isoString = `${year}-${month}-${day}T${hours}:${minutes}`;
+      const seconds = String(date.getSeconds()).padStart(2, '0');
+      const localDateTimeString = `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
       
       setFormData(prev => ({
         ...prev,
-        [name]: isoString
+        [name]: localDateTimeString
       }));
     } else {
       setFormData(prev => ({
@@ -306,10 +307,10 @@ const EditAssignmentModal = ({ isOpen, onClose, onSubmit, assignment }) => {
         title: formData.title,
         description: formData.description || null,
         guidelines: formData.guidelines || null,
-        startDate: formData.startDate ? new Date(formData.startDate).toISOString() : null,
-        deadline: new Date(formData.deadline).toISOString(),
-        reviewDeadline: new Date(formData.reviewDeadline).toISOString(),
-        finalDeadline: new Date(formData.finalDeadline).toISOString(),
+        startDate: formData.startDate || null,
+        deadline: formData.deadline,
+        reviewDeadline: formData.reviewDeadline,
+        finalDeadline: formData.finalDeadline,
         numPeerReviewsRequired: parseInt(formData.numPeerReviewsRequired),
         missingReviewPenalty: parseInt(formData.missingReviewPenalty) || 0,
         allowCrossClass: formData.allowCrossClass,
