@@ -34,10 +34,15 @@ import { toast } from "react-toastify";
 import { ROLE } from "../constant/roleEnum";
 import { useRef } from "react";
 
-const ProtectedRoute = ({ children, role }) => {
+const ProtectedRoute = ({ children, role, allowGuest = false }) => {
   const user = useCurrentAccount();
   const location = useLocation();
   const hasShownToast = useRef(false);
+  
+  // Allow guest access if allowGuest is true
+  if (allowGuest && !user) {
+    return children;
+  }
   
   if (!user) {
     return <Navigate to="/login" replace />;
@@ -55,8 +60,8 @@ const ProtectedRoute = ({ children, role }) => {
 const PublicRoute = ({ children }) => {
   const user = useCurrentAccount();
   
+  // Prevent logged-in users from accessing login page
   if (user) {
-    // User is already logged in, redirect to appropriate dashboard
     if (user.roles[0] === "Instructor") {
       return <Navigate to="/instructor/dashboard" replace />;
     } else if (user.roles[0] === "Admin") {
@@ -97,7 +102,7 @@ import PeerReviewHistoryPage from "@/pages/PeerReviewPage/PeerReviewHistoryPage"
 export const router = createBrowserRouter([
   {
     path: "/",
-    element: <ProtectedRoute role={ROLE.STUDENT}><MainLayout /></ProtectedRoute>,
+    element: <ProtectedRoute role={ROLE.STUDENT} allowGuest={true}><MainLayout /></ProtectedRoute>,
     children: [
       {
         index: true,
