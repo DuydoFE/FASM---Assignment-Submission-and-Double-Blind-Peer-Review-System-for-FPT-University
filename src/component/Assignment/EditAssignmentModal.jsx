@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { X, Save, FileText, AlertCircle } from 'lucide-react';
+import { Save, FileText, AlertCircle } from 'lucide-react';
 import { getRubricTemplatesByUserId } from '../../service/rubricService';
 import { toast } from 'react-toastify';
 import { getCurrentAccount } from '../../utils/accountUtils';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
+import { Input, Select, Checkbox, Modal, Button } from 'antd';
+
+const { TextArea } = Input;
 
 const EditAssignmentModal = ({ isOpen, onClose, onSubmit, assignment }) => {
   const [formData, setFormData] = useState({
@@ -346,25 +349,42 @@ const EditAssignmentModal = ({ isOpen, onClose, onSubmit, assignment }) => {
     }
   };
 
-  if (!isOpen || !assignment) return null;
+  if (!assignment) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-hidden flex flex-col">
-        <div className="flex justify-between items-center p-6 border-b border-gray-200">
-          <div className="flex items-center gap-3">
-            <div className="bg-blue-100 p-2 rounded-lg">
-              <FileText className="w-6 h-6 text-blue-600" />
-            </div>
-            <h2 className="text-2xl font-bold text-gray-900">Edit Assignment</h2>
+    <Modal
+      open={isOpen}
+      onCancel={onClose}
+      width={800}
+      title={
+        <div className="flex items-center gap-3">
+          <div className="bg-blue-100 p-2 rounded-lg">
+            <FileText className="w-6 h-6 text-blue-600" />
           </div>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition-colors">
-            <X className="w-6 h-6" />
-          </button>
+          <span className="text-2xl font-bold text-gray-900">Edit Assignment</span>
         </div>
-
-        <div className="flex-1 overflow-y-auto">
-          <div className="p-6 space-y-6">
+      }
+      footer={
+        <div className="flex gap-3 justify-end">
+          <Button onClick={onClose}>
+            Cancel
+          </Button>
+          <Button
+            type="primary"
+            onClick={handleSubmit}
+            disabled={!hasFormChanged()}
+            icon={<Save className="w-5 h-5" />}
+            className="bg-blue-600 hover:bg-blue-700"
+          >
+            Save Changes
+          </Button>
+        </div>
+      }
+      styles={{
+        body: { maxHeight: 'calc(90vh - 200px)', overflowY: 'auto' }
+      }}
+    >
+      <div className="space-y-6">
             <div className="space-y-4">
               <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
                 <div className="w-1 h-5 bg-blue-500 rounded"></div>
@@ -375,14 +395,12 @@ const EditAssignmentModal = ({ isOpen, onClose, onSubmit, assignment }) => {
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Title <span className="text-red-500">*</span>
                 </label>
-                <input
+                <Input
                   type="text"
                   name="title"
                   value={formData.title}
                   onChange={handleChange}
-                  className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none ${
-                    errors.title ? 'border-red-500' : 'border-gray-300'
-                  }`}
+                  status={errors.title ? 'error' : ''}
                   placeholder="Enter assignment title"
                 />
                 {errors.title && (
@@ -397,12 +415,11 @@ const EditAssignmentModal = ({ isOpen, onClose, onSubmit, assignment }) => {
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Description
                 </label>
-                <textarea
+                <TextArea
                   name="description"
                   value={formData.description}
                   onChange={handleChange}
                   rows={3}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none resize-none"
                   placeholder="Enter assignment description"
                 />
               </div>
@@ -411,12 +428,11 @@ const EditAssignmentModal = ({ isOpen, onClose, onSubmit, assignment }) => {
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Guidelines
                 </label>
-                <textarea
+                <TextArea
                   name="guidelines"
                   value={formData.guidelines}
                   onChange={handleChange}
                   rows={3}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none resize-none"
                   placeholder="Enter grading guidelines"
                 />
               </div>
@@ -577,15 +593,16 @@ const EditAssignmentModal = ({ isOpen, onClose, onSubmit, assignment }) => {
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Grading Scale <span className="text-red-500">*</span>
                   </label>
-                  <select
-                    name="gradingScale"
+                  <Select
                     value={formData.gradingScale}
-                    onChange={handleChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
-                  >
-                    <option value="Scale10">Scale 10</option>
-                    <option value="PassFail">Pass/Fail</option>
-                  </select>
+                    onChange={(value) => handleChange({ target: { name: 'gradingScale', value } })}
+                    className="w-full"
+                    size="large"
+                    options={[
+                      { label: 'Scale 10', value: 'Scale10' },
+                      { label: 'Pass/Fail', value: 'PassFail' }
+                    ]}
+                  />
                 </div>
 
                 {formData.gradingScale === 'PassFail' && (
@@ -593,19 +610,19 @@ const EditAssignmentModal = ({ isOpen, onClose, onSubmit, assignment }) => {
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Pass Threshold <span className="text-red-500">*</span>
                     </label>
-                    <select
-                      name="passThreshold"
-                      value={formData.passThreshold}
-                      onChange={handleChange}
-                      className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none ${
-                        errors.passThreshold ? 'border-red-500' : 'border-gray-300'
-                      }`}
-                    >
-                      <option value="">Select pass threshold</option>
-                      <option value="0">≥ 0.0</option>
-                      <option value="40">≥ 4.0</option>
-                      <option value="50">≥ 5.0</option>
-                    </select>
+                    <Select
+                      placeholder="Select pass threshold"
+                      value={formData.passThreshold || undefined}
+                      onChange={(value) => handleChange({ target: { name: 'passThreshold', value } })}
+                      status={errors.passThreshold ? 'error' : ''}
+                      className="w-full"
+                      size="large"
+                      options={[
+                        { label: '≥ 0.0', value: '0' },
+                        { label: '≥ 4.0', value: '40' },
+                        { label: '≥ 5.0', value: '50' }
+                      ]}
+                    />
                     {errors.passThreshold && (
                       <div className="flex items-center gap-1 mt-1 text-red-500 text-sm">
                         <AlertCircle className="w-4 h-4" />
@@ -619,16 +636,14 @@ const EditAssignmentModal = ({ isOpen, onClose, onSubmit, assignment }) => {
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Instructor Weight (%) <span className="text-red-500">*</span>
                   </label>
-                  <input
+                  <Input
                     type="number"
                     name="instructorWeight"
                     value={formData.instructorWeight}
                     onChange={handleChange}
                     min="0"
                     max="100"
-                    className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none ${
-                      errors.instructorWeight ? 'border-red-500' : 'border-gray-300'
-                    }`}
+                    status={errors.instructorWeight ? 'error' : ''}
                   />
                   {errors.instructorWeight && (
                     <div className="flex items-center gap-1 mt-1 text-red-500 text-sm">
@@ -642,16 +657,14 @@ const EditAssignmentModal = ({ isOpen, onClose, onSubmit, assignment }) => {
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Peer Weight (%) <span className="text-red-500">*</span>
                   </label>
-                  <input
+                  <Input
                     type="number"
                     name="peerWeight"
                     value={formData.peerWeight}
                     onChange={handleChange}
                     min="0"
                     max="100"
-                    className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none ${
-                      errors.peerWeight ? 'border-red-500' : 'border-gray-300'
-                    }`}
+                    status={errors.peerWeight ? 'error' : ''}
                   />
                   {errors.peerWeight && (
                     <div className="flex items-center gap-1 mt-1 text-red-500 text-sm">
@@ -674,16 +687,14 @@ const EditAssignmentModal = ({ isOpen, onClose, onSubmit, assignment }) => {
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Number of Peer Reviews Required <span className="text-red-500">*</span>
                   </label>
-                  <input
+                  <Input
                     type="number"
                     name="numPeerReviewsRequired"
                     value={formData.numPeerReviewsRequired}
                     onChange={handleChange}
                     min="1"
                     max="10"
-                    className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none ${
-                      errors.numPeerReviewsRequired ? 'border-red-500' : 'border-gray-300'
-                    }`}
+                    status={errors.numPeerReviewsRequired ? 'error' : ''}
                   />
                   {errors.numPeerReviewsRequired && (
                     <div className="flex items-center gap-1 mt-1 text-red-500 text-sm">
@@ -697,7 +708,7 @@ const EditAssignmentModal = ({ isOpen, onClose, onSubmit, assignment }) => {
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Missing Review Penalty <span className="text-red-500">*</span>
                   </label>
-                  <input
+                  <Input
                     type="number"
                     name="missingReviewPenalty"
                     value={formData.missingReviewPenalty}
@@ -705,9 +716,7 @@ const EditAssignmentModal = ({ isOpen, onClose, onSubmit, assignment }) => {
                     min="1"
                     max="10"
                     step="1"
-                    className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none ${
-                      errors.missingReviewPenalty ? 'border-red-500' : 'border-gray-300'
-                    }`}
+                    status={errors.missingReviewPenalty ? 'error' : ''}
                   />
                   {errors.missingReviewPenalty && (
                     <div className="flex items-center gap-1 mt-1 text-red-500 text-sm">
@@ -719,33 +728,28 @@ const EditAssignmentModal = ({ isOpen, onClose, onSubmit, assignment }) => {
               </div>
 
               <div className="space-y-3">
-                <label className="flex items-center space-x-3 cursor-pointer group">
-                  <input
-                    type="checkbox"
-                    name="allowCrossClass"
-                    checked={formData.allowCrossClass}
-                    onChange={handleChange}
-                    className="w-5 h-5 text-blue-500 border-gray-300 rounded focus:ring-blue-500"
-                  />
+                <Checkbox
+                  name="allowCrossClass"
+                  checked={formData.allowCrossClass}
+                  onChange={(e) => handleChange(e)}
+                >
                   <div>
-                    <span className="text-sm font-medium text-gray-900 group-hover:text-blue-600">Allow Cross-Class Review</span>
+                    <span className="text-sm font-medium text-gray-900">Allow Cross-Class Review</span>
                     <p className="text-xs text-gray-500">Students can review submissions from other classes</p>
                   </div>
-                </label>
+                </Checkbox>
 
                 {formData.allowCrossClass && (
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Cross-Class Tag <span className="text-red-500">*</span>
                     </label>
-                    <input
+                    <Input
                       type="text"
                       name="crossClassTag"
                       value={formData.crossClassTag}
                       onChange={handleChange}
-                      className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none ${
-                        errors.crossClassTag ? 'border-red-500' : 'border-gray-300'
-                      }`}
+                      status={errors.crossClassTag ? 'error' : ''}
                       placeholder="Enter cross-class tag"
                     />
                     {errors.crossClassTag && (
@@ -759,33 +763,8 @@ const EditAssignmentModal = ({ isOpen, onClose, onSubmit, assignment }) => {
                 )}
               </div>
             </div>
-          </div>
-        </div>
-
-        <div className="border-t border-gray-200 p-6 bg-gray-50 flex gap-3 justify-end">
-          <button
-            type="button"
-            onClick={onClose}
-            className="px-6 py-2.5 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 font-medium transition-colors"
-          >
-            Cancel
-          </button>
-          <button
-            type="button"
-            onClick={handleSubmit}
-            disabled={!hasFormChanged()}
-            className={`px-6 py-2.5 rounded-lg font-medium flex items-center gap-2 transition-colors ${
-              hasFormChanged()
-                ? 'bg-blue-600 text-white hover:bg-blue-700 cursor-pointer'
-                : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-            }`}
-          >
-            <Save className="w-5 h-5" />
-            Save Changes
-          </button>
-        </div>
       </div>
-    </div>
+    </Modal>
   );
 };
 

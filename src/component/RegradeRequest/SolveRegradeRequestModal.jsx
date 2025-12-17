@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { X, CheckCircle, Info, AlertCircle } from 'lucide-react';
-import { Input } from 'antd';
+import { Modal, Button, Input } from 'antd';
+import { CheckCircle, Info, AlertCircle } from 'lucide-react';
 import { reviewRegradeRequest } from '../../service/regradeService';
 import { getCurrentAccount } from '../../utils/accountUtils';
 import { toast } from 'react-toastify';
@@ -51,27 +51,35 @@ const SolveRegradeRequestModal = ({ request, onClose, onSubmit }) => {
     };
 
     return (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-                {/* Header */}
-                <div className="flex items-center justify-between p-6 border-b border-gray-200">
-                    <div>
-                        <h2 className="text-xl font-bold text-gray-900">Handle Regrade Request</h2>
-                        <p className="text-sm text-gray-600 mt-1">
-                            {request.name} - {request.courseName} - {request.className} - {request.assignmentTitle}
-                        </p>
-                    </div>
-                    <button
-                        onClick={onClose}
-                        className="text-gray-400 hover:text-gray-600 transition-colors"
-                        disabled={isSubmitting}
-                    >
-                        <X className="w-6 h-6" />
-                    </button>
+        <Modal
+            open={true}
+            onCancel={onClose}
+            width={800}
+            title={
+                <div>
+                    <h2 className="text-xl font-bold text-gray-900">Handle Regrade Request</h2>
+                    <p className="text-sm text-gray-600 mt-1">
+                        {request.name} - {request.courseName} - {request.className} - {request.assignmentTitle}
+                    </p>
                 </div>
-
-                {/* Content */}
-                <div className="p-6 space-y-6">
+            }
+            footer={[
+                <Button key="cancel" onClick={onClose} disabled={isSubmitting}>
+                    Cancel
+                </Button>,
+                <Button
+                    key="submit"
+                    type="primary"
+                    onClick={handleSubmit}
+                    disabled={isSubmitting}
+                    loading={isSubmitting}
+                    icon={<CheckCircle className="w-4 h-4" />}
+                >
+                    {isSubmitting ? 'Submitting...' : 'Confirm Decision'}
+                </Button>
+            ]}
+        >
+            <div className="space-y-6">
                     {/* Request Details */}
                     <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
                         <div className="flex items-start gap-3">
@@ -180,28 +188,8 @@ const SolveRegradeRequestModal = ({ request, onClose, onSubmit }) => {
                             </p>
                         )}
                     </div>
-                </div>
-
-                {/* Footer */}
-                <div className="flex items-center justify-end gap-3 p-6 border-t border-gray-200 bg-gray-50">
-                    <button
-                        onClick={onClose}
-                        disabled={isSubmitting}
-                        className="px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                        Cancel
-                    </button>
-                    <button
-                        onClick={handleSubmit}
-                        disabled={isSubmitting}
-                        className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                        <CheckCircle className="w-4 h-4" />
-                        {isSubmitting ? 'Submitting...' : 'Confirm Decision'}
-                    </button>
-                </div>
             </div>
-        </div>
+        </Modal>
     );
 };
 

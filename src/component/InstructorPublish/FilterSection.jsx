@@ -1,5 +1,5 @@
 import React from 'react';
-import { Select } from 'antd';
+import { Select, Button } from 'antd';
 import { Eye, Loader2 } from 'lucide-react';
 
 const FilterSection = ({
@@ -67,18 +67,16 @@ const FilterSection = ({
       
       <div>
         <label className="block text-sm text-gray-600 mb-2">&nbsp;</label>
-        <button 
+        <Button
           onClick={onViewGrades}
           disabled={!selectedCourseId || !selectedClassId || !selectedAssignmentId || loading.summary}
-          className="w-full px-4 py-2.5 rounded-lg bg-green-600 hover:bg-green-700 text-white font-medium flex items-center justify-center transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
+          type="primary"
+          size="large"
+          className="w-full bg-green-600 hover:!bg-green-700"
+          icon={loading.summary ? <Loader2 className="w-4 h-4 animate-spin" /> : <Eye className="w-4 h-4" />}
         >
-          {loading.summary ? (
-            <Loader2 className="inline w-4 h-4 mr-2 animate-spin" />
-          ) : (
-            <Eye className="inline w-4 h-4 mr-2" />
-          )}
-          View Grades
-        </button>
+          View Scores
+        </Button>
       </div>
     </div>
   );

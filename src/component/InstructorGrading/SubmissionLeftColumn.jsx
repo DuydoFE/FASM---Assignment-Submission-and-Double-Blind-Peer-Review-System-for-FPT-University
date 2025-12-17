@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Download, Eye, Star, ChevronDown } from 'lucide-react';
+import { Button } from 'antd';
 import PeerReviewDetailModal from './PeerReviewDetailModal';
 
 const SubmissionLeftColumn = ({
@@ -100,13 +101,15 @@ const SubmissionLeftColumn = ({
                             </svg>
                             <h2 className="font-semibold text-gray-900">Peer Reviews</h2>
                         </div>
-                        <button
+                        <Button
                             onClick={() => setIsDetailModalOpen(true)}
-                            className="flex items-center gap-1 px-3 py-1.5 text-sm text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors font-medium"
+                            type="primary"
+                            size="small"
+                            className="bg-blue-600 hover:!bg-blue-700"
+                            icon={<Eye className="w-4 h-4" />}
                         >
-                            <Eye className="w-4 h-4" />
                             View Detail
-                        </button>
+                        </Button>
                     </div>
                     <p className="text-sm text-gray-500 mb-3">
                         Average Score: <span className="font-semibold text-blue-600">{parseFloat(calculateAveragePeerScore()).toFixed(1)}/10</span>

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Search, Eye, Loader2, MoreVertical, RefreshCw, CheckCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import { Dropdown, Input } from 'antd';
+import { Dropdown, Input, Button } from 'antd';
 import { getRegradeRequestsForInstructor } from '../../service/regradeService';
 import { getCurrentAccount } from '../../utils/accountUtils';
 import SolveRegradeRequestModal from '../../component/RegradeRequest/SolveRegradeRequestModal';
@@ -318,12 +318,13 @@ const InstructorRegradeRequest = () => {
                                         </td>
                                         <td className="px-6 py-4 text-center">
                                             {request.status === "Pending" ? (
-                                                <button
+                                                <Button
                                                     onClick={() => handleSolveClick(request)}
-                                                    className="bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-700 transition-colors"
+                                                    type="primary"
+                                                    className="bg-blue-600 hover:!bg-blue-700"
                                                 >
                                                     Solve
-                                                </button>
+                                                </Button>
                                             ) : request.status === "Approved" ? (
                                                 <Dropdown
                                                     menu={{ items: getDropdownItems(request) }}

@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { X, Calendar } from 'lucide-react';
+import { Calendar } from 'lucide-react';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
+import { Modal, Button } from 'antd';
 
 const UpdateDeadlineModal = ({ isOpen, onClose, onSave, assignment }) => {
   const [newDeadline, setNewDeadline] = useState(null);
@@ -23,7 +24,7 @@ const UpdateDeadlineModal = ({ isOpen, onClose, onSave, assignment }) => {
     }
   }, [assignment, isOpen]);
 
-  if (!isOpen || !assignment) return null;
+  if (!assignment) return null;
 
   const handleSubmit = () => {
     if (!newDeadline) {
@@ -53,21 +54,35 @@ const UpdateDeadlineModal = ({ isOpen, onClose, onSave, assignment }) => {
   const now = new Date();
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-hidden flex flex-col">
-        <div className="flex justify-between items-center p-6 border-b border-gray-200">
-          <div className="flex items-center gap-3">
-            <div className="bg-orange-100 p-2 rounded-lg">
-              <Calendar className="w-6 h-6 text-orange-600" />
-            </div>
-            <h2 className="text-xl font-bold text-gray-900">Extend Deadline</h2>
+    <Modal
+      open={isOpen}
+      onCancel={handleClose}
+      width={500}
+      title={
+        <div className="flex items-center gap-3">
+          <div className="bg-orange-100 p-2 rounded-lg">
+            <Calendar className="w-6 h-6 text-orange-600" />
           </div>
-          <button onClick={handleClose} className="text-gray-400 hover:text-gray-600 transition-colors">
-            <X className="w-6 h-6" />
-          </button>
+          <span className="text-xl font-bold text-gray-900">Extend Deadline</span>
         </div>
-
-        <div className="flex-1 overflow-y-auto p-6 space-y-6">
+      }
+      footer={
+        <div className="flex gap-3 justify-end">
+          <Button onClick={handleClose}>
+            Cancel
+          </Button>
+          <Button
+            type="primary"
+            onClick={handleSubmit}
+            icon={<Calendar className="w-5 h-5" />}
+            className="bg-orange-500 hover:bg-orange-600"
+          >
+            Extend
+          </Button>
+        </div>
+      }
+    >
+      <div className="space-y-6">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Assignment: <span className="font-semibold text-gray-900">{assignment.title}</span>
@@ -94,26 +109,9 @@ const UpdateDeadlineModal = ({ isOpen, onClose, onSave, assignment }) => {
             <p className="text-sm text-gray-600">
               <span className="font-medium">Current deadline:</span> {assignment.deadline} at {assignment.time || 'N/A'}
             </p>
-          </div>
-        </div>
-
-        <div className="border-t border-gray-200 p-6 bg-gray-50 flex gap-3 justify-end">
-          <button
-            onClick={handleClose}
-            className="px-6 py-2.5 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 font-medium transition-colors"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={handleSubmit}
-            className="px-6 py-2.5 bg-orange-500 text-white rounded-lg hover:bg-orange-600 flex items-center gap-2 transition-colors"
-          >
-            <Calendar className="w-5 h-5" />
-            Extend
-          </button>
         </div>
       </div>
-    </div>
+    </Modal>
   );
 };
 

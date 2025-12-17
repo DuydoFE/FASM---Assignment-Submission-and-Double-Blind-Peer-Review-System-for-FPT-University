@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { X, Loader } from 'lucide-react';
-import { Input } from "antd";
+import { Loader } from 'lucide-react';
+import { Input, Modal, Button } from "antd";
 const { TextArea } = Input;
 
 const EditCriterionModal = ({ isOpen, onClose, onSubmit, criterion, isSubmitting }) => {
@@ -103,27 +103,36 @@ const EditCriterionModal = ({ isOpen, onClose, onSubmit, criterion, isSubmitting
         }
     };
 
-    if (!isOpen) return null;
-
     return (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full mx-4 overflow-hidden">
-                {/* Header */}
-                <div className="bg-white px-6 py-5">
-                    <div className="flex justify-between items-center">
-                        <h2 className="text-2xl font-bold text-gray-900">Edit Criterion</h2>
-                        <button
-                            onClick={onClose}
-                            className="text-gray-900/80 hover:text-gray-900 hover:bg-gray-900/20 transition-all rounded-lg p-1.5"
-                            disabled={isSubmitting}
-                        >
-                            <X size={22} />
-                        </button>
-                    </div>
+        <Modal
+            open={isOpen}
+            onCancel={onClose}
+            width={600}
+            title={
+                <h2 className="text-2xl font-bold text-gray-900">Edit Criterion</h2>
+            }
+            footer={
+                <div className="flex justify-end gap-3">
+                    <Button
+                        onClick={onClose}
+                        disabled={isSubmitting}
+                    >
+                        Cancel
+                    </Button>
+                    <Button
+                        type="primary"
+                        onClick={handleSubmit}
+                        disabled={isButtonDisabled}
+                        loading={isSubmitting}
+                        icon={isSubmitting ? <Loader className="w-4 h-4 animate-spin" /> : null}
+                        className="bg-blue-500 hover:bg-blue-600"
+                    >
+                        {isSubmitting ? 'Editing...' : 'Edit Criterion'}
+                    </Button>
                 </div>
-
-                {/* Form */}
-                <div className="p-6">
+            }
+        >
+            <div>
                     <div className="space-y-5">
                         {/* Title */}
                         <div>
@@ -209,36 +218,8 @@ const EditCriterionModal = ({ isOpen, onClose, onSubmit, criterion, isSubmitting
                             </div>
                         </div>
                     </div>
-
-                    {/* Action Buttons */}
-                    <div className="flex justify-end gap-3 mt-8 pt-6 border-t border-gray-100">
-                        <button
-                            type="button"
-                            onClick={onClose}
-                            className="px-5 py-2.5 text-sm font-semibold text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400"
-                            disabled={isSubmitting}
-                        >
-                            Cancel
-                        </button>
-                        <button
-                            type="button"
-                            onClick={handleSubmit}
-                            disabled={isButtonDisabled}
-                            className="px-5 py-2.5 text-sm font-semibold text-white bg-blue-500 hover:bg-blue-600 rounded-lg transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 flex items-center gap-2 shadow-lg hover:shadow-xl disabled:opacity-60 disabled:cursor-not-allowed"
-                        >
-                            {isSubmitting ? (
-                                <>
-                                    <Loader className="w-4 h-4 animate-spin" />
-                                    Editing...
-                                </>
-                            ) : (
-                                'Edit Criterion'
-                            )}
-                        </button>
-                    </div>
                 </div>
-            </div>
-        </div>
+        </Modal>
     );
 };
 

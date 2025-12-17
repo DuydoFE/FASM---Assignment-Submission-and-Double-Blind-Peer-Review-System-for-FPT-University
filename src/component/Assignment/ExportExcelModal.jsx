@@ -1,9 +1,10 @@
 import React, { useState } from "react";
-import { X, FileSpreadsheet, Download, Loader2 } from "lucide-react";
+import { FileSpreadsheet, Download, Loader2 } from "lucide-react";
 import * as XLSX from "xlsx";
 import { toast } from "react-toastify";
 import { getCurrentAccount } from "../../utils/accountUtils";
 import { getExportSubmissions } from "../../service/submissionService";
+import { Checkbox, Modal, Button } from "antd";
 
 const ExportExcelModal = ({
   isOpen,
@@ -19,7 +20,6 @@ const ExportExcelModal = ({
   );
   const [isExporting, setIsExporting] = useState(false);
 
-  if (!isOpen) return null;
 
   const handleSelectAll = () => {
     if (selectAll) {
@@ -128,28 +128,45 @@ const ExportExcelModal = ({
     .replace(/\//g, "")}.xlsx`;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-hidden">
-        {/* Header */}
-        <div className="flex justify-between items-center p-6 border-b border-gray-200">
-          <div>
-            <h2 className="text-xl font-bold text-gray-900">
-              Export Excel File
-            </h2>
-            <p className="text-sm text-gray-600 mt-1">
-              Select assignments to export grades
-            </p>
-          </div>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors"
-          >
-            <X className="w-5 h-5" />
-          </button>
+    <Modal
+      open={isOpen}
+      onCancel={onClose}
+      width={700}
+      title={
+        <div>
+          <h2 className="text-xl font-bold text-gray-900">
+            Export Excel File
+          </h2>
+          <p className="text-sm text-gray-600 mt-1">
+            Select assignments to export grades
+          </p>
         </div>
-
-        {/* Content */}
-        <div className="p-6 overflow-y-auto max-h-[calc(90vh-200px)]">
+      }
+      footer={
+        <div className="flex gap-3 justify-end">
+          <Button
+            onClick={onClose}
+            disabled={isExporting}
+          >
+            Cancel
+          </Button>
+          <Button
+            type="primary"
+            onClick={handleExport}
+            disabled={selectedAssignments.length === 0 || isExporting}
+            icon={isExporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+            loading={isExporting}
+            className="bg-green-600 hover:bg-green-700"
+          >
+            {isExporting ? "Exporting..." : "Export Excel"}
+          </Button>
+        </div>
+      }
+      styles={{
+        body: { maxHeight: 'calc(90vh - 200px)', overflowY: 'auto' }
+      }}
+    >
+      <div className="space-y-6">
           {/* Course Info */}
           <div className="bg-blue-50 rounded-lg p-4 mb-6">
             <div className="flex items-center gap-2 mb-3">
@@ -180,41 +197,39 @@ const ExportExcelModal = ({
             <h3 className="font-semibold text-gray-900 mb-3">
               Select assignments
             </h3>
-            <label className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors">
-              <input
-                type="checkbox"
+            <div className="p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+              <Checkbox
                 checked={selectAll}
                 onChange={handleSelectAll}
-                className="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
-              />
-              <span className="font-medium text-gray-900"> Select All</span>
-            </label>
+              >
+                <span className="font-medium text-gray-900"> Select All</span>
+              </Checkbox>
+            </div>
           </div>
 
           {/* Assignment List */}
           <div className="space-y-2">
             {assignments.map((assignment) => (
-              <label
+              <div
                 key={assignment.assignmentId}
-                className="flex items-center gap-3 p-3 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors"
+                className="flex items-center gap-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
               >
-                <input
-                  type="checkbox"
+                <Checkbox
                   checked={selectedAssignments.includes(
                     assignment.assignmentId
                   )}
                   onChange={() =>
                     handleToggleAssignment(assignment.assignmentId)
                   }
-                  className="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
-                />
-                <span className="text-gray-900 flex-1">{assignment.title}</span>
+                >
+                  <span className="text-gray-900">{assignment.title}</span>
+                </Checkbox>
                 <span
-                  className={`px-2 py-1 rounded-full text-xs font-medium ${assignment.statusColor}`}
+                  className={`ml-auto px-2 py-1 rounded-full text-xs font-medium ${assignment.statusColor}`}
                 >
                   {assignment.status}
                 </span>
-              </label>
+              </div>
             ))}
           </div>
 
@@ -241,32 +256,8 @@ const ExportExcelModal = ({
               </p>
             </div>
           </div>
-        </div>
-
-        {/* Footer */}
-        <div className="flex gap-3 justify-end p-6 border-t border-gray-200 bg-gray-50">
-          <button
-            onClick={onClose}
-            disabled={isExporting}
-            className="px-5 py-2.5 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-100 font-medium transition-colors"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={handleExport}
-            disabled={selectedAssignments.length === 0 || isExporting}
-            className="px-5 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed font-medium transition-colors flex items-center gap-2"
-          >
-            {isExporting ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
-            ) : (
-              <Download className="w-4 h-4" />
-            )}
-            {isExporting ? "Exporting..." : "Export Excel"}
-          </button>
-        </div>
       </div>
-    </div>
+    </Modal>
   );
 };
 

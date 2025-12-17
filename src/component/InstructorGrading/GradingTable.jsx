@@ -1,6 +1,6 @@
 import React from "react";
 import { ChevronDown, Loader2, AlertCircle } from "lucide-react";
-import { Input } from "antd";
+import { Input, Button } from "antd";
 
 const { Search } = Input;
 
@@ -234,26 +234,28 @@ const GradingTable = ({
                       <td className="px-6 py-4">
                         {student.status === "Submitted" &&
                         student.assignmentStatus === "Closed" ? (
-                          <button
+                          <Button
                             onClick={() =>
                               onGradeClick(student.submissionId, student.status)
                             }
-                            className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm font-medium"
+                            type="primary"
+                            className="bg-blue-500 hover:!bg-blue-600"
                           >
                             Grade
-                          </button>
+                          </Button>
                         ) : (student.status === "Graded" &&
                             student.assignmentStatus === "Closed") ||
                           (student.assignmentStatus === "GradesPublished" &&
                             student.regradeRequestStatus === "Approved") ? (
-                          <button
+                          <Button
                             onClick={() =>
                               onGradeClick(student.submissionId, student.status)
                             }
-                            className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors text-sm font-medium"
+                            type="primary"
+                            className="bg-orange-500 hover:!bg-orange-600"
                           >
                             Re-grade
-                          </button>
+                          </Button>
                         ) : null}
                       </td>
                     </tr>
@@ -277,23 +279,16 @@ const GradingTable = ({
       {/* Action Button: Auto Grade Zero - only show when assignment is Closed or Cancelled */}
       {assignmentStatus && ['Closed', 'Cancelled'].includes(assignmentStatus) && (
         <div className="flex justify-end mt-6">
-          <button
+          <Button
             onClick={onAutoGradeZero}
             disabled={loading.autoGrading || (students && students.filter(s => s.status === 'Not Submitted').length === 0)}
-            className="px-6 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors font-medium flex items-center disabled:bg-gray-300 disabled:cursor-not-allowed"
+            type="primary"
+            danger
+            size="large"
+            icon={loading.autoGrading ? <Loader2 className="w-4 h-4 animate-spin" /> : <AlertCircle className="w-4 h-4" />}
           >
-            {loading.autoGrading ? (
-              <>
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Grading...
-              </>
-            ) : (
-              <>
-                <AlertCircle className="w-4 h-4 mr-2" />
-                Auto Grade Zero
-              </>
-            )}
-          </button>
+            {loading.autoGrading ? "Grading..." : "Auto Grade Zero"}
+          </Button>
         </div>
       )}
     </>
