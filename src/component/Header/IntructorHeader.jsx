@@ -9,7 +9,6 @@ import { toast } from "react-toastify";
 import { useState } from "react";
 import NotificationPopover from "./NotificationPopover";
 import fasmLogo from "../../assets/img/FASM.png";
-import PillNav from "../../components/PillNav";
 
 const FasmLogo = () => (
   <div className="flex items-center">
@@ -29,28 +28,21 @@ const InstructorHeader = () => {
   const [searchValue, setSearchValue] = useState("");
 
   const navItems = [
-    { label: "Dashboard", href: "/instructor/dashboard" },
-    { label: "My Classes", href: "/instructor/my-classes" },
-    { label: "Regrade Requests", href: "/instructor/regrade-request" },
+    { key: "/instructor/dashboard", label: "Dashboard" },
+    { key: "/instructor/my-classes", label: "My Classes" },
+    { key: "/instructor/regrade-request", label: "Regrade Requests" },
   ];
 
-  const getActiveHref = () => {
+  const getSelectedKey = () => {
     const currentPath = location.pathname;
-    
-    const exactMatch = navItems.find(item => item.href === currentPath);
-    if (exactMatch) {
-      console.log('Exact match found:', exactMatch.href, 'for path:', currentPath);
-      return exactMatch.href;
-    }
-    
-    const partialMatch = navItems.find(item => currentPath.startsWith(item.href));
-    if (partialMatch) {
-      console.log('Partial match found:', partialMatch.href, 'for path:', currentPath);
-      return partialMatch.href;
-    }
-    
-    console.log('No match found for path:', currentPath);
-    return currentPath;
+    const matchedItem = navItems.find(item =>
+      currentPath === item.key || currentPath.startsWith(item.key)
+    );
+    return matchedItem ? matchedItem.key : currentPath;
+  };
+
+  const handleMenuClick = ({ key }) => {
+    navigate(key);
   };
 
   const handleSearch = (e) => {
@@ -112,18 +104,21 @@ const InstructorHeader = () => {
               <FasmLogo />
             </Link>
 
-            <nav className="flex items-center">
-              <PillNav
-                items={navItems}
-                activeHref={getActiveHref()}
-                className="custom-nav"
-                ease="power2.easeOut"
-                baseColor="#ffffff"
-                pillColor="#000000"
-                hoveredPillTextColor="#000000"
-                pillTextColor="#ffffff"
-              />
-            </nav>
+            <Menu
+              mode="horizontal"
+              selectedKeys={[getSelectedKey()]}
+              items={navItems}
+              onClick={handleMenuClick}
+              style={{
+                border: 'none',
+                backgroundColor: 'transparent',
+                minWidth: '500px',
+                fontSize: '16px',
+                lineHeight: '64px',
+              }}
+              className="text-lg font-medium"
+              disabledOverflow={true}
+            />
           </div>
 
           <div className="flex items-center space-x-4">
