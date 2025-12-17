@@ -7,7 +7,6 @@ export default {
   ],
   theme: {
   	extend: {
-        // --- PHẦN MỚI THÊM VÀO (BẮT ĐẦU) ---
         keyframes: {
             fadeInUp: {
                 '0%': { opacity: '0', transform: 'translateY(20px)' },
@@ -38,7 +37,6 @@ export default {
             'shimmer': 'shimmer 2s infinite',
             'float': 'float 3s ease-in-out infinite',
         },
-        // --- PHẦN MỚI THÊM VÀO (KẾT THÚC) ---
 
   		borderRadius: {
   			lg: 'var(--radius)',
