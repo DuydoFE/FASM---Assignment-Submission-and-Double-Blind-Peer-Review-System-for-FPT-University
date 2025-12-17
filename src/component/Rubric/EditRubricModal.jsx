@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
+import { Input } from 'antd';
 
 function EditRubricModal({ isOpen, onClose, onSubmit, rubric, isSubmitting }) {
     const [title, setTitle] = useState('');
@@ -62,14 +63,13 @@ function EditRubricModal({ isOpen, onClose, onSubmit, rubric, isSubmitting }) {
                             <label className="block text-sm font-medium text-gray-700 mb-2">
                                 Rubric Title <span className="text-red-500">*</span>
                             </label>
-                            <input
-                                type="text"
+                            <Input
                                 value={title}
                                 onChange={(e) => setTitle(e.target.value)}
                                 placeholder="Enter rubric title"
                                 disabled={isSubmitting}
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
                                 required
+                                size="large"
                             />
                         </div>
                     </div>

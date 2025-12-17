@@ -1,5 +1,6 @@
 import React from 'react';
 import { Plus, X } from 'lucide-react';
+import { Input } from 'antd';
 
 const AddStudentModal = ({ 
   isOpen, 
@@ -45,17 +46,17 @@ const AddStudentModal = ({
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Student Code
             </label>
-            <input
-              type="text"
+            <Input
               value={studentCode}
               onChange={(e) => {
                 setStudentCode(e.target.value);
                 setModalError('');
               }}
               placeholder="Enter student code (e.g., SE123456)"
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none"
               disabled={addingStudent}
               autoFocus
+              size="large"
+              status={modalError ? 'error' : ''}
             />
             {modalError && (
               <p className="text-red-500 text-sm mt-2">{modalError}</p>
