@@ -224,15 +224,15 @@ const EditCriterionModal = ({ isOpen, onClose, onSubmit, criterion, isSubmitting
                             type="button"
                             onClick={handleSubmit}
                             disabled={isButtonDisabled}
-                            className="px-5 py-2.5 text-sm font-semibold text-white bg-orange-500 hover:bg-orange-600 rounded-lg transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 flex items-center gap-2 shadow-lg hover:shadow-xl disabled:opacity-60 disabled:cursor-not-allowed"
+                            className="px-5 py-2.5 text-sm font-semibold text-white bg-blue-500 hover:bg-blue-600 rounded-lg transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 flex items-center gap-2 shadow-lg hover:shadow-xl disabled:opacity-60 disabled:cursor-not-allowed"
                         >
                             {isSubmitting ? (
                                 <>
                                     <Loader className="w-4 h-4 animate-spin" />
-                                    Updating...
+                                    Editing...
                                 </>
                             ) : (
-                                'Update Criterion'
+                                'Edit Criterion'
                             )}
                         </button>
                     </div>

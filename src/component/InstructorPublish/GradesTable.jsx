@@ -1,5 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import { Search, ChevronDown, Loader2, AlertCircle } from 'lucide-react';
+import React, { useState, useEffect } from "react";
+import { ChevronDown, Loader2, AlertCircle } from "lucide-react";
+import { Input } from "antd";
+
+const { Search } = Input;
 
 const GradesTable = ({
   assignmentInfo,
@@ -10,50 +13,60 @@ const GradesTable = ({
   filteredStudents,
   loading,
   onAutoGradeZero,
-  onPublishGrades
+  onPublishGrades,
 }) => {
   const getGradeColor = (grade) => {
-    if (grade === null || grade === undefined) return 'text-gray-400 bg-gray-50';
-    const normalizedGrade = grade / 10;
-    if (normalizedGrade >= 8.5) return 'text-green-600 bg-green-50';
-    if (normalizedGrade >= 7.0) return 'text-yellow-600 bg-yellow-50';
-    return 'text-red-600 bg-red-50';
+    if (grade === null || grade === undefined)
+      return "text-gray-400 bg-gray-50";
+    const normalizedGrade = grade;
+    if (normalizedGrade >= 8) return "text-green-600 bg-green-50";
+    if (normalizedGrade >= 5) return "text-yellow-600 bg-yellow-50";
+    return "text-red-600 bg-red-50";
   };
 
   const getStatusStyle = (status) => {
     switch (status) {
-      case 'Graded':
-        return 'bg-green-100 text-green-700';
-      case 'Submitted':
-        return 'bg-blue-100 text-blue-700';
-      case 'Not Submitted':
-        return 'bg-red-100 text-red-700';
+      case "Graded":
+        return "bg-green-100 text-green-700";
+      case "Submitted":
+        return "bg-blue-100 text-blue-700";
+      case "Not Submitted":
+        return "bg-red-100 text-red-700";
       default:
-        return 'bg-gray-100 text-gray-800';
+        return "bg-gray-100 text-gray-800";
     }
   };
 
-  // Check if peer review was not graded for Graded status
-  // When status is Graded and instructorGrade equals finalGrade, it means peer review was not conducted
   const isPeerReviewNotGraded = (student) => {
-    if (student.status !== 'Graded') return false;
-    // If both instructor grade and final grade exist and are equal, peer review was not applied
-    if (student.instructorGrade !== null && student.instructorGrade !== undefined &&
-        student.finalGrade !== null && student.finalGrade !== undefined &&
-        student.instructorGrade === student.finalGrade) {
+    if (student.status !== "Graded") return false;
+    if (
+      student.instructorGrade !== null &&
+      student.instructorGrade !== undefined &&
+      student.finalGrade !== null &&
+      student.finalGrade !== undefined &&
+      student.instructorGrade === student.finalGrade
+    ) {
       return true;
     }
     return false;
   };
 
-  const assignmentStatus = assignmentInfo?.status ?? assignmentInfo?.assignmentStatus ?? (filteredStudents && filteredStudents.length > 0 ? filteredStudents[0].assignmentStatus : undefined);
+  const assignmentStatus =
+    assignmentInfo?.status ??
+    assignmentInfo?.assignmentStatus ??
+    (filteredStudents && filteredStudents.length > 0
+      ? filteredStudents[0].assignmentStatus
+      : undefined);
 
-  // derive whether actions were already applied from assignmentInfo fields (common names)
   const initiallyAutoGraded = Boolean(
-    assignmentInfo?.autoGraded ?? assignmentInfo?.autoGradeApplied ?? assignmentInfo?.isAutoGraded
+    assignmentInfo?.autoGraded ??
+      assignmentInfo?.autoGradeApplied ??
+      assignmentInfo?.isAutoGraded
   );
   const initiallyPublished = Boolean(
-    assignmentInfo?.isPublished ?? assignmentInfo?.gradesPublished ?? assignmentInfo?.publishedAt
+    assignmentInfo?.isPublished ??
+      assignmentInfo?.gradesPublished ??
+      assignmentInfo?.publishedAt
   );
 
   const [autoGradedOnce, setAutoGradedOnce] = useState(initiallyAutoGraded);
@@ -64,31 +77,26 @@ const GradesTable = ({
     setPublishedOnce(initiallyPublished);
   }, [initiallyAutoGraded, initiallyPublished, assignmentInfo]);
 
-  // wrappers: support both sync and promise-returning handlers
   const handleAutoGradeZero = () => {
     try {
       const result = onAutoGradeZero && onAutoGradeZero();
-      if (result && typeof result.then === 'function') {
+      if (result && typeof result.then === "function") {
         result.then(() => setAutoGradedOnce(true)).catch(() => {});
       } else {
         setAutoGradedOnce(true);
       }
-    } catch (e) {
-      // ignore; do not set flag on error
-    }
+    } catch (e) {}
   };
 
   const handlePublishGrades = () => {
     try {
       const result = onPublishGrades && onPublishGrades();
-      if (result && typeof result.then === 'function') {
+      if (result && typeof result.then === "function") {
         result.then(() => setPublishedOnce(true)).catch(() => {});
       } else {
         setPublishedOnce(true);
       }
-    } catch (e) {
-      // ignore
-    }
+    } catch (e) {}
   };
 
   return (
@@ -98,21 +106,23 @@ const GradesTable = ({
         <div className="bg-white rounded-lg border border-gray-200 p-6 mb-6 relative">
           {/* Assignment status badge (top-right) */}
           {assignmentStatus && (
-            <span className={`absolute top-4 right-4 px-4 py-2 rounded-lg text-base font-semibold shadow-sm ${
-              assignmentStatus === 'Upcoming'
-                ? 'bg-blue-100 text-blue-800'
-                : assignmentStatus === 'Draft'
-                ? 'bg-gray-100 text-gray-800'
-                : assignmentStatus === 'GradesPublished'
-                ? 'bg-green-100 text-green-800'
-                : assignmentStatus === 'Cancelled'
-                ? 'bg-gray-100 text-gray-800'
-                : assignmentStatus === 'InReview'
-                ? 'bg-yellow-100 text-yellow-800'
-                : assignmentStatus === 'Closed'
-                ? 'bg-red-100 text-red-800'
-                : 'bg-gray-100 text-gray-800'
-            }`}>
+            <span
+              className={`absolute top-4 right-4 px-4 py-2 rounded-lg text-base font-semibold shadow-sm ${
+                assignmentStatus === "Upcoming"
+                  ? "bg-blue-100 text-blue-800"
+                  : assignmentStatus === "Draft"
+                  ? "bg-gray-100 text-gray-800"
+                  : assignmentStatus === "GradesPublished"
+                  ? "bg-green-100 text-green-800"
+                  : assignmentStatus === "Cancelled"
+                  ? "bg-gray-100 text-gray-800"
+                  : assignmentStatus === "InReview"
+                  ? "bg-yellow-100 text-yellow-800"
+                  : assignmentStatus === "Closed"
+                  ? "bg-red-100 text-red-800"
+                  : "bg-gray-100 text-gray-800"
+              }`}
+            >
               {assignmentStatus}
             </span>
           )}
@@ -151,18 +161,15 @@ const GradesTable = ({
       )}
 
       {/* Search Bar */}
-      <div className="mb-6">
-        <div className="relative">
-          <Search className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
-          <input
-            type="text"
-            placeholder="Search students..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-        </div>
-      </div>
+      <Search
+        placeholder="Search students..."
+        value={searchTerm}
+        onChange={(e) => setSearchTerm(e.target.value)}
+        allowClear
+        size="large"
+        className="w-full"
+        style={{ height: 60 }}
+      />
 
       {/* Table */}
       <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
@@ -175,12 +182,24 @@ const GradesTable = ({
           <table className="w-full">
             <thead className="bg-gray-50 border-b border-gray-200">
               <tr>
-                <th className="px-6 py-3 text-left text-sm font-medium text-gray-600">No.</th>
-                <th className="px-6 py-3 text-left text-sm font-medium text-gray-600">Student Code</th>
-                <th className="px-6 py-3 text-left text-sm font-medium text-gray-600">Full Name</th>
-                <th className="px-6 py-3 text-center text-sm font-medium text-gray-600">Average Peer Review</th>
-                <th className="px-6 py-3 text-center text-sm font-medium text-gray-600">Instructor Grade</th>
-                <th className="px-6 py-3 text-center text-sm font-medium text-gray-600">Final Grade</th>
+                <th className="px-6 py-3 text-left text-sm font-medium text-gray-600">
+                  No.
+                </th>
+                <th className="px-6 py-3 text-left text-sm font-medium text-gray-600">
+                  Student Code
+                </th>
+                <th className="px-6 py-3 text-left text-sm font-medium text-gray-600">
+                  Full Name
+                </th>
+                <th className="px-6 py-3 text-center text-sm font-medium text-gray-600">
+                  Average Peer Review Score
+                </th>
+                <th className="px-6 py-3 text-center text-sm font-medium text-gray-600">
+                  Instructor Score
+                </th>
+                <th className="px-6 py-3 text-center text-sm font-medium text-gray-600">
+                  Final Score
+                </th>
                 <th
                   onClick={handleStatusClick}
                   className="px-6 py-3 text-center text-sm font-medium text-gray-600 cursor-pointer hover:text-orange-600 select-none"
@@ -195,38 +214,77 @@ const GradesTable = ({
               {filteredStudents.length > 0 ? (
                 filteredStudents.map((student, index) => (
                   <tr key={student.studentId} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 text-sm text-gray-600">{index + 1}</td>
-                    <td className="px-6 py-4 text-sm text-gray-600">{student.studentCode}</td>
-                    <td className="px-6 py-4 text-sm text-gray-800">{student.studentName}</td>
+                    <td className="px-6 py-4 text-sm text-gray-600">
+                      {index + 1}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-600">
+                      {student.studentCode}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-800">
+                      {student.studentName}
+                    </td>
                     <td className="px-6 py-4 text-center">
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${student.status === 'Not Submitted' || student.status === 'Submitted' || isPeerReviewNotGraded(student) ? 'text-gray-400 bg-gray-50' : getGradeColor(student.peerReview)}`}>
-                        {student.status === 'Not Submitted' || student.status === 'Submitted' || isPeerReviewNotGraded(student)
-                          ? '--'
-                          : (student.peerReview !== null && student.peerReview !== undefined
-                            ? (student.peerReview).toFixed(1)
-                            : '--')}
+                      <span
+                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                          student.status === "Not Submitted" ||
+                          student.status === "Submitted" ||
+                          isPeerReviewNotGraded(student)
+                            ? "text-gray-400 bg-gray-50"
+                            : getGradeColor(student.peerReview)
+                        }`}
+                      >
+                        {student.status === "Not Submitted" ||
+                        student.status === "Submitted" ||
+                        isPeerReviewNotGraded(student)
+                          ? "--"
+                          : student.peerReview !== null &&
+                            student.peerReview !== undefined
+                          ? student.peerReview.toFixed(1)
+                          : "--"}
                       </span>
                     </td>
                     <td className="px-6 py-4 text-center">
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${student.status === 'Not Submitted' || student.status === 'Submitted' ? 'text-gray-400 bg-gray-50' : getGradeColor(student.instructorGrade)}`}>
-                        {student.status === 'Not Submitted' || student.status === 'Submitted'
-                          ? '--'
-                          : (student.instructorGrade !== null && student.instructorGrade !== undefined
-                            ? (student.instructorGrade).toFixed(1)
-                            : '--')}
+                      <span
+                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                          student.status === "Not Submitted" ||
+                          student.status === "Submitted"
+                            ? "text-gray-400 bg-gray-50"
+                            : getGradeColor(student.instructorGrade)
+                        }`}
+                      >
+                        {student.status === "Not Submitted" ||
+                        student.status === "Submitted"
+                          ? "--"
+                          : student.instructorGrade !== null &&
+                            student.instructorGrade !== undefined
+                          ? student.instructorGrade.toFixed(1)
+                          : "--"}
                       </span>
                     </td>
                     <td className="px-6 py-4 text-center">
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${student.status === 'Not Submitted' || student.status === 'Submitted' ? 'text-gray-400 bg-gray-50' : getGradeColor(student.finalGrade)}`}>
-                        {student.status === 'Not Submitted' || student.status === 'Submitted'
-                          ? '--'
-                          : (student.finalGrade !== null && student.finalGrade !== undefined
-                            ? (student.finalGrade).toFixed(1)
-                            : '--')}
+                      <span
+                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                          student.status === "Not Submitted" ||
+                          student.status === "Submitted"
+                            ? "text-gray-400 bg-gray-50"
+                            : getGradeColor(student.finalGrade)
+                        }`}
+                      >
+                        {student.status === "Not Submitted" ||
+                        student.status === "Submitted"
+                          ? "--"
+                          : student.finalGrade !== null &&
+                            student.finalGrade !== undefined
+                          ? student.finalGrade.toFixed(1)
+                          : "--"}
                       </span>
                     </td>
                     <td className="px-6 py-4 text-center">
-                      <span className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${getStatusStyle(student.status)}`}>
+                      <span
+                        className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${getStatusStyle(
+                          student.status
+                        )}`}
+                      >
                         {student.status}
                       </span>
                     </td>
@@ -234,7 +292,10 @@ const GradesTable = ({
                 ))
               ) : (
                 <tr>
-                  <td colSpan="7" className="px-6 py-12 text-center text-gray-500">
+                  <td
+                    colSpan="7"
+                    className="px-6 py-12 text-center text-gray-500"
+                  >
                     No students found
                   </td>
                 </tr>
@@ -245,13 +306,13 @@ const GradesTable = ({
       </div>
 
       {/* Action Button: Publish Grades - only show when assignment is Closed or Cancelled */}
-      {['Closed', 'Cancelled'].includes(assignmentStatus) && (
+      {["Closed", "Cancelled"].includes(assignmentStatus) && (
         <div className="flex justify-end mt-6">
           <button
             onClick={onPublishGrades}
             disabled={loading.publishing}
-            title={'Assignment is closed or cancelled'}
-            className="px-6 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg transition-colors font-medium flex items-center disabled:bg-gray-300 disabled:cursor-not-allowed"
+            title={"Assignment is closed or cancelled"}
+            className="px-6 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg transition-colors font-medium flex items-center disabled:bg-gray-300 disabled:cursor-not-allowed"
           >
             {loading.publishing ? (
               <>
@@ -259,7 +320,7 @@ const GradesTable = ({
                 Publishing...
               </>
             ) : (
-              'Publish Grades'
+              "Publish Scores"
             )}
           </button>
         </div>
