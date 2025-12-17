@@ -63,7 +63,7 @@ const GradingRightColumn = ({
                                         <label className="block text-sm font-medium text-gray-700 mb-2">
                                             Score (0-10)
                                         </label>
-                                        <input
+                                        <Input
                                             type="number"
                                             min="0"
                                             max="10"
@@ -75,7 +75,7 @@ const GradingRightColumn = ({
                                                 else value = Math.min(10, Math.max(0, value));
                                                 updateCriteriaScore(c.criteriaId, 'score', value);
                                             }}
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                            className="w-full px-3 py-2 "
                                             placeholder="Enter score"
                                         />
                                     </div>
