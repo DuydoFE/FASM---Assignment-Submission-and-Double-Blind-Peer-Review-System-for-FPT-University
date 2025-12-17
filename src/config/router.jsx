@@ -1,9 +1,10 @@
-import { createBrowserRouter, Navigate } from "react-router-dom";
+import { createBrowserRouter, Navigate, useLocation } from "react-router-dom";
 import UseReactQuerry from "../component/UseReactQuerry";
 import Test from "../Test";
 import MainLayout from "../layout/MainLayout";
 import HomePage from "../pages/HomePage/HomePage";
 import LoginPage from "../pages/Authenticate/LoginPage";
+import AccessDeniedPage from "../pages/AccessDenied/AccessDeniedPage";
 
 import StudentDashBoard from "../pages/StudentDashBoard/StudentDashBoard";
 import StudentAssignmentPage from "../pages/StudentAssignmentPage/StudentAssignmentPage";
@@ -33,24 +34,45 @@ import { toast } from "react-toastify";
 import { ROLE } from "../constant/roleEnum";
 import { useRef } from "react";
 
-const ProtectedRoute = ({ children, role }) => {
+const ProtectedRoute = ({ children, role, allowGuest = false, requireAuth = false }) => {
   const user = useCurrentAccount();
+  const location = useLocation();
   const hasShownToast = useRef(false);
   
-  if (!user) {
-    // User is not logged in, redirect to login page without error message
-    // This handles the case when user logs out
-    return <Navigate to="/login" replace />;
+  // Allow guest access if allowGuest is true and requireAuth is false
+  if (allowGuest && !user && !requireAuth) {
+    return children;
   }
+  
+  // If requireAuth is true, always require login
+  if (!user) {
+    return <Navigate to="/login" state={{ from: location }} replace />;
+  }
+  
   if (user?.roles[0] !== role) {
-    // User is logged in but doesn't have the correct role
-    // Use ref to prevent multiple toasts on re-renders
     if (!hasShownToast.current) {
       hasShownToast.current = true;
       toast.error("You don't have permission to access this page!");
     }
-    return <Navigate to="/" replace />;
+    return <Navigate to="/access-denied" state={{ from: location }} replace />;
   }
+  return children;
+};
+
+const PublicRoute = ({ children }) => {
+  const user = useCurrentAccount();
+  
+  // Prevent logged-in users from accessing login page
+  if (user) {
+    if (user.roles[0] === "Instructor") {
+      return <Navigate to="/instructor/dashboard" replace />;
+    } else if (user.roles[0] === "Admin") {
+      return <Navigate to="/admin/dashboard" replace />;
+    } else if (user.roles[0] === "Student") {
+      return <Navigate to="/" replace />;
+    }
+  }
+  
   return children;
 };
 
@@ -82,7 +104,7 @@ import PeerReviewHistoryPage from "@/pages/PeerReviewPage/PeerReviewHistoryPage"
 export const router = createBrowserRouter([
   {
     path: "/",
-    element: <MainLayout />,
+    element: <ProtectedRoute role={ROLE.STUDENT} allowGuest={true}><MainLayout /></ProtectedRoute>,
     children: [
       {
         index: true,
@@ -90,58 +112,62 @@ export const router = createBrowserRouter([
       },
       {
         path: "profile",
-        element: <ProfilePage />,
+        element: <ProtectedRoute role={ROLE.STUDENT} requireAuth={true}><ProfilePage /></ProtectedRoute>,
       },
       {
         path: "studentdashboard",
-        element: <StudentDashBoard />,
+        element: <ProtectedRoute role={ROLE.STUDENT} requireAuth={true}><StudentDashBoard /></ProtectedRoute>,
       },
       {
         path: "my-assignments",
-        element: <StudentAssignmentPage />,
+        element: <ProtectedRoute role={ROLE.STUDENT} requireAuth={true}><StudentAssignmentPage /></ProtectedRoute>,
       },
       {
         path: "assignment/:courseId",
-        element: <AssignmentDetailPage />,
+        element: <ProtectedRoute role={ROLE.STUDENT} requireAuth={true}><AssignmentDetailPage /></ProtectedRoute>,
       },
       {
         path: "assignment/:courseId/:assignmentId",
-        element: <StudentSubmitAssignmentPage />,
+        element: <ProtectedRoute role={ROLE.STUDENT} requireAuth={true}><StudentSubmitAssignmentPage /></ProtectedRoute>,
       },
       {
         path: "assignment/:courseId/:assignmentId/review",
-        element: <PeerReviewPage />,
+        element: <ProtectedRoute role={ROLE.STUDENT} requireAuth={true}><PeerReviewPage /></ProtectedRoute>,
       },
       {
         path: "assignment/:courseId/:assignmentId/cross-review",
-        element: <CrossClassReviewPage />,
+        element: <ProtectedRoute role={ROLE.STUDENT} requireAuth={true}><CrossClassReviewPage /></ProtectedRoute>,
       },
       {
         path: "/review-success",
-        element: <ReviewSuccessPage />,
+        element: <ProtectedRoute role={ROLE.STUDENT} requireAuth={true}><ReviewSuccessPage /></ProtectedRoute>,
       },
       {
         path: "assignment/:courseId/:assignmentId/scores",
-        element: <ViewScorePage />,
+        element: <ProtectedRoute role={ROLE.STUDENT} requireAuth={true}><ViewScorePage /></ProtectedRoute>,
       },
       {
         path: "regrade-request",
-        element: <ViewRequestHistoryPage />,
+        element: <ProtectedRoute role={ROLE.STUDENT} requireAuth={true}><ViewRequestHistoryPage /></ProtectedRoute>,
       },
        {
-        path: "search", 
-        element: <SearchResultsPage />,
+        path: "search",
+        element: <ProtectedRoute role={ROLE.STUDENT} requireAuth={true}><SearchResultsPage /></ProtectedRoute>,
       },
       {
         path: "assignment/:courseId/:assignmentId/review-history",
-        element: <PeerReviewHistoryPage />,
+        element: <ProtectedRoute role={ROLE.STUDENT} requireAuth={true}><PeerReviewHistoryPage /></ProtectedRoute>,
       },
 
     ],
   },
   {
     path: "/login",
-    element: <LoginPage />,
+    element: <PublicRoute><LoginPage /></PublicRoute>,
+  },
+  {
+    path: "/access-denied",
+    element: <AccessDeniedPage />,
   },
   {
     path: "/test",

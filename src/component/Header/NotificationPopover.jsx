@@ -35,6 +35,8 @@ const getTypeStyles = (type) => {
       return "bg-amber-500/10 text-amber-400 border-amber-500/20";
     case "RegradeRequest":
       return "bg-amber-500/10 text-amber-400 border-amber-500/20";
+    case "InstructorAssigned":
+      return "bg-emerald-500/10 text-emerald-400 border-emerald-500/20";
     default:
       return "bg-zinc-500/10 text-zinc-400 border-zinc-500/20";
   }
@@ -108,7 +110,12 @@ const NotificationPopover = ({ user }) => {
         navigate(`/instructor/regrade-request`);
         break;
 
+      case "InstructorAssigned":
+        navigate("/instructor/my-classes");
+        break;
+
       default:
+        console.log("Default case - navigating to my-assignments");
         navigate("/my-assignments");
     }
   };
