@@ -1,5 +1,8 @@
 import React, { useState } from 'react';
 import { X, Loader } from 'lucide-react';
+import { Input } from 'antd';
+
+const { TextArea } = Input;
 
 const AddCriterionModal = ({ isOpen, onClose, onSubmit, rubricId, isSubmitting }) => {
     const [formData, setFormData] = useState({
@@ -92,16 +95,13 @@ const AddCriterionModal = ({ isOpen, onClose, onSubmit, rubricId, isSubmitting }
                             <label className="block text-sm font-semibold text-gray-700 mb-2">
                                 Title <span className="text-red-500">*</span>
                             </label>
-                            <input
-                                type="text"
+                            <Input
                                 value={formData.title}
                                 onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                                className={`w-full px-4 py-2.5 border-2 ${errors.title
-                                        ? 'border-red-400 bg-red-50'
-                                        : 'border-gray-200 hover:border-gray-300'
-                                    } rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all`}
                                 placeholder="e.g., Code Quality"
                                 disabled={isSubmitting}
+                                status={errors.title ? 'error' : ''}
+                                size="large"
                             />
                             {errors.title && (
                                 <p className="text-red-600 text-xs mt-1.5 flex items-center gap-1">
@@ -116,13 +116,13 @@ const AddCriterionModal = ({ isOpen, onClose, onSubmit, rubricId, isSubmitting }
                             <label className="block text-sm font-semibold text-gray-700 mb-2">
                                 Description
                             </label>
-                            <textarea
+                            <TextArea
                                 value={formData.description}
                                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                                className="w-full px-4 py-2.5 border-2 border-gray-200 hover:border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all resize-none"
                                 placeholder="Describe what this criterion evaluates..."
-                                rows="3"
+                                rows={3}
                                 disabled={isSubmitting}
+                                size="large"
                             />
                         </div>
 
@@ -133,18 +133,16 @@ const AddCriterionModal = ({ isOpen, onClose, onSubmit, rubricId, isSubmitting }
                                 <label className="block text-sm font-semibold text-gray-700 mb-2">
                                     Weight (%) <span className="text-red-500">*</span>
                                 </label>
-                                <input
+                                <Input
                                     type="number"
                                     value={formData.weight}
                                     onChange={(e) => setFormData({ ...formData, weight: e.target.value })}
-                                    className={`w-full px-4 py-2.5 border-2 ${errors.weight
-                                            ? 'border-red-400 bg-red-50'
-                                            : 'border-gray-200 hover:border-gray-300'
-                                        } rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all`}
                                     placeholder="0-100"
-                                    min="0"
-                                    max="100"
+                                    min={0}
+                                    max={100}
                                     disabled={isSubmitting}
+                                    status={errors.weight ? 'error' : ''}
+                                    size="large"
                                 />
                                 {errors.weight && (
                                     <p className="text-red-600 text-xs mt-1.5 flex items-center gap-1">
@@ -159,17 +157,15 @@ const AddCriterionModal = ({ isOpen, onClose, onSubmit, rubricId, isSubmitting }
                                 <label className="block text-sm font-semibold text-gray-700 mb-2">
                                     Max Score <span className="text-red-500">*</span>
                                 </label>
-                                <input
+                                <Input
                                     type="number"
                                     value={formData.maxScore}
                                     onChange={(e) => setFormData({ ...formData, maxScore: e.target.value })}
-                                    className={`w-full px-4 py-2.5 border-2 ${errors.maxScore
-                                            ? 'border-red-400 bg-red-50'
-                                            : 'border-gray-200 hover:border-gray-300'
-                                        } rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all`}
                                     placeholder="Points"
-                                    min="0"
+                                    min={0}
                                     disabled={isSubmitting}
+                                    status={errors.maxScore ? 'error' : ''}
+                                    size="large"
                                 />
                                 {errors.maxScore && (
                                     <p className="text-red-600 text-xs mt-1.5 flex items-center gap-1">
