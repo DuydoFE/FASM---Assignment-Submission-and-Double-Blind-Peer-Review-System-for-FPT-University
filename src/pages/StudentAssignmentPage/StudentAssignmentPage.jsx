@@ -10,12 +10,11 @@ import {
   Server,
   Globe,
   Code,
-  Sparkles,
-  GraduationCap,
 } from "lucide-react";
 import CourseListItem from "../../component/Assignment/CourseListItem";
 import EnrolledCourseCard from "../../component/Assignment/EnrolledCourseCard";
 import JoinClassModal from "../../component/Assignment/JoinClassModal";
+import FASMLogo from "../../assets/img/FASM.png";
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-toastify";
@@ -242,9 +241,21 @@ const StudentAssignmentPage = () => {
               transition={{ duration: 0.6, delay: 0.2 }}
               className="flex items-center gap-3 mb-3"
             >
-              <GraduationCap className="w-10 h-10" />
+              <motion.img
+                src={FASMLogo}
+                alt="FASM Logo"
+                className="w-12 h-12 object-contain"
+                animate={{
+                  rotate: [0, 5, -5, 0],
+                  scale: [1, 1.05, 1]
+                }}
+                transition={{
+                  duration: 3,
+                  repeat: Infinity,
+                  repeatType: "reverse"
+                }}
+              />
               <h1 className="text-3xl font-bold">My Classes</h1>
-              <Sparkles className="w-6 h-6 text-yellow-300 animate-pulse" />
             </motion.div>
             <motion.p
               initial={{ opacity: 0 }}
@@ -268,9 +279,8 @@ const StudentAssignmentPage = () => {
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.5, delay: 0.3 }}
-            className="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-2"
+            className="text-2xl font-bold text-gray-800 mb-6"
           >
-            <BookOpen className="w-7 h-7 text-blue-600" />
             Enrolled Classes
           </motion.h2>
           
@@ -292,7 +302,11 @@ const StudentAssignmentPage = () => {
             <div className="flex items-center justify-between mb-4">
               <div>
                 <h3 className="text-xl font-bold text-gray-800 mb-1 flex items-center gap-2">
-                  <Sparkles className="w-5 h-5 text-purple-600" />
+                  <img
+                    src={FASMLogo}
+                    alt="FASM Logo"
+                    className="w-6 h-6 object-contain"
+                  />
                   Available Courses
                 </h3>
                 <p className="text-sm text-gray-600">Discover and join new classes</p>
