@@ -4,6 +4,7 @@ import Test from "../Test";
 import MainLayout from "../layout/MainLayout";
 import HomePage from "../pages/HomePage/HomePage";
 import LoginPage from "../pages/Authenticate/LoginPage";
+import AccessDeniedPage from "../pages/AccessDenied/AccessDeniedPage";
 
 import StudentDashBoard from "../pages/StudentDashBoard/StudentDashBoard";
 import StudentAssignmentPage from "../pages/StudentAssignmentPage/StudentAssignmentPage";
@@ -41,12 +42,11 @@ const ProtectedRoute = ({ children, role }) => {
     return <Navigate to="/login" replace />;
   }
   if (user?.roles[0] !== role) {
-   
     if (!hasShownToast.current) {
       hasShownToast.current = true;
       toast.error("You don't have permission to access this page!");
     }
-    return <Navigate to="/" replace />;
+    return <Navigate to="/access-denied" replace />;
   }
   return children;
 };
@@ -139,6 +139,10 @@ export const router = createBrowserRouter([
   {
     path: "/login",
     element: <LoginPage />,
+  },
+  {
+    path: "/access-denied",
+    element: <AccessDeniedPage />,
   },
   {
     path: "/test",
