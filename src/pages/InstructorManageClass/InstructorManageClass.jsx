@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useLocation, useParams } from "react-router-dom";
 import { Search, Users, Trash2, Plus } from "lucide-react";
+import { Input } from "antd";
 import { getCurrentAccount } from "../../utils/accountUtils";
 import {
   getStudentsInCourse,
@@ -239,16 +240,18 @@ const InstructorManageClass = () => {
             Add Student
           </button>
 
-          <div className="relative">
-            <Search className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Search students..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-            />
-          </div>
+          <Input
+            placeholder="Search students..."
+            prefix={<Search className="w-5 h-5 text-gray-400" />}
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            size="large"
+            className="w-80"
+            style={{
+              borderRadius: '8px',
+              fontSize: '16px',
+            }}
+          />
         </div>
       </div>
 

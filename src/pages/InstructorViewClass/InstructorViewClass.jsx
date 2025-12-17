@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { Search, BookOpen, Play, CheckCircle, Clock, ChevronDown, Key, X, Eye, EyeOff } from 'lucide-react';
+import { Input } from 'antd';
 import { getCurrentAccount } from '../../utils/accountUtils';
 import { useNavigate } from 'react-router-dom';
 import { getInstructorCourses } from '../../service/courseInstructorService';
@@ -149,16 +150,18 @@ const InstructorViewClass = () => {
 
         {/* Search */}
         <div className="mb-8">
-          <div className="relative max-w-md">
-            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
-            <input
-              type="text"
-              placeholder="Search by course name or code..."
-              className="w-full pl-12 pr-4 py-3 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </div>
+          <Input
+            placeholder="Search by course name or code..."
+            prefix={<Search className="w-5 h-5 text-gray-400" />}
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            size="large"
+            className="max-w-md"
+            style={{
+              borderRadius: '8px',
+              fontSize: '18px',
+            }}
+          />
         </div>
 
         {/* Statistics Cards */}

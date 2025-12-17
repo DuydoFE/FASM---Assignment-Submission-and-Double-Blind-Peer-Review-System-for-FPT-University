@@ -171,7 +171,7 @@ const GradingRightColumn = ({
                         onChange={(e) => setGeneralFeedback(e.target.value)}
                         rows="6"
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
-                        placeholder="Nhập nhận xét tổng quan về bài làm của sinh viên..."
+                        placeholder="Enter a general comment on the student's submission..."
                     />
                     <p className="text-xs text-gray-500 mt-2">
                         This comment will be displayed along with the student's overall grade.

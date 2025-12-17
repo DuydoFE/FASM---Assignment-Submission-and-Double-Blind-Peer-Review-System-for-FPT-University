@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Search, Eye, Loader, Pencil } from 'lucide-react';
+import { Input } from 'antd';
 import { getRubricTemplatesByUserId, getRubricByUserId } from '../../service/rubricService';
 import { toast } from 'react-toastify';
 import { getCurrentAccount } from '../../utils/accountUtils';
@@ -138,16 +139,18 @@ const InstructorManageRubric = () => {
 
                 {/* Search */}
                 <div className="flex gap-4 mb-8">
-                    <div className="flex-1 relative">
-                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                        <input
-                            type="text"
-                            placeholder="Search rubrics..."
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
-                        />
-                    </div>
+                    <Input
+                        placeholder="Search rubrics..."
+                        prefix={<Search className="w-5 h-5 text-gray-400" />}
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        size="large"
+                        className="flex-1"
+                        style={{
+                            borderRadius: '8px',
+                            fontSize: '16px',
+                        }}
+                    />
                 </div>
 
                 {/* Template Section */}
@@ -301,16 +304,18 @@ const InstructorManageRubric = () => {
 
                     {/* Search for My Rubrics */}
                     <div className="flex gap-4 mb-6">
-                        <div className="flex-1 relative">
-                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                            <input
-                                type="text"
-                                placeholder="Search by title, course/class, or assignment..."
-                                value={rubricSearchQuery}
-                                onChange={(e) => setRubricSearchQuery(e.target.value)}
-                                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
-                            />
-                        </div>
+                        <Input
+                            placeholder="Search by title, course/class, or assignment..."
+                            prefix={<Search className="w-5 h-5 text-gray-400" />}
+                            value={rubricSearchQuery}
+                            onChange={(e) => setRubricSearchQuery(e.target.value)}
+                            size="large"
+                            className="flex-1"
+                            style={{
+                                borderRadius: '8px',
+                                fontSize: '16px',
+                            }}
+                        />
                     </div>
 
                     <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">

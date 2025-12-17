@@ -12,7 +12,7 @@ const PillNav = ({
   hoveredPillTextColor = '#060010',
   pillTextColor,
   onMobileMenuClick,
-  initialLoadAnimation = true
+  initialLoadAnimation = false
 }) => {
   const resolvedPillTextColor = pillTextColor ?? baseColor;
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -103,7 +103,22 @@ const PillNav = ({
     return () => window.removeEventListener('resize', onResize);
   }, [items, ease, initialLoadAnimation]);
 
-  const handleEnter = i => {
+  // Reset all animations when activeHref changes
+  useEffect(() => {
+    // Kill all active tweens
+    activeTweenRefs.current.forEach(tween => tween?.kill());
+    activeTweenRefs.current = [];
+    
+    // Reset all timelines to start position
+    tlRefs.current.forEach(tl => {
+      if (tl) {
+        tl.progress(0);
+      }
+    });
+  }, [activeHref]);
+
+  const handleEnter = (i, isActive) => {
+    if (isActive) return; // Don't animate if tab is active
     const tl = tlRefs.current[i];
     if (!tl) return;
     activeTweenRefs.current[i]?.kill();
@@ -114,7 +129,8 @@ const PillNav = ({
     });
   };
 
-  const handleLeave = i => {
+  const handleLeave = (i, isActive) => {
+    if (isActive) return; // Don't animate if tab is active
     const tl = tlRefs.current[i];
     if (!tl) return;
     activeTweenRefs.current[i]?.kill();
@@ -219,11 +235,22 @@ const PillNav = ({
             {items.map((item, i) => {
               const isActive = activeHref === item.href;
 
-              const pillStyle = {
-                background: 'var(--pill-bg, #fff)',
-                color: 'var(--pill-text, var(--base, #000))',
+              const pillStyle = isActive ? {
+                background: 'var(--pill-bg, #000)',
+                color: 'var(--pill-text, #fff)',
                 paddingLeft: 'var(--pill-pad-x)',
-                paddingRight: 'var(--pill-pad-x)'
+                paddingRight: 'var(--pill-pad-x)',
+                border: 'none',
+                outline: 'none',
+                boxShadow: 'none'
+              } : {
+                background: 'transparent',
+                color: 'var(--pill-bg, #000)',
+                paddingLeft: 'var(--pill-pad-x)',
+                paddingRight: 'var(--pill-pad-x)',
+                border: 'none',
+                outline: 'none',
+                boxShadow: 'none'
               };
 
               const PillContent = (
@@ -257,18 +284,11 @@ const PillNav = ({
                       {item.label}
                     </span>
                   </span>
-                  {isActive && (
-                    <span
-                      className="absolute left-1/2 -bottom-[6px] -translate-x-1/2 w-3 h-3 rounded-full z-[4]"
-                      style={{ background: 'var(--base, #000)' }}
-                      aria-hidden="true"
-                    />
-                  )}
                 </>
               );
 
               const basePillClasses =
-                'relative overflow-hidden inline-flex items-center justify-center h-full no-underline rounded-full box-border font-semibold text-[16px] leading-[0] uppercase tracking-[0.2px] whitespace-nowrap cursor-pointer px-0';
+                'relative overflow-hidden inline-flex items-center justify-center h-full no-underline rounded-full box-border font-semibold text-[16px] leading-[0] uppercase tracking-[0.2px] whitespace-nowrap cursor-pointer px-0 focus:outline-none focus:ring-0';
 
               return (
                 <li key={item.href} role="none" className="flex h-full">
@@ -279,8 +299,8 @@ const PillNav = ({
                       className={basePillClasses}
                       style={pillStyle}
                       aria-label={item.ariaLabel || item.label}
-                      onMouseEnter={() => handleEnter(i)}
-                      onMouseLeave={() => handleLeave(i)}
+                      onMouseEnter={() => handleEnter(i, isActive)}
+                      onMouseLeave={() => handleLeave(i, isActive)}
                     >
                       {PillContent}
                     </Link>
@@ -291,8 +311,8 @@ const PillNav = ({
                       className={basePillClasses}
                       style={pillStyle}
                       aria-label={item.ariaLabel || item.label}
-                      onMouseEnter={() => handleEnter(i)}
-                      onMouseLeave={() => handleLeave(i)}
+                      onMouseEnter={() => handleEnter(i, isActive)}
+                      onMouseLeave={() => handleLeave(i, isActive)}
                     >
                       {PillContent}
                     </a>

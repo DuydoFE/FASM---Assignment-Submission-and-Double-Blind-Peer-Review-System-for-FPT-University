@@ -2,7 +2,7 @@ import { Link, useNavigate, useLocation } from "react-router-dom";
 import { LogOut, User, Search } from "lucide-react";
 import { getCurrentAccount } from "../../utils/accountUtils";
 import { useDispatch } from "react-redux";
-import { Dropdown, Menu, Avatar, Button } from "antd";
+import { Dropdown, Menu, Avatar, Button, Input } from "antd";
 import { logout as logoutAction } from "../../redux/features/userSlice";
 import { logout as logoutApi } from "../../service/userService";
 import { toast } from "react-toastify";
@@ -35,6 +35,28 @@ const InstructorHeader = () => {
     { label: "My Classes", href: "/instructor/my-classes" },
     { label: "Regrade Requests", href: "/instructor/regrade-request" },
   ];
+
+  // Determine active href based on current location
+  const getActiveHref = () => {
+    const currentPath = location.pathname;
+    
+    // Check exact matches first
+    const exactMatch = navItems.find(item => item.href === currentPath);
+    if (exactMatch) {
+      console.log('Exact match found:', exactMatch.href, 'for path:', currentPath);
+      return exactMatch.href;
+    }
+    
+    // Check if current path starts with any nav item href (for sub-routes)
+    const partialMatch = navItems.find(item => currentPath.startsWith(item.href));
+    if (partialMatch) {
+      console.log('Partial match found:', partialMatch.href, 'for path:', currentPath);
+      return partialMatch.href;
+    }
+    
+    console.log('No match found for path:', currentPath);
+    return currentPath;
+  };
 
   const handleSearch = (e) => {
     if (e.key === "Enter" && searchValue.trim()) {
@@ -101,29 +123,31 @@ const InstructorHeader = () => {
             <nav className="flex items-center">
               <PillNav
                 items={navItems}
-                activeHref="/"
+                activeHref={getActiveHref()}
                 className="custom-nav"
                 ease="power2.easeOut"
-                baseColor="#000000"
-                pillColor="#ffffff"
-                hoveredPillTextColor="#ffffff"
-                pillTextColor="#000000"
+                baseColor="#ffffff"
+                pillColor="#000000"
+                hoveredPillTextColor="#000000"
+                pillTextColor="#ffffff"
               />
             </nav>
           </div>
 
           <div className="flex items-center space-x-4">
-            <div className="relative w-64">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Search..."
-                value={searchValue}
-                onChange={(e) => setSearchValue(e.target.value)}
-                onKeyDown={handleSearch}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all"
-              />
-            </div>
+            <Input
+              placeholder="Search..."
+              prefix={<Search className="w-5 h-5 text-gray-700" />}
+              value={searchValue}
+              onChange={(e) => setSearchValue(e.target.value)}
+              onKeyDown={handleSearch}
+              size="large"
+              className="w-80"
+              style={{
+                borderRadius: '8px',
+                fontSize: '16px',
+              }}
+            />
 
             {/* Component NotificationPopover được gọi ở đây */}
             {user && <NotificationPopover user={user} />}

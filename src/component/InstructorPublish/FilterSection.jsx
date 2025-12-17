@@ -1,5 +1,6 @@
 import React from 'react';
-import { ChevronDown, Eye, Loader2 } from 'lucide-react';
+import { Select } from 'antd';
+import { Eye, Loader2 } from 'lucide-react';
 
 const FilterSection = ({
   courses,
@@ -18,62 +19,50 @@ const FilterSection = ({
     <div className="grid grid-cols-4 gap-4 mb-6">
       <div>
         <label className="block text-sm text-gray-600 mb-2">Course</label>
-        <div className="relative">
-          <select 
-            value={selectedCourseId}
-            onChange={(e) => setSelectedCourseId(e.target.value)}
-            disabled={loading.courses}
-            className="w-full px-4 py-2.5 border border-gray-300 rounded-lg appearance-none bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
-          >
-            <option value="">Select Course</option>
-            {courses.map(course => (
-              <option key={course.courseId} value={course.courseId}>
-                {course.courseName}
-              </option>
-            ))}
-          </select>
-          <ChevronDown className="absolute right-3 top-3 w-5 h-5 text-gray-400 pointer-events-none" />
-        </div>
+        <Select
+          value={selectedCourseId || undefined}
+          onChange={(value) => setSelectedCourseId(value)}
+          disabled={loading.courses}
+          placeholder="Select Course"
+          className="w-full"
+          size="large"
+          options={courses.map(course => ({
+            value: course.courseId,
+            label: course.courseName
+          }))}
+        />
       </div>
       
       <div>
         <label className="block text-sm text-gray-600 mb-2">Class</label>
-        <div className="relative">
-          <select 
-            value={selectedClassId}
-            onChange={(e) => setSelectedClassId(e.target.value)}
-            disabled={!selectedCourseId || loading.classes}
-            className="w-full px-4 py-2.5 border border-gray-300 rounded-lg appearance-none bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
-          >
-            <option value="">Select Class</option>
-            {classes.map(cls => (
-              <option key={cls.courseInstanceId} value={cls.courseInstanceId}>
-                {cls.sectionCode}
-              </option>
-            ))}
-          </select>
-          <ChevronDown className="absolute right-3 top-3 w-5 h-5 text-gray-400 pointer-events-none" />
-        </div>
+        <Select
+          value={selectedClassId || undefined}
+          onChange={(value) => setSelectedClassId(value)}
+          disabled={!selectedCourseId || loading.classes}
+          placeholder="Select Class"
+          className="w-full"
+          size="large"
+          options={classes.map(cls => ({
+            value: cls.courseInstanceId,
+            label: cls.sectionCode
+          }))}
+        />
       </div>
       
       <div>
         <label className="block text-sm text-gray-600 mb-2">Assignment</label>
-        <div className="relative">
-          <select 
-            value={selectedAssignmentId}
-            onChange={(e) => setSelectedAssignmentId(e.target.value)}
-            disabled={!selectedClassId || loading.assignments}
-            className="w-full px-4 py-2.5 border border-gray-300 rounded-lg appearance-none bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
-          >
-            <option value="">Select Assignment</option>
-            {assignments.map(assignment => (
-              <option key={assignment.assignmentId} value={assignment.assignmentId}>
-                {assignment.title}
-              </option>
-            ))}
-          </select>
-          <ChevronDown className="absolute right-3 top-3 w-5 h-5 text-gray-400 pointer-events-none" />
-        </div>
+        <Select
+          value={selectedAssignmentId || undefined}
+          onChange={(value) => setSelectedAssignmentId(value)}
+          disabled={!selectedClassId || loading.assignments}
+          placeholder="Select Assignment"
+          className="w-full"
+          size="large"
+          options={assignments.map(assignment => ({
+            value: assignment.assignmentId,
+            label: assignment.title
+          }))}
+        />
       </div>
       
       <div>
