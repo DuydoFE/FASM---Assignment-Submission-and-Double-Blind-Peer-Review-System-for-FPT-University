@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Pencil, Trash2, Plus, Loader, ArrowLeft } from 'lucide-react';
+import { Pencil, Trash2, Plus, Loader, ArrowLeft, MoreVertical } from 'lucide-react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { Dropdown } from 'antd';
 import { deleteCriterion, createCriterion, updateCriterion } from '../../service/criteriaService';
 import { updateRubric, getRubricById } from '../../service/rubricService';
 import AddCriterionModal from '../../component/Criteria/AddCriterionModal';
@@ -345,29 +346,38 @@ function InstructorManageCriteria() {
                                                             <div className="text-base font-semibold text-indigo-600">{criterion.maxScore}</div>
                                                         </div>
                                                     </div>
-                                                    <div className="flex items-center gap-1 ml-2">
-                                                        {(assignmentStatus === 'Draft') && (
-                                                            <button
-                                                                onClick={() => handleEditClick(criterion)}
-                                                                className="text-gray-400 hover:text-indigo-600 transition-colors p-2 rounded-lg hover:bg-indigo-50"
-                                                                title="Edit criterion"
-                                                            >
-                                                                <Pencil size={18} />
-                                                            </button>
-                                                        )}
-                                                        {(assignmentStatus === 'Draft') && (
-                                                            <button
-                                                                onClick={(e) => {
-                                                                    e.stopPropagation();
-                                                                    handleDeleteClick(criterion.criteriaId, criterion.title);
+                                                    {(assignmentStatus === 'Draft') && (
+                                                        <div className="ml-2">
+                                                            <Dropdown
+                                                                menu={{
+                                                                    items: [
+                                                                        {
+                                                                            key: 'edit',
+                                                                            label: 'Edit',
+                                                                            icon: <Pencil size={16} />,
+                                                                            onClick: () => handleEditClick(criterion)
+                                                                        },
+                                                                        {
+                                                                            key: 'delete',
+                                                                            label: 'Delete',
+                                                                            icon: <Trash2 size={16} />,
+                                                                            danger: true,
+                                                                            onClick: () => handleDeleteClick(criterion.criteriaId, criterion.title)
+                                                                        }
+                                                                    ]
                                                                 }}
-                                                                className="text-gray-400 hover:text-red-600 transition-colors p-2 rounded-lg hover:bg-red-50"
-                                                                title="Delete criterion"
+                                                                trigger={['click']}
+                                                                placement="bottomRight"
                                                             >
-                                                                <Trash2 size={18} />
-                                                            </button>
-                                                        )}
-                                                    </div>
+                                                                <button
+                                                                    className="text-gray-400 hover:text-gray-600 transition-colors p-2 rounded-lg hover:bg-gray-100"
+                                                                    onClick={(e) => e.stopPropagation()}
+                                                                >
+                                                                    <MoreVertical size={18} />
+                                                                </button>
+                                                            </Dropdown>
+                                                        </div>
+                                                    )}
                                                 </div>
                                             </div>
 
