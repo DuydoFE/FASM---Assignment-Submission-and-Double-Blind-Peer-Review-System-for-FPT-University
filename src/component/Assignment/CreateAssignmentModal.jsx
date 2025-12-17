@@ -5,6 +5,10 @@ import { toast } from 'react-toastify';
 import { getCurrentAccount } from '../../utils/accountUtils';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
+import { Input } from "antd";
+
+const { TextArea } = Input;
+
 
 const CreateAssignmentModal = ({ isOpen, onClose, onSubmit, courseInstanceId }) => {
   const [formData, setFormData] = useState({
@@ -410,8 +414,8 @@ const CreateAssignmentModal = ({ isOpen, onClose, onSubmit, courseInstanceId }) 
       <div className="bg-white rounded-xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-hidden flex flex-col">
         <div className="flex justify-between items-center p-6 border-b border-gray-200">
           <div className="flex items-center gap-3">
-            <div className="bg-orange-100 p-2 rounded-lg">
-              <FileText className="w-6 h-6 text-orange-600" />
+            <div className="bg-blue-100 p-2 rounded-lg">
+              <FileText className="w-6 h-6 text-blue-600" />
             </div>
             <h2 className="text-2xl font-bold text-gray-900">Create New Assignment</h2>
           </div>
@@ -426,7 +430,7 @@ const CreateAssignmentModal = ({ isOpen, onClose, onSubmit, courseInstanceId }) 
             {/* BASIC INFORMATION */}
             <div className="space-y-4">
               <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                <div className="w-1 h-5 bg-orange-500 rounded"></div>
+                <div className="w-1 h-5 bg-blue-500 rounded"></div>
                 Basic Information
               </h3>
 
@@ -434,12 +438,12 @@ const CreateAssignmentModal = ({ isOpen, onClose, onSubmit, courseInstanceId }) 
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Title <span className="text-red-500">*</span>
                 </label>
-                <input
+                <Input
                   type="text"
                   name="title"
                   value={formData.title}
                   onChange={handleChange}
-                  className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none ${errors.title ? 'border-red-500' : 'border-gray-300'
+                  className={`w-full px-4 py-2 ${errors.title ? 'border-red-500' : 'border-gray-300'
                     }`}
                   placeholder="Enter assignment title"
                 />
@@ -455,12 +459,12 @@ const CreateAssignmentModal = ({ isOpen, onClose, onSubmit, courseInstanceId }) 
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Description
                 </label>
-                <textarea
+                <TextArea
                   name="description"
                   value={formData.description}
                   onChange={handleChange}
                   rows={3}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none resize-none"
+                  className="w-full px-4 py-2"
                   placeholder="Enter assignment description"
                 />
               </div>
@@ -469,12 +473,12 @@ const CreateAssignmentModal = ({ isOpen, onClose, onSubmit, courseInstanceId }) 
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Guidelines
                 </label>
-                <textarea
+                <TextArea
                   name="guidelines"
                   value={formData.guidelines}
                   onChange={handleChange}
                   rows={3}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none resize-none"
+                  className="w-full px-4 py-2"
                   placeholder="Enter grading guidelines"
                 />
               </div>
@@ -517,17 +521,16 @@ const CreateAssignmentModal = ({ isOpen, onClose, onSubmit, courseInstanceId }) 
                   Document <span className="text-gray-400">(Optional)</span>
                 </label>
                 {!selectedFile ? (
-                  <label className="flex items-center justify-center w-full px-4 py-6 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-orange-500 hover:bg-orange-50 transition-colors">
+                  <label className="flex items-center justify-center w-full px-4 py-6 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition-colors">
                     <div className="flex flex-col items-center gap-2">
                       <Upload className="w-8 h-8 text-gray-400" />
                       <span className="text-sm text-gray-600">Click to upload file</span>
-                      <span className="text-xs text-gray-400">PDF, DOC, DOCX, PPT, PPTX</span>
                     </div>
                     <input
                       type="file"
                       onChange={handleFileChange}
                       className="hidden"
-                      accept=".pdf,.doc,.docx,.ppt,.pptx"
+                      accept="all"
                     />
                   </label>
                 ) : (
@@ -554,7 +557,7 @@ const CreateAssignmentModal = ({ isOpen, onClose, onSubmit, courseInstanceId }) 
             {/* IMPORTANT DATES */}
             <div className="space-y-4">
               <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                <div className="w-1 h-5 bg-orange-500 rounded"></div>
+                <div className="w-1 h-5 bg-blue-500 rounded"></div>
                 Important Dates
               </h3>
 
@@ -570,7 +573,7 @@ const CreateAssignmentModal = ({ isOpen, onClose, onSubmit, courseInstanceId }) 
                     timeIntervals={1}
                     dateFormat="MMM d, yyyy h:mm aa"
                     minDate={now}
-                    className={`w-full px-10 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none ${errors.startDate ? 'border-red-500' : 'border-gray-300'}`}
+                    className={`w-full px-10 py-2 border rounded-lg focus:ring-1 focus:ring-blue-400 focus:border-transparent outline-none ${errors.startDate ? 'border-red-500' : 'border-gray-300'}`}
                     placeholderText="Select start date and time"
                   />
                   {errors.startDate && (
@@ -592,7 +595,7 @@ const CreateAssignmentModal = ({ isOpen, onClose, onSubmit, courseInstanceId }) 
                     timeIntervals={1}
                     dateFormat="MMM d, yyyy h:mm aa"
                     minDate={now}
-                    className={`w-full px-10 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none ${errors.deadline ? 'border-red-500' : 'border-gray-300'}`}
+                    className={`w-full px-10 py-2 border rounded-lg focus:ring-1 focus:ring-blue-400 focus:border-transparent outline-none ${errors.deadline ? 'border-red-500' : 'border-gray-300'}`}
                     placeholderText="Select deadline and time"
                   />
                   {errors.deadline && (
@@ -614,7 +617,7 @@ const CreateAssignmentModal = ({ isOpen, onClose, onSubmit, courseInstanceId }) 
                     timeIntervals={1}
                     dateFormat="MMM d, yyyy h:mm aa"
                     minDate={now}
-                    className={`w-full px-10 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none ${errors.reviewDeadline ? 'border-red-500' : 'border-gray-300'}`}
+                    className={`w-full px-10 py-2 border rounded-lg focus:ring-1 focus:ring-blue-400 focus:border-transparent outline-none ${errors.reviewDeadline ? 'border-red-500' : 'border-gray-300'}`}
                     placeholderText="Select review deadline and time"
                   />
                   {errors.reviewDeadline && (
@@ -636,7 +639,7 @@ const CreateAssignmentModal = ({ isOpen, onClose, onSubmit, courseInstanceId }) 
                     timeIntervals={1}
                     dateFormat="MMM d, yyyy h:mm aa"
                     minDate={now}
-                    className={`w-full px-10 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none ${errors.finalDeadline ? 'border-red-500' : 'border-gray-300'}`}
+                    className={`w-full px-10 py-2 border rounded-lg focus:ring-1 focus:ring-blue-400 focus:border-transparent outline-none ${errors.finalDeadline ? 'border-red-500' : 'border-gray-300'}`}
                     placeholderText="Select final deadline and time"
                   />
                   {errors.finalDeadline && (
@@ -652,7 +655,7 @@ const CreateAssignmentModal = ({ isOpen, onClose, onSubmit, courseInstanceId }) 
             {/* GRADING */}
             <div className="space-y-4">
               <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                <div className="w-1 h-5 bg-orange-500 rounded"></div>
+                <div className="w-1 h-5 bg-blue-500 rounded"></div>
                 Grading Configuration
               </h3>
 
@@ -707,14 +710,14 @@ const CreateAssignmentModal = ({ isOpen, onClose, onSubmit, courseInstanceId }) 
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Instructor Weight (%) <span className="text-red-500">*</span>
                     </label>
-                    <input
+                    <Input
                       type="number"
                       name="instructorWeight"
                       value={formData.instructorWeight}
                       onChange={handleChange}
                       min="0"
                       max="100"
-                      className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none ${errors.instructorWeight ? 'border-red-500' : 'border-gray-300'
+                      className={`w-full px-4 py-2 ${errors.instructorWeight ? 'border-red-500' : 'border-gray-300'
                         }`}
                     />
                     {errors.instructorWeight && (
@@ -729,14 +732,14 @@ const CreateAssignmentModal = ({ isOpen, onClose, onSubmit, courseInstanceId }) 
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Peer Weight (%) <span className="text-red-500">*</span>
                     </label>
-                    <input
+                    <Input
                       type="number"
                       name="peerWeight"
                       value={formData.peerWeight}
                       onChange={handleChange}
                       min="0"
                       max="100"
-                      className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none ${errors.peerWeight ? 'border-red-500' : 'border-gray-300'
+                      className={`w-full px-4 py-2 ${errors.peerWeight ? 'border-red-500' : 'border-gray-300'
                         }`}
                     />
                     {errors.peerWeight && (
@@ -753,7 +756,7 @@ const CreateAssignmentModal = ({ isOpen, onClose, onSubmit, courseInstanceId }) 
             {/* REVIEW SETTINGS */}
             <div className="space-y-4">
               <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                <div className="w-1 h-5 bg-orange-500 rounded"></div>
+                <div className="w-1 h-5 bg-blue-500 rounded"></div>
                 Review Settings
               </h3>
 
@@ -762,14 +765,14 @@ const CreateAssignmentModal = ({ isOpen, onClose, onSubmit, courseInstanceId }) 
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Number of Peer Reviews Required <span className="text-red-500">*</span>
                   </label>
-                  <input
+                  <Input
                     type="number"
                     name="numPeerReviewsRequired"
                     value={formData.numPeerReviewsRequired}
                     onChange={handleChange}
                     min="1"
                     max="10"
-                    className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none ${errors.numPeerReviewsRequired ? 'border-red-500' : 'border-gray-300'
+                    className={`w-full px-4 py-2 ${errors.numPeerReviewsRequired ? 'border-red-500' : 'border-gray-300'
                       }`}
                   />
                   {errors.numPeerReviewsRequired && (
@@ -784,7 +787,7 @@ const CreateAssignmentModal = ({ isOpen, onClose, onSubmit, courseInstanceId }) 
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Missing Review Penalty <span className="text-red-500">*</span>
                   </label>
-                  <input
+                  <Input
                     type="number"
                     name="missingReviewPenalty"
                     value={formData.missingReviewPenalty}
@@ -792,7 +795,7 @@ const CreateAssignmentModal = ({ isOpen, onClose, onSubmit, courseInstanceId }) 
                     min="1"
                     max="10"
                     step="1"
-                    className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none ${errors.missingReviewPenalty ? 'border-red-500' : 'border-gray-300'
+                    className={`w-full px-4 py-2 ${errors.missingReviewPenalty ? 'border-red-500' : 'border-gray-300'
                       }`}
                   />
                   {errors.missingReviewPenalty && (
@@ -811,11 +814,11 @@ const CreateAssignmentModal = ({ isOpen, onClose, onSubmit, courseInstanceId }) 
                     name="allowCrossClass"
                     checked={formData.allowCrossClass}
                     onChange={handleChange}
-                    className="w-5 h-5 text-orange-500 border-gray-300 rounded focus:ring-orange-500"
+                    className="w-5 h-5 text-blue-500 border-gray-300 rounded focus:ring-blue-500"
                   />
                   <div>
-                    <span className="text-sm font-medium text-gray-900 group-hover:text-orange-600">Allow Cross-Class Review</span>
-                    <p className="text-xs text-gray-500">Students can review submissions from other classes</p>
+                    <span className="text-sm font-medium text-gray-900 group-hover:text-blue-600">Allow Cross-Class Review</span>
+                    <p className="text-xs text-gray-500">Students can peer review submissions from other classes</p>
                   </div>
                 </label>
 
@@ -824,12 +827,12 @@ const CreateAssignmentModal = ({ isOpen, onClose, onSubmit, courseInstanceId }) 
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Cross-Class Tag <span className="text-red-500">*</span>
                     </label>
-                    <input
+                    <Input
                       type="text"
                       name="crossClassTag"
                       value={formData.crossClassTag}
                       onChange={handleChange}
-                      className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none ${errors.crossClassTag ? 'border-red-500' : 'border-gray-300'
+                      className={`w-full px-4 py-2 ${errors.crossClassTag ? 'border-red-500' : 'border-gray-300'
                         }`}
                       placeholder="Enter cross-class tag"
                     />
@@ -859,7 +862,7 @@ const CreateAssignmentModal = ({ isOpen, onClose, onSubmit, courseInstanceId }) 
           <button
             type="button"
             onClick={handleSubmit}
-            className="px-6 py-2.5 bg-orange-500 text-white rounded-lg hover:bg-orange-600 font-medium flex items-center gap-2 transition-colors"
+            className="px-6 py-2.5 bg-blue-500 text-white rounded-lg hover:bg-blue-600 font-medium flex items-center gap-2 transition-colors"
           >
             <Plus className="w-5 h-5" />
             Create Assignment

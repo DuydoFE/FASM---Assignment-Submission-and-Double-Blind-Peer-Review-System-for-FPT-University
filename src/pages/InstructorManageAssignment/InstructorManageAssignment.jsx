@@ -412,7 +412,7 @@ const InstructorManageAssignment = () => {
           </button>
           <button
             onClick={() => setShowModal(true)}
-            className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-lg flex items-center space-x-2 font-medium transition-colors"
+            className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-lg flex items-center space-x-2 font-medium transition-colors"
           >
             <Plus className="w-5 h-5" />
             <span>Create Assignment</span>
