@@ -6,6 +6,8 @@ import {
   getAllCampuses,
   getAllMajors,
   importUsers,
+  importStudents,
+  importInstructors,
   createUser,
 } from "../../service/adminService";
 import { ToastContainer, toast } from "react-toastify";
@@ -353,21 +355,24 @@ export default function AdminUserManagement() {
         </div>
 
         <div className="flex gap-3">
+          {/* Import Student */}
           <input
             type="file"
-            id="excelInput"
+            id="studentExcelInput"
             accept=".xlsx, .xls"
             className="hidden"
             onChange={async (e) => {
               const file = e.target.files[0];
               if (!file) return;
               try {
-                await importUsers(file);
+                const res = await importStudents(file);
                 const allUsers = await getAllUsers();
                 setUsers(Array.isArray(allUsers?.data) ? allUsers.data : []);
-                toast.success("Users imported successfully");
-              } catch {
-                toast.error("Failed to import users");
+                const message = res?.message || res?.data?.message || "Students imported successfully";
+                toast.success(message);
+              } catch (err) {
+                const errorMessage = err?.message || err?.response?.data?.message || "Failed to import students";
+                toast.error(errorMessage);
               } finally {
                 e.target.value = "";
               }
@@ -375,11 +380,43 @@ export default function AdminUserManagement() {
           />
 
           <button
-            onClick={() => document.getElementById("excelInput").click()}
+            onClick={() => document.getElementById("studentExcelInput").click()}
+            className="bg-blue-600 text-white px-6 py-3 rounded-xl font-semibold
+            shadow-md shadow-blue-200 hover:bg-blue-700 hover:-translate-y-0.5 transition-all"
+          >
+            Import Student
+          </button>
+
+          {/* Import Instructor */}
+          <input
+            type="file"
+            id="instructorExcelInput"
+            accept=".xlsx, .xls"
+            className="hidden"
+            onChange={async (e) => {
+              const file = e.target.files[0];
+              if (!file) return;
+              try {
+                const res = await importInstructors(file);
+                const allUsers = await getAllUsers();
+                setUsers(Array.isArray(allUsers?.data) ? allUsers.data : []);
+                const message = res?.message || res?.data?.message || "Instructors imported successfully";
+                toast.success(message);
+              } catch (err) {
+                const errorMessage = err?.message || err?.response?.data?.message || "Failed to import instructors";
+                toast.error(errorMessage);
+              } finally {
+                e.target.value = "";
+              }
+            }}
+          />
+
+          <button
+            onClick={() => document.getElementById("instructorExcelInput").click()}
             className="bg-green-600 text-white px-6 py-3 rounded-xl font-semibold
             shadow-md shadow-green-200 hover:bg-green-700 hover:-translate-y-0.5 transition-all"
           >
-            Import Users
+            Import Instructor
           </button>
 
           <button
