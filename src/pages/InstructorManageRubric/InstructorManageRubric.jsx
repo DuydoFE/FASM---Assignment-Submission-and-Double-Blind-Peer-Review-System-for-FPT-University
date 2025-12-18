@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Search, Eye, Loader, Pencil } from 'lucide-react';
-import { Input, Pagination } from 'antd';
+import { Input } from 'antd';
 import { getRubricTemplatesByUserId, getRubricByUserId } from '../../service/rubricService';
 import { toast } from 'react-toastify';
 import { getCurrentAccount } from '../../utils/accountUtils';
@@ -260,15 +260,38 @@ const InstructorManageRubric = () => {
                             </div>
 
                             {/* Footer with Pagination */}
-                            <div className="mt-6 flex justify-end">
-                                <Pagination
-                                    current={currentPage}
-                                    pageSize={itemsPerPage}
-                                    total={filteredTemplates.length}
-                                    onChange={(page) => setCurrentPage(page)}
-                                    showSizeChanger={false}
-                                    showTotal={(total, range) => `${range[0]}-${range[1]} of ${total} templates`}
-                                />
+                            <div className="mt-6 flex items-center justify-between">
+                                <div className="text-sm text-gray-600">
+                                    Showing {indexOfFirstItem + 1}-{Math.min(indexOfLastItem, filteredTemplates.length)} of {filteredTemplates.length} templates
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <button
+                                        onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                                        disabled={currentPage === 1}
+                                        className="px-4 py-2 text-gray-600 hover:text-gray-900 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                        Previous
+                                    </button>
+                                    {[...Array(totalPages)].map((_, idx) => (
+                                        <button
+                                            key={idx + 1}
+                                            onClick={() => setCurrentPage(idx + 1)}
+                                            className={`px-4 py-2 rounded-lg transition ${currentPage === idx + 1
+                                                ? 'bg-blue-600 text-white'
+                                                : 'text-gray-600 hover:bg-gray-100'
+                                                }`}
+                                        >
+                                            {idx + 1}
+                                        </button>
+                                    ))}
+                                    <button
+                                        onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                                        disabled={currentPage === totalPages}
+                                        className="px-4 py-2 text-gray-600 hover:text-gray-900 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                        Next
+                                    </button>
+                                </div>
                             </div>
                         </>
                     )}
@@ -377,15 +400,38 @@ const InstructorManageRubric = () => {
 
                     {/* Rubric Pagination */}
                     {!loading && filteredRubrics.length > itemsPerPage && (
-                        <div className="mt-6 flex justify-end">
-                            <Pagination
-                                current={currentRubricPage}
-                                pageSize={itemsPerPage}
-                                total={filteredRubrics.length}
-                                onChange={(page) => setCurrentRubricPage(page)}
-                                showSizeChanger={false}
-                                showTotal={(total, range) => `${range[0]}-${range[1]} of ${total} rubrics`}
-                            />
+                        <div className="mt-6 flex items-center justify-between">
+                            <div className="text-sm text-gray-600">
+                                Showing {indexOfFirstRubric + 1}-{Math.min(indexOfLastRubric, filteredRubrics.length)} of {filteredRubrics.length} rubrics
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <button
+                                    onClick={() => setCurrentRubricPage(prev => Math.max(1, prev - 1))}
+                                    disabled={currentRubricPage === 1}
+                                    className="px-4 py-2 text-gray-600 hover:text-gray-900 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    Previous
+                                </button>
+                                {[...Array(totalRubricPages)].map((_, idx) => (
+                                    <button
+                                        key={idx + 1}
+                                        onClick={() => setCurrentRubricPage(idx + 1)}
+                                        className={`px-4 py-2 rounded-lg transition ${currentRubricPage === idx + 1
+                                            ? 'bg-blue-600 text-white'
+                                            : 'text-gray-600 hover:bg-gray-100'
+                                            }`}
+                                    >
+                                        {idx + 1}
+                                    </button>
+                                ))}
+                                <button
+                                    onClick={() => setCurrentRubricPage(prev => Math.min(totalRubricPages, prev + 1))}
+                                    disabled={currentRubricPage === totalRubricPages}
+                                    className="px-4 py-2 text-gray-600 hover:text-gray-900 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    Next
+                                </button>
+                            </div>
                         </div>
                     )}
                 </div>
