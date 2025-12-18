@@ -30,6 +30,26 @@ export default {
                 '0%, 100%': { transform: 'translateY(0px)' },
                 '50%': { transform: 'translateY(-10px)' },
             },
+            slideDown: {
+                '0%': { opacity: '0', transform: 'translateY(-20px)' },
+                '100%': { opacity: '1', transform: 'translateY(0)' },
+            },
+            slideRight: {
+                '0%': { opacity: '0', transform: 'translateX(-30px)' },
+                '100%': { opacity: '1', transform: 'translateX(0)' },
+            },
+            slideLeft: {
+                '0%': { opacity: '0', transform: 'translateX(30px)' },
+                '100%': { opacity: '1', transform: 'translateX(0)' },
+            },
+            slideUp: {
+                '0%': { opacity: '0', transform: 'translateY(20px)' },
+                '100%': { opacity: '1', transform: 'translateY(0)' },
+            },
+            modalSlideIn: {
+                '0%': { opacity: '0', transform: 'scale(0.9) translateY(-20px)' },
+                '100%': { opacity: '1', transform: 'scale(1) translateY(0)' },
+            },
         },
         animation: {
             'fade-in-up': 'fadeInUp 0.8s ease-out forwards',

@@ -1,295 +1,222 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus, Eye, Search, Save } from "lucide-react";
+import { Upload, UserPlus } from "lucide-react";
 import {
   getAllUsers,
   getAllCampuses,
   getAllMajors,
-  importUsers,
   importStudents,
   importInstructors,
   createUser,
 } from "../../service/adminService";
-import { ToastContainer, toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+import {
+  Table,
+  Input,
+  Select,
+  Button,
+  Tag,
+  Space,
+  Card,
+  Modal,
+  Form,
+  message,
+  Upload as AntUpload,
+  ConfigProvider
+} from "antd";
+import {
+  EyeOutlined,
+  SearchOutlined,
+  PlusOutlined,
+  UploadOutlined
+} from "@ant-design/icons";
 
-function Input({ label, ...props }) {
-  return (
-    <div>
-      <label className="block text-sm font-medium text-gray-600 mb-1">
-        {label}
-      </label>
-      <input
-        {...props}
-        className="w-full p-3 rounded-xl border border-gray-300
-        focus:border-orange-500 focus:ring-2 focus:ring-orange-200
-        outline-none transition"
-      />
-    </div>
-  );
-}
+const { Option } = Select;
 
-function Select({ label, options, ...props }) {
-  return (
-    <div>
-      <label className="block text-sm font-medium text-gray-600 mb-1">
-        {label}
-      </label>
-      <select
-        {...props}
-        className="w-full p-3 rounded-xl border border-gray-300
-        focus:border-orange-500 focus:ring-2 focus:ring-orange-200
-        outline-none transition"
-      >
-        <option value={0}>Select {label}</option>
-        {options.map((o) => (
-          <option key={o.value} value={o.value}>
-            {o.label}
-          </option>
-        ))}
-      </select>
-    </div>
-  );
-}
-
-function ConfirmModal({ open, title, message, onConfirm, onCancel }) {
-  if (!open) return null;
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm"></div>
-      <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 z-10">
-        <h3 className="text-xl font-bold text-gray-800 mb-3">{title}</h3>
-        <p className="text-gray-600 mb-6">{message}</p>
-        <div className="flex justify-end gap-4">
-          <button
-            onClick={onCancel}
-            className="px-4 py-2 rounded-lg border border-gray-300
-            text-gray-700 hover:bg-gray-100 transition"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={() => {
-              onConfirm();
-              onCancel();
-            }}
-            className="px-4 py-2 rounded-lg bg-orange-600 text-white
-            hover:bg-orange-700 transition"
-          >
-            Confirm
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
+// Custom theme for orange accent
+const theme = {
+  token: {
+    colorPrimary: '#ea580c',
+    colorLink: '#ea580c',
+    borderRadius: 8,
+  },
+};
 
 function AdminCreateUserForm({ campuses, majors, onClose, onUserCreated }) {
-  const [newUser, setNewUser] = useState({
-    campusId: 0,
-    majorId: null,
-    username: "",
-    password: "",
-    email: "",
-    firstName: "",
-    lastName: "",
-    studentCode: "",
-    avatarUrl: "",
-    role: "",
-    isActive: true,
-  });
+  const [form] = Form.useForm();
+  const [selectedRole, setSelectedRole] = useState("");
 
-  const [confirmOpen, setConfirmOpen] = useState(false);
-  const [confirmConfig, setConfirmConfig] = useState({
-    title: "",
-    message: "",
-    onConfirm: null,
-  });
-
-  const openConfirm = ({ title, message, onConfirm }) => {
-    setConfirmConfig({ title, message, onConfirm });
-    setConfirmOpen(true);
+  const handleRoleChange = (value) => {
+    setSelectedRole(value);
+    form.resetFields(['username', 'password', 'email', 'firstName', 'lastName', 'studentCode', 'avatarUrl', 'campusId', 'majorId', 'isActive']);
   };
 
-  const closeConfirm = () => {
-    setConfirmOpen(false);
-    setConfirmConfig({ title: "", message: "", onConfirm: null });
-  };
-
-  const generateUsernameFromFirstName = (firstName) =>
-    firstName?.trim().toLowerCase().replace(/\s+/g, "");
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    if (name === "role") {
-      setNewUser({
-        campusId: 0,
-        majorId: null,
-        username: "",
-        password: "",
-        email: "",
-        firstName: "",
-        lastName: "",
-        studentCode: "",
-        avatarUrl: "",
-        role: value,
-        isActive: true,
-      });
-      return;
-    }
-    setNewUser({ ...newUser, [name]: value });
-  };
-
-  const handleSave = async () => {
-    const payload = {
-      ...newUser,
-      username:
-        newUser.role === "Instructor"
-          ? generateUsernameFromFirstName(newUser.firstName)
-          : newUser.username,
-    };
-
-    try {
-      const res = await createUser(payload);
-      toast.success(res?.data?.message || "User created successfully");
-      const allUsers = await getAllUsers();
-      onUserCreated?.(Array.isArray(allUsers?.data) ? allUsers.data : []);
-      onClose();
-    } catch (err) {
-      toast.error(err?.response?.data?.message || "Create user failed");
-    }
+  const handleSubmit = async (values) => {
+    Modal.confirm({
+      title: "Create new user?",
+      content: "Are you sure you want to create this user with the provided information?",
+      okText: "Confirm",
+      cancelText: "Cancel",
+      onOk: async () => {
+        try {
+          const payload = {
+            ...values,
+            role: selectedRole,
+            username: selectedRole === "Instructor" 
+              ? values.firstName?.trim().toLowerCase().replace(/\s+/g, "")
+              : values.username,
+          };
+          
+          const res = await createUser(payload);
+          message.success(res?.data?.message || "User created successfully");
+          const allUsers = await getAllUsers();
+          onUserCreated?.(Array.isArray(allUsers?.data) ? allUsers.data : []);
+          onClose();
+        } catch (err) {
+          message.error(err?.response?.data?.message || "Create user failed");
+        }
+      }
+    });
   };
 
   return (
     <div>
-      <div className="flex items-center mb-8">
-        <h1 className="text-2xl font-bold text-gray-800">
-          Create New User
-        </h1>
-        <button
-          onClick={onClose}
-          className="ml-auto text-gray-400 hover:text-gray-600"
-        >
-          ✕
-        </button>
-      </div>
-
-      <div className="space-y-6">
-        <div className="bg-gray-50 border rounded-2xl p-6 max-w-md">
-          <h3 className="text-sm font-semibold text-gray-600 uppercase mb-3">
-            Step 1
-          </h3>
-          <h4 className="text-lg font-bold text-gray-800 mb-4">
-            Select User Role
-          </h4>
-
-          <select
+      <h2 className="text-xl font-semibold mb-6">Create New User</h2>
+      
+      <Form form={form} layout="vertical" onFinish={handleSubmit}>
+        <Card size="small" title="Step 1: Select User Role" className="mb-4">
+          <Form.Item
             name="role"
-            value={newUser.role}
-            onChange={handleChange}
-            className="w-full p-3 rounded-xl border border-gray-300
-            focus:border-orange-500 focus:ring-2 focus:ring-orange-200 transition"
+            rules={[{ required: true, message: "Please select a role" }]}
           >
-            <option value="">Choose role...</option>
-            <option value="Student">Student</option>
-            <option value="Instructor">Instructor</option>
-          </select>
-
-          {!newUser.role && (
-            <p className="text-sm text-gray-400 mt-3">
-              Please select a role to continue
-            </p>
+            <Select
+              placeholder="Choose role..."
+              onChange={handleRoleChange}
+              size="large"
+            >
+              <Option value="Student">Student</Option>
+              <Option value="Instructor">Instructor</Option>
+            </Select>
+          </Form.Item>
+          {!selectedRole && (
+            <p className="text-sm text-gray-400">Please select a role to continue</p>
           )}
-        </div>
+        </Card>
 
-        {newUser.role && (
-          <div className="bg-white border rounded-2xl p-8">
-            <div className="border-l-4 border-orange-500 pl-4 mb-6">
-              <h3 className="text-xl font-bold text-gray-800">
-                Step 2: User Information
-              </h3>
-              <p className="text-sm text-gray-500">
-                Fill in user details
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {newUser.role === "Student" && (
+        {selectedRole && (
+          <Card size="small" title="Step 2: User Information">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {selectedRole === "Student" && (
                 <>
-                  <Input label="Username" name="username" value={newUser.username} onChange={handleChange} />
-                  <Input label="Password" type="password" name="password" value={newUser.password} onChange={handleChange} />
+                  <Form.Item
+                    name="username"
+                    label="Username"
+                    rules={[{ required: true, message: "Please enter username" }]}
+                  >
+                    <Input placeholder="Enter username" />
+                  </Form.Item>
+                  <Form.Item
+                    name="password"
+                    label="Password"
+                    rules={[{ required: true, message: "Please enter password" }]}
+                  >
+                    <Input.Password placeholder="Enter password" />
+                  </Form.Item>
                 </>
               )}
-              <Input label="Email" name="email" value={newUser.email} onChange={handleChange} />
-              <Input label="First Name" name="firstName" value={newUser.firstName} onChange={handleChange} />
-              <Input label="Last Name" name="lastName" value={newUser.lastName} onChange={handleChange} />
-              <Input label="User Code" name="studentCode" value={newUser.studentCode} onChange={handleChange} />
-              <Input label="Avatar URL" name="avatarUrl" value={newUser.avatarUrl} onChange={handleChange} />
-
-              <Select
-                label="Campus"
-                name="campusId"
-                value={newUser.campusId}
-                onChange={handleChange}
-                options={campuses.map((c) => ({
-                  value: c.id || c.campusId,
-                  label: c.name || c.campusName,
-                }))}
-              />
-
-              {newUser.role === "Student" && (
-                <Select
-                  label="Major"
-                  name="majorId"
-                  value={newUser.majorId || 0}
-                  onChange={handleChange}
-                  options={majors.map((m) => ({
-                    value: m.majorId,
-                    label: m.majorName,
-                  }))}
-                />
-              )}
-
-              <Select
-                label="Status"
-                name="isActive"
-                value={newUser.isActive}
-                onChange={handleChange}
-                options={[
-                  { value: true, label: "Active" },
-                  { value: false, label: "Inactive" },
+              
+              <Form.Item
+                name="email"
+                label="Email"
+                rules={[
+                  { required: true, message: "Please enter email" },
+                  { type: "email", message: "Invalid email format" }
                 ]}
-              />
-            </div>
-
-            <div className="flex justify-end mt-8">
-              <button
-                onClick={() =>
-                  openConfirm({
-                    title: "Create new user?",
-                    message: "Are you sure you want to create this user?",
-                    onConfirm: handleSave,
-                  })
-                }
-                className="flex items-center gap-2 bg-orange-600 text-white
-                px-8 py-3 rounded-xl font-semibold
-                shadow-md shadow-orange-200
-                hover:bg-orange-700 hover:-translate-y-0.5 transition-all"
               >
-                <Save size={18} /> Create User
-              </button>
+                <Input placeholder="Enter email" />
+              </Form.Item>
+              
+              <Form.Item
+                name="firstName"
+                label="First Name"
+                rules={[{ required: true, message: "Please enter first name" }]}
+              >
+                <Input placeholder="Enter first name" />
+              </Form.Item>
+              
+              <Form.Item
+                name="lastName"
+                label="Last Name"
+                rules={[{ required: true, message: "Please enter last name" }]}
+              >
+                <Input placeholder="Enter last name" />
+              </Form.Item>
+              
+              <Form.Item
+                name="studentCode"
+                label="User Code"
+                rules={[{ required: true, message: "Please enter user code" }]}
+              >
+                <Input placeholder="Enter user code" />
+              </Form.Item>
+              
+              <Form.Item name="avatarUrl" label="Avatar URL">
+                <Input placeholder="Enter avatar URL (optional)" />
+              </Form.Item>
+              
+              <Form.Item
+                name="campusId"
+                label="Campus"
+                rules={[{ required: true, message: "Please select campus" }]}
+              >
+                <Select placeholder="Select campus">
+                  {campuses.map((c) => (
+                    <Option key={c.id || c.campusId} value={c.id || c.campusId}>
+                      {c.name || c.campusName}
+                    </Option>
+                  ))}
+                </Select>
+              </Form.Item>
+              
+              {selectedRole === "Student" && (
+                <Form.Item
+                  name="majorId"
+                  label="Major"
+                  rules={[{ required: true, message: "Please select major" }]}
+                >
+                  <Select placeholder="Select major">
+                    {majors.map((m) => (
+                      <Option key={m.majorId} value={m.majorId}>
+                        {m.majorName}
+                      </Option>
+                    ))}
+                  </Select>
+                </Form.Item>
+              )}
+              
+              <Form.Item
+                name="isActive"
+                label="Status"
+                initialValue={true}
+                rules={[{ required: true, message: "Please select status" }]}
+              >
+                <Select>
+                  <Option value={true}>Active</Option>
+                  <Option value={false}>Inactive</Option>
+                </Select>
+              </Form.Item>
             </div>
-          </div>
-        )}
 
-        <ConfirmModal
-          open={confirmOpen}
-          title={confirmConfig.title}
-          message={confirmConfig.message}
-          onConfirm={confirmConfig.onConfirm}
-          onCancel={closeConfirm}
-        />
-      </div>
+            <div className="flex justify-end mt-6">
+              <Space>
+                <Button onClick={onClose}>Cancel</Button>
+                <Button type="primary" htmlType="submit" icon={<PlusOutlined />}>
+                  Create User
+                </Button>
+              </Space>
+            </div>
+          </Card>
+        )}
+      </Form>
     </div>
   );
 }
@@ -307,247 +234,457 @@ export default function AdminUserManagement() {
   const [campuses, setCampuses] = useState([]);
   const [majors, setMajors] = useState([]);
   const [showCreateUserModal, setShowCreateUserModal] = useState(false);
+  const [loading, setLoading] = useState(false);
   const roles = ["Student", "Instructor"];
 
   useEffect(() => {
-    getAllUsers().then((res) => setUsers(Array.isArray(res?.data) ? res.data : []));
+    fetchUsers();
     getAllCampuses().then((res) => setCampuses(Array.isArray(res?.data) ? res.data : []));
     getAllMajors().then((res) => setMajors(Array.isArray(res?.data) ? res.data : []));
   }, []);
 
-  const handleFilterChange = (e) =>
-    setFilters({ ...filters, [e.target.name]: e.target.value });
+  const fetchUsers = async () => {
+    setLoading(true);
+    try {
+      const res = await getAllUsers();
+      setUsers(Array.isArray(res?.data) ? res.data : []);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  const isAnyFilterSelected =
-    filters.campus || filters.role || filters.major || filters.search;
+  const handleFilterChange = (name, value) => {
+    setFilters({ ...filters, [name]: value });
+  };
+
+  const isAnyFilterSelected = filters.campus || filters.role || filters.major || filters.search;
 
   const filteredUsers = isAnyFilterSelected
     ? users
-      .filter((u) => !u.roles?.includes("Admin"))
-      .filter((u) => {
-        return (
-          (filters.campus ? u.campusName === filters.campus : true) &&
-          (filters.role ? u.roles?.includes(filters.role) : true) &&
-          (filters.major ? u.majorName === filters.major : true) &&
-          (filters.search
-            ? Object.values(u)
-              .join(" ")
-              .toLowerCase()
-              .includes(filters.search.toLowerCase())
-            : true)
-        );
-      })
+        .filter((u) => !u.roles?.includes("Admin"))
+        .filter((u) => {
+          return (
+            (filters.campus ? u.campusName === filters.campus : true) &&
+            (filters.role ? u.roles?.includes(filters.role) : true) &&
+            (filters.major ? u.majorName === filters.major : true) &&
+            (filters.search
+              ? Object.values(u)
+                  .join(" ")
+                  .toLowerCase()
+                  .includes(filters.search.toLowerCase())
+              : true)
+          );
+        })
     : [];
 
+  const handleImportStudents = async (file) => {
+    try {
+      const res = await importStudents(file);
+      message.success(res?.message || res?.data?.message || "Import students successfully");
+      await fetchUsers();
+    } catch (err) {
+      message.error(err?.response?.data?.message || "Failed to import students");
+    }
+  };
+
+  const handleImportInstructors = async (file) => {
+    try {
+      const res = await importInstructors(file);
+      message.success(res?.message || res?.data?.message || "Import instructors successfully");
+      await fetchUsers();
+    } catch (err) {
+      message.error(err?.response?.data?.message || "Failed to import instructors");
+    }
+  };
+
+  const columns = [
+    {
+      title: "Full Name",
+      dataIndex: "fullName",
+      key: "fullName",
+      render: (_, record) => (
+        <div className="font-semibold text-gray-800 flex items-center gap-3">
+          <div className="w-9 h-9 rounded-full bg-orange-500 flex items-center justify-center text-white font-bold text-sm">
+            {record.firstName?.[0]?.toUpperCase()}{record.lastName?.[0]?.toUpperCase()}
+          </div>
+          <span>{`${record.firstName} ${record.lastName}`}</span>
+        </div>
+      ),
+    },
+    {
+      title: "User Code",
+      dataIndex: "studentCode",
+      key: "studentCode",
+      render: (code) => (
+        <span className="font-mono text-sm bg-gray-100 px-2 py-1 rounded">
+          {code}
+        </span>
+      ),
+    },
+    {
+      title: "Email",
+      dataIndex: "email",
+      key: "email",
+      render: (email) => (
+        <span className="text-blue-600 hover:text-blue-800 transition-colors">
+          {email}
+        </span>
+      ),
+    },
+    {
+      title: "Role",
+      dataIndex: "roles",
+      key: "roles",
+      render: (roles) => (
+        <Space>
+          {roles?.map((role) => (
+            <Tag
+              key={role}
+              color={role === "Student" ? "blue" : "green"}
+              className="font-medium px-3 py-1"
+            >
+              {role}
+            </Tag>
+          ))}
+        </Space>
+      ),
+    },
+    {
+      title: "Campus",
+      dataIndex: "campusName",
+      key: "campusName",
+      render: (campus) => (
+        <span className="text-gray-700">{campus}</span>
+      ),
+    },
+    {
+      title: "Major",
+      dataIndex: "majorName",
+      key: "majorName",
+      render: (major) => (
+        <span className="text-gray-700">{major}</span>
+      ),
+    },
+    {
+      title: "Status",
+      dataIndex: "isActive",
+      key: "isActive",
+      render: (isActive) => (
+        <Tag
+          color={isActive ? "success" : "error"}
+          className="font-medium px-3 py-1"
+        >
+          <span className="flex items-center gap-1">
+            <span className={`w-2 h-2 rounded-full ${isActive ? 'bg-green-500' : 'bg-red-500'}`} />
+            {isActive ? "Active" : "Inactive"}
+          </span>
+        </Tag>
+      ),
+    },
+    {
+      title: "Action",
+      key: "action",
+      align: "center",
+      render: (_, record) => (
+        <Button
+          type="primary"
+          ghost
+          icon={<EyeOutlined />}
+          onClick={() => navigate(`/admin/users/${record.id}`)}
+          className="hover:scale-110 transition-transform"
+        >
+          View
+        </Button>
+      ),
+    },
+  ];
+
   return (
-    <div className="p-8 bg-gray-50 min-h-screen">
-      <ToastContainer />
-
-      {/* HEADER */}
-      <div className="flex flex-col md:flex-row justify-between items-start mb-10 gap-6">
-        <div>
-          <h2 className="text-4xl font-extrabold text-gray-900">
-            User Management
-          </h2>
-          <p className="text-gray-500 mt-1">
-            Manage students and instructors
-          </p>
-        </div>
-
-        <div className="flex gap-3">
-          {/* Import Student */}
-          <input
-            type="file"
-            id="studentExcelInput"
-            accept=".xlsx, .xls"
-            className="hidden"
-            onChange={async (e) => {
-              const file = e.target.files[0];
-              if (!file) return;
-              try {
-                const res = await importStudents(file);
-                const allUsers = await getAllUsers();
-                setUsers(Array.isArray(allUsers?.data) ? allUsers.data : []);
-                const message = res?.message || res?.data?.message || "Students imported successfully";
-                toast.success(message);
-              } catch (err) {
-                const errorMessage = err?.message || err?.response?.data?.message || "Failed to import students";
-                toast.error(errorMessage);
-              } finally {
-                e.target.value = "";
-              }
-            }}
-          />
-
-          <button
-            onClick={() => document.getElementById("studentExcelInput").click()}
-            className="bg-blue-600 text-white px-6 py-3 rounded-xl font-semibold
-            shadow-md shadow-blue-200 hover:bg-blue-700 hover:-translate-y-0.5 transition-all"
-          >
-            Import Student
-          </button>
-
-          {/* Import Instructor */}
-          <input
-            type="file"
-            id="instructorExcelInput"
-            accept=".xlsx, .xls"
-            className="hidden"
-            onChange={async (e) => {
-              const file = e.target.files[0];
-              if (!file) return;
-              try {
-                const res = await importInstructors(file);
-                const allUsers = await getAllUsers();
-                setUsers(Array.isArray(allUsers?.data) ? allUsers.data : []);
-                const message = res?.message || res?.data?.message || "Instructors imported successfully";
-                toast.success(message);
-              } catch (err) {
-                const errorMessage = err?.message || err?.response?.data?.message || "Failed to import instructors";
-                toast.error(errorMessage);
-              } finally {
-                e.target.value = "";
-              }
-            }}
-          />
-
-          <button
-            onClick={() => document.getElementById("instructorExcelInput").click()}
-            className="bg-green-600 text-white px-6 py-3 rounded-xl font-semibold
-            shadow-md shadow-green-200 hover:bg-green-700 hover:-translate-y-0.5 transition-all"
-          >
-            Import Instructor
-          </button>
-
-          <button
-            onClick={() => setShowCreateUserModal(true)}
-            className="flex items-center gap-2 bg-orange-600 text-white
-            px-6 py-3 rounded-xl font-semibold
-            shadow-md shadow-orange-200 hover:bg-orange-700 hover:-translate-y-0.5 transition-all"
-          >
-            <Plus size={20} /> Create User
-          </button>
-        </div>
-      </div>
-
-      {/* FILTER */}
-      <div className="bg-white border rounded-2xl p-6 mb-8">
-        <h3 className="text-sm font-semibold text-gray-600 uppercase mb-4">
-          Filters
-        </h3>
-
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-5">
-          <select name="campus" value={filters.campus} onChange={handleFilterChange} className="p-3 rounded-xl border border-gray-300">
-            <option value="">Select Campus</option>
-            {campuses.map((c) => (
-              <option key={c.id || c.campusId} value={c.name || c.campusName}>
-                {c.name || c.campusName}
-              </option>
-            ))}
-          </select>
-
-          <select name="role" value={filters.role} onChange={handleFilterChange} className="p-3 rounded-xl border border-gray-300">
-            <option value="">Select Role</option>
-            {roles.map((r) => (
-              <option key={r} value={r}>{r}</option>
-            ))}
-          </select>
-
-          <select name="major" value={filters.major} onChange={handleFilterChange} className="p-3 rounded-xl border border-gray-300">
-            <option value="">Select Major</option>
-            {majors.map((m) => (
-              <option key={m.majorId} value={m.majorName}>{m.majorName}</option>
-            ))}
-          </select>
-
-          <div className="flex items-center border rounded-xl overflow-hidden">
-            <input
-              type="text"
-              name="search"
-              value={filters.search}
-              onChange={handleFilterChange}
-              placeholder="Search users..."
-              className="p-3 flex-1 outline-none"
-            />
-            <button className="px-4 bg-gray-100 hover:bg-gray-200 transition">
-              <Search size={18} />
-            </button>
+    <ConfigProvider theme={theme}>
+      <div className="p-6 bg-gradient-to-br from-orange-50/30 via-white to-orange-50/30 min-h-screen">
+        {/* Header */}
+        <div className="flex justify-between items-center mb-6 animate-fade-in">
+          <div>
+            <h2 className="text-3xl font-bold text-gray-800 mb-1">User Management</h2>
+            <p className="text-gray-500">Manage students and instructors</p>
           </div>
+          <Space size="middle">
+            <AntUpload
+              accept=".xlsx, .xls"
+              showUploadList={false}
+              beforeUpload={(file) => {
+                handleImportStudents(file);
+                return false;
+              }}
+            >
+              <Button
+                icon={<UploadOutlined />}
+                className="hover:scale-105 transition-transform"
+              >
+                Import Students
+              </Button>
+            </AntUpload>
+            
+            <AntUpload
+              accept=".xlsx, .xls"
+              showUploadList={false}
+              beforeUpload={(file) => {
+                handleImportInstructors(file);
+                return false;
+              }}
+            >
+              <Button
+                icon={<UploadOutlined />}
+                className="hover:scale-105 transition-transform"
+              >
+                Import Instructors
+              </Button>
+            </AntUpload>
+            
+            <Button
+              type="primary"
+              icon={<PlusOutlined />}
+              onClick={() => setShowCreateUserModal(true)}
+              className="hover:scale-105 transition-transform shadow-md"
+            >
+              Add User
+            </Button>
+          </Space>
         </div>
-      </div>
 
-      {/* TABLE */}
-      {isAnyFilterSelected && (
-        <div className="bg-white border rounded-2xl overflow-hidden">
-          <table className="w-full">
-            <thead className="bg-[#FFF3EB] text-[#F36F21] text-sm uppercase font-semibold border-b-2 border-[#F36F21]">
-              <tr>
-                <th className="p-4 text-left">Full Name</th>
-                <th className="p-4 text-left">User Code</th>
-                <th className="p-4 text-left">Email</th>
-                <th className="p-4 text-left">Role</th>
-                <th className="p-4 text-left">Campus</th>
-                <th className="p-4 text-left">Major</th>
-                <th className="p-4 text-left">Status</th>
-                <th className="p-4 text-center">Detail</th>
-              </tr>
-            </thead>
-
-            <tbody>
-              {filteredUsers.map((user) => (
-                <tr key={user.id} className="border-t hover:bg-gray-50 transition">
-                  <td className="p-4 font-medium">
-                    {`${user.firstName} ${user.lastName}`}
-                  </td>
-                  <td className="p-4 text-gray-600">{user.studentCode}</td>
-                  <td className="p-4 text-gray-600">{user.email}</td>
-                  <td className="p-4">
-                    <span className="bg-orange-100 text-orange-700 px-2 py-1 rounded-lg text-xs font-medium">
-                      {user.roles?.join(", ")}
-                    </span>
-                  </td>
-                  <td className="p-4 text-gray-600">{user.campusName}</td>
-                  <td className="p-4 text-gray-600">{user.majorName}</td>
-                  <td className="p-4">
-                    <span
-                      className={`px-3 py-1 rounded-full text-xs font-semibold
-                ${user.isActive
-                          ? "bg-green-100 text-green-700"
-                          : "bg-red-100 text-red-700"
-                        }`}
-                    >
-                      {user.isActive ? "Active" : "Inactive"}
-                    </span>
-                  </td>
-                  <td className="p-4 text-center">
-                    <button
-                      onClick={() => navigate(`/admin/users/${user.id}`)}
-                      className="text-orange-600 hover:text-orange-800"
-                    >
-                      <Eye size={18} />
-                    </button>
-                  </td>
-                </tr>
+        {/* Filters */}
+        <Card
+          className="mb-6 shadow-sm border-orange-100 animate-slide-up"
+          style={{ animationDelay: '0.1s' }}
+        >
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <Select
+              placeholder="Select Campus"
+              allowClear
+              value={filters.campus || undefined}
+              onChange={(value) => handleFilterChange("campus", value || "")}
+              className="w-full"
+              size="large"
+            >
+              {campuses.map((c) => (
+                <Option key={c.id || c.campusId} value={c.name || c.campusName}>
+                  {c.name || c.campusName}
+                </Option>
               ))}
-            </tbody>
-          </table>
-        </div>
-      )}
-
-      {/* MODAL */}
-      {showCreateUserModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowCreateUserModal(false)} />
-          <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-4xl p-6 z-10 overflow-y-auto max-h-[90vh]">
-            <AdminCreateUserForm
-              campuses={campuses}
-              majors={majors}
-              onClose={() => setShowCreateUserModal(false)}
-              onUserCreated={(updatedUsers) => setUsers(updatedUsers)}
+            </Select>
+            
+            <Select
+              placeholder="Select Role"
+              allowClear
+              value={filters.role || undefined}
+              onChange={(value) => handleFilterChange("role", value || "")}
+              className="w-full"
+              size="large"
+            >
+              {roles.map((r) => (
+                <Option key={r} value={r}>
+                  {r}
+                </Option>
+              ))}
+            </Select>
+            
+            <Select
+              placeholder="Select Major"
+              allowClear
+              value={filters.major || undefined}
+              onChange={(value) => handleFilterChange("major", value || "")}
+              className="w-full"
+              size="large"
+            >
+              {majors.map((m) => (
+                <Option key={m.majorId} value={m.majorName}>
+                  {m.majorName}
+                </Option>
+              ))}
+            </Select>
+            
+            <Input
+              placeholder="Search users..."
+              prefix={<SearchOutlined className="text-orange-500" />}
+              value={filters.search}
+              onChange={(e) => handleFilterChange("search", e.target.value)}
+              allowClear
+              size="large"
             />
           </div>
-        </div>
-      )}
-    </div>
+        </Card>
+
+        {/* User Table */}
+        <Card
+          className="shadow-sm border-orange-100 animate-slide-up"
+          style={{ animationDelay: '0.2s' }}
+        >
+          <Table
+            columns={columns}
+            dataSource={filteredUsers}
+            rowKey="id"
+            loading={loading}
+            pagination={{
+              pageSize: 10,
+              showSizeChanger: true,
+              showTotal: (total) => `Total ${total} users`,
+            }}
+            locale={{
+              emptyText: isAnyFilterSelected
+                ? "No users found for selected filters"
+                : "No users available"
+            }}
+            className="user-table"
+          />
+        </Card>
+
+        {/* Modal Create User */}
+        <Modal
+          open={showCreateUserModal}
+          onCancel={() => setShowCreateUserModal(false)}
+          footer={null}
+          width={800}
+          destroyOnClose
+        >
+          <AdminCreateUserForm
+            campuses={campuses}
+            majors={majors}
+            onClose={() => setShowCreateUserModal(false)}
+            onUserCreated={(updatedUsers) => {
+              setUsers(updatedUsers);
+              setShowCreateUserModal(false);
+            }}
+          />
+        </Modal>
+
+        <style jsx global>{`
+          @keyframes fade-in {
+            from {
+              opacity: 0;
+              transform: translateY(-10px);
+            }
+            to {
+              opacity: 1;
+              transform: translateY(0);
+            }
+          }
+
+          @keyframes slide-up {
+            from {
+              opacity: 0;
+              transform: translateY(20px);
+            }
+            to {
+              opacity: 1;
+              transform: translateY(0);
+            }
+          }
+
+          @keyframes pulse-slow {
+            0%, 100% {
+              opacity: 1;
+            }
+            50% {
+              opacity: 0.8;
+            }
+          }
+
+          @keyframes slide-in-row {
+            from {
+              opacity: 0;
+              transform: translateX(-20px);
+            }
+            to {
+              opacity: 1;
+              transform: translateX(0);
+            }
+          }
+
+          .animate-fade-in {
+            animation: fade-in 0.5s ease-out;
+          }
+
+          .animate-slide-up {
+            animation: slide-up 0.6s ease-out backwards;
+          }
+
+          .animate-pulse-slow {
+            animation: pulse-slow 2s ease-in-out infinite;
+          }
+
+          /* Table Header Styling */
+          .user-table .ant-table-thead > tr > th {
+            background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%) !important;
+            color: #ea580c !important;
+            font-weight: 600 !important;
+            border-bottom: 2px solid #fed7aa !important;
+            font-size: 13px !important;
+            text-transform: uppercase !important;
+            letter-spacing: 0.5px !important;
+          }
+
+          /* Table Row Animation */
+          .user-table .ant-table-tbody > tr {
+            animation: slide-in-row 0.4s ease-out backwards;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+          }
+
+          .user-table .ant-table-tbody > tr:nth-child(1) { animation-delay: 0.05s; }
+          .user-table .ant-table-tbody > tr:nth-child(2) { animation-delay: 0.1s; }
+          .user-table .ant-table-tbody > tr:nth-child(3) { animation-delay: 0.15s; }
+          .user-table .ant-table-tbody > tr:nth-child(4) { animation-delay: 0.2s; }
+          .user-table .ant-table-tbody > tr:nth-child(5) { animation-delay: 0.25s; }
+          .user-table .ant-table-tbody > tr:nth-child(6) { animation-delay: 0.3s; }
+          .user-table .ant-table-tbody > tr:nth-child(7) { animation-delay: 0.35s; }
+          .user-table .ant-table-tbody > tr:nth-child(8) { animation-delay: 0.4s; }
+          .user-table .ant-table-tbody > tr:nth-child(9) { animation-delay: 0.45s; }
+          .user-table .ant-table-tbody > tr:nth-child(10) { animation-delay: 0.5s; }
+
+          /* Row Hover Effect */
+          .user-table .ant-table-tbody > tr:hover {
+            background: linear-gradient(90deg, #fff7ed 0%, #ffffff 100%) !important;
+            box-shadow: 0 4px 12px rgba(234, 88, 12, 0.15) !important;
+            transform: translateX(4px);
+          }
+
+          .user-table .ant-table-tbody > tr:hover td {
+            border-color: #fed7aa !important;
+          }
+
+          /* Striped Rows */
+          .user-table .ant-table-tbody > tr:nth-child(even) {
+            background-color: #fafafa;
+          }
+
+          /* Button Styling */
+          .ant-btn-primary {
+            box-shadow: 0 2px 8px rgba(234, 88, 12, 0.2);
+          }
+
+          .ant-btn-primary:hover {
+            box-shadow: 0 4px 12px rgba(234, 88, 12, 0.3) !important;
+          }
+
+          /* Tag Animation */
+          .ant-tag {
+            transition: all 0.3s ease;
+          }
+
+          .ant-tag:hover {
+            transform: scale(1.05);
+          }
+
+          /* Pagination Styling */
+          .ant-pagination-item-active {
+            border-color: #ea580c !important;
+            background-color: #fff7ed !important;
+          }
+
+          .ant-pagination-item-active a {
+            color: #ea580c !important;
+          }
+        `}</style>
+      </div>
+    </ConfigProvider>
   );
 }
