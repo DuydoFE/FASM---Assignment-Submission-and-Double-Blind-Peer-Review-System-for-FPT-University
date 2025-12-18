@@ -13,7 +13,7 @@ import {
   LogOut
 } from "lucide-react";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import FASMLogo from "../assets/img/FASM.png";
 import { useDispatch } from "react-redux";
 import { logout } from "../redux/features/userSlice";
@@ -24,6 +24,33 @@ import { store } from "../redux/store";
 export default function AdminLayout() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const [displayText, setDisplayText] = useState("");
+  const fullText = "ADMINISTRATOR DASHBOARD";
+
+  useEffect(() => {
+    let currentIndex = 0;
+    let isDeleting = false;
+    
+    const typeWriter = () => {
+      if (!isDeleting && currentIndex <= fullText.length) {
+        setDisplayText(fullText.slice(0, currentIndex));
+        currentIndex++;
+      } else if (!isDeleting && currentIndex > fullText.length) {
+        // Pause at the end before starting over
+        setTimeout(() => {
+          isDeleting = true;
+        }, 2000);
+      } else if (isDeleting && currentIndex > 0) {
+        currentIndex--;
+        setDisplayText(fullText.slice(0, currentIndex));
+      } else if (isDeleting && currentIndex === 0) {
+        isDeleting = false;
+      }
+    };
+
+    const typingInterval = setInterval(typeWriter, 100);
+    return () => clearInterval(typingInterval);
+  }, []);
 
   const handleLogout = () => {
     try {
@@ -168,7 +195,10 @@ export default function AdminLayout() {
       {/* Main Content */}
       <div className="flex-1 flex flex-col">
         <header className="h-16 bg-white shadow flex items-center justify-between px-6">
-          <h1 className="text-lg font-semibold">Administrator Dashboard</h1>
+          <h1 className="text-3xl font-bold italic uppercase tracking-widest text-gray-400" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
+            {displayText}
+            <span className="animate-blink">|</span>
+          </h1>
           <div className="flex items-center space-x-4">
             <button
               onClick={() => navigate("/admin/settings")}
@@ -191,6 +221,21 @@ export default function AdminLayout() {
           <Outlet />
         </main>
       </div>
+      
+      <style jsx global>{`
+        @keyframes blink {
+          0%, 50% {
+            opacity: 1;
+          }
+          51%, 100% {
+            opacity: 0;
+          }
+        }
+
+        .animate-blink {
+          animation: blink 1s infinite;
+        }
+      `}</style>
     </div>
   );
 }
