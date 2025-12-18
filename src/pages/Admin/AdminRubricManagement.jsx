@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Toaster, toast } from "react-hot-toast";
 import {
   getAllMajors,
+  getAllCourses,
   getAllRubricTemplates,
   createRubricTemplate,
   updateRubricTemplate,
@@ -17,14 +18,17 @@ export default function AdminRubricManagement() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [currentRubric, setCurrentRubric] = useState(null);
-  const [newRubric, setNewRubric] = useState({ title: "", majorId: 0, isPublic: true });
+  const [newRubric, setNewRubric] = useState({ title: "", majorId: 0, courseId: 0, isPublic: true });
   const [search, setSearch] = useState("");
   const [selectedMajorId, setSelectedMajorId] = useState(0);
+  const [selectedCourseId, setSelectedCourseId] = useState(0);
+  const [courses, setCourses] = useState([]);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         await loadMajors();
+        await loadCourses();
         await loadRubrics();
       } catch (err) { }
     };
@@ -44,6 +48,19 @@ export default function AdminRubricManagement() {
     }
   };
 
+  const loadCourses = async () => {
+    try {
+      const res = await getAllCourses();
+      if (res?.statusCode === 200 && Array.isArray(res.data)) {
+        setCourses(res.data);
+      } else {
+        toast.error(res?.message || "Failed to load courses.");
+      }
+    } catch (err) {
+      toast.error("Server error loading courses.");
+    }
+  };
+
   const loadRubrics = async () => {
     setLoading(true);
     try {
@@ -56,6 +73,8 @@ export default function AdminRubricManagement() {
             title: r.title,
             majorId: r.majorId,
             majorName: r.majorName || major?.majorName || "-",
+            courseId: r.courseId,
+            courseName: r.courseName || "-",
             criteria: r.criteriaTemplates?.map((c) => c.title).join(", ") || "-",
             criteriaCount: r.criteriaTemplates?.length || 0,
             assignmentsUsing: r.assignmentsUsingTemplate?.length || 0,
@@ -79,6 +98,7 @@ export default function AdminRubricManagement() {
     currentRubric &&
     (newRubric.title !== currentRubric.title ||
       newRubric.majorId !== currentRubric.majorId ||
+      newRubric.courseId !== currentRubric.courseId ||
       newRubric.isPublic !== currentRubric.isPublic);
 
   const getApiMessage = (res, defaultMsg = "Operation failed") => {
@@ -88,7 +108,7 @@ export default function AdminRubricManagement() {
   const handleCreateRubric = async (e) => {
     e.preventDefault();
     if (!newRubric.title.trim()) {
-      toast.error("Please enter a title."); // Vẫn giữ validation FE
+      toast.error("Please enter a title.");
       return;
     }
     if (!newRubric.majorId) {
@@ -100,6 +120,7 @@ export default function AdminRubricManagement() {
       const payload = {
         title: newRubric.title,
         majorId: newRubric.majorId,
+        courseId: newRubric.courseId,
         createdByUserId: 1,
       };
       const res = await createRubricTemplate(payload);
@@ -126,7 +147,12 @@ export default function AdminRubricManagement() {
     }
 
     try {
-      const payload = { templateId: currentRubric.id, title: newRubric.title };
+      const payload = {
+        templateId: currentRubric.id,
+        title: newRubric.title,
+        majorId: newRubric.majorId,
+        courseId: newRubric.courseId
+      };
       const res = await updateRubricTemplate(payload);
       if (res?.statusCode === 200) {
         toast.success(getApiMessage(res, "Rubric updated successfully!"));
@@ -169,20 +195,21 @@ export default function AdminRubricManagement() {
 
   const openEditModal = (rubric) => {
     setCurrentRubric(rubric);
-    setNewRubric({ title: rubric.title, majorId: rubric.majorId, isPublic: rubric.isPublic });
+    setNewRubric({ title: rubric.title, majorId: rubric.majorId, courseId: rubric.courseId || 0, isPublic: rubric.isPublic });
     setShowEditModal(true);
   };
 
   const filteredRubrics = rubrics.filter(
     (r) =>
       (selectedMajorId === 0 || r.majorId === selectedMajorId) &&
+      (selectedCourseId === 0 || r.courseId === selectedCourseId) &&
       r.title.toLowerCase().includes(search.toLowerCase())
   );
 
   return (
-    <div className="space-y-6">
+    <div className="bg-white p-8 rounded-2xl shadow-lg border border-gray-200 space-y-6">
       <Toaster position="top-right" reverseOrder={false} /> {/* Toast container */}
-      <h2 className="text-2xl font-bold text-orange-500 flex items-center gap-2">
+      <h2 className="text-3xl font-bold text-[#F36F21] flex items-center gap-2">
         📋 Rubric Management
       </h2>
 
@@ -199,7 +226,10 @@ export default function AdminRubricManagement() {
         <select
           className="border rounded p-2 min-w-[180px]"
           value={selectedMajorId}
-          onChange={(e) => setSelectedMajorId(Number(e.target.value))}
+          onChange={(e) => {
+            setSelectedMajorId(Number(e.target.value));
+            setSelectedCourseId(0);
+          }}
         >
           <option value={0}>-- Select Major --</option>
           {majors.map((m) => (
@@ -209,30 +239,44 @@ export default function AdminRubricManagement() {
           ))}
         </select>
 
+        <select
+          className="border rounded p-2 min-w-[180px]"
+          value={selectedCourseId}
+          onChange={(e) => setSelectedCourseId(Number(e.target.value))}
+        >
+          <option value={0}>-- Select Course --</option>
+          {courses.map((c) => (
+            <option key={c.courseId} value={c.courseId}>
+              {c.courseCode}
+            </option>
+          ))}
+        </select>
+
         <button
           onClick={() => setShowCreateModal(true)}
-          className="px-4 py-2 bg-orange-500 text-white rounded hover:bg-orange-600 font-medium"
+          className="px-4 py-2 rounded-xl font-semibold transition-all bg-[#F36F21] text-white shadow-md shadow-orange-200 hover:bg-[#D95C18] hover:-translate-y-0.5"
         >
-          + Add Rubric
+          + Create Rubric
         </button>
       </div>
 
       {/* Rubrics table */}
-      <div className="bg-white rounded-xl shadow-md overflow-x-auto">
+      <div className="overflow-hidden rounded-xl border border-gray-200">
         {selectedMajorId === 0 ? (
           <p className="p-4 text-center text-gray-500">Please select a major to view rubrics.</p>
         ) : loading ? (
           <p className="p-4 text-center text-gray-500">Loading rubrics...</p>
         ) : filteredRubrics.length > 0 ? (
-          <table className="w-full text-sm border-collapse">
-            <thead className="bg-orange-500 text-white">
+          <table className="w-full table-fixed border-collapse text-sm">
+            <thead className="bg-[#FFF3EB] text-[#F36F21] font-semibold border-b-2 border-[#F36F21]">
               <tr>
-                <th className="p-3 text-left">Title</th>
-                <th className="p-3 text-left">Major</th>
-                <th className="p-3 text-left"># Criteria</th>
-                <th className="p-3 text-left">Assignments Using</th>
-                <th className="p-3 text-left">Public</th> {/* NEW */}
-                <th className="p-3 text-left">Actions</th>
+                <th className="px-4 py-3 text-left">Title</th>
+                <th className="px-4 py-3 text-left">Major</th>
+                <th className="px-4 py-3 text-left">Course</th>
+                <th className="px-4 py-3 text-left"># Criteria</th>
+                <th className="px-4 py-3 text-left">Assignments Using</th>
+                <th className="px-4 py-3 text-center">Public</th>
+                <th className="px-4 py-3 text-center">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -242,35 +286,37 @@ export default function AdminRubricManagement() {
                   className={`${idx % 2 === 0 ? "bg-gray-50" : "bg-white"} hover:bg-gray-100`}
                 >
                   <td className="p-3 font-medium">{r.title}</td>
-                  <td className="p-3">{r.majorName}</td>
-                  <td className="p-3">{r.criteriaCount}</td>
-                  <td className="p-3">{r.assignmentsUsing}</td>
-                  <td className="p-3 text-center">
+                  <td className="px-4 py-3">{r.majorName}</td>
+                  <td className="px-4 py-3">{r.courseName}</td>
+                  <td className="px-4 py-3">{r.criteriaCount}</td>
+                  <td className="px-4 py-3">{r.assignmentsUsing}</td>
+                  <td className="px-4 py-3 text-center">
                     {r.isPublic ? (
                       <span className="text-green-600 font-bold">✅</span>
                     ) : (
                       <span className="text-red-600 font-bold">❌</span>
                     )}
                   </td>
-                  <td className="p-3 space-x-2">
-                    <button
-                      className="text-green-600 hover:underline"
-                      onClick={() => navigate(`/admin/rubrics/${r.id}`)}
-                    >
-                      View
-                    </button>
-                    <button
-                      className="text-blue-600 hover:underline"
-                      onClick={() => openEditModal(r)}
-                    >
-                      Edit
-                    </button>
-                    <button
-                      className="text-red-600 hover:underline"
-                      onClick={() => handleDeleteRubric(r.id)}
-                    >
-                      Delete
-                    </button>
+                  <td className="px-4 py-3">
+                    <div className="flex justify-center items-center gap-3">
+                      <button className="px-3 py-1.5 rounded-lg text-sm font-semibold transition-all bg-green-50 text-green-700 border border-green-200 hover:bg-green-100"
+                        onClick={() => navigate(`/admin/rubrics/${r.id}`)}
+                      >
+                        View
+                      </button>
+
+                      <button className="px-3 py-1.5 rounded-lg text-sm font-semibold transition-all bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100"
+                        onClick={() => openEditModal(r)}
+                      >
+                        Update
+                      </button>
+
+                      <button className="px-3 py-1.5 rounded-lg text-sm font-semibold transition-all bg-red-50 text-red-700 border border-red-200 hover:bg-red-100"
+                        onClick={() => handleDeleteRubric(r.id)}
+                      >
+                        Delete
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -284,7 +330,7 @@ export default function AdminRubricManagement() {
       {/* CREATE MODAL */}
       {showCreateModal && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl shadow-lg p-6 w-full max-w-lg">
+          <div className="bg-white rounded-2xl shadow-xl p-6 w-full max-w-lg">
             <h3 className="text-xl font-semibold mb-4 border-b pb-2">Create New Rubric</h3>
             <form className="space-y-3" onSubmit={handleCreateRubric}>
               {/* Title */}
@@ -315,6 +361,25 @@ export default function AdminRubricManagement() {
                   </option>
                 ))}
               </select>
+
+              {/* Course Dropdown */}
+              <label className="block font-medium mt-2">Course</label>
+              <select
+                required
+                value={newRubric.courseId}
+                onChange={(e) =>
+                  setNewRubric({ ...newRubric, courseId: Number(e.target.value) })
+                }
+                className="border rounded p-3 w-full"
+              >
+                <option value={0}>Select Course</option>
+                {courses.map((c) => (
+                  <option key={c.courseId} value={c.courseId}>
+                    {c.courseCode}
+                  </option>
+                ))}
+              </select>
+
 
               <div className="flex justify-end gap-3 mt-4">
                 <button
@@ -349,6 +414,39 @@ export default function AdminRubricManagement() {
                 placeholder="Rubric Title"
                 className="border rounded p-3 w-full"
               />
+              <label className="block font-medium mt-2">Major</label>
+              <select
+                required
+                value={newRubric.majorId}
+                onChange={(e) =>
+                  setNewRubric({ ...newRubric, majorId: Number(e.target.value) })
+                }
+                className="border rounded p-3 w-full"
+              >
+                <option value={0}>Select Major</option>
+                {majors.map((m) => (
+                  <option key={m.majorId} value={m.majorId}>
+                    {m.majorName}
+                  </option>
+                ))}
+              </select>
+
+              <label className="block font-medium mt-2">Course</label>
+              <select
+                required
+                value={newRubric.courseId}
+                onChange={(e) =>
+                  setNewRubric({ ...newRubric, courseId: Number(e.target.value) })
+                }
+                className="border rounded p-3 w-full"
+              >
+                <option value={0}>Select Course</option>
+                {courses.map((c) => (
+                  <option key={c.courseId} value={c.courseId}>
+                    {c.courseCode}
+                  </option>
+                ))}
+              </select>
 
               <div className="flex justify-end gap-3 mt-4">
                 <button
@@ -364,7 +462,7 @@ export default function AdminRubricManagement() {
                     }`}
                   disabled={!isChanged}
                 >
-                  Save Changes
+                  Save
                 </button>
               </div>
             </form>

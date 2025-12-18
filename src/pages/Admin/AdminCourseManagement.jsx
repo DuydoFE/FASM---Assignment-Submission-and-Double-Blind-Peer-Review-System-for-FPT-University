@@ -150,21 +150,21 @@ export default function AdminCourseManagement() {
 
         <button
           onClick={() => setShowAddModal(true)}
-          className="bg-orange-500 text-white px-6 py-3 rounded-xl"
+          className="px-6 py-3 rounded-xl font-semibold transition-all bg-[#F36F21] text-white shadow-md shadow-orange-200 hover:bg-[#D95C18] hover:-translate-y-0.5"
         >
-          Create Course
+          + Create Course
         </button>
       </div>
 
       {/* ===== TABLE ===== */}
       <div className="rounded-xl border overflow-hidden">
-        <table className="w-full">
-          <thead className="bg-orange-50">
+        <table className="w-full table-fixed">
+          <thead className="bg-[#FFF3EB] text-[#F36F21] font-semibold border-b-2 border-[#F36F21]">
             <tr>
-              <th className="p-3 text-left">Course Code</th>
-              <th className="p-3 text-left">Course Name</th>
-              <th className="p-3 text-center">Status</th>
-              <th className="p-3 text-center">Actions</th>
+              <th className="p-3 text-left uppercase text-sm">Course Code</th>
+              <th className="p-3 text-left uppercase text-sm">Course Name</th>
+              <th className="p-3 text-center uppercase text-sm">Status</th>
+              <th className="p-3 text-center uppercase text-sm">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -178,7 +178,7 @@ export default function AdminCourseManagement() {
               </tr>
             ) : (
               filteredCourses.map((c) => (
-                <tr key={c.courseId} className="border-b hover:bg-orange-50">
+                <tr key={c.courseId} className="border-b hover:bg-[#FFF3EB] transition">
                   <td className="p-3">{c.courseCode}</td>
                   <td className="p-3">{c.courseName}</td>
                   <td className="p-3 text-center">
@@ -190,7 +190,7 @@ export default function AdminCourseManagement() {
                   </td>
                   <td className="p-3 flex gap-2 justify-center">
                     <button
-                      className="bg-blue-500 text-white px-4 py-2 rounded-lg"
+                      className="px-4 py-2 rounded-xl text-sm font-semibold transition-all bg-blue-600 text-white shadow-md shadow-blue-200 hover:bg-blue-700 hover:-translate-y-0.5"
                       onClick={() => {
                         setEditCourse(c);
                         setOriginalCourse(c);
@@ -200,7 +200,7 @@ export default function AdminCourseManagement() {
                       Update
                     </button>
                     <button
-                      className="bg-red-500 text-white px-4 py-2 rounded-lg"
+                      className="px-4 py-2 rounded-xl text-sm font-semibold transition-all bg-red-50 text-red-700 border border-red-200 hover:bg-red-100"
                       onClick={() => handleDelete(c.courseId)}
                     >
                       Delete
@@ -255,13 +255,13 @@ export default function AdminCourseManagement() {
 
           <div className="flex justify-end gap-3">
             <button
-              className="bg-green-600 text-white px-4 py-2 rounded"
+              className="px-4 py-2 rounded-xl font-semibold bg-gray-300 text-gray-700 hover:bg-gray-400"
               onClick={handleCreate}
             >
               Save
             </button>
             <button
-              className="bg-gray-400 text-white px-4 py-2 rounded"
+              className="px-4 py-2 rounded-xl font-semibold transition-all bg-gray-300 text-gray-700 hover:bg-gray-400"
               onClick={() => setShowAddModal(false)}
             >
               Cancel
@@ -310,7 +310,10 @@ export default function AdminCourseManagement() {
 
           <div className="flex justify-end gap-3">
             <button
-              className={`px-4 py-2 rounded text-white ${isChanged ? 'bg-blue-600' : 'bg-gray-400 cursor-not-allowed'}`}
+              className={`px-4 py-2 rounded-xl font-semibold transition-all${isChanged
+                ? "bg-blue-600 text-white shadow-md shadow-blue-200 hover:bg-blue-700 hover:-translate-y-0.5"
+                : "bg-gray-300 text-gray-600 cursor-not-allowed"
+                }`}
               onClick={handleUpdate}
               disabled={!isChanged}
             >

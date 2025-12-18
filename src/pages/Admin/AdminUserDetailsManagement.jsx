@@ -159,16 +159,27 @@ export default function AdminUserDetailsManagement() {
             onConfirm: () => navigate(-1),
           })
         }
-        className="flex items-center gap-2 text-orange-600 hover:text-orange-800 mb-6"
+        className="
+flex items-center gap-2
+text-orange-600
+hover:text-orange-800
+font-medium
+mb-8
+"
       >
         <ArrowLeft size={20} /> Back
       </button>
 
-      <h2 className="text-4xl font-bold text-orange-600 mb-4 flex items-center gap-2">
+      <h2 className="text-4xl font-extrabold text-gray-900 mb-6 flex items-center gap-3">
         User Details
         <Edit
           size={24}
-          className="cursor-pointer"
+          className="
+cursor-pointer
+text-gray-400
+hover:text-orange-600
+transition
+"
           onClick={() =>
             openConfirm({
               title: "Edit user?",
@@ -182,10 +193,15 @@ export default function AdminUserDetailsManagement() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Left Panel */}
         <div className="col-span-1 space-y-6">
-          <div className="bg-white shadow-xl rounded-2xl p-6 flex flex-col items-center text-center">
+          <div className="bg-white border shadow-md rounded-2xl p-6 flex flex-col items-center text-center">
             <img
               src={user.avatarUrl}
-              className="w-36 h-36 rounded-full object-cover mb-4 border shadow"
+              className="
+w-36 h-36 rounded-full
+object-cover mb-4
+border-4 border-white
+shadow-lg
+"
               alt="avatar"
             />
             <h3 className="text-2xl font-semibold">{user.firstName} {user.lastName}</h3>
@@ -193,7 +209,11 @@ export default function AdminUserDetailsManagement() {
 
             <div className="mt-3">
               <span
-                className={`px-4 py-1 rounded-full text-sm font-semibold ${user.isActive ? "bg-green-100 text-green-600" : "bg-red-100 text-red-600"}`}
+                className={`px-4 py-1 rounded-full text-xs font-semibold uppercase tracking-wide
+  ${user.isActive
+                    ? "bg-green-100 text-green-700"
+                    : "bg-red-100 text-red-700"
+                  }`}
               >
                 {user.isActive ? "Active" : "Inactive"}
               </span>
@@ -207,20 +227,36 @@ export default function AdminUserDetailsManagement() {
                   onConfirm: handleToggleStatus,
                 })
               }
-              className={`mt-5 w-full py-2 rounded-xl text-white font-semibold shadow ${user.isActive ? "bg-red-500 hover:bg-red-600" : "bg-green-500 hover:bg-green-600"
-                }`}
+              className={`
+mt-6 w-full py-3 rounded-xl
+text-white font-semibold
+shadow-md
+hover:-translate-y-0.5
+transition-all
+${user.isActive
+                  ? "bg-red-500 hover:bg-red-600 shadow-red-200"
+                  : "bg-green-500 hover:bg-green-600 shadow-green-200"
+                }
+`}
             >
               {user.isActive ? "Deactivate User" : "Activate User"}
             </button>
           </div>
 
-          <div className="bg-white shadow-lg rounded-2xl p-6">
+          <div className="bg-white border shadow-sm rounded-2xl p-6">
             <h4 className="text-xl font-bold text-orange-600 mb-3">Roles</h4>
             <div className="flex flex-wrap gap-2">
               {user.roles?.map((r, i) => (
                 <span
                   key={i}
-                  className="px-3 py-1 bg-orange-50 border border-orange-200 text-orange-700 rounded-lg text-sm"
+                  className="
+px-3 py-1
+bg-orange-100
+text-orange-700
+rounded-full
+text-xs font-semibold
+uppercase
+"
                 >
                   {r}
                 </span>
@@ -233,7 +269,7 @@ export default function AdminUserDetailsManagement() {
         <div className="col-span-2 space-y-8">
           {/* Basic Info */}
           <div className="bg-white shadow-lg rounded-2xl p-6">
-            <h3 className="text-xl font-bold text-orange-600 mb-6">Basic Information</h3>
+            <h3 className="text-xl font-bold text-gray-800 mb-6 flex items-center gap-2">Basic Information</h3>
 
             {/* Khi editing = false, hiển thị info user */}
             {!editing ? (
@@ -315,7 +351,13 @@ export default function AdminUserDetailsManagement() {
                         type="text"
                         value={form.username}
                         onChange={(e) => setForm({ ...form, username: e.target.value })}
-                        className="w-full border rounded-lg p-2"
+                        className="
+w-full p-3
+border rounded-xl
+focus:border-orange-500
+focus:ring-2 focus:ring-orange-200
+transition
+"
                         required
                       />
                     </div>
@@ -399,8 +441,8 @@ export default function AdminUserDetailsManagement() {
                           studentCode: user.studentCode ?? "",
                           avatarUrl: user.avatarUrl ?? "",
                         })
-                            ? "bg-gray-400 cursor-not-allowed"
-                            : "bg-orange-600 hover:bg-orange-700"
+                          ? "bg-gray-400 cursor-not-allowed"
+                          : "bg-orange-600 hover:bg-orange-700"
                           }`}
                       >
                         Save
@@ -420,7 +462,12 @@ export default function AdminUserDetailsManagement() {
             ) : (
               <div className="grid gap-4">
                 {user.enrolledCourses.map(course => (
-                  <div key={course.courseInstanceId} className="border rounded-xl p-4 bg-gray-50 hover:bg-gray-100 transition">
+                  <div key={course.courseInstanceId} className="
+border rounded-xl p-4
+bg-gray-50
+hover:bg-white hover:shadow-md
+transition-all
+">
                     <p><strong>Course Name:</strong> {course.courseName}</p>
                     <p><strong>Status:</strong> {course.status}</p>
                     <p><strong>Final Grade:</strong> {course.finalGrade}</p>
@@ -482,8 +529,14 @@ export default function AdminUserDetailsManagement() {
 
 function InfoCard({ label, value, icon }) {
   return (
-    <div className="flex items-start gap-3 p-4 border rounded-xl bg-gray-50">
-      <div className="text-orange-600">{icon}</div>
+    <div className="
+flex items-start gap-3
+p-4 border rounded-xl
+bg-gray-50
+hover:bg-gray-100
+transition
+">
+      <div className="text-orange-500 mt-1">{icon}</div>
       <div>
         <p className="text-sm text-gray-500">{label}</p>
         <p className="text-gray-800 font-medium">{value}</p>
@@ -501,7 +554,12 @@ function ConfirmModal({ open, title, message, onConfirm, onCancel }) {
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm"></div>
 
       {/* Modal */}
-      <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 z-10">
+      <div className="
+relative bg-white rounded-2xl
+shadow-2xl w-full max-w-2xl
+p-8 z-10
+animate-[fadeIn_0.2s_ease-out]
+">
         <h3 className="text-xl font-bold text-gray-800 mb-3">{title}</h3>
         <p className="text-gray-600 mb-6">{message}</p>
 
