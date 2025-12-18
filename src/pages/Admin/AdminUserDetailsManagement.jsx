@@ -29,7 +29,7 @@ export default function AdminUserDetailsManagement() {
     studentCode: "",
     avatarUrl: "",
   });
-  const isStudent = user?.roles?.includes("STUDENT");
+  const isStudent = user?.roles?.includes("Student");
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [confirmConfig, setConfirmConfig] = useState({
     title: "",
@@ -287,12 +287,11 @@ export default function AdminUserDetailsManagement() {
                           Major <span className="text-gray-400">(Required)</span>
                         </label>
                         <select
-                          value={form.majorId ?? ""}
-                          required
+                          value={form.majorId}
                           onChange={(e) => setForm({ ...form, majorId: Number(e.target.value) })}
                           className="w-full border rounded-lg p-2 text-gray-800 bg-white"
                         >
-                          <option value="">Select Major</option>
+                          <option value={0}>Select Major</option>
                           {majors.map((m) => (
                             <option key={m.majorId} value={m.majorId}>
                               {m.majorName}
