@@ -205,7 +205,7 @@ const EditCriterionModal = ({ isOpen, onClose, onSubmit, criterion, isSubmitting
                                     value={formData.maxScore}
                                     onChange={(e) => setFormData({ ...formData, maxScore: e.target.value })}
                                     className={`w-full px-4 py-2.5 ${errors.maxScore ? 'border-red-500' : 'border-gray-300' }`}
-                                    placeholder="Points"
+                                    placeholder="Scores"
                                     min="0"
                                     disabled={isSubmitting}
                                 />
