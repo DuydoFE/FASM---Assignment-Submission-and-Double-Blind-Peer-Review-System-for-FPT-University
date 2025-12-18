@@ -22,13 +22,9 @@ export default function AdminCourseManagement() {
   const [filteredCourses, setFilteredCourses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
-
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
-
   const [confirmConfig, setConfirmConfig] = useState(null);
-  // { message: string, onConfirm: async function }
-
   const [newCourse, setNewCourse] = useState({
     courseCode: "",
     courseName: "",

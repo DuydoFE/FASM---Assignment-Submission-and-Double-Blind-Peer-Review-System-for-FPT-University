@@ -11,7 +11,6 @@ import {
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
-/* ===================== BASIC INPUT ===================== */
 function Input({ label, ...props }) {
   return (
     <div>
@@ -51,7 +50,6 @@ function Select({ label, options, ...props }) {
   );
 }
 
-/* ===================== CONFIRM MODAL ===================== */
 function ConfirmModal({ open, title, message, onConfirm, onCancel }) {
   if (!open) return null;
   return (
@@ -84,7 +82,6 @@ function ConfirmModal({ open, title, message, onConfirm, onCancel }) {
   );
 }
 
-/* ===================== CREATE USER FORM ===================== */
 function AdminCreateUserForm({ campuses, majors, onClose, onUserCreated }) {
   const [newUser, setNewUser] = useState({
     campusId: 0,
@@ -295,7 +292,6 @@ function AdminCreateUserForm({ campuses, majors, onClose, onUserCreated }) {
   );
 }
 
-/* ===================== MAIN PAGE ===================== */
 export default function AdminUserManagement() {
   const navigate = useNavigate();
 
