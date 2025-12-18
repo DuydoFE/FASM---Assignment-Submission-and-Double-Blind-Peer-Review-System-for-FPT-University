@@ -164,7 +164,7 @@ const ViewScorePage = () => {
   if (isError || !scoreData) {
     return (
       <div className="p-8 text-center text-red-500 font-semibold text-lg">
-        Unable to load points. Please try again later.
+        Unable to load Scores. Please try again later.
       </div>
     );
   }
@@ -298,7 +298,7 @@ const ViewScorePage = () => {
               </div>
               <div>
                 <p className="font-semibold text-indigo-800">
-                  Points from the instructor
+                  Scores from the instructor
                 </p>
                 <p className="text-2xl font-bold text-indigo-600">
                   {scoreData.instructorScore.toFixed(2)}

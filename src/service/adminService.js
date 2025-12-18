@@ -1,7 +1,7 @@
 import api from "../config/axios";
 import axios from "axios";
 
-const API_BASE_URL = "https://localhost:7104/api";
+const API_BASE_URL = "https://api.fasm.site/api";
 
 // Lấy thông tin user theo ID
 export const getUserById = async (id) => {
@@ -140,6 +140,48 @@ export const importUsers = async (file) => {
   } catch (error) {
     if (error.response) {
       throw error.response.data;
+    }
+    throw new Error("Cannot connect to server");
+  }
+};
+
+// Import students from Excel
+export const importStudents = async (file) => {
+  try {
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const res = await api.post("/Users/import-students", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+
+    return res.data;
+  } catch (error) {
+    if (error.response) {
+      throw error.response;
+    }
+    throw new Error("Cannot connect to server");
+  }
+};
+
+// Import instructors from Excel
+export const importInstructors = async (file) => {
+  try {
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const res = await api.post("/Users/import-instructors", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+
+    return res.data;
+  } catch (error) {
+    if (error.response) {
+      throw error.response;
     }
     throw new Error("Cannot connect to server");
   }

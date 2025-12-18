@@ -10,7 +10,7 @@ const AutoGradeZeroModal = ({ isOpen, onClose, onConfirm, loading, notSubmittedC
           <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
             <AlertCircle className="w-6 h-6 text-red-600" />
           </div>
-          <span>Auto Grade with Zero Points</span>
+          <span>Auto Grade with Zero Scores</span>
         </div>
       }
       open={isOpen}
@@ -32,7 +32,7 @@ const AutoGradeZeroModal = ({ isOpen, onClose, onConfirm, loading, notSubmittedC
       ]}
     >
       <p className="text-gray-600 mb-2">
-        This will automatically assign <span className="font-semibold text-red-600">0 points</span> to all students with "Not Submitted" status.
+        This will automatically assign <span className="font-semibold text-red-600">0 Scores</span> to all students with "Not Submitted" status.
       </p>
       <p className="text-gray-600">
         <span className="font-semibold">{notSubmittedCount || 0} student(s)</span> will be affected. This action cannot be undone.
