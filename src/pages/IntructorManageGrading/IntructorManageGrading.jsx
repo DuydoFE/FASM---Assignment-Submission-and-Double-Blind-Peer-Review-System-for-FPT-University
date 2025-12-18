@@ -281,7 +281,7 @@ const InstructorManageGrading = () => {
     
     try {
       await autoGradeZero(selectedAssignmentId);
-      toast.success('Auto-graded all non-submitted assignments with 0 points!');
+      toast.success('Auto-graded all non-submitted assignments with 0 Scores!');
       await handleViewMarkFromRestore();
     } catch (error) {
       console.error('Error auto-grading:', error);

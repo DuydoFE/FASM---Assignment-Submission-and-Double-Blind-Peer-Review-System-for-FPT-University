@@ -17,7 +17,6 @@ function AdminDashboard() {
   const chartRef = useRef(null);
   const gradeChartRef = useRef(null);
 
-  // Default values (will be replaced with API data)
   const userStats = {
     instructors: statisticsData?.totalInstructors || 0,
     students: statisticsData?.totalStudents || 0
@@ -40,17 +39,12 @@ function AdminDashboard() {
     percentage: item.submissionRate
   })) || [];
 
-  // Fetch academic years from API
   useEffect(() => {
     const fetchAcademicYears = async () => {
       try {
         setLoading(true);
         const response = await getAllAcademicYears();
-        
-        // Get current date
         const now = new Date();
-        
-        // Extract academic years from the response data and filter out future ones
         const years = response.data
           .map(year => ({
             id: year.academicYearId,
@@ -62,14 +56,11 @@ function AdminDashboard() {
             semesterCount: year.semesterCount
           }))
           .filter(year => {
-            // Only include academic years that have already started
             const startDate = new Date(year.startDate);
             return startDate <= now;
           });
         
         setAcademicYears(years);
-        
-        // Set the first year as selected if available
         if (years.length > 0) {
           setSelectedAcademicYear(years[0]);
         }
@@ -84,7 +75,6 @@ function AdminDashboard() {
     fetchAcademicYears();
   }, []);
 
-  // Fetch semesters when academic year is selected
   useEffect(() => {
     const fetchSemesters = async () => {
       if (!selectedAcademicYear?.id) {
@@ -96,11 +86,7 @@ function AdminDashboard() {
       try {
         setLoadingSemesters(true);
         const response = await getSemestersByAcademicYear(selectedAcademicYear.id);
-        
-        // Get current date
         const now = new Date();
-        
-        // Extract semesters from the response data and filter out future ones
         const semesterList = response.data
           .map(semester => ({
             id: semester.semesterId,
@@ -110,14 +96,11 @@ function AdminDashboard() {
             academicYearId: semester.academicYearId
           }))
           .filter(semester => {
-            // Only include semesters that have already started
             const startDate = new Date(semester.startDate);
             return startDate <= now;
           });
         
         setSemesters(semesterList);
-        
-        // Set the first semester as selected if available
         if (semesterList.length > 0) {
           setSelectedSemester(semesterList[0].name);
         } else {
@@ -134,16 +117,12 @@ function AdminDashboard() {
 
     fetchSemesters();
   }, [selectedAcademicYear]);
-
-  // Fetch statistics when academic year or semester changes
   useEffect(() => {
     const fetchStatistics = async () => {
       if (!selectedAcademicYear?.id || !selectedSemester) {
         setStatisticsData(null);
         return;
       }
-
-      // Find the semester ID from the selected semester name
       const semester = semesters.find(s => s.name === selectedSemester);
       if (!semester) {
         return;
@@ -166,8 +145,6 @@ function AdminDashboard() {
 
     fetchStatistics();
   }, [selectedAcademicYear, selectedSemester, semesters]);
-
-  // Update submission chart when statistics data changes
   useEffect(() => {
     if (chartRef.current && statisticsData?.submissionRate) {
       const myChart = echarts.init(chartRef.current);
@@ -246,8 +223,6 @@ function AdminDashboard() {
       };
     }
   }, [statisticsData]);
-
-  // Update grade distribution chart when statistics data changes
   useEffect(() => {
     if (gradeChartRef.current && statisticsData?.scoreDistribution) {
       const scoreData = statisticsData.scoreDistribution;

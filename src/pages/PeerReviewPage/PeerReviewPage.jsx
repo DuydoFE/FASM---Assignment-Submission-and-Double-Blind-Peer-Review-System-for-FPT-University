@@ -313,7 +313,7 @@ const PeerReviewPage = () => {
                 </p>
                 <div className="ml-auto flex space-x-2">
                   <a
-                    href={reviewData.fileUrl}
+                    href={reviewData.previewUrl || reviewData.fileUrl}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="p-2 hover:bg-gray-100 rounded-full text-gray-700"

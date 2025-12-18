@@ -111,15 +111,14 @@ export default function AdminRubricManagement() {
       toast.error("Please enter a title.");
       return;
     }
-    if (!newRubric.majorId) {
-      toast.error("Please select a major.");
+    if (!newRubric.courseId) {
+      toast.error("Please select a course.");
       return;
     }
 
     try {
       const payload = {
         title: newRubric.title,
-        majorId: newRubric.majorId,
         courseId: newRubric.courseId,
         createdByUserId: 1,
       };
@@ -201,7 +200,6 @@ export default function AdminRubricManagement() {
 
   const filteredRubrics = rubrics.filter(
     (r) =>
-      (selectedMajorId === 0 || r.majorId === selectedMajorId) &&
       (selectedCourseId === 0 || r.courseId === selectedCourseId) &&
       r.title.toLowerCase().includes(search.toLowerCase())
   );
@@ -213,7 +211,7 @@ export default function AdminRubricManagement() {
         📋 Rubric Management
       </h2>
 
-      {/* Search + Major Filter + Add button */}
+      {/* Search + Course Filter + Add button */}
       <div className="bg-white p-4 rounded-xl shadow-md flex flex-wrap items-center gap-4">
         <input
           type="text"
@@ -222,22 +220,6 @@ export default function AdminRubricManagement() {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
-
-        <select
-          className="border rounded p-2 min-w-[180px]"
-          value={selectedMajorId}
-          onChange={(e) => {
-            setSelectedMajorId(Number(e.target.value));
-            setSelectedCourseId(0);
-          }}
-        >
-          <option value={0}>-- Select Major --</option>
-          {majors.map((m) => (
-            <option key={m.majorId} value={m.majorId}>
-              {m.majorName}
-            </option>
-          ))}
-        </select>
 
         <select
           className="border rounded p-2 min-w-[180px]"
@@ -262,9 +244,7 @@ export default function AdminRubricManagement() {
 
       {/* Rubrics table */}
       <div className="overflow-hidden rounded-xl border border-gray-200">
-        {selectedMajorId === 0 ? (
-          <p className="p-4 text-center text-gray-500">Please select a major to view rubrics.</p>
-        ) : loading ? (
+        {loading ? (
           <p className="p-4 text-center text-gray-500">Loading rubrics...</p>
         ) : filteredRubrics.length > 0 ? (
           <table className="w-full table-fixed border-collapse text-sm">
@@ -323,7 +303,7 @@ export default function AdminRubricManagement() {
             </tbody>
           </table>
         ) : (
-          <p className="p-4 text-center text-gray-500">No rubrics found for this major.</p>
+          <p className="p-4 text-center text-gray-500">No rubrics found.</p>
         )}
       </div>
 
@@ -344,24 +324,6 @@ export default function AdminRubricManagement() {
                 className="border rounded p-3 w-full"
               />
 
-              {/* Major Dropdown */}
-              <label className="block font-medium mt-2">Major</label>
-              <select
-                required
-                value={newRubric.majorId}
-                onChange={(e) =>
-                  setNewRubric({ ...newRubric, majorId: Number(e.target.value) })
-                }
-                className="border rounded p-3 w-full"
-              >
-                <option value={0}>Select Major</option>
-                {majors.map((m) => (
-                  <option key={m.majorId} value={m.majorId}>
-                    {m.majorName}
-                  </option>
-                ))}
-              </select>
-
               {/* Course Dropdown */}
               <label className="block font-medium mt-2">Course</label>
               <select
@@ -379,7 +341,6 @@ export default function AdminRubricManagement() {
                   </option>
                 ))}
               </select>
-
 
               <div className="flex justify-end gap-3 mt-4">
                 <button
