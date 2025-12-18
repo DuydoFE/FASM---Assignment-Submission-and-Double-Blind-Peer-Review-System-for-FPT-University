@@ -290,7 +290,7 @@ const GradingModal = ({
                 ) : (
                   <Send className="w-4 h-4 mr-2" />
                 )}
-                {status === "Completed" ? "Update Grade" : "Submit Review"}
+                {status === "Completed" ? "Update Score" : "Submit Review"}
               </>
             )}
           </button>
