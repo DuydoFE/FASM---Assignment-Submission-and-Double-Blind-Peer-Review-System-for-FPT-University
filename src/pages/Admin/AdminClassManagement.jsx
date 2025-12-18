@@ -97,7 +97,7 @@ export default function AdminClassManagement() {
         setCourses(Array.isArray(coursesRes?.data) ? coursesRes.data : []);
       } catch (err) {
         console.error(err);
-        toast.error("Lỗi tải dữ liệu hệ thống!");
+        toast.error("System data loading error!");
       }
     };
     fetchFiltersData();
@@ -114,7 +114,7 @@ export default function AdminClassManagement() {
         setClasses(Array.isArray(res?.data) ? res.data : []);
       } catch (err) {
         console.error(err);
-        toast.error("Không thể tải danh sách lớp!");
+        toast.error("Unable to load class list!");
       }
     };
     fetchData();
@@ -158,8 +158,6 @@ export default function AdminClassManagement() {
 
   const handleNewClassChange = (e) => {
     const { name, value } = e.target;
-
-    // If semester is changed, auto-populate start and end dates from semester
     if (name === "semesterId" && value) {
       const selectedSemester = semesters.find(s => s.semesterId === Number(value));
       if (selectedSemester && selectedSemester.startDate && selectedSemester.endDate) {
@@ -180,16 +178,15 @@ export default function AdminClassManagement() {
     const { campusId, semesterId, courseId, sectionCode, startDate, endDate } = newClass;
 
     if (!campusId || !semesterId || !courseId || !sectionCode.trim()) {
-      toast.warn("Vui lòng nhập đầy đủ thông tin!");
+      toast.warn("Please enter all required information!");
       return;
     }
 
     if (!startDate || !endDate) {
-      toast.warn("Vui lòng chọn ngày bắt đầu và kết thúc!");
+      toast.warn("Please select a start date and an end date!");
       return;
     }
 
-    // Validate dates are within semester range
     const selectedSemester = semesters.find(s => s.semesterId === Number(semesterId));
     if (selectedSemester) {
       const semesterStart = new Date(selectedSemester.startDate);
@@ -198,11 +195,11 @@ export default function AdminClassManagement() {
       const classEnd = new Date(endDate);
 
       if (classStart < semesterStart) {
-        toast.error(`Ngày bắt đầu không thể trước ngày bắt đầu học kỳ (${semesterStart.toLocaleDateString('en-GB')})!`);
+        toast.error(`The start date cannot be earlier than the semester start date (${semesterStart.toLocaleDateString('en-GB')})!`);
         return;
       }
       if (classEnd > semesterEnd) {
-        toast.error(`Ngày kết thúc không thể sau ngày kết thúc học kỳ (${semesterEnd.toLocaleDateString('en-GB')})!`);
+        toast.error(`The end date cannot be later than the semester end date (${semesterEnd.toLocaleDateString('en-GB')})!`);
         return;
       }
     }
@@ -220,7 +217,7 @@ export default function AdminClassManagement() {
 
     try {
       await createCourseInstance(payload);
-      toast.success("Tạo lớp thành công!");
+      toast.success("Class created successfully!");
       setShowAddForm(false);
       setNewClass({ campusId: "", semesterId: "", courseId: "", sectionCode: "", startDate: "", endDate: "" });
 
@@ -230,7 +227,7 @@ export default function AdminClassManagement() {
       }
     } catch (err) {
       console.error(err);
-      toast.error(err.response?.data?.message || "Tạo lớp thất bại!");
+      toast.error(err.response?.data?.message || "Failed to create class!");
     }
   };
 
@@ -342,7 +339,6 @@ export default function AdminClassManagement() {
     }
   };
 
-  // Get semester date constraints for date inputs
   const getDateConstraints = (semesterId) => {
     const selectedSemester = semesters.find(s => s.semesterId === Number(semesterId));
     if (!selectedSemester) return { min: "", max: "" };
@@ -385,14 +381,7 @@ export default function AdminClassManagement() {
             name="campus"
             value={filters.campus}
             onChange={handleFilterChange}
-            className="
-flex-1 min-w-[150px]
-p-3 rounded-xl border
-text-gray-700
-focus:border-orange-500
-focus:ring-2 focus:ring-orange-200
-transition
-"
+            className="flex-1 min-w-[150px] p-3 rounded-xl border text-gray-700 focus:border-orange-500 focus:ring-2 focus:ring-orange-200 transition"
           >
             <option value="">Select Campus</option>
             {campuses.map((c) => (
@@ -424,25 +413,12 @@ transition
             value={filters.search}
             onChange={handleFilterChange}
             placeholder="Search class name..."
-            className="
-flex-1 min-w-[200px]
-p-3 rounded-xl border
-focus:border-orange-500
-focus:ring-2 focus:ring-orange-200
-transition
-"
+            className="flex-1 min-w-[200px] p-3 rounded-xl border focus:border-orange-500 focus:ring-2 focus:ring-orange-200 transition"
           />
 
           <button
             onClick={() => setShowAddForm(!showAddForm)}
-            className="
-px-6 py-3
-bg-orange-600 text-white
-rounded-xl font-semibold
-shadow-md shadow-orange-200
-hover:bg-orange-700 hover:-translate-y-0.5
-transition-all
-"
+            className="px-6 py-3 bg-orange-600 text-white rounded-xl font-semibold shadow-md shadow-orange-200 hover:bg-orange-700 hover:-translate-y-0.5 transition-all"
           >
             + Create Class
           </button>
@@ -456,12 +432,7 @@ transition-all
             onClick={() => setShowAddForm(false)}
           />
 
-          <div className="
-relative bg-white w-full max-w-3xl
-p-8 rounded-2xl
-shadow-2xl space-y-6
-animate-[fadeIn_0.2s_ease-out]
-">
+          <div className="relative bg-white w-full max-w-3xl p-8 rounded-2xl shadow-2xl space-y-6 animate-[fadeIn_0.2s_ease-out]">
             <h3 className="text-xl font-bold text-gray-800">Create New Class</h3>
 
             <div className="flex flex-wrap gap-4">
@@ -473,13 +444,7 @@ animate-[fadeIn_0.2s_ease-out]
                   name="campusId"
                   value={newClass.campusId}
                   onChange={handleNewClassChange}
-                  className="
-w-full p-3
-border rounded-xl
-focus:border-orange-500
-focus:ring-2 focus:ring-orange-200
-transition
-"
+                  className="w-full p-3 border rounded-xl focus:border-orange-500 focus:ring-2 focus:ring-orange-200 transition"
                 >
                   <option value="">Select Campus</option>
                   {campuses.map(c => (
@@ -579,12 +544,7 @@ transition
             <div className="flex justify-end gap-4 pt-2">
               <button
                 onClick={() => setShowAddForm(false)}
-                className="
-px-6 py-2 rounded-xl
-border border-gray-300
-text-gray-700 font-semibold
-hover:bg-gray-100
-"
+                className="px-6 py-2 rounded-xl border border-gray-300 text-gray-700 font-semibold hover:bg-gray-100"
               >
                 Cancel
               </button>
@@ -731,8 +691,7 @@ hover:bg-gray-100
                     onConfirm: handleUpdateClass,
                   })
                 }
-                className={`px-6 py-2 rounded-lg font-semibold shadow transition
-    ${!isUpdateChanged()
+                className={`px-6 py-2 rounded-lg font-semibold shadow transition${!isUpdateChanged()
                     ? "bg-gray-200 text-gray-400 cursor-not-allowed"
                     : "bg-green-500 text-white hover:bg-green-600"
                   }`}
@@ -785,10 +744,9 @@ hover:bg-gray-100
                       <td className="p-3">{formatDate(c.endDate)}</td>
                       <td className="p-3">
                         <span
-                          className={`px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wide
-  ${c.isActive
-                              ? "bg-green-100 text-green-700"
-                              : "bg-red-100 text-red-700"
+                          className={`px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wide${c.isActive
+                            ? "bg-green-100 text-green-700"
+                            : "bg-red-100 text-red-700"
                             }`}
                         >
                           {c.isActive ? "Active" : "Deactive"}
@@ -798,33 +756,24 @@ hover:bg-gray-100
                         <div className="flex flex-wrap gap-2">
                           <button
                             disabled={c.isActive}
-                            className={`px-3 py-1.5 text-xs font-semibold rounded-xl transition-all
-${c.isActive
-                                ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                                : "bg-green-50 text-green-700 hover:bg-green-100 border border-green-200"
+                            className={`px-3 py-1.5 text-xs font-semibold rounded-xl transition-all${c.isActive
+                              ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                              : "bg-green-50 text-green-700 hover:bg-green-100 border border-green-200"
                               }`}
                             onClick={() => !c.isActive && handleOpenUpdateForm(c)}
                           >
                             ✏️ Update
                           </button>
                           <button
-                            className="
-px-3 py-1.5 text-xs font-semibold
-rounded-xl
-bg-orange-50 text-orange-700
-hover:bg-orange-100
-border border-orange-200
-transition
-"
+                            className="px-3 py-1.5 text-xs font-semibold rounded-xl bg-orange-50 text-orange-700 hover:bg-orange-100 border border-orange-200 transition"
                             onClick={() => handleViewDetail(c.courseInstanceId)}
                           >
                             👁️ View
                           </button>
                           <button
-                            className={`px-3 py-1.5 text-xs font-semibold rounded-xl transition-all
-${c.isActive
-                                ? "bg-red-50 text-red-700 hover:bg-red-100 border border-red-200"
-                                : "bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200"
+                            className={`px-3 py-1.5 text-xs font-semibold rounded-xl transition-all${c.isActive
+                              ? "bg-red-50 text-red-700 hover:bg-red-100 border border-red-200"
+                              : "bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200"
                               }`}
                             onClick={() => handleToggleStatus(c.courseInstanceId, c.isActive)}
                           >
@@ -849,12 +798,7 @@ ${c.isActive
           />
 
           {/* Modal */}
-          <div className="
-relative bg-white w-full max-w-md
-p-6 rounded-2xl
-shadow-2xl space-y-5
-animate-[fadeIn_0.15s_ease-out]
-">
+          <div className="relative bg-white w-full max-w-md p-6 rounded-2xl shadow-2xl space-y-5 animate-[fadeIn_0.15s_ease-out]">
             <h3 className="text-lg font-semibold text-gray-800">
               {confirmState.title || "Confirm"}
             </h3>

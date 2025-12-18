@@ -7,9 +7,6 @@ import {
   deleteMajor,
 } from "../../service/adminService";
 
-/* =========================
-   Modal Wrapper (OUTSIDE)
-   ========================= */
 const ModalWrapper = ({ children }) => (
   <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
     <div className="bg-white rounded-2xl shadow-xl p-6 w-full max-w-md">
@@ -68,9 +65,6 @@ export default function AdminMajorManagement() {
     loadMajors();
   }, []);
 
-  /* =========================
-     Open Edit Modal
-     ========================= */
   const openEdit = (major) => {
     const majorCopy = {
       majorId: major.majorId,
@@ -100,9 +94,6 @@ export default function AdminMajorManagement() {
     );
   };
 
-  /* =========================
-     Confirm Action Handler
-     ========================= */
   const handleConfirm = async () => {
     try {
       let res;
