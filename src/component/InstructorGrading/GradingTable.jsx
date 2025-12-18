@@ -1,6 +1,9 @@
-import React from "react";
-import { ChevronDown, Loader2, AlertCircle } from "lucide-react";
+import React, { useState, useRef } from "react";
+import { ChevronDown, Loader2, AlertCircle, Download, Upload } from "lucide-react";
 import { Input, Button, Modal } from "antd";
+import * as XLSX from "xlsx";
+import { toast } from "react-toastify";
+import { exportSubmissionsExcel, importSubmissionsExcel } from "../../service/instructorGrading";
 
 const { Search } = Input;
 
@@ -15,7 +18,14 @@ const GradingTable = ({
   onGradeClick,
   onAutoGradeZero,
   students,
+  assignmentId,
+  currentUserId,
+  onRefreshData,
 }) => {
+  const [isExporting, setIsExporting] = useState(false);
+  const [isImporting, setIsImporting] = useState(false);
+  const fileInputRef = useRef(null);
+  
   const formatDateTime = (dateString) => {
     if (!dateString) return { date: "--", time: "" };
     // Check for default/empty datetime value (0001-01-01T00:00:00)
@@ -61,6 +71,181 @@ const GradingTable = ({
     (filteredStudents && filteredStudents.length > 0
       ? filteredStudents[0].assignmentStatus
       : undefined);
+
+  const handleExportExcel = async () => {
+    if (!assignmentId) {
+      toast.error("Assignment ID is required");
+      return;
+    }
+
+    try {
+      setIsExporting(true);
+
+      // Call API to get export data
+      const response = await exportSubmissionsExcel(assignmentId);
+      
+      // Parse the API response - it returns JSON data
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          const apiData = JSON.parse(reader.result);
+          
+          if (!apiData.data || apiData.data.length === 0) {
+            toast.error("No submissions to export");
+            return;
+          }
+
+          const exportData = apiData.data;
+
+          // Prepare Excel data
+          const excelData = [];
+          
+          // Create header row
+          const headers = ["UserName", "StudentCode", "SubmissionId", "ReviewSubmission", "InstructorId", "AssignmentName"];
+          
+          // Add dynamic criteria headers
+          if (exportData[0]?.criteriaScores?.length > 0) {
+            exportData[0].criteriaScores.forEach(criteria => {
+              headers.push(`${criteria.criteriaName} (${criteria.weight}%)`);
+              headers.push(`${criteria.criteriaName} Feedback`);
+            });
+          }
+          
+          headers.push("Final Feedback");
+          
+          excelData.push(headers);
+
+          // Add data rows
+          exportData.forEach(submission => {
+            const row = [
+              submission.userName || "",
+              submission.studentCode || "",
+              submission.submissionId || "",
+              submission.fileUrl ? `https://docs.google.com/viewer?url=${submission.fileUrl}` : "",
+              currentUserId || "",
+              submission.assignmentName || ""
+            ];
+
+            // Add criteria scores and feedback
+            if (submission.criteriaScores && submission.criteriaScores.length > 0) {
+              submission.criteriaScores.forEach(criteria => {
+                row.push(criteria.score !== null && criteria.score !== undefined ? criteria.score : "");
+                row.push(criteria.feedback || "");
+              });
+            }
+
+            // Add final feedback
+            row.push(submission.feedback || "");
+
+            excelData.push(row);
+          });
+
+          // Create workbook and worksheet
+          const wb = XLSX.utils.book_new();
+          const ws = XLSX.utils.aoa_to_sheet(excelData);
+
+          // Set column widths
+          const columnWidths = [
+            { wch: 15 }, // UserName
+            { wch: 12 }, // StudentCode
+            { wch: 12 }, // SubmissionId
+            { wch: 50 }, // ReviewSubmission
+            { wch: 12 }, // InstructorId
+            { wch: 35 }, // AssignmentName
+          ];
+
+          // Add widths for criteria columns
+          if (exportData[0]?.criteriaScores?.length > 0) {
+            exportData[0].criteriaScores.forEach(() => {
+              columnWidths.push({ wch: 18 }); // Criteria score
+              columnWidths.push({ wch: 30 }); // Criteria feedback
+            });
+          }
+          
+          columnWidths.push({ wch: 30 }); // Final Feedback
+
+          ws['!cols'] = columnWidths;
+
+          // Add worksheet to workbook
+          XLSX.utils.book_append_sheet(wb, ws, "Grading Data");
+
+          // Generate filename
+          const assignmentName = exportData[0]?.assignmentName || assignmentInfo?.title || "Assignment";
+          const className = assignmentInfo?.className || "Class";
+          const fileName = `${assignmentName.replace(/[^a-z0-9]/gi, '_')}_${className.replace(/[^a-z0-9]/gi, '_')}.xlsx`;
+
+          // Export file
+          XLSX.writeFile(wb, fileName);
+          
+          toast.success("Excel file exported successfully");
+        } catch (parseError) {
+          console.error("Parse error:", parseError);
+          toast.error("Failed to process export data");
+        }
+      };
+      
+      reader.readAsText(response);
+      
+    } catch (error) {
+      console.error("Export error:", error);
+      toast.error(error.message || "Failed to export Excel file");
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  const handleImportClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = async (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    const validTypes = [
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "application/vnd.ms-excel",
+    ];
+    if (!validTypes.includes(file.type)) {
+      toast.error("Please upload a valid Excel file (.xlsx or .xls)");
+      return;
+    }
+
+    if (!assignmentId) {
+      toast.error("Assignment ID is required");
+      return;
+    }
+
+    try {
+      setIsImporting(true);
+      const response = await importSubmissionsExcel(assignmentId, file);
+      
+      // Display backend message if available
+      const message = response?.message || response?.data?.message || "Grades imported successfully!";
+      toast.success(message);
+      
+      // Reset file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+      
+      // Refresh data without reloading the page
+      if (onRefreshData) {
+        await onRefreshData();
+      }
+    } catch (error) {
+      console.error("Error importing grades:", error);
+      toast.error(error.message || "Failed to import grades");
+      
+      // Reset file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    } finally {
+      setIsImporting(false);
+    }
+  };
 
   return (
     <>
@@ -123,15 +308,50 @@ const GradingTable = ({
       {/* Search Bar */}
       <div className="mb-6">
         <Search
-        placeholder="Search students..."
-        value={searchTerm}
-        onChange={(e) => setSearchTerm(e.target.value)}
-        allowClear
-        size="large"
-        className="w-full"
-        style={{ height: 38 }}
-      />
+          placeholder="Search students..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          allowClear
+          size="large"
+          className="w-full"
+          style={{ height: 38 }}
+        />
       </div>
+
+      {/* Export and Import Buttons - only show when assignment is Closed */}
+      {assignmentStatus === 'Closed' && (
+        <div className="mb-4 flex justify-end gap-2">
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={handleFileChange}
+            accept=".xlsx,.xls"
+            className="hidden"
+          />
+          <Button
+            onClick={handleImportClick}
+            disabled={isImporting}
+            icon={<Upload size={16} />}
+            loading={isImporting}
+            type="default"
+            size="large"
+            className="bg-blue-50 hover:!bg-blue-100 border-blue-300 text-blue-600"
+          >
+            {isImporting ? "Importing..." : "Import from Excel"}
+          </Button>
+          <Button
+            onClick={handleExportExcel}
+            disabled={isExporting || !filteredStudents || filteredStudents.length === 0}
+            icon={<Download size={16} />}
+            loading={isExporting}
+            type="default"
+            size="large"
+            className="bg-green-50 hover:!bg-green-100 border-green-300 text-green-600"
+          >
+            {isExporting ? "Exporting..." : "Export to Excel"}
+          </Button>
+        </div>
+      )}
 
       {/* Table */}
       <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">

@@ -89,9 +89,44 @@ export const exportSubmissionsExcel = async (assignmentId) => {
     }
 };
 
+export const importSubmissionsExcel = async (assignmentId, file) => {
+    if (!assignmentId) {
+        throw new Error("assignmentId is required");
+    }
+    if (!file) {
+        throw new Error("file is required");
+    }
+
+    try {
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append("assignmentId", assignmentId);
+
+        const response = await api.post(
+            "/instructor/InstructorSubmission/import-excel",
+            formData,
+            {
+                headers: {
+                    "Content-Type": "multipart/form-data",
+                },
+            }
+        );
+
+        return response.data;
+    } catch (error) {
+        const message =
+            error?.response?.data?.message ||
+            "Import Submissions Failed";
+
+        console.error("Import Submissions Failed:", message);
+        throw new Error(message);
+    }
+};
+
 export const instructorGradingService = {
     publishGrades,
     gradeSubmission,
     autoGradeZero,
-    exportSubmissionsExcel
+    exportSubmissionsExcel,
+    importSubmissionsExcel
 };
