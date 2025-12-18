@@ -74,6 +74,13 @@ export default function AdminClassAssignments() {
 
   return (
     <div className="space-y-6">
+      <button
+        onClick={() => navigate(-1)}
+        className="px-4 py-2 rounded-xl border border-gray-300 text-gray-700 font-semibold hover:bg-gray-100 transition"
+      >
+        ← Back
+      </button>
+
       <h2 className="text-2xl font-bold text-orange-500">
         📄 Assignments for Class {id}
       </h2>

@@ -39,13 +39,13 @@ const ConfirmModal = ({ title, message, onConfirm, onCancel }) => (
       <div className="flex justify-end gap-3">
         <button
           onClick={onCancel}
-          className="px-4 py-2 rounded-lg bg-gray-300"
+          className="px-4 py-2 border rounded-lg hover:bg-gray-100"
         >
           Cancel
         </button>
         <button
           onClick={onConfirm}
-          className="px-4 py-2 rounded-lg bg-red-500 text-white"
+          className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
         >
           Confirm
         </button>
@@ -135,24 +135,24 @@ export default function AdminAcademicYearManagement() {
   };
 
   const handleAddNewYear = async () => {
-  if (!/^\d{4}$/.test(newYearData.name)) {
-    toast.error("Year must be in format YYYY (e.g., 2025)");
-    return;
-  }
+    if (!/^\d{4}$/.test(newYearData.name)) {
+      toast.error("Year must be in format YYYY (e.g., 2025)");
+      return;
+    }
 
-  const toastId = toast.loading("Processing...");
-  try {
-    const res = await createAcademicYear(newYearData);
-    const msg = res?.data?.message || "New academic year added successfully";
-    toast.success(msg, { id: toastId });
+    const toastId = toast.loading("Processing...");
+    try {
+      const res = await createAcademicYear(newYearData);
+      const msg = res?.data?.message || "New academic year added successfully";
+      toast.success(msg, { id: toastId });
 
-    setShowAddForm(false);
-    setNewYearData({ campusId: 1, name: "", startDate: "", endDate: "" });
-    loadYears();
-  } catch (error) {
-    toast.error(getErrorMessage(error, "Failed to add new academic year"), { id: toastId });
-  }
-};
+      setShowAddForm(false);
+      setNewYearData({ campusId: 1, name: "", startDate: "", endDate: "" });
+      loadYears();
+    } catch (error) {
+      toast.error(getErrorMessage(error, "Failed to add new academic year"), { id: toastId });
+    }
+  };
 
   /* ================= EDIT ================= */
   const handleEdit = (year) => {
@@ -229,59 +229,75 @@ export default function AdminAcademicYearManagement() {
 
   /* ================= RENDER ================= */
   return (
-    <div className="bg-white p-6 rounded-2xl shadow-lg border border-gray-200">
+    <div className="bg-white p-6 rounded-2xl shadow-lg border">
       <Toaster position="top-right" />
 
-      <h2 className="text-3xl font-bold mb-6 text-orange-600">
-        Academic Year Management
-      </h2>
+      <div className="flex items-center justify-between mb-6">
+        <h2 className="text-3xl font-bold text-orange-600">
+          Academic Year Management
+        </h2>
 
-      <button
-        onClick={() => setShowAddForm(true)}
-        className="bg-orange-500 text-white px-6 py-3 rounded-xl mb-4"
-      >
-        Add New Academic Year
-      </button>
+        <button
+          onClick={() => setShowAddForm(true)}
+          className="px-6 py-3 rounded-xl font-semibold transition-all
+      bg-[#F36F21] text-white shadow-md shadow-orange-200
+      hover:bg-[#D95C18] hover:-translate-y-0.5"
+        >
+          + Create Academic Year
+        </button>
+      </div>
 
-      <table className="w-full mt-6 text-center">
-        <thead className="bg-orange-50">
-          <tr>
-            <th className="p-3">Academic Year</th>
-            <th className="p-3">Start Date</th>
-            <th className="p-3">End Date</th>
-            <th className="p-3">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {loading ? (
+      <div className="rounded-xl border overflow-hidden">
+        <table className="w-full table-fixed">
+          <thead className="bg-[#FFF3EB] text-[#F36F21] font-semibold border-b-2 border-[#F36F21]">
             <tr>
-              <td colSpan="4" className="p-4 text-center">Loading...</td>
+              <th className="p-3 text-left uppercase text-sm">Academic Year</th>
+              <th className="p-3 text-left uppercase text-sm">Start Date</th>
+              <th className="p-3 text-left uppercase text-sm">End Date</th>
+              <th className="p-3 text-center uppercase text-sm">Actions</th>
             </tr>
-          ) : (
-            years.map((y) => (
-              <tr key={y.id}>
-                <td className="p-3">{y.name}</td>
-                <td className="p-3">{formatDate(y.startDate)}</td>
-                <td className="p-3">{formatDate(y.endDate)}</td>
-                <td className="p-3 flex justify-center gap-2">
-                  <button
-                    onClick={() => handleEdit(y)}
-                    className="bg-blue-500 text-white px-3 py-1 rounded"
-                  >
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => handleDelete(y.id)}
-                    className="bg-red-500 text-white px-3 py-1 rounded"
-                  >
-                    Delete
-                  </button>
-                </td>
+          </thead>
+          <tbody>
+            {loading ? (
+              <tr>
+                <td colSpan="4" className="p-4 text-center">Loading...</td>
               </tr>
-            ))
-          )}
-        </tbody>
-      </table>
+            ) : (
+              years.map((y) => (
+                <tr
+                  key={y.id}
+                  className="border-b hover:bg-[#FFF3EB] transition"
+                >
+                  <td className="p-3">{y.name}</td>
+                  <td className="p-3">{formatDate(y.startDate)}</td>
+                  <td className="p-3">{formatDate(y.endDate)}</td>
+                  <td className="p-3 flex justify-center gap-2">
+                    <td className="p-3 flex gap-2 justify-center">
+                      <button
+                        onClick={() => handleEdit(y)}
+                        className="px-4 py-2 rounded-xl text-sm font-semibold transition-all
+               bg-blue-600 text-white shadow-md shadow-blue-200
+               hover:bg-blue-700 hover:-translate-y-0.5"
+                      >
+                        Update
+                      </button>
+
+                      <button
+                        onClick={() => handleDelete(y.id)}
+                        className="px-4 py-2 rounded-xl text-sm font-semibold
+               bg-red-50 text-red-700 border border-red-200
+               hover:bg-red-100"
+                      >
+                        Delete
+                      </button>
+                    </td>
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
 
       {/* ================= ADD FORM MODAL ================= */}
       {showAddForm && (
@@ -317,7 +333,11 @@ export default function AdminAcademicYearManagement() {
               Cancel
             </button>
             <button
-              onClick={() =>
+              onClick={() => {
+                if (!/^\d{4}$/.test(newYearData.name)) {
+                  toast.error("Academic Year must be yyyy (e.g. 2025)");
+                  return;
+                }
                 setConfirmConfig({
                   title: "Create Academic Year",
                   message: "Are you sure you want to create this academic year?",
@@ -325,11 +345,11 @@ export default function AdminAcademicYearManagement() {
                     setConfirmConfig(null);
                     await handleAddNewYear();
                   },
-                })
-              }
-              className="bg-green-500 text-white px-4 py-2 rounded-lg"
+                });
+              }}
+              className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition"
             >
-              Submit
+              Create
             </button>
           </div>
         </Modal>
@@ -367,15 +387,17 @@ export default function AdminAcademicYearManagement() {
           <div className="flex justify-end gap-3">
             <button
               onClick={() => setShowEditForm(false)}
-              className="bg-gray-300 px-4 py-2 rounded-lg"
+              className="px-4 py-2 border rounded-lg hover:bg-gray-100"
             >
               Cancel
             </button>
             <button
               onClick={handleSaveEdit}
-              className={`px-4 py-2 rounded-lg text-white ${hasChanges() ? "bg-green-500" : "bg-gray-400 cursor-not-allowed"
-                }`}
               disabled={!hasChanges()}
+              className={`px-4 py-2 rounded-xl font-semibold transition-all ${hasChanges()
+                ? "bg-blue-600 text-white shadow-md shadow-blue-200 hover:bg-blue-700 hover:-translate-y-0.5"
+                : "bg-gray-300 text-gray-600 cursor-not-allowed"
+                }`}
             >
               Save
             </button>

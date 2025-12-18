@@ -34,8 +34,7 @@ export default function AdminClassDetailsManagement() {
   };
 
   const [addInstructorModal, setAddInstructorModal] = useState({ show: false });
-  const [instructorList, setInstructorList] = useState([]);
-  const [newInstructor, setNewInstructor] = useState({ userId: "" });
+  const [newInstructor, setNewInstructor] = useState({ userName: "" });
   const hasInstructor = instructors.length > 0;
 
   const contextClass = {
@@ -139,18 +138,6 @@ export default function AdminClassDetailsManagement() {
     }
   };
 
-  const fetchUsersByRole = async (role) => {
-    try {
-      const res = await getUsersByRole(role);
-      const users = Array.isArray(res?.data) ? res.data : [];
-      return users.filter(u => u.campusId === classInfo?.campusId);
-    } catch (err) {
-      console.error(err);
-      toast.error("❌ Failed to load users list!");
-      return [];
-    }
-  };
-
   const handleAddStudent = async () => {
     if (classInfo?.isActive) {
       toast.error("⚠️ Cannot add students while the class is Active.");
@@ -192,12 +179,13 @@ export default function AdminClassDetailsManagement() {
       setLoading(true);
       const res = await createCourseInstructor({
         courseInstanceId: id,
-        userId: Number(newInstructor.userId),
+        userName: newInstructor.userName,
         isMainInstructor: true,
       });
+      ;
       toast.success(`✅ ${getApiMessage(res, "Instructor added successfully!")}`);
       setAddInstructorModal({ show: false });
-      setNewInstructor({ userId: "" });
+      setNewInstructor({ userName: "" });
       await refreshData();
     } catch (err) {
       console.error(err);
@@ -211,9 +199,7 @@ export default function AdminClassDetailsManagement() {
     setAddStudentModal({ show: true });
   };
 
-  const openAddInstructorModal = async () => {
-    const instructors = await fetchUsersByRole("Instructor");
-    setInstructorList(instructors);
+  const openAddInstructorModal = () => {
     setAddInstructorModal({ show: true });
   };
 
@@ -221,7 +207,7 @@ export default function AdminClassDetailsManagement() {
   if (!classInfo) return <p className="p-6 text-gray-500">Class not found</p>;
 
   return (
-    <div className="space-y-6 relative">
+    <div className="space-y-8 p-8 bg-gray-50 min-h-screen relative">
       <ToastContainer
         toastClassName={({ type }) =>
           `${contextClass[type || "default"]
@@ -236,17 +222,33 @@ export default function AdminClassDetailsManagement() {
 
       <button
         onClick={() => navigate("/admin/classes")}
-        className="px-4 py-2 bg-gray-300 text-gray-800 rounded hover:bg-gray-400"
+        className="px-4 py-2 rounded-xl border border-gray-300 text-gray-700 font-semibold hover:bg-gray-100 transition"
       >
         ← Back
       </button>
 
-      <h2 className="text-2xl font-bold text-orange-500">📘 Class Detail</h2>
+      <h2 className="text-4xl font-extrabold text-gray-900 tracking-tight">
+        Class Detail
+      </h2>
+      <p className="text-gray-500 -mt-4">
+        View class information, students and instructors
+      </p>
 
-      <div className="bg-white p-4 rounded-xl shadow-md space-y-2">
+      <div className="bg-white p-6 rounded-2xl border shadow-sm space-y-2">
         <p><strong>Class Name:</strong> {classInfo.className || classInfo.sectionCode}</p>
         <p><strong>Course:</strong> {classInfo.courseCode}</p>
-        <p><strong>Status:</strong> {classInfo.isActive ? "Active" : "Deactive"}</p>
+        <p>
+          <strong>Status:</strong>{" "}
+          <span
+            className={`px-3 py-1 rounded-full text-xs font-semibold
+    ${classInfo.isActive
+                ? "bg-green-100 text-green-700"
+                : "bg-red-100 text-red-700"
+              }`}
+          >
+            {classInfo.isActive ? "Active" : "Inactive"}
+          </span>
+        </p>
         <p><strong>Semester:</strong> {classInfo.semesterName}</p>
       </div>
 
@@ -254,7 +256,12 @@ export default function AdminClassDetailsManagement() {
         <button
           onClick={openAddStudentModal}
           disabled={isClassActive}
-          className={`px-4 py-2 rounded ${isClassActive ? "bg-gray-300 cursor-not-allowed" : "bg-green-600 hover:bg-green-700 text-white"}`}
+          className={`
+px-5 py-2.5 rounded-xl font-semibold transition-all
+${isClassActive
+              ? "bg-gray-300 cursor-not-allowed"
+              : "bg-green-600 text-white shadow-md shadow-green-200 hover:bg-green-700 hover:-translate-y-0.5"
+            }`}
         >
           Add Student
         </button>
@@ -262,9 +269,11 @@ export default function AdminClassDetailsManagement() {
         <button
           onClick={openAddInstructorModal}
           disabled={isClassActive || hasInstructor}
-          className={`px-4 py-2 rounded ${isClassActive || hasInstructor
-            ? "bg-gray-300 cursor-not-allowed"
-            : "bg-blue-600 hover:bg-blue-700 text-white"
+          className={`
+px-5 py-2.5 rounded-xl font-semibold transition-all
+${isClassActive || hasInstructor
+              ? "bg-gray-300 cursor-not-allowed"
+              : "bg-blue-600 text-white shadow-md shadow-blue-200 hover:bg-blue-700 hover:-translate-y-0.5"
             }`}
         >
           Add Instructor
@@ -292,22 +301,27 @@ export default function AdminClassDetailsManagement() {
             <button
               onClick={handleImportFile}
               disabled={isClassActive}
-              className={`px-4 py-2 rounded ${isClassActive ? "bg-gray-300 cursor-not-allowed" : "bg-green-600 hover:bg-green-700 text-white"}`}
+              className={`
+px-5 py-2.5 rounded-xl font-semibold transition-all
+${isClassActive
+                  ? "bg-gray-300 cursor-not-allowed"
+                  : "bg-green-600 text-white shadow-md shadow-green-200 hover:bg-green-700 hover:-translate-y-0.5"
+                }`}
             >
               Import Excel
             </button>
           </div>
         </div>
 
-        <table className="w-full text-sm border">
-          <thead className="bg-orange-500 text-white">
+        <table className="w-full text-sm border-collapse table-fixed">
+          <thead className="bg-[#FFF3EB] text-[#F36F21] text-sm uppercase font-semibold border-b-2 border-[#F36F21]">
             <tr>
-              <th className="p-2 text-left">Name</th>
-              <th className="p-2 text-left">Student ID</th>
-              <th className="p-2 text-left">Email</th>
-              <th className="p-2 text-left">Role</th>
-              <th className="p-2 text-left">Status</th>
-              <th className="p-2 text-left">Action</th>
+              <th className="p-3 text-left align-middle">Name</th>
+              <th className="p-3 text-left align-middle">Student ID</th>
+              <th className="p-3 text-left align-middle">Email</th>
+              <th className="p-3 text-left align-middle">Role</th>
+              <th className="p-3 text-left align-middle">Status</th>
+              <th className="p-3 text-left align-middle">Action</th>
             </tr>
           </thead>
 
@@ -319,19 +333,30 @@ export default function AdminClassDetailsManagement() {
             ) : (
               users.map((u) => (
                 <tr key={u.courseStudentId || u.userId} className="border-b hover:bg-gray-50">
-                  <td className="p-2">{u.studentName}</td>
-                  <td className="p-2">{u.studentCode}</td>
-                  <td className="p-2">{u.studentEmail}</td>
-                  <td className="p-2">{u.roleName || "Student"}</td>
-                  <td className={`p-2 font-medium ${u.status === "Active" ? "text-green-600" : "text-red-500"}`}>{u.status}</td>
-                  <td className="p-2">
+                  <td className="p-3 text-left align-middle">{u.studentName}</td>
+                  <td className="p-3 text-left align-middle">{u.studentCode}</td>
+                  <td className="p-3 text-left align-middle">{u.studentEmail}</td>
+                  <td className="p-3 text-left align-middle">{u.roleName || "Student"}</td>
+                  <td className="p-3">
+                    <span
+                      className={`px-3 py-1 rounded-full text-xs font-semibold${u.status === "Active"
+                        ? "bg-green-100 text-green-700"
+                        : "bg-red-100 text-red-700"
+                        }`}
+                    >
+                      {u.status}
+                    </span>
+                  </td>
+                  <td className="p-3 text-left align-middle">
                     <button
                       onClick={() => setConfirmModal({ show: true, user: u, type: "student" })}
                       disabled={isClassActive}
-                      className={`px-3 py-1 ${isClassActive
-                        ? "bg-gray-300 cursor-not-allowed"
-                        : "bg-red-500 hover:bg-red-600 text-white"
-                        } rounded`}
+                      className={`
+px-3 py-1.5 rounded-xl text-xs font-semibold transition-all
+${isClassActive
+                          ? "bg-gray-300 cursor-not-allowed"
+                          : "bg-red-50 text-red-700 border border-red-200 hover:bg-red-100"
+                        }`}
                     >
                       Remove
                     </button>
@@ -344,11 +369,11 @@ export default function AdminClassDetailsManagement() {
       </div>
 
       {/* INSTRUCTOR LIST */}
-      <div className="bg-white p-4 rounded-xl shadow-md space-y-4">
+      <div className="bg-white p-6 rounded-2xl border shadow-sm space-y-4">
         <h3 className="text-lg font-semibold">👨‍🏫 Instructors</h3>
 
-        <table className="w-full text-sm border">
-          <thead className="bg-blue-600 text-white">
+        <table className="w-full text-sm border-collapse table-fixed">
+          <thead className="bg-[#FFF3EB] text-[#F36F21] text-sm uppercase font-semibold border-b-2 border-[#F36F21]">
             <tr>
               <th className="p-2 text-left">Name</th>
               <th className="p-2 text-left">Email</th>
@@ -369,9 +394,13 @@ export default function AdminClassDetailsManagement() {
                   <td className="p-2 text-center">
                     <button
                       onClick={() => setConfirmModal({ show: true, user: inst, type: "instructor" })}
-                      className={`px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 text-xs shadow ${isClassActive ? "cursor-not-allowed opacity-50 hover:bg-red-500" : ""
-                        }`}
                       disabled={isClassActive}
+                      className={`
+px-3 py-1.5 rounded-xl text-xs font-semibold transition-all
+${isClassActive
+                          ? "bg-gray-300 cursor-not-allowed"
+                          : "bg-red-50 text-red-700 border border-red-200 hover:bg-red-100"
+                        }`}
                     >
                       Remove
                     </button>
@@ -386,7 +415,7 @@ export default function AdminClassDetailsManagement() {
       <div className="flex justify-end">
         <button
           onClick={() => navigate(`/admin/classes/${id}/assignments`)}
-          className="px-6 py-2 bg-orange-500 text-white rounded hover:bg-orange-600 shadow-md"
+          className="px-6 py-3 rounded-xl bg-orange-600 text-white font-semibold shadow-md shadow-orange-200 hover:bg-orange-700 hover:-translate-y-0.5 transition-all"
         >
           📄 View Assignments
         </button>
@@ -395,7 +424,7 @@ export default function AdminClassDetailsManagement() {
       {/* CONFIRM REMOVE MODAL */}
       {confirmModal.show && (
         <div className="fixed inset-0 flex items-center justify-center bg-black/40 z-50">
-          <div className="bg-white p-6 rounded-xl w-96 shadow-lg text-center space-y-4 animate-fade-in-down">
+          <div className="bg-white p-6 rounded-2xl w-96 shadow-2xl space-y-5 animate-[fadeIn_0.15s_ease-out]">
             <h3 className="text-lg font-bold text-red-600">⚠ Confirm Removal</h3>
             <p>
               Are you sure you want to remove{" "}
@@ -440,7 +469,7 @@ export default function AdminClassDetailsManagement() {
                     studentCode: e.target.value.trim(),
                   })
                 }
-                className="w-full p-2 border rounded focus:border-green-500 outline-none"
+                className="w-full p-3 rounded-xl border focus:border-orange-500 focus:ring-2 focus:ring-orange-200 transition"
               />
             </div>
 
@@ -470,18 +499,15 @@ export default function AdminClassDetailsManagement() {
           <div className="bg-white p-6 rounded-xl w-96 shadow-lg text-center space-y-4 animate-fade-in-down">
             <h3 className="text-lg font-bold text-blue-600">➕ Add Instructor</h3>
 
-            <select
-              value={newInstructor.userId}
-              onChange={(e) => setNewInstructor({ ...newInstructor, userId: e.target.value })}
+            <input
+              type="text"
+              placeholder="Instructor username"
+              value={newInstructor.userName}
+              onChange={(e) =>
+                setNewInstructor({ userName: e.target.value.trim() })
+              }
               className="w-full p-2 border rounded focus:border-blue-500 outline-none"
-            >
-              <option value="">Select Instructor</option>
-              {instructorList.map((i) => (
-                <option key={i.id} value={i.id}>
-                  {i.firstName} {i.lastName} - {i.email}
-                </option>
-              ))}
-            </select>
+            />
 
             <div className="flex justify-center space-x-4 pt-2">
               <button
@@ -493,8 +519,11 @@ export default function AdminClassDetailsManagement() {
               </button>
               <button
                 onClick={handleAddInstructor}
-                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 shadow"
-                disabled={loading}
+                disabled={loading || !newInstructor.userName}
+                className={`px-4 py-2 rounded shadow text-white ${loading || !newInstructor.userName
+                  ? "bg-gray-300 cursor-not-allowed"
+                  : "bg-blue-600 hover:bg-blue-700"
+                  }`}
               >
                 {loading ? "Adding..." : "Add"}
               </button>
