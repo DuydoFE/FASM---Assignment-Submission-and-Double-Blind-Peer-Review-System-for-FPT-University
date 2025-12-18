@@ -353,7 +353,7 @@ export default function AdminClassManagement() {
   };
 
   return (
-    <div className="space-y-6 p-6 relative">
+    <div className="space-y-8 p-8 bg-gray-50 min-h-screen relative">
 
       <ToastContainer
         toastClassName={({ type }) =>
@@ -367,54 +367,86 @@ export default function AdminClassManagement() {
         closeButton={false}
       />
 
-      <h2 className="text-3xl font-bold text-orange-500 mb-4">🏫 Class Management</h2>
+      <h2 className="text-4xl font-extrabold text-gray-900 tracking-tight">
+        Class Management
+      </h2>
+      <p className="text-gray-500 -mt-4 mb-2">
+        Manage classes by campus, semester and course
+      </p>
 
-      <div className="bg-white p-5 rounded-2xl shadow-md flex flex-wrap gap-4 items-center">
-        <select
-          name="campus"
-          value={filters.campus}
-          onChange={handleFilterChange}
-          className="border rounded-lg p-3 text-gray-700 hover:border-orange-400 transition flex-1 min-w-[150px]"
-        >
-          <option value="">Select Campus</option>
-          {campuses.map((c) => (
-            <option key={c.campusId} value={c.campusId}>{c.name || c.campusName}</option>
-          ))}
-        </select>
+      <div className="bg-white p-6 rounded-2xl border shadow-sm">
+        <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-4">
+          Filters
+        </h3>
 
-        <select name="semester" value={filters.semester} onChange={handleFilterChange} className="border rounded-lg p-3 text-gray-700 hover:border-orange-400 transition flex-1 min-w-[150px]">
-          <option value="">All Semesters</option>
-          {semesters.map((s) => (<option key={s.semesterId} value={s.semesterId}>{s.name || s.semesterName}</option>))}
-        </select>
-        <select name="course" value={filters.course} onChange={handleFilterChange} className="border rounded-lg p-3 text-gray-700 hover:border-orange-400 transition flex-1 min-w-[150px]">
-          <option value="">All Courses</option>
-          {courses.map((course) => (<option key={course.courseId} value={course.courseId}>{course.courseCode}</option>))}
-        </select>
-        <select
-          name="status"
-          value={filters.status}
-          onChange={handleFilterChange}
-          className="border rounded-lg p-3 text-gray-700 hover:border-orange-400 transition flex-1 min-w-[150px]"
-        >
-          <option value="">All Status</option>
-          <option value="active">Active</option>
-          <option value="deactive">Deactive</option>
-        </select>
-        <input
-          type="text"
-          name="search"
-          value={filters.search}
-          onChange={handleFilterChange}
-          placeholder="Search class name..."
-          className="border rounded-lg p-3 flex-1 min-w-[200px] focus:outline-orange-400"
-        />
+        <div className="flex flex-wrap gap-4 items-center">
 
-        <button
-          onClick={() => setShowAddForm(!showAddForm)}
-          className="px-6 py-3 bg-orange-500 text-white rounded-xl shadow hover:bg-orange-600 transition"
-        >
-          + Add Class
-        </button>
+          <select
+            name="campus"
+            value={filters.campus}
+            onChange={handleFilterChange}
+            className="
+flex-1 min-w-[150px]
+p-3 rounded-xl border
+text-gray-700
+focus:border-orange-500
+focus:ring-2 focus:ring-orange-200
+transition
+"
+          >
+            <option value="">Select Campus</option>
+            {campuses.map((c) => (
+              <option key={c.campusId} value={c.campusId}>{c.name || c.campusName}</option>
+            ))}
+          </select>
+
+          <select name="semester" value={filters.semester} onChange={handleFilterChange} className="border rounded-lg p-3 text-gray-700 hover:border-orange-400 transition flex-1 min-w-[150px]">
+            <option value="">All Semesters</option>
+            {semesters.map((s) => (<option key={s.semesterId} value={s.semesterId}>{s.name || s.semesterName}</option>))}
+          </select>
+          <select name="course" value={filters.course} onChange={handleFilterChange} className="border rounded-lg p-3 text-gray-700 hover:border-orange-400 transition flex-1 min-w-[150px]">
+            <option value="">All Courses</option>
+            {courses.map((course) => (<option key={course.courseId} value={course.courseId}>{course.courseCode}</option>))}
+          </select>
+          <select
+            name="status"
+            value={filters.status}
+            onChange={handleFilterChange}
+            className="border rounded-lg p-3 text-gray-700 hover:border-orange-400 transition flex-1 min-w-[150px]"
+          >
+            <option value="">All Status</option>
+            <option value="active">Active</option>
+            <option value="deactive">Deactive</option>
+          </select>
+          <input
+            type="text"
+            name="search"
+            value={filters.search}
+            onChange={handleFilterChange}
+            placeholder="Search class name..."
+            className="
+flex-1 min-w-[200px]
+p-3 rounded-xl border
+focus:border-orange-500
+focus:ring-2 focus:ring-orange-200
+transition
+"
+          />
+
+          <button
+            onClick={() => setShowAddForm(!showAddForm)}
+            className="
+px-6 py-3
+bg-orange-600 text-white
+rounded-xl font-semibold
+shadow-md shadow-orange-200
+hover:bg-orange-700 hover:-translate-y-0.5
+transition-all
+"
+          >
+            + Create Class
+          </button>
+        </div>
       </div>
 
       {showAddForm && (
@@ -424,8 +456,13 @@ export default function AdminClassManagement() {
             onClick={() => setShowAddForm(false)}
           />
 
-          <div className="relative bg-white w-full max-w-3xl p-6 rounded-2xl shadow-xl space-y-4 animate-fade-in-down">
-            <h3 className="text-xl font-semibold text-gray-700">Create New Class</h3>
+          <div className="
+relative bg-white w-full max-w-3xl
+p-8 rounded-2xl
+shadow-2xl space-y-6
+animate-[fadeIn_0.2s_ease-out]
+">
+            <h3 className="text-xl font-bold text-gray-800">Create New Class</h3>
 
             <div className="flex flex-wrap gap-4">
               <div className="flex-1 min-w-[150px]">
@@ -436,7 +473,13 @@ export default function AdminClassManagement() {
                   name="campusId"
                   value={newClass.campusId}
                   onChange={handleNewClassChange}
-                  className="border rounded-lg p-3 w-full"
+                  className="
+w-full p-3
+border rounded-xl
+focus:border-orange-500
+focus:ring-2 focus:ring-orange-200
+transition
+"
                 >
                   <option value="">Select Campus</option>
                   {campuses.map(c => (
@@ -536,7 +579,12 @@ export default function AdminClassManagement() {
             <div className="flex justify-end gap-4 pt-2">
               <button
                 onClick={() => setShowAddForm(false)}
-                className="px-6 py-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 font-semibold"
+                className="
+px-6 py-2 rounded-xl
+border border-gray-300
+text-gray-700 font-semibold
+hover:bg-gray-100
+"
               >
                 Cancel
               </button>
@@ -548,9 +596,9 @@ export default function AdminClassManagement() {
                     onConfirm: handleAddClass,
                   })
                 }
-                className="px-6 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 font-semibold shadow"
+                className="px-6 py-2 rounded-xl bg-green-600 text-white font-semibold shadow-md shadow-green-200 hover:bg-green-700 hover:-translate-y-0.5 transition-all"
               >
-                Create
+                Create Class
               </button>
             </div>
           </div>
@@ -689,7 +737,7 @@ export default function AdminClassManagement() {
                     : "bg-green-500 text-white hover:bg-green-600"
                   }`}
               >
-                Update
+                Save
               </button>
             </div>
           </div>
@@ -697,22 +745,22 @@ export default function AdminClassManagement() {
       )}
 
       {/* --- TABLE --- */}
-      <div className="bg-white rounded-2xl shadow overflow-x-auto">
+      <div className="bg-white rounded-2xl border shadow-sm overflow-x-auto">
         {filters.campus ? (
           displayedClasses.length > 0 ? (
-            <table className="w-full text-sm border-collapse">
-              <thead className="bg-orange-500 text-white text-left">
+            <table className="w-full text-sm border-collapse table-fixed">
+              <thead className="bg-[#FFF3EB] text-[#F36F21] text-sm uppercase font-semibold border-b-2 border-[#F36F21]">
                 <tr>
-                  <th className="p-3">Class Name</th>
-                  <th className="p-3">Course</th>
-                  <th className="p-3">Semester</th>
-                  <th className="p-3">Campus</th>
-                  <th className="p-3">Students</th>
-                  <th className="p-3">Assignments</th>
-                  <th className="p-3">Start Date</th>
-                  <th className="p-3">End Date</th>
-                  <th className="p-3">Status</th>
-                  <th className="p-3">Actions</th>
+                  <th className="p-3 text-left align-middle">Class Name</th>
+                  <th className="p-3 text-left align-middle">Course</th>
+                  <th className="p-3 text-left align-middle">Semester</th>
+                  <th className="p-3 text-left align-middle">Campus</th>
+                  <th className="p-3 text-left align-middle">Students</th>
+                  <th className="p-3 text-left align-middle">Assignments</th>
+                  <th className="p-3 text-left align-middle">Start Date</th>
+                  <th className="p-3 text-left align-middle">End Date</th>
+                  <th className="p-3 text-left align-middle">Status</th>
+                  <th className="p-3 text-left align-middle">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -723,7 +771,10 @@ export default function AdminClassManagement() {
                   };
 
                   return (
-                    <tr key={c.courseInstanceId} className="border-b hover:bg-gray-50 transition">
+                    <tr
+                      key={c.courseInstanceId}
+                      className="border-b hover:bg-gray-50 transition-all"
+                    >
                       <td className="p-3 font-medium text-gray-800">{c.sectionCode || c.courseName}</td>
                       <td className="p-3">{c.courseCode}</td>
                       <td className="p-3">{c.semesterName}</td>
@@ -734,9 +785,10 @@ export default function AdminClassManagement() {
                       <td className="p-3">{formatDate(c.endDate)}</td>
                       <td className="p-3">
                         <span
-                          className={`px-3 py-1 text-xs rounded-full font-semibold ${c.isActive
-                            ? "bg-green-100 text-green-700"
-                            : "bg-red-100 text-red-700"
+                          className={`px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wide
+  ${c.isActive
+                              ? "bg-green-100 text-green-700"
+                              : "bg-red-100 text-red-700"
                             }`}
                         >
                           {c.isActive ? "Active" : "Deactive"}
@@ -746,24 +798,33 @@ export default function AdminClassManagement() {
                         <div className="flex flex-wrap gap-2">
                           <button
                             disabled={c.isActive}
-                            className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${c.isActive
-                              ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                              : "bg-green-50 text-green-600 hover:bg-green-100 border border-green-200"
+                            className={`px-3 py-1.5 text-xs font-semibold rounded-xl transition-all
+${c.isActive
+                                ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                                : "bg-green-50 text-green-700 hover:bg-green-100 border border-green-200"
                               }`}
                             onClick={() => !c.isActive && handleOpenUpdateForm(c)}
                           >
                             ✏️ Update
                           </button>
                           <button
-                            className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-orange-50 text-orange-600 hover:bg-orange-100 border border-orange-200 transition-all"
+                            className="
+px-3 py-1.5 text-xs font-semibold
+rounded-xl
+bg-orange-50 text-orange-700
+hover:bg-orange-100
+border border-orange-200
+transition
+"
                             onClick={() => handleViewDetail(c.courseInstanceId)}
                           >
                             👁️ View
                           </button>
                           <button
-                            className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${c.isActive
-                              ? "bg-red-50 text-red-600 hover:bg-red-100 border border-red-200"
-                              : "bg-blue-50 text-blue-600 hover:bg-blue-100 border border-blue-200"
+                            className={`px-3 py-1.5 text-xs font-semibold rounded-xl transition-all
+${c.isActive
+                                ? "bg-red-50 text-red-700 hover:bg-red-100 border border-red-200"
+                                : "bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200"
                               }`}
                             onClick={() => handleToggleStatus(c.courseInstanceId, c.isActive)}
                           >
@@ -788,7 +849,12 @@ export default function AdminClassManagement() {
           />
 
           {/* Modal */}
-          <div className="relative bg-white w-full max-w-md p-6 rounded-2xl shadow-xl space-y-4 animate-fade-in-down">
+          <div className="
+relative bg-white w-full max-w-md
+p-6 rounded-2xl
+shadow-2xl space-y-5
+animate-[fadeIn_0.15s_ease-out]
+">
             <h3 className="text-lg font-semibold text-gray-800">
               {confirmState.title || "Confirm"}
             </h3>

@@ -34,11 +34,22 @@ export default function AdminMajorManagement() {
   const [originalMajor, setOriginalMajor] = useState(null);
 
   const [confirmAction, setConfirmAction] = useState(null);
-  // confirmAction = { type: "create" | "update" | "delete", payload?: any }
+  const validateNewMajor = () => {
+    if (!newMajor.majorCode.trim()) {
+      toast.error("Major Code is required");
+      return false;
+    }
 
-  /* =========================
-     Load Majors
-     ========================= */
+    if (!newMajor.majorName.trim()) {
+      toast.error("Major Name is required");
+      return false;
+    }
+
+    return true;
+  };
+  const isAddFormInvalid =
+    !newMajor.majorCode.trim() || !newMajor.majorName.trim();
+
   const loadMajors = async () => {
     setLoading(true);
     try {
@@ -130,19 +141,19 @@ export default function AdminMajorManagement() {
   };
 
   return (
-    <div className="bg-white p-6 rounded-2xl shadow-lg border border-gray-200">
+    <div className="bg-white p-8 rounded-2xl shadow-lg border border-gray-200 space-y-6">
       <Toaster position="top-right" />
 
-      <h2 className="text-3xl font-bold mb-6 text-orange-600">
+      <h2 className="text-3xl font-bold mb-2 text-orange-600">
         Major Management
       </h2>
 
       {/* Add Button */}
       <button
         onClick={() => setShowAddModal(true)}
-        className="bg-orange-500 text-white px-6 py-3 rounded-xl hover:bg-orange-600 mb-4"
+        className="px-6 py-3 rounded-xl font-semibold transition-all bg-[#F36F21] text-white shadow-md shadow-orange-200 hover:bg-[#D95C18] hover:-translate-y-0.5 mb-2"
       >
-        Add New Major
+        + Create Major
       </button>
 
       {/* ================= ADD MODAL ================= */}
@@ -152,7 +163,7 @@ export default function AdminMajorManagement() {
             Add New Major
           </h3>
 
-          <div className="flex flex-col gap-3">
+          <div className="flex flex-col gap-4">
             <label className="font-medium">Major Code</label>
             <input
               type="text"
@@ -177,8 +188,15 @@ export default function AdminMajorManagement() {
 
             <div className="flex justify-end gap-3 mt-4">
               <button
-                onClick={() => setConfirmAction({ type: "create" })}
-                className="bg-green-600 text-white px-5 py-2 rounded-lg"
+                disabled={isAddFormInvalid}
+                onClick={() => {
+                  if (!validateNewMajor()) return;
+                  setConfirmAction({ type: "create" });
+                }}
+                className={`px-5 py-2 rounded-lg text-white ${isAddFormInvalid
+                  ? "bg-gray-400 cursor-not-allowed"
+                  : "bg-green-600 hover:bg-green-700"
+                  }`}
               >
                 Save
               </button>
@@ -299,12 +317,12 @@ export default function AdminMajorManagement() {
 
       {/* ================= TABLE ================= */}
       <div className="overflow-hidden rounded-xl border border-gray-200">
-        <table className="w-full border-collapse">
-          <thead>
-            <tr className="bg-orange-50">
-              <th className="p-3 text-left border-b">Code</th>
-              <th className="p-3 text-left border-b">Name</th>
-              <th className="p-3 text-left border-b w-40">Actions</th>
+        <table className="w-full table-fixed border-collapse">
+          <thead className="bg-[#FFF3EB] text-[#F36F21] font-semibold border-b-2 border-[#F36F21]">
+            <tr className="border-b hover:bg-orange-50 last:border-b-0">
+              <th className="px-4 py-3 text-left border-b">Code</th>
+              <th className="px-4 py-3 text-left border-b">Name</th>
+              <th className="px-4 py-3 text-center border-b">Actions</th>
             </tr>
           </thead>
 
@@ -327,27 +345,29 @@ export default function AdminMajorManagement() {
                   key={item.majorId}
                   className="border-b hover:bg-orange-50"
                 >
-                  <td className="p-3">{item.majorCode}</td>
-                  <td className="p-3">{item.majorName}</td>
-                  <td className="p-3 flex gap-2">
-                    <button
-                      onClick={() => openEdit(item)}
-                      className="bg-blue-500 text-white px-4 py-2 rounded-lg"
-                    >
-                      Edit
-                    </button>
+                  <td className="px-4 py-3">{item.majorCode}</td>
+                  <td className="px-4 py-3">{item.majorName}</td>
+                  <td className="px-4 py-3">
+                    <div className="flex justify-center items-center gap-3">
+                      <button
+                        onClick={() => openEdit(item)}
+                        className="px-4 py-2 rounded-xl text-sm font-semibold transition-all bg-blue-600 text-white shadow-md shadow-blue-200 hover:bg-blue-700 hover:-translate-y-0.5"
+                      >
+                        Update
+                      </button>
 
-                    <button
-                      onClick={() =>
-                        setConfirmAction({
-                          type: "delete",
-                          payload: item.majorId,
-                        })
-                      }
-                      className="bg-red-500 text-white px-4 py-2 rounded-lg"
-                    >
-                      Delete
-                    </button>
+                      <button
+                        onClick={() =>
+                          setConfirmAction({
+                            type: "delete",
+                            payload: item.majorId,
+                          })
+                        }
+                        className="px-4 py-2 rounded-xl text-sm font-semibold transition-all bg-red-50 text-red-700 border border-red-200 hover:bg-red-100"
+                      >
+                        Delete
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))
