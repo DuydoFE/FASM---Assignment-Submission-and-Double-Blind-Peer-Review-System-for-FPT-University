@@ -211,7 +211,7 @@ const InstructorPublishMark = () => {
   return (
     <div className="min-h-screen bg-white-50 p-6">
       <div className="max-w-7xl mx-auto">
-        <h1 className="text-2xl font-bold text-gray-800 mb-6">Official Grade Table</h1>
+        <h1 className="text-2xl font-bold text-gray-800 mb-6">Assignment Scores Table</h1>
         
         <FilterSection
           courses={courses}

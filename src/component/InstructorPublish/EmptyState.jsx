@@ -10,7 +10,7 @@ const EmptyState = ({ selectedCourseId, selectedClassId, selectedAssignmentId })
         </div>
         
         <h2 className="text-2xl font-bold text-gray-800 mb-3">
-          View Published Grades
+          View Assignment Scores
         </h2>
         <p className="text-gray-600 mb-8">
           Select a course, class, and assignment above to view and manage published grades

@@ -22,37 +22,37 @@ const InstructorSideBar = () => {
     {
       key: 'dashboard',
       label: 'Statistic',
-      icon: <LayoutDashboard className="w-5 h-5" />,
+      icon: <LayoutDashboard className="w-6 h-6" />,
       path: `/instructor/class-statistic/${courseInstanceId}`,
     },
     {
       key: 'manage-class',
       label: 'Class List',
-      icon: <Users className="w-5 h-5" />,
+      icon: <Users className="w-6 h-6" />,
       path: `/instructor/manage-class/${courseInstanceId}`,
     },
     {
       key: 'assignment',
       label: 'Assignment',
-      icon: <BookOpenText className="w-5 h-5" />,
+      icon: <BookOpenText className="w-6 h-6" />,
       path: `/instructor/manage-assignment/${courseInstanceId}`,
     },
     {
       key: 'rubric',
       label: 'Rubric',
-      icon: <FileText className="w-5 h-5" />,
+      icon: <FileText className="w-6 h-6" />,
       path: `/instructor/manage-rubric/${courseInstanceId}`,
     },
     {
       key: 'grading',
       label: 'Grading Score',
-      icon: <BarChart3 className="w-5 h-5" />,
+      icon: <BarChart3 className="w-6 h-6" />,
       path: '/instructor/manage-grading',
     },
     {
       key: 'publish',
       label: 'Publish Score',
-      icon: <Upload className="w-5 h-5" />,
+      icon: <Upload className="w-6 h-6" />,
       path: '/instructor/publish-score',
     },
   ];
@@ -109,56 +109,58 @@ const InstructorSideBar = () => {
 
       <style jsx>{`
         :global(.instructor-sidebar-menu .ant-menu-item) {
-          border-radius: 8px;
-          margin-bottom: 10px;
-          padding: 16px 20px;
+          border-radius: 10px;
+          margin-bottom: 12px;
+          padding: 20px 24px;
           height: auto;
-          min-height: 48px;
+          min-height: 60px;
           line-height: 1.6;
           display: flex;
           align-items: center;
-          font-size: 15px;
+          font-size: 17px;
           font-weight: 500;
+          transition: all 0.3s ease;
         }
         
         :global(.instructor-sidebar-menu .ant-menu-item-selected) {
           background-color: #fff7ed !important;
           color: #ea580c !important;
-          border-left: 4px solid #ea580c;
-          padding-left: 16px !important;
+          border-left: 5px solid #ea580c;
+          padding-left: 19px !important;
           font-weight: 600;
         }
         
         :global(.instructor-sidebar-menu .ant-menu-item:hover) {
           background-color: #f9fafb;
+          transform: translateX(2px);
         }
         
         :global(.instructor-sidebar-menu .ant-menu-item .ant-menu-title-content) {
-          margin-left: 14px;
-          font-size: 15px;
+          margin-left: 16px;
+          font-size: 17px;
         }
 
         :global(.instructor-sidebar-menu .ant-menu-item-icon) {
-          font-size: 20px !important;
+          font-size: 24px !important;
         }
 
         :global(.instructor-sidebar-menu.ant-menu-inline-collapsed .ant-menu-item) {
-          padding: 16px 0 !important;
+          padding: 20px 0 !important;
           display: flex;
           justify-content: center;
           align-items: center;
-          min-height: 48px;
+          min-height: 60px;
         }
 
         :global(.instructor-sidebar-menu.ant-menu-inline-collapsed .ant-menu-item-selected) {
           border-left: none;
-          padding: 16px 0 !important;
+          padding: 20px 0 !important;
           background-color: #fff7ed !important;
         }
 
         :global(.instructor-sidebar-menu.ant-menu-inline-collapsed .ant-menu-item-icon) {
           margin: 0 !important;
-          font-size: 22px !important;
+          font-size: 26px !important;
         }
       `}</style>
     </div>
