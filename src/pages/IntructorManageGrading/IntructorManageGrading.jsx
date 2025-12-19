@@ -184,7 +184,6 @@ const InstructorManageGrading = () => {
       setStudents(mappedStudents);
       
       const assignmentData = assignments.find(a => a.assignmentId == assignmentId);
-      const classData = classes.find(c => c.courseInstanceId == classId);
       if (assignmentData) {
         const submittedCount = mappedStudents.filter(s => s.status === 'Submitted' || s.status === 'Graded').length;
         const gradedCount = mappedStudents.filter(s => s.status === 'Graded').length;
@@ -196,8 +195,7 @@ const InstructorManageGrading = () => {
           maxScore: assignmentData.maxScore || 10,
           totalStudents: mappedStudents.length,
           submitted: submittedCount,
-          graded: gradedCount,
-          className: classData?.name || classData?.className || 'Class'
+          graded: gradedCount
         });
       }
     } catch (error) {
@@ -330,9 +328,6 @@ const InstructorManageGrading = () => {
             onGradeClick={handleGradeClick}
             onAutoGradeZero={handleAutoGradeZero}
             students={students}
-            assignmentId={selectedAssignmentId}
-            currentUserId={currentUser?.id}
-            onRefreshData={handleViewMarkFromRestore}
           />
         )}
 

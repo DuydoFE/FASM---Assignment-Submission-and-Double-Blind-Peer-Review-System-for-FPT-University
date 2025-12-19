@@ -85,7 +85,6 @@ const InstructorManageAssignment = () => {
         ).toLocaleDateString(),
         finalDeadline: new Date(assignment.finalDeadline).toLocaleDateString(),
         time: new Date(assignment.deadline).toLocaleTimeString(),
-        reviewTime: new Date(assignment.reviewDeadline).toLocaleTimeString(),
         submitted: assignment.reviewCount,
         total: assignment.submissionCount,
         courseCode: assignment.courseCode,
@@ -305,7 +304,7 @@ const InstructorManageAssignment = () => {
           },
         ]
       : []),
-    ...(assignment.status === "Draft"
+    ...(assignment.status === "Draft" || assignment.status === "Upcoming"
       ? [
           {
             label: (
@@ -327,7 +326,7 @@ const InstructorManageAssignment = () => {
       ),
       onClick: () => handleViewSubmissions(assignment),
     },
-    ...(assignment.status === "Draft"
+    ...(assignment.status === "Draft" || assignment.status === "Upcoming"
       ? [
           {
             type: "divider",
@@ -480,7 +479,7 @@ const InstructorManageAssignment = () => {
               >
                 {assignment.reviewDeadline}
               </div>
-              <div className="text-sm text-gray-500">{assignment.reviewTime}</div>
+              <div className="text-sm text-gray-500">{assignment.time}</div>
             </div>
             <div className="col-span-2 flex justify-center">
               <span

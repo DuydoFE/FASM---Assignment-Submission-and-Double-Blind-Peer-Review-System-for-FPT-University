@@ -26,7 +26,7 @@ const PublishGradesModal = ({ isOpen, onClose, onConfirm, loading }) => {
       ]}
     >
       <p className="text-gray-600">
-        Are you sure you want to publish scores for this assignment? Students will be able to see their scores.
+        Are you sure you want to publish grades for this assignment? Students will be able to see their grades.
       </p>
     </Modal>
   );
