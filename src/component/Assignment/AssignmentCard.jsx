@@ -1,15 +1,14 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  Calendar,
-  Download,
-  Eye,
-  Clock,
-  BarChart, 
-  CheckCircle, // Xanh lá
-  XCircle, // Đỏ
-  Info, // Xanh dương
-} from "lucide-react";
+  CalendarOutlined,
+  EyeOutlined,
+  ClockCircleOutlined,
+  BarChartOutlined,
+  CheckCircleOutlined,
+  CloseCircleOutlined,
+  InfoCircleOutlined,
+} from "@ant-design/icons";
 
 const formatDate = (dateString) => {
   if (!dateString) return "N/A";
@@ -30,35 +29,35 @@ const getAssignmentStyles = (assignment) => {
         cardBg: "bg-blue-50",
         borderColor: "border-blue-200",
         badgeClasses: "bg-green-100 text-green-700",
-        icon: <CheckCircle className="w-6 h-6 text-blue-500" />,
+        icon: <CheckCircleOutlined style={{ fontSize: '24px', color: '#3b82f6' }} />,
       };
       case "Upcoming":
       return {
         cardBg: "bg-blue-50",
         borderColor: "border-blue-200",
         badgeClasses: "bg-blue-100 text-blue-700",
-        icon: <CheckCircle className="w-6 h-6 text-blue-500" />,
+        icon: <CheckCircleOutlined style={{ fontSize: '24px', color: '#3b82f6' }} />,
       };
       case "Active":
       return {
         cardBg: "bg-green-50",
         borderColor: "border-blue-200",
         badgeClasses: "bg-green-100 text-green-700",
-        icon: <CheckCircle className="w-6 h-6 text-green-500" />,
+        icon: <CheckCircleOutlined style={{ fontSize: '24px', color: '#22c55e' }} />,
       };
     case "Closed":
       return {
         cardBg: "bg-red-50",
         borderColor: "border-red-200",
         badgeClasses: "bg-red-100 text-red-700",
-        icon: <XCircle className="w-6 h-6 text-red-500" />,
+        icon: <CloseCircleOutlined style={{ fontSize: '24px', color: '#ef4444' }} />,
       };
     case "InReview":
       return {
         cardBg: "bg-yellow-50",
         borderColor: "border-yellow-200",
         badgeClasses: "bg-yellow-100 text-yellow-700",
-        icon: <Clock className="w-6 h-6 text-yellow-500" />,
+        icon: <ClockCircleOutlined style={{ fontSize: '24px', color: '#eab308' }} />,
       };
 
     default:
@@ -66,7 +65,7 @@ const getAssignmentStyles = (assignment) => {
         cardBg: "bg-white",
         borderColor: "border-gray-200",
         badgeClasses: "bg-gray-100 text-gray-700",
-        icon: <Info className="w-6 h-6 text-gray-500" />,
+        icon: <InfoCircleOutlined style={{ fontSize: '24px', color: '#6b7280' }} />,
       };
   }
 };
@@ -108,21 +107,21 @@ const AssignmentCard = ({ assignment, courseId }) => {
 
         <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-gray-600 mt-4 ml-10">
           <div className="flex items-center">
-            <Calendar className="w-4 h-4 mr-1.5" />
+            <CalendarOutlined style={{ fontSize: '16px', marginRight: '6px' }} />
             Start Date:{" "}
             <span className="font-semibold ml-1">
               {formatDate(assignment.startDate)}
             </span>
           </div>
           <div className="flex items-center text-red-600">
-            <Clock className="w-4 h-4 mr-1.5" />
+            <ClockCircleOutlined style={{ fontSize: '16px', marginRight: '6px' }} />
             Deadline:{" "}
             <span className="font-semibold ml-1">
               {formatDate(assignment.deadline)}
             </span>
           </div>
           <div className="flex items-center text-purple-600">
-            <Eye className="w-4 h-4 mr-1.5" />
+            <EyeOutlined style={{ fontSize: '16px', marginRight: '6px' }} />
             Review:{" "}
             <span className="font-semibold ml-1">
               {formatDate(assignment.reviewDeadline)}
@@ -141,11 +140,6 @@ const AssignmentCard = ({ assignment, courseId }) => {
       <div
         className={`p-4 border-t ${styles.borderColor} flex justify-end items-center space-x-3`}
       >
-        <button className="flex items-center px-4 py-2 bg-white border border-gray-300 text-gray-700 font-semibold rounded-md hover:bg-gray-50 text-sm">
-          <Download className="w-4 h-4 mr-2" />
-          Document
-        </button>
-
         <button
           onClick={handleViewScore}
           disabled={assignment.status !== "GradesPublished"}
@@ -157,7 +151,7 @@ const AssignmentCard = ({ assignment, courseId }) => {
             }
           `}
         >
-          <BarChart className="w-4 h-4 mr-2" />
+          <BarChartOutlined style={{ fontSize: '16px', marginRight: '8px' }} />
           View Final Score
         </button>
 
@@ -165,7 +159,7 @@ const AssignmentCard = ({ assignment, courseId }) => {
           onClick={handleNavigate}
           className="flex items-center px-4 py-2 text-white font-semibold rounded-md text-sm bg-blue-600 hover:bg-blue-700"
         >
-          <Eye className="w-4 h-4 mr-2" />
+          <EyeOutlined style={{ fontSize: '16px', marginRight: '8px' }} />
           Detail and Submit
         </button>
       </div>

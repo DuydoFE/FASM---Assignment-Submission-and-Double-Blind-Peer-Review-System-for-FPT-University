@@ -1,17 +1,18 @@
 import React from "react";
 import { useParams, Link } from "react-router-dom";
+import { motion } from "framer-motion";
 import {
-  ChevronRight,
-  Clock,
-  BarChart2,
-  Download,
-  CheckCircle,
-  XCircle,
-  FilePenLine,
-  Slash,
-  Info,
-  Eye,
-} from "lucide-react";
+  RightOutlined,
+  ClockCircleOutlined,
+  BarChartOutlined,
+  DownloadOutlined,
+  CheckCircleOutlined,
+  CloseCircleOutlined,
+  EditOutlined,
+  StopOutlined,
+  InfoCircleOutlined,
+  EyeOutlined,
+} from "@ant-design/icons";
 
 import { assignmentService } from "../../service/assignmentService";
 import { reviewService } from "../../service/reviewService";
@@ -44,43 +45,43 @@ const getAssignmentStyles = (status) => {
       return {
         card: "bg-green-50 border-green-200",
         badge: "bg-green-100 text-green-700",
-        icon: <CheckCircle className="w-6 h-6 text-green-500" />,
+        icon: <CheckCircleOutlined style={{ fontSize: '24px', color: '#22c55e' }} />,
       };
     case "Closed":
       return {
         card: "bg-red-50 border-red-200",
         badge: "bg-red-100 text-red-700",
-        icon: <XCircle className="w-6 h-6 text-red-500" />,
+        icon: <CloseCircleOutlined style={{ fontSize: '24px', color: '#ef4444' }} />,
       };
     case "InReview":
       return {
         card: "bg-yellow-50 border-yellow-200",
         badge: "bg-yellow-100 text-yellow-700",
-        icon: <Eye className="w-6 h-6 text-yellow-500" />,
+        icon: <EyeOutlined style={{ fontSize: '24px', color: '#eab308' }} />,
       };
     case "Upcoming":
       return {
         card: "bg-blue-50 border-blue-200",
         badge: "bg-blue-100 text-blue-700",
-        icon: <Info className="w-6 h-6 text-blue-500" />,
+        icon: <InfoCircleOutlined style={{ fontSize: '24px', color: '#3b82f6' }} />,
       };
     case "Cancelled":
       return {
         card: "bg-gray-100 border-gray-300",
         badge: "bg-gray-200 text-gray-600",
-        icon: <Slash className="w-6 h-6 text-gray-500" />,
+        icon: <StopOutlined style={{ fontSize: '24px', color: '#6b7280' }} />,
       };
     case "Draft":
       return {
         card: "bg-gray-100 border-gray-300",
         badge: "bg-gray-200 text-gray-600",
-        icon: <FilePenLine className="w-6 h-6 text-gray-500" />,
+        icon: <EditOutlined style={{ fontSize: '24px', color: '#6b7280' }} />,
       };
     default:
       return {
         card: "bg-gray-50 border-gray-200",
         badge: "bg-gray-100 text-gray-700",
-        icon: <Info className="w-6 h-6 text-gray-500" />,
+        icon: <InfoCircleOutlined style={{ fontSize: '24px', color: '#6b7280' }} />,
       };
   }
 };
@@ -152,38 +153,84 @@ const StudentSubmitAssignmentPage = () => {
 
   const isReviewOpen = reviewTrackingData?.data?.status === "InReview";
 
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1,
+      },
+    },
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        duration: 0.5,
+        ease: "easeOut",
+      },
+    },
+  };
+
+  const cardVariants = {
+    hidden: { opacity: 0, scale: 0.95 },
+    visible: {
+      opacity: 1,
+      scale: 1,
+      transition: {
+        duration: 0.4,
+        ease: "easeOut",
+      },
+    },
+  };
+
   return (
     <div className="bg-gray-100 min-h-screen p-8">
-      <div className="max-w-7xl mx-auto">
+      <motion.div
+        className="max-w-7xl mx-auto"
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+      >
         {/* Breadcrumbs */}
-        <div className="mb-6 flex items-center text-sm text-gray-600">
+        <motion.div
+          className="mb-6 flex items-center text-sm text-gray-600"
+          variants={itemVariants}
+        >
           <Link to="/my-assignments" className="hover:underline">
             My Assignments
           </Link>
-          <ChevronRight className="w-4 h-4 mx-1" />
+          <RightOutlined style={{ fontSize: '16px', margin: '0 4px' }} />
           <Link to={`/assignment/${courseId}`} className="hover:underline">
             {assignment.sectionCode}
           </Link>
-          <ChevronRight className="w-4 h-4 mx-1" />
+          <RightOutlined style={{ fontSize: '16px', margin: '0 4px' }} />
           <span className="font-semibold text-gray-800 truncate max-w-xs">
             {assignment.title}
           </span>
-        </div>
+        </motion.div>
 
         {/* Header */}
-        <div className="mb-8">
+        <motion.div className="mb-8" variants={itemVariants}>
           <p className="text-blue-600 font-semibold">
             {assignment.sectionCode}
           </p>
-          <h1 className="text-3xl font-bold text-gray-900">
+          <h1 className="text-3xl md:text-4xl font-medium text-gray-900 typing-animation">
             {assignment.courseName}
           </h1>
-        </div>
+        </motion.div>
 
         {/* Main Content Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2">
-            <div className={`p-6 rounded-lg border ${statusStyle.card}`}>
+          <motion.div className="lg:col-span-2" variants={itemVariants}>
+            <motion.div
+              className={`p-6 rounded-lg border ${statusStyle.card}`}
+              variants={cardVariants}
+              whileHover={{ scale: 1.02, transition: { duration: 0.2 } }}
+            >
               {/* Card Header */}
               <div className="flex justify-between items-start">
                 <div className="flex items-center">
@@ -209,14 +256,14 @@ const StudentSubmitAssignmentPage = () => {
               {/* Card Info */}
               <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-gray-600 mt-4 ml-10">
                 <div className="flex items-center">
-                  <Clock className="w-4 h-4 mr-1.5" />
+                  <ClockCircleOutlined style={{ fontSize: '16px', marginRight: '6px' }} />
                   Deadline:{" "}
                   <span className="font-semibold ml-1">
                     {formatDate(assignment.deadline)}
                   </span>
                 </div>
                 <div className="flex items-center">
-                  <BarChart2 className="w-4 h-4 mr-1.5" />
+                  <BarChartOutlined style={{ fontSize: '16px', marginRight: '6px' }} />
                   Weight:{" "}
                   <span className="font-semibold ml-1">{`${
                     assignment.instructorWeight + assignment.peerWeight
@@ -230,35 +277,88 @@ const StudentSubmitAssignmentPage = () => {
                 <p className="text-sm text-gray-700 mb-4 whitespace-pre-wrap">
                   {assignment.guidelines}
                 </p>
+                
+                {/* File Information */}
+                <div className="mb-3">
+                  <p className="text-sm text-gray-600">
+                    <span className="font-semibold">Attach file: </span>
+                    {assignment.fileName ? (
+                      <span className="text-blue-600">{assignment.fileName}</span>
+                    ) : (
+                      <span className="text-gray-400 italic">No file</span>
+                    )}
+                  </p>
+                </div>
+
                 <div className="flex items-center space-x-3">
-                  <button className="flex items-center px-4 py-2 bg-white border border-gray-300 text-gray-700 font-semibold rounded-md hover:bg-gray-50 text-sm">
-                    <Info className="w-4 h-4 mr-2" />
-                    View Detail
-                  </button>
-                  <button className="flex items-center px-4 py-2 bg-white border border-gray-300 text-gray-700 font-semibold rounded-md hover:bg-gray-50 text-sm">
-                    <Download className="w-4 h-4 mr-2" />
-                    Download attach file
-                  </button>
+                  {assignment.previewUrl ? (
+                    <a
+                      href={assignment.previewUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center px-4 py-2 bg-white border border-gray-300 text-gray-700 font-semibold rounded-md hover:bg-gray-50 text-sm"
+                    >
+                      <InfoCircleOutlined style={{ fontSize: '16px', marginRight: '8px' }} />
+                      View Detail
+                    </a>
+                  ) : (
+                    <button
+                      disabled
+                      className="flex items-center px-4 py-2 bg-gray-100 border border-gray-300 text-gray-400 font-semibold rounded-md cursor-not-allowed text-sm"
+                    >
+                      <InfoCircleOutlined style={{ fontSize: '16px', marginRight: '8px' }} />
+                      View Detail
+                    </button>
+                  )}
+                  {assignment.fileUrl ? (
+                    <a
+                      href={assignment.fileUrl}
+                      download={assignment.fileName || 'attachment'}
+                      className="flex items-center px-4 py-2 bg-white border border-gray-300 text-gray-700 font-semibold rounded-md hover:bg-gray-50 text-sm"
+                    >
+                      <DownloadOutlined style={{ fontSize: '16px', marginRight: '8px' }} />
+                      Download
+                    </a>
+                  ) : (
+                    <button
+                      disabled
+                      className="flex items-center px-4 py-2 bg-gray-100 border border-gray-300 text-gray-400 font-semibold rounded-md cursor-not-allowed text-sm"
+                    >
+                      <DownloadOutlined style={{ fontSize: '16px', marginRight: '8px' }} />
+                      Download
+                    </button>
+                  )}
                 </div>
               </div>
-            </div>
-            <RubricCard assignmentId={assignmentId} />
-          </div>
+            </motion.div>
+            <motion.div variants={itemVariants}>
+              <RubricCard assignmentId={assignmentId} />
+            </motion.div>
+          </motion.div>
 
           {/* Right Column: Submission Status */}
-          <div className="space-y-6">
-            <h2 className="text-xl font-bold text-gray-800">
+          <motion.div className="space-y-6" variants={itemVariants}>
+            <motion.h2
+              className="text-xl font-bold text-gray-800"
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.5 }}
+            >
               Submit and Grading
-            </h2>
-            <SubmissionGuideCard />
+            </motion.h2>
+            <motion.div variants={cardVariants}>
+              <SubmissionGuideCard />
+            </motion.div>
             {userId && (
-              <SubmissionCard
-                initialSubmission={submission}
-                assignmentId={assignmentId}
-                userId={userId}
-                assignmentStatus={assignment.status}
-                onSubmissionSuccess={handleSubmissionSuccess}
-              />
+              <motion.div variants={cardVariants}>
+                <SubmissionCard
+                  initialSubmission={submission}
+                  assignmentId={assignmentId}
+                  userId={userId}
+                  assignmentStatus={assignment.status}
+                  onSubmissionSuccess={handleSubmissionSuccess}
+                />
+              </motion.div>
             )}
             {assignment.peerWeight > 0 && (
               <>
@@ -267,27 +367,66 @@ const StudentSubmitAssignmentPage = () => {
                     Đang tải trạng thái chấm chéo...
                   </p>
                 ) : (
-                  <div className="space-y-6">
-                    <PeerReviewCard
-                      completed={completedReviews}
-                      required={requiredReviews}
-                      reviewDeadline={reviewDeadline}
-                      isReviewOpen={isReviewOpen}
-                    />
+                  <motion.div className="space-y-6" variants={containerVariants}>
+                    <motion.div variants={cardVariants}>
+                      <PeerReviewCard
+                        completed={completedReviews}
+                        required={requiredReviews}
+                        reviewDeadline={reviewDeadline}
+                        isReviewOpen={isReviewOpen}
+                      />
+                    </motion.div>
 
                     {isReviewOpen && (
-                      <CrossClassReviewCard
-                        assignmentId={assignmentId}
-                        courseId={courseId}
-                      />
+                      <motion.div
+                        variants={cardVariants}
+                        initial="hidden"
+                        animate="visible"
+                      >
+                        <CrossClassReviewCard
+                          assignmentId={assignmentId}
+                          courseId={courseId}
+                        />
+                      </motion.div>
                     )}
-                  </div>
+                  </motion.div>
                 )}
               </>
             )}
-          </div>
+          </motion.div>
         </div>
-      </div>
+      </motion.div>
+
+      <style jsx>{`
+        @keyframes typing {
+          0% {
+            width: 0;
+            opacity: 0;
+          }
+          1% {
+            opacity: 1;
+          }
+          50% {
+            width: 100%;
+            opacity: 1;
+          }
+          90% {
+            width: 100%;
+            opacity: 1;
+          }
+          100% {
+            width: 0;
+            opacity: 0;
+          }
+        }
+
+        .typing-animation {
+          overflow: hidden;
+          white-space: nowrap;
+          display: inline-block;
+          animation: typing 6s steps(40, end) infinite;
+        }
+      `}</style>
     </div>
   );
 };
