@@ -77,10 +77,22 @@ const SubmissionLeftColumn = ({
                             </div>
                         </div>
                         <div className="flex gap-2">
+                            {(submissionDetails.previewUrl || submissionDetails.previewURL) && (
+                                <a
+                                    href={submissionDetails.previewUrl || submissionDetails.previewURL}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="p-2 hover:bg-blue-100 rounded"
+                                    title="Preview file"
+                                >
+                                    <Eye className="w-4 h-4 text-blue-600" />
+                                </a>
+                            )}
                             <a
                                 href={submissionDetails.fileUrl}
                                 download
                                 className="p-2 hover:bg-blue-100 rounded"
+                                title="Download file"
                             >
                                 <Download className="w-4 h-4 text-blue-600" />
                             </a>

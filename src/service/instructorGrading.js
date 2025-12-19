@@ -123,10 +123,34 @@ export const importSubmissionsExcel = async (assignmentId, file) => {
     }
 };
 
+export const overrideFinalScore = async ({ submissionId, newFinalScore, instructorId }) => {
+    if (!submissionId || newFinalScore === undefined || newFinalScore === null || !instructorId) {
+        throw new Error("submissionId, newFinalScore, and instructorId are required");
+    }
+
+    try {
+        const response = await api.put("/instructor/InstructorSubmission/override-final-score", {
+            submissionId,
+            newFinalScore,
+            instructorId
+        });
+        return response.data;
+    } catch (error) {
+        const message =
+            error?.response?.data?.message ||
+            error?.response?.data ||
+            "Override Final Score Failed";
+
+        console.error("Override Final Score Failed:", message);
+        throw new Error(message);
+    }
+};
+
 export const instructorGradingService = {
     publishGrades,
     gradeSubmission,
     autoGradeZero,
     exportSubmissionsExcel,
-    importSubmissionsExcel
+    importSubmissionsExcel,
+    overrideFinalScore
 };

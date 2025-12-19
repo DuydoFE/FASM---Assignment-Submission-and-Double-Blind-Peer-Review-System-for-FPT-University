@@ -47,13 +47,13 @@ const InstructorSideBar = () => {
       key: 'grading',
       label: 'Grading Score',
       icon: <BarChart3 className="w-6 h-6" />,
-      path: '/instructor/manage-grading',
+      path: `/instructor/manage-grading/${courseInstanceId}`,
     },
     {
       key: 'publish',
       label: 'Publish Score',
       icon: <Upload className="w-6 h-6" />,
-      path: '/instructor/publish-score',
+      path: `/instructor/publish-score/${courseInstanceId}`,
     },
   ];
 

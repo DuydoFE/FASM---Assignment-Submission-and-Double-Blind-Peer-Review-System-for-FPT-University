@@ -1,9 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
 
-import { getCoursesByUser } from '../../service/courseInstructorService';
-import { getClassesByUser } from '../../service/courseInstanceService';
 import { getAssignmentsByCourseInstanceId } from '../../service/assignmentService';
 import { getSubmissionSummary } from '../../service/instructorSubmission';
 import { getCurrentAccount } from '../../utils/accountUtils';
@@ -18,23 +16,18 @@ const InstructorManageGrading = () => {
   const currentUser = getCurrentAccount();
   const navigate = useNavigate();
   const location = useLocation();
+  const { courseInstanceId } = useParams();
 
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
   
-  const [courses, setCourses] = useState([]);
-  const [classes, setClasses] = useState([]);
   const [assignments, setAssignments] = useState([]);
   const [students, setStudents] = useState([]);
   const [assignmentInfo, setAssignmentInfo] = useState(null);
   
-  const [selectedCourseId, setSelectedCourseId] = useState('');
-  const [selectedClassId, setSelectedClassId] = useState('');
   const [selectedAssignmentId, setSelectedAssignmentId] = useState('');
   
   const [loading, setLoading] = useState({
-    courses: false,
-    classes: false,
     assignments: false,
     summary: false,
     autoGrading: false
@@ -51,7 +44,6 @@ const InstructorManageGrading = () => {
     if (location.state?.returnState) {
       const returnState = location.state.returnState;
       setPendingReturnState(returnState);
-      setSelectedCourseId(returnState.selectedCourseId || '');
       setSearchTerm(returnState.searchTerm || '');
       setStatusFilter(returnState.statusFilter || 'All');
       
@@ -61,36 +53,10 @@ const InstructorManageGrading = () => {
   }, []);
 
   useEffect(() => {
-    fetchCourses();
-  }, []);
-
-  useEffect(() => {
-    if (selectedCourseId) {
-      fetchClasses();
-    } else {
-      setClasses([]);
-      setSelectedClassId('');
-    }
-  }, [selectedCourseId]);
-
-  // When classes are loaded and we have pending return state, set the class
-  useEffect(() => {
-    if (pendingReturnState && classes.length > 0 && pendingReturnState.selectedClassId) {
-      const classExists = classes.some(c => c.courseInstanceId == pendingReturnState.selectedClassId);
-      if (classExists) {
-        setSelectedClassId(pendingReturnState.selectedClassId);
-      }
-    }
-  }, [classes, pendingReturnState]);
-
-  useEffect(() => {
-    if (selectedClassId) {
+    if (courseInstanceId) {
       fetchAssignments();
-    } else {
-      setAssignments([]);
-      setSelectedAssignmentId('');
     }
-  }, [selectedClassId]);
+  }, [courseInstanceId]);
 
   // When assignments are loaded and we have pending return state, set the assignment and fetch data
   useEffect(() => {
@@ -102,49 +68,21 @@ const InstructorManageGrading = () => {
     }
   }, [assignments, pendingReturnState]);
 
-  // Auto-fetch table data when all selections are restored
+  // Auto-fetch table data when assignment selection is restored
   useEffect(() => {
     if (pendingReturnState &&
-        selectedCourseId &&
-        selectedClassId &&
         selectedAssignmentId &&
-        pendingReturnState.selectedCourseId == selectedCourseId &&
-        pendingReturnState.selectedClassId == selectedClassId &&
         pendingReturnState.selectedAssignmentId == selectedAssignmentId) {
-      // All selections are restored, now fetch the table data
+      // Selection is restored, now fetch the table data
       handleViewMarkFromRestore();
       setPendingReturnState(null); // Clear pending state after handling
     }
-  }, [selectedCourseId, selectedClassId, selectedAssignmentId, pendingReturnState]);
-
-  const fetchCourses = async () => {
-    setLoading(prev => ({ ...prev, courses: true }));
-    try {
-      const data = await getCoursesByUser(currentUser.id);
-      setCourses(data);
-    } catch (error) {
-      console.error('Error fetching courses:', error);
-    } finally {
-      setLoading(prev => ({ ...prev, courses: false }));
-    }
-  };
-
-  const fetchClasses = async () => {
-    setLoading(prev => ({ ...prev, classes: true }));
-    try {
-      const data = await getClassesByUser(currentUser.id, selectedCourseId);
-      setClasses(data);
-    } catch (error) {
-      console.error('Error fetching classes:', error);
-    } finally {
-      setLoading(prev => ({ ...prev, classes: false }));
-    }
-  };
+  }, [selectedAssignmentId, pendingReturnState]);
 
   const fetchAssignments = async () => {
     setLoading(prev => ({ ...prev, assignments: true }));
     try {
-      const data = await getAssignmentsByCourseInstanceId(selectedClassId);
+      const data = await getAssignmentsByCourseInstanceId(courseInstanceId);
       setAssignments(data);
     } catch (error) {
       console.error('Error fetching assignments:', error);
@@ -154,14 +92,14 @@ const InstructorManageGrading = () => {
   };
 
   // Helper function to fetch submission data (shared logic)
-  const fetchSubmissionData = async (courseId, classId, assignmentId) => {
+  const fetchSubmissionData = async (assignmentId) => {
     setLoading(prev => ({ ...prev, summary: true }));
     setShowTable(true);
     
     try {
       const response = await getSubmissionSummary({
-        courseId: courseId,
-        classId: classId,
+        courseId: null,
+        classId: null,
         assignmentId: assignmentId
       });
       
@@ -184,7 +122,6 @@ const InstructorManageGrading = () => {
       setStudents(mappedStudents);
       
       const assignmentData = assignments.find(a => a.assignmentId == assignmentId);
-      const classData = classes.find(c => c.courseInstanceId == classId);
       if (assignmentData) {
         const submittedCount = mappedStudents.filter(s => s.status === 'Submitted' || s.status === 'Graded').length;
         const gradedCount = mappedStudents.filter(s => s.status === 'Graded').length;
@@ -197,7 +134,7 @@ const InstructorManageGrading = () => {
           totalStudents: mappedStudents.length,
           submitted: submittedCount,
           graded: gradedCount,
-          className: classData?.name || classData?.className || 'Class'
+          className: 'Class'
         });
       }
     } catch (error) {
@@ -212,16 +149,16 @@ const InstructorManageGrading = () => {
   };
 
   const handleViewMark = async () => {
-    if (!selectedCourseId || !selectedClassId || !selectedAssignmentId) {
-      toast.error('Please select Course, Class, and Assignment');
+    if (!selectedAssignmentId) {
+      toast.error('Please select an Assignment');
       return;
     }
-    await fetchSubmissionData(selectedCourseId, selectedClassId, selectedAssignmentId);
+    await fetchSubmissionData(selectedAssignmentId);
   };
 
   // Called when restoring state from navigation - no validation needed
   const handleViewMarkFromRestore = async () => {
-    await fetchSubmissionData(selectedCourseId, selectedClassId, selectedAssignmentId);
+    await fetchSubmissionData(selectedAssignmentId);
   };
 
   const handleStatusClick = () => {
@@ -249,8 +186,7 @@ const InstructorManageGrading = () => {
     navigate(`/instructor/grading-detail/${submissionId}`, {
       state: {
         returnState: {
-          selectedCourseId,
-          selectedClassId,
+          courseInstanceId,
           selectedAssignmentId,
           showTable,
           searchTerm,
@@ -297,14 +233,8 @@ const InstructorManageGrading = () => {
         <h1 className="text-2xl font-bold text-gray-800 mb-6">Instructor Scores Table</h1>
         
         <GradingFilterSection
-          courses={courses}
-          classes={classes}
           assignments={assignments}
-          selectedCourseId={selectedCourseId}
-          selectedClassId={selectedClassId}
           selectedAssignmentId={selectedAssignmentId}
-          setSelectedCourseId={setSelectedCourseId}
-          setSelectedClassId={setSelectedClassId}
           setSelectedAssignmentId={setSelectedAssignmentId}
           loading={loading}
           onViewMark={handleViewMark}
@@ -312,8 +242,6 @@ const InstructorManageGrading = () => {
 
         {!showTable && (
           <GradingEmptyState
-            selectedCourseId={selectedCourseId}
-            selectedClassId={selectedClassId}
             selectedAssignmentId={selectedAssignmentId}
           />
         )}
