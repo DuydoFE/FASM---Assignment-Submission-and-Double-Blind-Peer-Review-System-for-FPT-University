@@ -237,16 +237,21 @@ const InstructorGradingDetail = () => {
             toast.success(successMessage);
 
             setTimeout(() => {
-                // Get courseInstanceId from location state first, fallback to submissionDetails
-                const courseInstanceId = location.state?.returnState?.courseInstanceId || submissionDetails?.courseInstanceId;
-                
-                const returnPath = location.pathname.includes('publish')
-                    ? `/instructor/publish-mark/${courseInstanceId}`
-                    : `/instructor/manage-grading/${courseInstanceId}`;
+                // Check if coming from regrade request page
+                if (location.state?.fromRegradeRequest && location.state?.returnState?.returnPath) {
+                    navigate(location.state.returnState.returnPath);
+                } else {
+                    // Get courseInstanceId from location state first, fallback to submissionDetails
+                    const courseInstanceId = location.state?.returnState?.courseInstanceId || submissionDetails?.courseInstanceId;
+                    
+                    const returnPath = location.pathname.includes('publish')
+                        ? `/instructor/publish-mark/${courseInstanceId}`
+                        : `/instructor/manage-grading/${courseInstanceId}`;
 
-                navigate(returnPath, {
-                    state: location.state?.returnState ? { returnState: location.state.returnState } : undefined
-                });
+                    navigate(returnPath, {
+                        state: location.state?.returnState ? { returnState: location.state.returnState } : undefined
+                    });
+                }
             }, 800);
 
         } catch (error) {
@@ -263,16 +268,21 @@ const InstructorGradingDetail = () => {
     };
 
     const handleBackClick = () => {
-        // Get courseInstanceId from location state first, fallback to submissionDetails
-        const courseInstanceId = location.state?.returnState?.courseInstanceId || submissionDetails?.courseInstanceId;
-        
-        const returnPath = location.pathname.includes('publish')
-            ? `/instructor/publish-mark/${courseInstanceId}`
-            : `/instructor/manage-grading/${courseInstanceId}`;
+        // Check if coming from regrade request page
+        if (location.state?.fromRegradeRequest && location.state?.returnState?.returnPath) {
+            navigate(location.state.returnState.returnPath);
+        } else {
+            // Get courseInstanceId from location state first, fallback to submissionDetails
+            const courseInstanceId = location.state?.returnState?.courseInstanceId || submissionDetails?.courseInstanceId;
+            
+            const returnPath = location.pathname.includes('publish')
+                ? `/instructor/publish-mark/${courseInstanceId}`
+                : `/instructor/manage-grading/${courseInstanceId}`;
 
-        navigate(returnPath, {
-            state: location.state?.returnState ? { returnState: location.state.returnState } : undefined
-        });
+            navigate(returnPath, {
+                state: location.state?.returnState ? { returnState: location.state.returnState } : undefined
+            });
+        }
     };
 
     const formatDateTime = (dateString) => {

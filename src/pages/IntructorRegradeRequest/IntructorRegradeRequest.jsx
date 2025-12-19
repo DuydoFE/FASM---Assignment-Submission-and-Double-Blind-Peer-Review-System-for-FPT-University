@@ -122,7 +122,11 @@ const InstructorRegradeRequest = () => {
                 regradeRequestId: request.requestId,
                 studentName: request.name,
                 originalReason: request.reason,
-                assignmentTitle: request.assignmentTitle
+                assignmentTitle: request.assignmentTitle,
+                fromRegradeRequest: true,
+                returnState: {
+                    returnPath: '/instructor/regrade-request'
+                }
             }
         });
     };
