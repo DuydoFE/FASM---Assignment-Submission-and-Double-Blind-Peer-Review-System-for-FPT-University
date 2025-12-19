@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { motion } from "framer-motion";
 import {
   X,
   CheckCircle,
@@ -55,10 +56,19 @@ const CircularProgress = ({ score, threshold }) => {
 
   const isHigh = score > threshold;
   const color = isHigh ? "text-red-500" : "text-green-500";
+  const strokeColor = isHigh ? "#ef4444" : "#22c55e";
 
   return (
     <div className="relative w-40 h-40 mx-auto my-4">
-      <svg className="w-full h-full transform -rotate-90">
+      <motion.svg
+        className="w-full h-full"
+        initial={{ rotate: -90 }}
+        animate={{ rotate: 270 }}
+        transition={{
+          duration: 1.5,
+          ease: "easeInOut",
+        }}
+      >
         <circle
           cx="80"
           cy="80"
@@ -68,26 +78,52 @@ const CircularProgress = ({ score, threshold }) => {
           fill="transparent"
           className="text-gray-100"
         />
-        <circle
+        <motion.circle
           cx="80"
           cy="80"
           r={radius}
-          stroke="currentColor"
+          stroke={strokeColor}
           strokeWidth="10"
           fill="transparent"
-          strokeDasharray={circumference}
-          strokeDashoffset={strokeDashoffset}
-          className={`${color} transition-all duration-1000 ease-out`}
           strokeLinecap="round"
+          initial={{
+            strokeDasharray: circumference,
+            strokeDashoffset: circumference,
+          }}
+          animate={{
+            strokeDashoffset: strokeDashoffset,
+          }}
+          transition={{
+            duration: 1.5,
+            ease: "easeOut",
+            delay: 0.3,
+          }}
         />
-      </svg>
+      </motion.svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <span className={`text-3xl font-extrabold ${color}`}>
+        <motion.span
+          className={`text-3xl font-extrabold ${color}`}
+          initial={{ opacity: 0, scale: 0.5 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{
+            duration: 0.5,
+            delay: 0.8,
+            ease: "backOut",
+          }}
+        >
           {score.toFixed(2)}%
-        </span>
-        <span className="text-xs text-gray-400 font-bold uppercase mt-1">
+        </motion.span>
+        <motion.span
+          className="text-xs text-gray-400 font-bold uppercase mt-1"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{
+            duration: 0.3,
+            delay: 1.2,
+          }}
+        >
           Similarity
-        </span>
+        </motion.span>
       </div>
     </div>
   );
