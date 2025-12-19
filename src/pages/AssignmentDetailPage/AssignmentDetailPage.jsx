@@ -1,20 +1,19 @@
 import React, { useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import {
-  ChevronRight,
-  Clock,
-  BookCopy,
-  CheckCircle,
-  AlertTriangle,
-  Filter,
-} from "lucide-react";
+  RightOutlined,
+  ClockCircleOutlined,
+  BookOutlined,
+  CheckCircleOutlined,
+  WarningOutlined,
+  FilterOutlined,
+} from "@ant-design/icons";
 import StatCard from "../../component/Assignment/StatCard";
 import AssignmentCard from "../../component/Assignment/AssignmentCard";
+import PeerReviewInfoCard from "../../component/Assignment/PeerReviewInfoCard";
 import { useQuery } from "@tanstack/react-query";
 import { reviewService } from "../../service/reviewService";
 import { getCourseInstanceById } from "../../service/courseInstanceService";
-
-import PeerReviewInfoCard from "../../component/Assignment/PeerReviewInfoCard";
 
 const ASSIGNMENT_STATUSES = [
   { value: "All", label: "All Status" },
@@ -30,7 +29,6 @@ const AssignmentDetailPage = () => {
   const { courseId } = useParams();
   const [filterStatus, setFilterStatus] = useState("All");
 
-  // Fetch course instance details
   const {
     data: courseInstanceData,
     isLoading: isLoadingCourseInstance,
@@ -88,7 +86,7 @@ const AssignmentDetailPage = () => {
           >
             My Assignments
           </Link>
-          <ChevronRight className="w-4 h-4 mx-2 text-gray-400" />
+          <RightOutlined style={{ fontSize: '16px', margin: '0 8px', color: '#9ca3af' }} />
           <span className="font-semibold text-gray-800">
             {courseInstanceData?.courseCode || courseId} - {courseInstanceData?.courseName}
           </span>
@@ -115,13 +113,13 @@ const AssignmentDetailPage = () => {
                       {courseInstanceData.courseCode}
                     </span>
                     <div className="flex items-center">
-                      <Clock size={16} className="mr-1.5 text-gray-400" />
+                      <ClockCircleOutlined style={{ fontSize: '16px', marginRight: '6px', color: '#9ca3af' }} />
                       <span className="text-sm">Year: {new Date(courseInstanceData.createdAt).getFullYear()}</span>
                     </div>
                   </div>
                 </div>
                 <div className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-green-50 to-emerald-50 text-green-700 rounded-full border border-green-200 shadow-sm">
-                  <CheckCircle size={18} />
+                  <CheckCircleOutlined style={{ fontSize: '18px' }} />
                   <span className="font-semibold">Enrolled</span>
                 </div>
               </div>
@@ -133,7 +131,7 @@ const AssignmentDetailPage = () => {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 mb-8">
           <div className="fade-in-up" style={{ animationDelay: "0.15s" }}>
             <StatCard
-              icon={BookCopy}
+              icon={BookOutlined}
               value={stats.total}
               label="All assignments"
               color="blue"
@@ -141,7 +139,7 @@ const AssignmentDetailPage = () => {
           </div>
           <div className="fade-in-up" style={{ animationDelay: "0.2s" }}>
             <StatCard
-              icon={CheckCircle}
+              icon={CheckCircleOutlined}
               value={stats.submitted}
               label="Submitted"
               color="green"
@@ -149,7 +147,7 @@ const AssignmentDetailPage = () => {
           </div>
           <div className="fade-in-up" style={{ animationDelay: "0.25s" }}>
             <StatCard
-              icon={Clock}
+              icon={ClockCircleOutlined}
               value={stats.dueSoon}
               label="About to expire"
               color="red"
@@ -157,7 +155,7 @@ const AssignmentDetailPage = () => {
           </div>
           <div className="fade-in-up" style={{ animationDelay: "0.3s" }}>
             <StatCard
-              icon={AlertTriangle}
+              icon={WarningOutlined}
               value={stats.warning}
               label="Note the time"
               color="yellow"
@@ -166,11 +164,11 @@ const AssignmentDetailPage = () => {
         </div>
 
         {/* Filter Section */}
-        <div className="bg-gray-50 p-5 rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-all duration-300 mb-6 slide-in-left" style={{ animationDelay: "0.35s" }}>
+        <div className="bg-gray-50 p-5 rounded-xl border border-gray-200 shadow-sm mb-6 slide-in-left" style={{ animationDelay: "0.35s" }}>
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-blue-50 rounded-lg">
-                <Filter size={20} className="text-blue-600" />
+                <FilterOutlined style={{ fontSize: '20px', color: '#2563eb' }} />
               </div>
               <h3 className="font-semibold text-gray-800 text-lg">Filter Assignments</h3>
             </div>
@@ -230,7 +228,7 @@ const AssignmentDetailPage = () => {
             <div className="text-center bg-gray-50 p-16 rounded-xl border-2 border-dashed border-gray-300 scale-in" style={{ animationDelay: "0.4s" }}>
               <div className="max-w-md mx-auto">
                 <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <BookCopy className="w-8 h-8 text-gray-400" />
+                  <BookOutlined style={{ fontSize: '32px', color: '#9ca3af' }} />
                 </div>
                 <h3 className="text-2xl font-bold text-gray-800 mb-2">No assignments found</h3>
                 <p className="text-gray-600">
