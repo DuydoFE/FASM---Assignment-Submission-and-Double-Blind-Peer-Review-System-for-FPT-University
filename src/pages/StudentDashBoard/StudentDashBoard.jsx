@@ -2,6 +2,7 @@ import React, { useState, useMemo } from "react";
 import { useSelector } from "react-redux";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
+import { motion } from "framer-motion";
 import {
   ChevronRight,
   Upload,
@@ -13,6 +14,9 @@ import {
   AlertCircle,
   PlayCircle,
   RefreshCw,
+  TrendingUp,
+  Award,
+  Target,
 } from "lucide-react";
 
 import { selectUser } from "../../redux/features/userSlice";
@@ -50,6 +54,42 @@ const formatHistoryDate = (dateString) => {
   const hours = date.getHours().toString().padStart(2, "0");
   const minutes = date.getMinutes().toString().padStart(2, "0");
   return `${day}/${month} • ${hours}:${minutes}`;
+};
+
+// Animation variants
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1,
+      delayChildren: 0.2,
+    },
+  },
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.5,
+      ease: "easeOut",
+    },
+  },
+};
+
+const cardVariants = {
+  hidden: { opacity: 0, scale: 0.95 },
+  visible: {
+    opacity: 1,
+    scale: 1,
+    transition: {
+      duration: 0.4,
+      ease: "easeOut",
+    },
+  },
 };
 
 const StudentDashBoard = () => {
@@ -113,35 +153,67 @@ const StudentDashBoard = () => {
     queryClient.invalidateQueries(["completedReviews", studentId]);
   };
 
+  // Calculate stats
+  const completedReviews = reviewHistory.filter(r => r.status === "Completed").length;
+  const pendingReviews = reviewHistory.filter(r => r.status === "Assigned").length;
+  const activeAssignments = displayedAssignments.length;
+
   return (
-    <div className="bg-gray-50 min-h-screen relative">
+    <motion.div
+      initial="hidden"
+      animate="visible"
+      variants={containerVariants}
+      className="bg-gradient-to-br from-gray-50 via-blue-50/30 to-orange-50/20 min-h-screen relative"
+    >
       <main className="p-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-800">
+        {/* Welcome Header with Animation */}
+        <motion.div variants={itemVariants} className="mb-8">
+          <motion.h1
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.6 }}
+            className="text-4xl font-bold bg-gradient-to-r from-orange-600 via-orange-500 to-yellow-500 bg-clip-text text-transparent mb-2"
+          >
             Welcome back, {currentUser?.firstName}!
-          </h1>
-        </div>
+          </motion.h1>
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.3, duration: 0.6 }}
+            className="text-gray-600"
+          >
+            Here's what's happening with your assignments today.
+          </motion.p>
+        </motion.div>
+
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2 space-y-8">
-            <div className="bg-white p-6 rounded-lg shadow-sm">
+            {/* Assignments Section */}
+            <motion.div
+              variants={cardVariants}
+              whileHover={{ boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1)" }}
+              className="bg-white/80 backdrop-blur-sm p-6 rounded-2xl shadow-lg border border-white"
+            >
               <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-bold text-gray-800">
+                <h2 className="text-2xl font-bold text-gray-800">
                   Assignments are about to expire
                 </h2>
                 {assignments.filter(
                   (a) =>
                     a.status === "Active" && new Date(a.deadline) > new Date()
                 ).length > 5 && (
-                  <Link
-                    to="/my-assignments"
-                    className="text-sm font-semibold text-orange-600 flex items-center"
-                  >
-                    Xem tất cả <ChevronRight className="w-4 h-4 ml-1" />
-                  </Link>
+                  <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                    <Link
+                      to="/my-assignments"
+                      className="text-sm font-semibold text-orange-600 flex items-center hover:text-orange-700 transition-colors"
+                    >
+                      Xem tất cả <ChevronRight className="w-4 h-4 ml-1" />
+                    </Link>
+                  </motion.div>
                 )}
               </div>
-              <div>
+              <motion.div variants={containerVariants}>
                 {isLoadingAssign && (
                   <p className="text-gray-500 text-sm">
                     Loading assignments...
@@ -156,50 +228,73 @@ const StudentDashBoard = () => {
                 {!isLoadingAssign &&
                 !isErrorAssign &&
                 displayedAssignments.length > 0
-                  ? displayedAssignments.map((assignment) => (
-                      <AssignmentCard
+                  ? displayedAssignments.map((assignment, index) => (
+                      <motion.div
                         key={assignment.assignmentId}
-                        color={getAssignmentColor(assignment.calculatedDays)}
-                        title={assignment.title}
-                        subject={assignment.courseName}
-                        dueDate={formatDueDate(assignment.deadline)}
-                        remaining={`${assignment.calculatedDays} days`}
-                      />
+                        variants={itemVariants}
+                        custom={index}
+                      >
+                        <AssignmentCard
+                          color={getAssignmentColor(assignment.calculatedDays)}
+                          title={assignment.title}
+                          subject={assignment.courseName}
+                          dueDate={formatDueDate(assignment.deadline)}
+                          remaining={`${assignment.calculatedDays} days`}
+                        />
+                      </motion.div>
                     ))
                   : !isLoadingAssign && (
                       <p className="text-gray-500 text-sm">
                         No upcoming active assignments.
                       </p>
                     )}
-              </div>
-            </div>
+              </motion.div>
+            </motion.div>
 
             <RecentActivity />
           </div>
+
           <div className="space-y-8">
-            <div className="bg-white p-6 rounded-lg shadow-sm">
-              <h2 className="text-xl font-bold text-gray-800 mb-4">
+            {/* Quick Actions */}
+            <motion.div
+              variants={cardVariants}
+              whileHover={{ boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1)" }}
+              className="bg-white/80 backdrop-blur-sm p-6 rounded-2xl shadow-lg border border-white"
+            >
+              <h2 className="text-2xl font-bold text-gray-800 mb-4">
                 Quick action
               </h2>
               <div className="space-y-3">
-                <button className="w-full flex items-center justify-center p-3 bg-orange-600 text-white font-semibold rounded-lg hover:bg-orange-700 transition-colors">
-                  <Upload className="w-5 h-5 mr-2" /> Submit new assignment
-                </button>
-                <button className="w-full flex items-center justify-center p-3 bg-gray-100 text-gray-700 font-semibold rounded-lg hover:bg-gray-200 transition-colors">
+                <motion.button
+                  whileHover={{ scale: 1.02, x: 5 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="w-full flex items-center justify-center p-4 bg-gray-100 text-gray-700 font-semibold rounded-xl hover:bg-gray-200 transition-colors shadow-sm hover:shadow-md"
+                >
                   <FileText className="w-5 h-5 mr-2" /> View scores
-                </button>
-                <button className="w-full flex items-center justify-center p-3 bg-gray-100 text-gray-700 font-semibold rounded-lg hover:bg-gray-200 transition-colors">
+                </motion.button>
+                <motion.button
+                  whileHover={{ scale: 1.02, x: 5 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="w-full flex items-center justify-center p-4 bg-gray-100 text-gray-700 font-semibold rounded-xl hover:bg-gray-200 transition-colors shadow-sm hover:shadow-md"
+                >
                   <Calendar className="w-5 h-5 mr-2" /> Submission schedule
-                </button>
+                </motion.button>
               </div>
-            </div>
+            </motion.div>
 
-            <div className="bg-white p-6 rounded-lg shadow-sm">
+            {/* Peer Review History */}
+            <motion.div
+              variants={cardVariants}
+              whileHover={{ boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1)" }}
+              className="bg-white/80 backdrop-blur-sm p-6 rounded-2xl shadow-lg border border-white"
+            >
               <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-bold text-gray-800">
+                <h2 className="text-2xl font-bold text-gray-800">
                   Peer Review History
                 </h2>
-                <Bell className="text-orange-600 w-5 h-5 cursor-pointer hover:text-orange-700" />
+                <motion.div whileHover={{ rotate: 15, scale: 1.1 }} whileTap={{ scale: 0.9 }}>
+                  <Bell className="text-orange-600 w-5 h-5 cursor-pointer" />
+                </motion.div>
               </div>
 
               <div className="space-y-3 max-h-[500px] overflow-y-auto pr-1 custom-scrollbar">
@@ -210,10 +305,14 @@ const StudentDashBoard = () => {
                     </span>
                   </div>
                 ) : reviewHistory.length > 0 ? (
-                  reviewHistory.map((review) => (
-                    <div
+                  reviewHistory.map((review, index) => (
+                    <motion.div
                       key={review.reviewAssignmentId}
-                      className="bg-white border border-gray-100 p-3 rounded-lg shadow-sm hover:shadow-md transition-shadow group"
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: index * 0.1 }}
+                      whileHover={{ x: 5, boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)" }}
+                      className="bg-white border border-gray-100 p-4 rounded-xl shadow-sm group"
                     >
                       <div className="flex justify-between items-start mb-1">
                         <h3
@@ -222,7 +321,8 @@ const StudentDashBoard = () => {
                         >
                           {review.assignmentTitle}
                         </h3>
-                        <span
+                        <motion.span
+                          whileHover={{ scale: 1.1 }}
                           className={`text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center ${
                             review.status === "Completed"
                               ? "bg-green-100 text-green-700"
@@ -230,7 +330,7 @@ const StudentDashBoard = () => {
                           }`}
                         >
                           {review.status}
-                        </span>
+                        </motion.span>
                       </div>
 
                       <div className="flex justify-between items-end mt-2">
@@ -246,7 +346,9 @@ const StudentDashBoard = () => {
 
                         <div className="flex items-center">
                           {review.status === "Assigned" ? (
-                            <button
+                            <motion.button
+                              whileHover={{ scale: 1.05 }}
+                              whileTap={{ scale: 0.95 }}
                               onClick={() =>
                                 handleOpenModal(
                                   review.reviewAssignmentId,
@@ -257,10 +359,12 @@ const StudentDashBoard = () => {
                             >
                               <PlayCircle className="w-3 h-3 mr-1" />
                               Continue Grading
-                            </button>
+                            </motion.button>
                           ) : review.status === "Completed" ? (
                             <div className="flex items-center space-x-2">
-                              <button
+                              <motion.button
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
                                 onClick={() =>
                                   handleOpenModal(
                                     review.reviewAssignmentId,
@@ -271,15 +375,20 @@ const StudentDashBoard = () => {
                               >
                                 <RefreshCw className="w-3 h-3 mr-1" />
                                 Regrade
-                              </button>
-                              <CheckCircle className="w-5 h-5 text-green-500" />
+                              </motion.button>
+                              <motion.div
+                                animate={{ scale: [1, 1.2, 1] }}
+                                transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
+                              >
+                                <CheckCircle className="w-5 h-5 text-green-500" />
+                              </motion.div>
                             </div>
                           ) : (
                             <AlertCircle className="w-5 h-5 text-yellow-500" />
                           )}
                         </div>
                       </div>
-                    </div>
+                    </motion.div>
                   ))
                 ) : (
                   <div className="text-center py-6 bg-gray-50 rounded-lg border border-dashed border-gray-200">
@@ -289,7 +398,7 @@ const StudentDashBoard = () => {
                   </div>
                 )}
               </div>
-            </div>
+            </motion.div>
           </div>
         </div>
 
@@ -303,7 +412,7 @@ const StudentDashBoard = () => {
           />
         )}
       </main>
-    </div>
+    </motion.div>
   );
 };
 
