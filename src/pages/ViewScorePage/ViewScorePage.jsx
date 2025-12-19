@@ -117,14 +117,21 @@ const ViewScorePage = () => {
         requestedByUserId: currentUser.userId,
       };
 
-      await reviewService.submitRegradeRequest(payload);
+      const response = await reviewService.submitRegradeRequest(payload);
 
-      toast.success("Your regrade request has been sent successfully!");
-      setIsModalOpen(false);
-      refetch();
+      // Use API response message if available
+      if (response.statusCode === 200 || response.statusCode === 201) {
+        toast.success(response.message || "Your regrade request has been sent successfully!");
+        setIsModalOpen(false);
+        refetch();
+      } else {
+        toast.error(response.message || "Failed to send request. Please try again.");
+      }
     } catch (error) {
       console.error("API call failed!", error);
-      toast.error("Failed to send request. Please try again.");
+      // Use error message from API if available
+      const errorMessage = error.response?.data?.message || error.message || "Failed to send request. Please try again.";
+      toast.error(errorMessage);
     } finally {
       setIsSubmitting(false);
     }
@@ -169,8 +176,7 @@ const ViewScorePage = () => {
     );
   }
 
-  const assignmentTitle =
-    navigate.state?.assignmentTitle || `Assignment #${assignmentId}`;
+  const assignmentTitle = scoreData?.assignmentTitle || `Assignment #${assignmentId}`;
 
   return (
     <div className="bg-gray-50 min-h-screen p-8">
@@ -250,7 +256,7 @@ const ViewScorePage = () => {
         </div>
         
         {/* Submission Details */}
-        {scoreData.fileUrl && (
+        {(scoreData.previewUrl || scoreData.fileUrl) && (
           <div className="mt-8">
             <h3 className="font-bold text-xl mb-4 text-gray-800 flex items-center">
               <FileText className="mr-2 text-gray-500" /> Submission Details
@@ -261,25 +267,47 @@ const ViewScorePage = () => {
                   {scoreData.fileName || "Submission File"}
                 </p>
                 <div className="ml-auto flex space-x-2 flex-shrink-0">
-                  <a
-                    href={scoreData.fileUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    title="Preview File"
-                    className="flex items-center px-3 py-1.5 border rounded-md font-semibold text-gray-700 hover:bg-gray-100 text-sm"
-                  >
-                    <Eye size={14} className="mr-1.5" />
-                    Preview
-                  </a>
-                  <a
-                    href={scoreData.fileUrl}
-                    download={scoreData.fileName}
-                    title="Download File"
-                    className="flex items-center px-3 py-1.5 border rounded-md font-semibold text-gray-700 hover:bg-gray-100 text-sm"
-                  >
-                    <Download size={14} className="mr-1.5" />
-                    Download
-                  </a>
+                  {scoreData.previewUrl ? (
+                    <a
+                      href={scoreData.previewUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      title="Preview File"
+                      className="flex items-center px-3 py-1.5 border rounded-md font-semibold text-gray-700 hover:bg-gray-100 text-sm"
+                    >
+                      <Eye size={14} className="mr-1.5" />
+                      Preview
+                    </a>
+                  ) : (
+                    <button
+                      disabled
+                      title="Preview not available"
+                      className="flex items-center px-3 py-1.5 border rounded-md font-semibold text-gray-400 bg-gray-100 cursor-not-allowed text-sm"
+                    >
+                      <Eye size={14} className="mr-1.5" />
+                      Preview
+                    </button>
+                  )}
+                  {scoreData.fileUrl ? (
+                    <a
+                      href={scoreData.fileUrl}
+                      download={scoreData.fileName}
+                      title="Download File"
+                      className="flex items-center px-3 py-1.5 border rounded-md font-semibold text-gray-700 hover:bg-gray-100 text-sm"
+                    >
+                      <Download size={14} className="mr-1.5" />
+                      Download
+                    </a>
+                  ) : (
+                    <button
+                      disabled
+                      title="Download not available"
+                      className="flex items-center px-3 py-1.5 border rounded-md font-semibold text-gray-400 bg-gray-100 cursor-not-allowed text-sm"
+                    >
+                      <Download size={14} className="mr-1.5" />
+                      Download
+                    </button>
+                  )}
                 </div>
               </div>
             </div>
@@ -292,35 +320,7 @@ const ViewScorePage = () => {
             Score details
           </h3>
           <div className="bg-white p-6 rounded-lg shadow-md border space-y-4">
-            <div className="flex items-center p-4 bg-indigo-50 rounded-lg">
-              <div className="p-3 bg-white rounded-full mr-4">
-                <UserCheck className="w-6 h-6 text-indigo-500" />
-              </div>
-              <div>
-                <p className="font-semibold text-indigo-800">
-                  Scores from the instructor
-                </p>
-                <p className="text-2xl font-bold text-indigo-600">
-                  {scoreData.instructorScore.toFixed(2)}
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-center p-4 bg-teal-50 rounded-lg">
-              <div className="p-3 bg-white rounded-full mr-4">
-                <Users className="w-6 h-6 text-teal-500" />
-              </div>
-              <div>
-                <p className="font-semibold text-teal-800">
-                  Average score from Peer Review
-                </p>
-                <p className="text-2xl font-bold text-teal-600">
-                  {scoreData.peerAverageScore.toFixed(2)}
-                </p>
-              </div>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="p-4 bg-gradient-to-br from-blue-100 to-purple-100 rounded-lg flex items-center transition-transform hover:scale-105">
                 <div className="p-3 bg-white/60 rounded-full mr-4 shadow-inner">
                   <TrendingUp className="w-6 h-6 text-purple-600" />
