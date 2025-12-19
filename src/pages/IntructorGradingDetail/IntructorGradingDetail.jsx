@@ -237,9 +237,12 @@ const InstructorGradingDetail = () => {
             toast.success(successMessage);
 
             setTimeout(() => {
+                // Get courseInstanceId from location state first, fallback to submissionDetails
+                const courseInstanceId = location.state?.returnState?.courseInstanceId || submissionDetails?.courseInstanceId;
+                
                 const returnPath = location.pathname.includes('publish')
-                    ? '/instructor/publish-mark'
-                    : '/instructor/manage-grading';
+                    ? `/instructor/publish-mark/${courseInstanceId}`
+                    : `/instructor/manage-grading/${courseInstanceId}`;
 
                 navigate(returnPath, {
                     state: location.state?.returnState ? { returnState: location.state.returnState } : undefined
@@ -260,9 +263,12 @@ const InstructorGradingDetail = () => {
     };
 
     const handleBackClick = () => {
+        // Get courseInstanceId from location state first, fallback to submissionDetails
+        const courseInstanceId = location.state?.returnState?.courseInstanceId || submissionDetails?.courseInstanceId;
+        
         const returnPath = location.pathname.includes('publish')
-            ? '/instructor/publish-mark'
-            : '/instructor/manage-grading';
+            ? `/instructor/publish-mark/${courseInstanceId}`
+            : `/instructor/manage-grading/${courseInstanceId}`;
 
         navigate(returnPath, {
             state: location.state?.returnState ? { returnState: location.state.returnState } : undefined

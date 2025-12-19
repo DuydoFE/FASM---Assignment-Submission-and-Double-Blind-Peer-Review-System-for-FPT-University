@@ -263,11 +263,11 @@ export const router = createBrowserRouter([
         element: <ProtectedRoute role={ROLE.INSTRUCTOR}><InstructorSubmissionDetail /></ProtectedRoute>,
       },
       {
-        path: "manage-grading",
+        path: "manage-grading/:courseInstanceId",
         element: <ProtectedRoute role={ROLE.INSTRUCTOR}><InstructorManageGrading /></ProtectedRoute>,
       },
       {
-        path: "publish-score",
+        path: "publish-score/:courseInstanceId",
         element: <ProtectedRoute role={ROLE.INSTRUCTOR}><InstructorPublishMark /></ProtectedRoute>,
       },
     ],

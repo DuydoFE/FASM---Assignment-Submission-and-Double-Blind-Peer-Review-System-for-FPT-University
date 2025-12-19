@@ -1,9 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
 
-import { getCoursesByUser } from '../../service/courseInstructorService';
-import { getClassesByUser } from '../../service/courseInstanceService';
 import { getAssignmentsByCourseInstanceId } from '../../service/assignmentService';
 import { getSubmissionSummary } from '../../service/instructorSubmission';
 import { getCurrentAccount } from '../../utils/accountUtils';
@@ -17,23 +15,18 @@ import PublishGradesModal from '../../component/InstructorPublish/PublishGradesM
 const InstructorPublishMark = () => {
   const currentUser = getCurrentAccount();
   const navigate = useNavigate();
+  const { courseInstanceId } = useParams();
 
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
   
-  const [courses, setCourses] = useState([]);
-  const [classes, setClasses] = useState([]);
   const [assignments, setAssignments] = useState([]);
   const [students, setStudents] = useState([]);
   const [assignmentInfo, setAssignmentInfo] = useState(null);
   
-  const [selectedCourseId, setSelectedCourseId] = useState('');
-  const [selectedClassId, setSelectedClassId] = useState('');
   const [selectedAssignmentId, setSelectedAssignmentId] = useState('');
   
   const [loading, setLoading] = useState({
-    courses: false,
-    classes: false,
     assignments: false,
     summary: false,
     publishing: false
@@ -43,55 +36,15 @@ const InstructorPublishMark = () => {
   const [showConfirmModal, setShowConfirmModal] = useState(false);
 
   useEffect(() => {
-    fetchCourses();
-  }, []);
-
-  useEffect(() => {
-    if (selectedCourseId) {
-      fetchClasses();
-    } else {
-      setClasses([]);
-      setSelectedClassId('');
-    }
-  }, [selectedCourseId]);
-
-  useEffect(() => {
-    if (selectedClassId) {
+    if (courseInstanceId) {
       fetchAssignments();
-    } else {
-      setAssignments([]);
-      setSelectedAssignmentId('');
     }
-  }, [selectedClassId]);
-
-  const fetchCourses = async () => {
-    setLoading(prev => ({ ...prev, courses: true }));
-    try {
-      const data = await getCoursesByUser(currentUser.id);
-      setCourses(data);
-    } catch (error) {
-      console.error('Error fetching courses:', error);
-    } finally {
-      setLoading(prev => ({ ...prev, courses: false }));
-    }
-  };
-
-  const fetchClasses = async () => {
-    setLoading(prev => ({ ...prev, classes: true }));
-    try {
-      const data = await getClassesByUser(currentUser.id, selectedCourseId);
-      setClasses(data);
-    } catch (error) {
-      console.error('Error fetching classes:', error);
-    } finally {
-      setLoading(prev => ({ ...prev, classes: false }));
-    }
-  };
+  }, [courseInstanceId]);
 
   const fetchAssignments = async () => {
     setLoading(prev => ({ ...prev, assignments: true }));
     try {
-      const data = await getAssignmentsByCourseInstanceId(selectedClassId);
+      const data = await getAssignmentsByCourseInstanceId(courseInstanceId);
       setAssignments(data);
     } catch (error) {
       console.error('Error fetching assignments:', error);
@@ -101,8 +54,8 @@ const InstructorPublishMark = () => {
   };
 
   const handleViewGrades = async () => {
-    if (!selectedCourseId || !selectedClassId || !selectedAssignmentId) {
-      toast.error('Please select Course, Class, and Assignment');
+    if (!selectedAssignmentId) {
+      toast.error('Please select an Assignment');
       return;
     }
 
@@ -111,8 +64,8 @@ const InstructorPublishMark = () => {
     
     try {
       const response = await getSubmissionSummary({
-        courseId: selectedCourseId,
-        classId: selectedClassId,
+        courseId: null,
+        classId: null,
         assignmentId: selectedAssignmentId
       });
       
@@ -214,14 +167,8 @@ const InstructorPublishMark = () => {
         <h1 className="text-2xl font-bold text-gray-800 mb-6">Assignment Scores Table</h1>
         
         <FilterSection
-          courses={courses}
-          classes={classes}
           assignments={assignments}
-          selectedCourseId={selectedCourseId}
-          selectedClassId={selectedClassId}
           selectedAssignmentId={selectedAssignmentId}
-          setSelectedCourseId={setSelectedCourseId}
-          setSelectedClassId={setSelectedClassId}
           setSelectedAssignmentId={setSelectedAssignmentId}
           loading={loading}
           onViewGrades={handleViewGrades}
@@ -229,8 +176,6 @@ const InstructorPublishMark = () => {
 
         {!showTable && (
           <EmptyState
-            selectedCourseId={selectedCourseId}
-            selectedClassId={selectedClassId}
             selectedAssignmentId={selectedAssignmentId}
           />
         )}

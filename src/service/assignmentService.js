@@ -1,5 +1,15 @@
 import api from "../config/axios";
 
+export const getAssignmentsByInstructor = async (instructorId) => {
+  try {
+    const response = await api.get(`/Assignment/instructor/${instructorId}`);
+    return response.data.data; // Trả về mảng assignments
+  } catch (error) {
+    console.error(`Lỗi khi lấy danh sách assignment cho instructor ID ${instructorId}:`, error);
+    throw error;
+  }
+};
+
 export const getAssignmentsByCourseInstanceId = async (courseInstanceId) => {
   try {
     const response = await api.get(`/Assignment/course-instance/${courseInstanceId}`);
@@ -188,6 +198,7 @@ const publishAssignment = async (assignmentId) => {
 
 
 export const assignmentService = {
+  getAssignmentsByInstructor,
   getAssignmentsByCourseInstanceId,
   getAssignmentDetailsById,
   getAssignmentRubric,

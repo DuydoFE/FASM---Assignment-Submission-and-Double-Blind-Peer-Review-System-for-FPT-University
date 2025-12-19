@@ -1,7 +1,7 @@
 import React from 'react';
-import { Eye, BookOpen, Users, FileText, ArrowRight, CheckCircle2, Search } from 'lucide-react';
+import { Eye, FileText, CheckCircle2, Search } from 'lucide-react';
 
-const GradingEmptyState = ({ selectedCourseId, selectedClassId, selectedAssignmentId }) => {
+const GradingEmptyState = ({ selectedAssignmentId }) => {
   return (
     <div className="mt-12 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-12 border border-blue-100">
       <div className="max-w-3xl mx-auto text-center">
@@ -13,30 +13,14 @@ const GradingEmptyState = ({ selectedCourseId, selectedClassId, selectedAssignme
           View Student Submissions
         </h2>
         <p className="text-gray-600 mb-8">
-          Select a course, class, and assignment above to view and grade student submissions
+          Select an assignment above to view and grade student submissions
         </p>
 
-        {/* Step indicators */}
+        {/* Step indicator */}
         <div className="flex items-center justify-center gap-4 mb-8">
-          <div className={`flex items-center gap-3 px-5 py-3 rounded-xl transition-all ${selectedCourseId ? 'bg-blue-500 text-white shadow-lg' : 'bg-white text-gray-400 border border-gray-200'}`}>
-            <BookOpen className="w-5 h-5" />
-            <span className="font-medium">1. Select Course</span>
-            {selectedCourseId && <CheckCircle2 className="w-5 h-5" />}
-          </div>
-
-          <ArrowRight className={`w-5 h-5 ${selectedCourseId ? 'text-blue-500' : 'text-gray-300'}`} />
-
-          <div className={`flex items-center gap-3 px-5 py-3 rounded-xl transition-all ${selectedClassId ? 'bg-purple-500 text-white shadow-lg' : 'bg-white text-gray-400 border border-gray-200'}`}>
-            <Users className="w-5 h-5" />
-            <span className="font-medium">2. Select Class</span>
-            {selectedClassId && <CheckCircle2 className="w-5 h-5" />}
-          </div>
-
-          <ArrowRight className={`w-5 h-5 ${selectedClassId ? 'text-purple-500' : 'text-gray-300'}`} />
-
           <div className={`flex items-center gap-3 px-5 py-3 rounded-xl transition-all ${selectedAssignmentId ? 'bg-green-500 text-white shadow-lg' : 'bg-white text-gray-400 border border-gray-200'}`}>
             <FileText className="w-5 h-5" />
-            <span className="font-medium">3. Select Assignment</span>
+            <span className="font-medium">Select Assignment</span>
             {selectedAssignmentId && <CheckCircle2 className="w-5 h-5" />}
           </div>
         </div>
