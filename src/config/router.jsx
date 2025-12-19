@@ -5,6 +5,7 @@ import MainLayout from "../layout/MainLayout";
 import HomePage from "../pages/HomePage/HomePage";
 import LoginPage from "../pages/Authenticate/LoginPage";
 import AccessDeniedPage from "../pages/AccessDenied/AccessDeniedPage";
+import NotFoundPage from "../pages/NotFound/NotFoundPage";
 
 import StudentDashBoard from "../pages/StudentDashBoard/StudentDashBoard";
 import StudentAssignmentPage from "../pages/StudentAssignmentPage/StudentAssignmentPage";
@@ -297,6 +298,10 @@ export const router = createBrowserRouter([
     { path: "settings", element: <AdminAccountSettings /> },
     { path: "systemSetting", element: <AdminSystemSetting /> },
   ],
+},
+{
+  path: "*",
+  element: <NotFoundPage />,
 }
 
 ]);
