@@ -296,6 +296,18 @@ const InstructorSubmissionDetail = () => {
               </div>
 
               <div className="flex items-center gap-2">
+                {(submissionData.previewUrl || submissionData.previewURL) && (
+                  <a
+                    href={submissionData.previewUrl || submissionData.previewURL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 px-4 py-2 text-sm bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+                    title="Preview file"
+                  >
+                    <Eye className="w-4 h-4" />
+                    Preview
+                  </a>
+                )}
                 <button
                   onClick={() => handleDownload(submissionData.fileUrl, submissionData.fileName || submissionData.originalFileName || 'submission-file')}
                   className="flex items-center gap-2 px-4 py-2 text-sm bg-blue-500 text-white rounded-lg hover:bg-blue-600"
@@ -321,18 +333,6 @@ const InstructorSubmissionDetail = () => {
               <p className="text-sm text-gray-500 mb-6">
                 {submissionData.originalFileName || 'Click download to view the file'}
               </p>
-
-              <div className="flex items-center justify-center gap-4">
-                <a
-                  href={submissionData.fileUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-2 px-4 py-2 text-sm bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
-                >
-                  <Download className="w-4 h-4" />
-                  Open File
-                </a>
-              </div>
             </div>
           </div>
         </div>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Eye, Loader2, MoreVertical, RefreshCw, CheckCircle } from 'lucide-react';
+import { Search, Eye, Loader2, MoreVertical, RefreshCw, CheckCircle, FileEdit } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { Dropdown, Input, Button, Pagination } from 'antd';
@@ -7,6 +7,7 @@ import { getRegradeRequestsForInstructor } from '../../service/regradeService';
 import { getCurrentAccount } from '../../utils/accountUtils';
 import SolveRegradeRequestModal from '../../component/RegradeRequest/SolveRegradeRequestModal';
 import CompleteRegradeRequestModal from '../../component/RegradeRequest/CompleteRegradeRequestModal';
+import OverrideFinalScoreModal from '../../component/RegradeRequest/OverrideFinalScoreModal';
 
 const InstructorRegradeRequest = () => {
     const navigate = useNavigate();
@@ -19,7 +20,9 @@ const InstructorRegradeRequest = () => {
     const [selectedRequest, setSelectedRequest] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isCompleteModalOpen, setIsCompleteModalOpen] = useState(false);
+    const [isOverrideModalOpen, setIsOverrideModalOpen] = useState(false);
     const [selectedRequestForComplete, setSelectedRequestForComplete] = useState(null);
+    const [selectedRequestForOverride, setSelectedRequestForOverride] = useState(null);
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 5;
 
@@ -45,6 +48,8 @@ const InstructorRegradeRequest = () => {
                 file: req.submission.fileName,
                 currentGrade: req.gradeInfo?.instructorScore || 'N/A',
                 instructorScore: req.gradeInfo?.instructorScore || 'N/A',
+                oldScore: req.submission?.oldScore,
+                finalScore: req.submission?.finalScore,
                 reason: req.reason,
                 requestTime: new Date(req.requestedAt).toLocaleString('vi-VN'),
                 status: req.status,
@@ -127,6 +132,11 @@ const InstructorRegradeRequest = () => {
         setIsCompleteModalOpen(true);
     };
 
+    const handleOverrideFinalScore = (request) => {
+        setSelectedRequestForOverride(request);
+        setIsOverrideModalOpen(true);
+    };
+
     const handleCompleteModalClose = () => {
         setIsCompleteModalOpen(false);
         setSelectedRequestForComplete(null);
@@ -144,15 +154,62 @@ const InstructorRegradeRequest = () => {
         handleCompleteModalClose();
     };
 
+    const handleOverrideModalClose = () => {
+        setIsOverrideModalOpen(false);
+        setSelectedRequestForOverride(null);
+    };
+
+    const handleOverrideModalSubmit = async (data) => {
+        try {
+            // TODO: Implement API call to override final score
+            console.log('Override data:', data);
+            
+            // Update local state temporarily
+            if (selectedRequestForOverride) {
+                setReviewRequests(prev => prev.map(req =>
+                    req.requestId === selectedRequestForOverride.requestId
+                        ? { ...req, finalScore: data.overrideScore, status: 'Completed' }
+                        : req
+                ));
+                
+                // Refetch data to get updated list
+                fetchRegradeRequests();
+            }
+            handleOverrideModalClose();
+        } catch (error) {
+            console.error('Error overriding score:', error);
+            toast.error('Failed to override score. Please try again.');
+        }
+    };
+
     const getDropdownItems = (request) => [
         {
             label: (
                 <div className="flex items-center gap-2 px-2 py-1">
                     <RefreshCw className="w-4 h-4 text-orange-500" />
-                    <span>Re-grade</span>
+                    <span>Re-Grade</span>
                 </div>
             ),
-            onClick: () => handleRegradeClick(request)
+            children: [
+                {
+                    label: (
+                        <div className="flex items-center gap-2 px-2 py-1">
+                            <RefreshCw className="w-4 h-4 text-blue-500" />
+                            <span>Re-Grade Instructor Score</span>
+                        </div>
+                    ),
+                    onClick: () => handleRegradeClick(request)
+                },
+                {
+                    label: (
+                        <div className="flex items-center gap-2 px-2 py-1">
+                            <FileEdit className="w-4 h-4 text-purple-500" />
+                            <span>Override Final Score</span>
+                        </div>
+                    ),
+                    onClick: () => handleOverrideFinalScore(request)
+                }
+            ]
         },
         {
             label: (
@@ -265,7 +322,8 @@ const InstructorRegradeRequest = () => {
                                     <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Course</th>
                                     <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Class</th>
                                     <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Assignment</th>
-                                    <th className="px-6 py-4 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">Current Score</th>
+                                    <th className="px-6 py-4 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">Old Score</th>
+                                    <th className="px-6 py-4 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">New Score</th>
                                     <th className="px-6 py-4 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">Request Time</th>
                                     <th className="px-6 py-4 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">Status</th>
                                     <th className="px-6 py-4 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">Actions</th>
@@ -302,8 +360,13 @@ const InstructorRegradeRequest = () => {
                                             </span>
                                         </td>
                                         <td className="px-6 py-4 text-center">
+                                            <span className="text-sm font-semibold text-gray-600">
+                                                {request.oldScore !== null && request.oldScore !== undefined ? `${request.oldScore}/10` : '--'}
+                                            </span>
+                                        </td>
+                                        <td className="px-6 py-4 text-center">
                                             <span className="text-sm font-semibold text-indigo-600">
-                                                {request.instructorScore !== 'N/A' ? `${request.instructorScore}/10` : 'N/A'}
+                                                {request.finalScore !== null && request.finalScore !== undefined ? `${request.finalScore}/10` : 'N/A'}
                                             </span>
                                         </td>
                                         <td className="px-6 py-4 text-center">
@@ -347,14 +410,15 @@ const InstructorRegradeRequest = () => {
 
                     {/* Pagination */}
                     {filteredRequests.length > itemsPerPage && (
-                        <div className="mt-6 flex justify-end px-6 pb-6">
+                        <div className="mt-6 flex items-center justify-center py-4">
                             <Pagination
                                 current={currentPage}
-                                pageSize={itemsPerPage}
                                 total={filteredRequests.length}
+                                pageSize={itemsPerPage}
                                 onChange={(page) => setCurrentPage(page)}
                                 showSizeChanger={false}
                                 showTotal={(total, range) => `${range[0]}-${range[1]} of ${total} requests`}
+                                className="ant-pagination"
                             />
                         </div>
                     )}
@@ -384,6 +448,16 @@ const InstructorRegradeRequest = () => {
                     request={selectedRequestForComplete}
                     onClose={handleCompleteModalClose}
                     onSubmit={handleCompleteModalSubmit}
+                />
+            )}
+
+            {/* Override Final Score Modal */}
+            {isOverrideModalOpen && selectedRequestForOverride && (
+                <OverrideFinalScoreModal
+                    isOpen={isOverrideModalOpen}
+                    onClose={handleOverrideModalClose}
+                    request={selectedRequestForOverride}
+                    onSubmit={handleOverrideModalSubmit}
                 />
             )}
         </div>
