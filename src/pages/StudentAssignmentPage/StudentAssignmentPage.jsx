@@ -229,10 +229,10 @@ const StudentAssignmentPage = () => {
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
-          className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 rounded-2xl shadow-2xl p-8 mb-8 text-white relative overflow-hidden"
+          className="bg-gradient-to-r from-blue-600 via-orange-500 to-green-600 rounded-2xl shadow-2xl p-8 mb-8 text-white relative overflow-hidden"
         >
           {/* Animated gradient overlay */}
-          <div className="absolute inset-0 bg-gradient-to-r from-blue-600/50 via-purple-600/50 to-pink-600/50 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+          <div className="absolute inset-0 bg-gradient-to-r from-blue-600/50 via-orange-500/50 to-green-600/50 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
           
           <div className="relative z-10">
             <motion.div
@@ -247,7 +247,7 @@ const StudentAssignmentPage = () => {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 0.6, delay: 0.3 }}
-              className="text-blue-100 text-lg"
+              className="text-white/90 text-lg"
             >
               Manage your enrolled courses and explore new learning opportunities
             </motion.p>
