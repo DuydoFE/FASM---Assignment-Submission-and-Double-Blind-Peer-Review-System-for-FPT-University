@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
-import { Card, Avatar, Spin, Alert, Descriptions, Typography, Tag } from "antd"; 
+import { Card, Avatar, Spin, Alert, Descriptions, Typography, Tag, message } from "antd";
 import { UserOutlined } from "@ant-design/icons";
-import { getUserById } from "../../service/userService";
+import { getUserById, updateUserAvatar } from "../../service/userService";
 import { selectUser } from "../../redux/features/userSlice";
+import AvatarUpload from "../../component/AvatarUpload";
 
 const { Title } = Typography;
 
@@ -65,6 +66,40 @@ const ProfilePage = () => {
  
   const fullName = `${userData.firstName} ${userData.lastName}`;
 
+  const handleAvatarChanged = async (newAvatarUrl) => {
+    try {
+      console.log('Uploading avatar for User ID:', currentUser.userId);
+      console.log('New Avatar URL:', newAvatarUrl);
+      
+      const response = await updateUserAvatar(currentUser.userId, newAvatarUrl);
+      
+      if (response.statusCode === 200 || response.data?.statusCode === 200) {
+        // Cập nhật state local để UI hiển thị ngay
+        setUserData(prev => ({
+          ...prev,
+          avatarUrl: newAvatarUrl
+        }));
+        
+        const successMessage = response.message || response.data?.message;
+        if (successMessage) {
+          message.success(successMessage);
+        }
+        console.log('Avatar update response:', response);
+      } else {
+        // Lấy error message từ backend
+        const errorMessage = response.message || response.data?.message;
+        throw new Error(errorMessage || 'Update failed');
+      }
+    } catch (error) {
+      // Hiển thị error message từ backend
+      const errorMsg = error.response?.data?.message || error.message;
+      if (errorMsg) {
+        message.error(errorMsg);
+      }
+      console.error('Avatar update error:', error);
+    }
+  };
+
   return (
     <div className="container mx-auto p-4 md:p-8">
       <Card
@@ -72,12 +107,13 @@ const ProfilePage = () => {
         className="shadow-lg"
       >
         <div className="flex flex-col items-center text-center">
-          <Avatar
-            size={128}
-            src={userData.avatarUrl || `https://ui-avatars.com/api/?name=${fullName.replace(' ', '+')}&background=random`}
-            icon={<UserOutlined />}
-            className="border-4 border-gray-100 shadow-md -mt-16"
-          />
+          <div className="-mt-16">
+            <AvatarUpload
+              currentAvatar={userData.avatarUrl}
+              onAvatarChanged={handleAvatarChanged}
+              size={128}
+            />
+          </div>
           <Title level={2} className="mt-4">{fullName}</Title>
           <div className="mt-2">
            
@@ -99,7 +135,6 @@ const ProfilePage = () => {
               {userData.isActive ? 'Active' : 'Inactive'}
             </Tag>
           </Descriptions.Item>
-          <Descriptions.Item label="User ID">{userData.id}</Descriptions.Item>
         </Descriptions>
       </Card>
     </div>

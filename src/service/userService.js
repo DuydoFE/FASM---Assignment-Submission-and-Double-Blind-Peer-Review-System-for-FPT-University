@@ -28,3 +28,18 @@ export const logout = async () => {
     throw error;
   }
 };
+
+export const updateUserAvatar = async (userId, avatarUrl) => {
+  try {
+
+    const response = await api.put(`/Users/${userId}/avatar`, avatarUrl, {
+      headers: {
+        'Content-Type': 'application/json-patch+json'
+      }
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Update avatar error:", error);
+    throw error;
+  }
+};
