@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Save, FileText, AlertCircle } from 'lucide-react';
+import { Save, FileText, AlertCircle, Upload, File, X } from 'lucide-react';
 import { getRubricTemplatesByUserId } from '../../service/rubricService';
 import { toast } from 'react-toastify';
 import { getCurrentAccount } from '../../utils/accountUtils';
@@ -35,19 +35,16 @@ const EditAssignmentModal = ({ isOpen, onClose, onSubmit, assignment }) => {
   const [errors, setErrors] = useState({});
   const [rubrics, setRubrics] = useState([]);
   const [loadingRubrics, setLoadingRubrics] = useState(false);
-  const [uploadedFile, setUploadedFile] = useState(null);
+  const [selectedFile, setSelectedFile] = useState(null);
   const [initialFormData, setInitialFormData] = useState(null);
   const currentUser = getCurrentAccount();
 
   const formatDateTimeLocal = (dateString) => {
     if (!dateString) return '';
-    const date = new Date(dateString);
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    const hours = String(date.getHours()).padStart(2, '0');
-    const minutes = String(date.getMinutes()).padStart(2, '0');
-    return `${year}-${month}-${day}T${hours}:${minutes}`;
+    // Parse the datetime string directly without timezone conversion
+    // Expected format: "2025-12-25T00:00:00" or "2025-12-25T00:00:00.000Z"
+    const cleanedString = dateString.replace('Z', '').split('.')[0];
+    return cleanedString;
   };
 
   const fetchRubrics = async () => {
@@ -107,12 +104,11 @@ const EditAssignmentModal = ({ isOpen, onClose, onSubmit, assignment }) => {
       };
       setFormData(initialData);
       setInitialFormData(initialData);
-      setUploadedFile(null);
+      setSelectedFile(null);
       fetchRubrics();
     }
   }, [isOpen, assignment]);
 
-  // REPLACED handleChange – same behavior as Create version:
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
 
@@ -129,14 +125,10 @@ const EditAssignmentModal = ({ isOpen, onClose, onSubmit, assignment }) => {
           newValue = "";
         } else {
           let num = Number(value);
-          if (isNaN(num)) {
-            newValue = "";
-          } else {
-            if (num < 1) num = 1;
-            if (num > 10) num = 10;
-            num = Math.floor(num);
-            newValue = String(num);
-          }
+          if (num < 1) num = 1;
+          if (num > 10) num = 10;
+          num = Math.floor(num);
+          newValue = num;
         }
       }
 
@@ -145,26 +137,87 @@ const EditAssignmentModal = ({ isOpen, onClose, onSubmit, assignment }) => {
           newValue = "";
         } else {
           let num = Number(value);
-          if (isNaN(num)) {
-            newValue = "";
-          } else {
-            if (num < 1) num = 1;
-            if (num > 10) num = 10;
-            num = Math.floor(num);
-            newValue = String(num);
-          }
+          if (num < 1) num = 1;
+          if (num > 10) num = 10;
+          num = Math.floor(num);
+          newValue = num;
         }
       }
 
+      // Handle instructor weight and auto-calculate peer weight
+      else if (name === "instructorWeight") {
+        if (value === "") {
+          newValue = "";
+          setFormData(prev => ({
+            ...prev,
+            instructorWeight: "",
+            peerWeight: ""
+          }));
+          if (errors.instructorWeight || errors.peerWeight) {
+            setErrors(prev => ({ ...prev, instructorWeight: '', peerWeight: '' }));
+          }
+          return;
+        } else {
+          let num = Number(value);
+          if (num < 0) num = 0;
+          if (num > 100) num = 100;
+          newValue = num;
+          const peerWeightValue = 100 - num;
+          
+          setFormData(prev => ({
+            ...prev,
+            instructorWeight: num,
+            peerWeight: peerWeightValue
+          }));
+          if (errors.instructorWeight || errors.peerWeight) {
+            setErrors(prev => ({ ...prev, instructorWeight: '', peerWeight: '' }));
+          }
+          return;
+        }
+      }
+
+      // Handle peer weight and auto-calculate instructor weight
+      else if (name === "peerWeight") {
+        if (value === "") {
+          newValue = "";
+          setFormData(prev => ({
+            ...prev,
+            instructorWeight: "",
+            peerWeight: ""
+          }));
+          if (errors.instructorWeight || errors.peerWeight) {
+            setErrors(prev => ({ ...prev, instructorWeight: '', peerWeight: '' }));
+          }
+          return;
+        } else {
+          let num = Number(value);
+          if (num < 0) num = 0;
+          if (num > 100) num = 100;
+          newValue = num;
+          const instructorWeightValue = 100 - num;
+          
+          setFormData(prev => ({
+            ...prev,
+            instructorWeight: instructorWeightValue,
+            peerWeight: num
+          }));
+          if (errors.instructorWeight || errors.peerWeight) {
+            setErrors(prev => ({ ...prev, instructorWeight: '', peerWeight: '' }));
+          }
+          return;
+        }
+      }
+
+      // Other numeric inputs
       else {
-        newValue = value === "" ? "" : String(Number(value));
+        newValue = value === "" ? "" : Number(value);
       }
     }
 
     else if (name === 'rubricTemplateId') {
       newValue = value;
-    } 
-    
+    }
+
     else if (name === 'passThreshold') {
       newValue = value;
     }
@@ -194,8 +247,12 @@ const EditAssignmentModal = ({ isOpen, onClose, onSubmit, assignment }) => {
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      setUploadedFile(file);
+      setSelectedFile(file);
     }
+  };
+
+  const removeFile = () => {
+    setSelectedFile(null);
   };
 
   // Get current time to prevent past dates/times
@@ -231,7 +288,7 @@ const EditAssignmentModal = ({ isOpen, onClose, onSubmit, assignment }) => {
   // Check if form data has changed
   const hasFormChanged = () => {
     if (!initialFormData) return false;
-    if (uploadedFile) return true; // If file is uploaded, consider as changed
+    if (selectedFile) return true; // If file is uploaded, consider as changed
     
     // Compare all form fields
     return JSON.stringify(formData) !== JSON.stringify(initialFormData);
@@ -334,7 +391,7 @@ const EditAssignmentModal = ({ isOpen, onClose, onSubmit, assignment }) => {
       console.log('Updating assignment:', submitData);
 
       // Call onSubmit and wait for result
-      const result = await onSubmit(submitData, uploadedFile);
+      const result = await onSubmit(submitData, selectedFile);
       
       // Only close modal if the edit was successful
       // The backend notification (success/error) is handled by the parent component
@@ -455,33 +512,42 @@ const EditAssignmentModal = ({ isOpen, onClose, onSubmit, assignment }) => {
                 <p className="text-xs text-gray-500 mt-1">The rubric cannot be changed after assignment creation</p>
               </div>
 
+              {/* FILE UPLOAD */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Upload File <span className="text-gray-400">(Optional)</span>
+                  Document <span className="text-gray-400">(Optional)</span>
                 </label>
-                <div className="flex items-center justify-center w-full">
-                  <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100">
-                    <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                      <svg className="w-8 h-8 mb-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                      </svg>
-                      <p className="text-sm text-gray-500">
-                        {uploadedFile ? (
-                          <span className="font-medium text-blue-600">{uploadedFile.name}</span>
-                        ) : (
-                          <>
-                            <span className="font-medium">Click to upload</span> or drag and drop
-                          </>
-                        )}
-                      </p>
+                {!selectedFile ? (
+                  <label className="flex items-center justify-center w-full px-4 py-6 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition-colors">
+                    <div className="flex flex-col items-center gap-2">
+                      <Upload className="w-8 h-8 text-gray-400" />
+                      <span className="text-sm text-gray-600">Click to upload file</span>
                     </div>
-                    <input
+                    <Input
                       type="file"
                       onChange={handleFileChange}
                       className="hidden"
+                      accept="all"
                     />
                   </label>
-                </div>
+                ) : (
+                  <div className="flex items-center justify-between p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                    <div className="flex items-center gap-3">
+                      <File className="w-5 h-5 text-blue-600" />
+                      <div>
+                        <p className="text-sm font-medium text-gray-900">{selectedFile.name}</p>
+                        <p className="text-xs text-gray-500">{(selectedFile.size / 1024).toFixed(2)} KB</p>
+                      </div>
+                    </div>
+                    <Button
+                      type="button"
+                      onClick={removeFile}
+                      className="text-gray-500 hover:text-gray-700 transition-colors"
+                    >
+                      <X className="w-5 h-5" />
+                    </Button>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -589,89 +655,97 @@ const EditAssignmentModal = ({ isOpen, onClose, onSubmit, assignment }) => {
               </h3>
 
               <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Grading Scale <span className="text-red-500">*</span>
-                  </label>
-                  <Select
-                    value={formData.gradingScale}
-                    onChange={(value) => handleChange({ target: { name: 'gradingScale', value } })}
-                    className="w-full"
-                    size="large"
-                    options={[
-                      { label: 'Scale 10', value: 'Scale10' },
-                      { label: 'Pass/Fail', value: 'PassFail' }
-                    ]}
-                  />
-                </div>
-
-                {formData.gradingScale === 'PassFail' && (
+                {/* Left Column - Grading Scale and Pass Threshold */}
+                <div className="space-y-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Pass Threshold <span className="text-red-500">*</span>
+                      Grading Scale <span className="text-red-500">*</span>
                     </label>
                     <Select
-                      placeholder="Select pass threshold"
-                      value={formData.passThreshold || undefined}
-                      onChange={(value) => handleChange({ target: { name: 'passThreshold', value } })}
-                      status={errors.passThreshold ? 'error' : ''}
+                      value={formData.gradingScale}
+                      onChange={(value) => handleChange({ target: { name: 'gradingScale', value } })}
                       className="w-full"
                       size="large"
                       options={[
-                        { label: '≥ 0.0', value: '0' },
-                        { label: '≥ 4.0', value: '40' },
-                        { label: '≥ 5.0', value: '50' }
+                        { label: 'Scale 10', value: 'Scale10' },
+                        { label: 'Pass/Fail', value: 'PassFail' }
                       ]}
                     />
-                    {errors.passThreshold && (
-                      <div className="flex items-center gap-1 mt-1 text-red-500 text-sm">
-                        <AlertCircle className="w-4 h-4" />
-                        <span>{errors.passThreshold}</span>
-                      </div>
-                    )}
                   </div>
-                )}
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Instructor Weight (%) <span className="text-red-500">*</span>
-                  </label>
-                  <Input
-                    type="number"
-                    name="instructorWeight"
-                    value={formData.instructorWeight}
-                    onChange={handleChange}
-                    min="0"
-                    max="100"
-                    status={errors.instructorWeight ? 'error' : ''}
-                  />
-                  {errors.instructorWeight && (
-                    <div className="flex items-center gap-1 mt-1 text-red-500 text-sm">
-                      <AlertCircle className="w-4 h-4" />
-                      <span>{errors.instructorWeight}</span>
+                  {formData.gradingScale === 'PassFail' && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Pass Threshold <span className="text-red-500">*</span>
+                      </label>
+                      <Select
+                        placeholder="Select pass threshold"
+                        value={formData.passThreshold || undefined}
+                        onChange={(value) => handleChange({ target: { name: 'passThreshold', value } })}
+                        status={errors.passThreshold ? 'error' : ''}
+                        className="w-full"
+                        size="large"
+                        options={[
+                          { label: '≥ 0.0', value: '0' },
+                          { label: '≥ 4.0', value: '4' },
+                          { label: '≥ 5.0', value: '5' }
+                        ]}
+                      />
+                      {errors.passThreshold && (
+                        <div className="flex items-center gap-1 mt-1 text-red-500 text-sm">
+                          <AlertCircle className="w-4 h-4" />
+                          <span>{errors.passThreshold}</span>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Peer Weight (%) <span className="text-red-500">*</span>
-                  </label>
-                  <Input
-                    type="number"
-                    name="peerWeight"
-                    value={formData.peerWeight}
-                    onChange={handleChange}
-                    min="0"
-                    max="100"
-                    status={errors.peerWeight ? 'error' : ''}
-                  />
-                  {errors.peerWeight && (
-                    <div className="flex items-center gap-1 mt-1 text-red-500 text-sm">
-                      <AlertCircle className="w-4 h-4" />
-                      <span>{errors.peerWeight}</span>
-                    </div>
-                  )}
+                {/* Right Column - Instructor Weight and Peer Weight */}
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Instructor Weight (%) <span className="text-red-500">*</span>
+                    </label>
+                    <Input
+                      type="number"
+                      name="instructorWeight"
+                      value={formData.instructorWeight}
+                      onChange={handleChange}
+                      min="0"
+                      max="100"
+                      className={`w-full px-4 py-2 ${errors.instructorWeight ? 'border-red-500' : 'border-gray-300'
+                        }`}
+                    />
+                    {errors.instructorWeight && (
+                      <div className="flex items-center gap-1 mt-1 text-red-500 text-sm">
+                        <AlertCircle className="w-4 h-4" />
+                        <span>{errors.instructorWeight}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Peer Weight (%) <span className="text-red-500">*</span>
+                    </label>
+                    <Input
+                      type="number"
+                      name="peerWeight"
+                      value={formData.peerWeight}
+                      onChange={handleChange}
+                      min="0"
+                      max="100"
+                      className={`w-full px-4 py-2 ${errors.peerWeight ? 'border-red-500' : 'border-gray-300'
+                        }`}
+                    />
+                    {errors.peerWeight && (
+                      <div className="flex items-center gap-1 mt-1 text-red-500 text-sm">
+                        <AlertCircle className="w-4 h-4" />
+                        <span>{errors.peerWeight}</span>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>

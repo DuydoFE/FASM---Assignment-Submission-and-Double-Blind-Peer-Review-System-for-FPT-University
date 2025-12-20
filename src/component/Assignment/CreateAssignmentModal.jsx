@@ -541,7 +541,7 @@ const CreateAssignmentModal = ({ isOpen, onClose, onSubmit, courseInstanceId }) 
                       <Upload className="w-8 h-8 text-gray-400" />
                       <span className="text-sm text-gray-600">Click to upload file</span>
                     </div>
-                    <input
+                    <Input
                       type="file"
                       onChange={handleFileChange}
                       className="hidden"
@@ -549,21 +549,21 @@ const CreateAssignmentModal = ({ isOpen, onClose, onSubmit, courseInstanceId }) 
                     />
                   </label>
                 ) : (
-                  <div className="flex items-center justify-between p-4 bg-orange-50 border border-orange-200 rounded-lg">
+                  <div className="flex items-center justify-between p-4 bg-blue-50 border border-blue-200 rounded-lg">
                     <div className="flex items-center gap-3">
-                      <File className="w-5 h-5 text-orange-600" />
+                      <File className="w-5 h-5 text-blue-600" />
                       <div>
                         <p className="text-sm font-medium text-gray-900">{selectedFile.name}</p>
                         <p className="text-xs text-gray-500">{(selectedFile.size / 1024).toFixed(2)} KB</p>
                       </div>
                     </div>
-                    <button
+                    <Button
                       type="button"
                       onClick={removeFile}
-                      className="text-red-500 hover:text-red-700 transition-colors"
+                      className="text-gray-500 hover:text-gray-700 transition-colors"
                     >
                       <X className="w-5 h-5" />
-                    </button>
+                    </Button>
                   </div>
                 )}
               </div>

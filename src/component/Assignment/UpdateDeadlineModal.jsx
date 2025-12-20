@@ -9,20 +9,24 @@ const UpdateDeadlineModal = ({ isOpen, onClose, onSave, assignment }) => {
 
   useEffect(() => {
     if (assignment && isOpen) {
-      // Parse the assignment deadline and time to create a Date object
-      if (assignment.deadline && assignment.time) {
-        const [day, month, year] = assignment.deadline.split('/');
-        const [hours, minutes] = assignment.time.split(':');
-        const parsedDate = new Date(year, month - 1, day, hours, minutes); // month is 0-indexed
-        setNewDeadline(parsedDate);
-      } else if (assignment.deadline) {
-        // If there's no time component, just parse the date
-        const [day, month, year] = assignment.deadline.split('/');
-        const parsedDate = new Date(year, month - 1, day);
+      // Parse the assignment deadline (now it's a datetime string like "2025-12-25T00:00:00")
+      if (assignment.deadline) {
+        // Remove 'Z' and milliseconds if present
+        const cleanStr = assignment.deadline.replace('Z', '').split('.')[0];
+        const parsedDate = new Date(cleanStr);
         setNewDeadline(parsedDate);
       }
     }
   }, [assignment, isOpen]);
+
+  const formatCurrentDeadline = (dateTimeStr) => {
+    if (!dateTimeStr) return 'N/A';
+    const cleanStr = dateTimeStr.replace('Z', '').split('.')[0];
+    const [datePart, timePart] = cleanStr.split('T');
+    const [year, month, day] = datePart.split('-');
+    const [hours, minutes] = timePart.split(':');
+    return `${day}/${month}/${year} at ${hours}:${minutes}`;
+  };
 
   if (!assignment) return null;
 
@@ -107,7 +111,7 @@ const UpdateDeadlineModal = ({ isOpen, onClose, onSave, assignment }) => {
 
           <div className="bg-gray-50 p-3 rounded-lg">
             <p className="text-sm text-gray-600">
-              <span className="font-medium">Current deadline:</span> {assignment.deadline} at {assignment.time || 'N/A'}
+              <span className="font-medium">Current deadline:</span> {formatCurrentDeadline(assignment.deadline)}
             </p>
         </div>
       </div>

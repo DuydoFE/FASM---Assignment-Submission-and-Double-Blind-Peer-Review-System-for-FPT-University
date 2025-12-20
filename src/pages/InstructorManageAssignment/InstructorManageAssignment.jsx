@@ -79,12 +79,10 @@ const InstructorManageAssignment = () => {
         title: assignment.title,
         description: assignment.description,
         guidelines: assignment.guidelines,
-        deadline: new Date(assignment.deadline).toLocaleDateString(),
-        reviewDeadline: new Date(
-          assignment.reviewDeadline
-        ).toLocaleDateString(),
-        finalDeadline: new Date(assignment.finalDeadline).toLocaleDateString(),
-        time: new Date(assignment.deadline).toLocaleTimeString(),
+        deadline: assignment.deadline,
+        reviewDeadline: assignment.reviewDeadline,
+        finalDeadline: assignment.finalDeadline,
+        time: assignment.deadline,
         submitted: assignment.reviewCount,
         total: assignment.submissionCount,
         courseCode: assignment.courseCode,
@@ -140,16 +138,14 @@ const InstructorManageAssignment = () => {
         localDateTimeString
       );
 
-      // Create Date object for display purposes only
-      const deadlineDate = new Date(year, month - 1, day, hours, minutes);
-      
+      // Update assignment with the new datetime string (same format as API)
       setAssignments((prev) =>
         prev.map((a) =>
           a.id === selectedAssignment.id
             ? {
                 ...a,
-                deadline: deadlineDate.toLocaleDateString(),
-                time: deadlineDate.toLocaleTimeString(),
+                deadline: localDateTimeString,
+                time: localDateTimeString,
               }
             : a
         )
@@ -356,14 +352,36 @@ const InstructorManageAssignment = () => {
   }
 
   const getDeadlineColor = (deadline) => {
+    if (!deadline) return "text-gray-900";
     const today = new Date();
-    const deadlineDate = new Date(deadline.split("/").reverse().join("-"));
+    const deadlineDate = new Date(deadline);
     const diffTime = deadlineDate - today;
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
     if (diffDays < 0) return "text-red-500";
     if (diffDays <= 3) return "text-orange-500";
     return "text-gray-900";
+  };
+
+  const formatDisplayDateTime = (dateTimeStr) => {
+    if (!dateTimeStr) return { date: '', time: '' };
+    try {
+      // Display raw datetime from API: "2025-12-25T00:00:00"
+      // Format: DD/MM/YYYY HH:mm
+      const cleanStr = dateTimeStr.replace('Z', '').split('.')[0];
+      const [datePart, timePart] = cleanStr.split('T');
+      if (!datePart || !timePart) return { date: '', time: '' };
+      
+      const [year, month, day] = datePart.split('-');
+      const [hours, minutes] = timePart.split(':');
+      return {
+        date: `${day}/${month}/${year}`,
+        time: `${hours}:${minutes}`
+      };
+    } catch (error) {
+      console.error('Error formatting datetime:', error, dateTimeStr);
+      return { date: '', time: '' };
+    }
   };
 
   const courseInfo = courseInstanceData
@@ -467,9 +485,9 @@ const InstructorManageAssignment = () => {
                   assignment.deadline
                 )}`}
               >
-                {assignment.deadline}
+                {formatDisplayDateTime(assignment.deadline).date}
               </div>
-              <div className="text-sm text-gray-500">{assignment.time}</div>
+              <div className="text-sm text-gray-500">{formatDisplayDateTime(assignment.deadline).time}</div>
             </div>
             <div className="col-span-2 text-center space-y-1">
               <div
@@ -477,9 +495,9 @@ const InstructorManageAssignment = () => {
                   assignment.reviewDeadline
                 )}`}
               >
-                {assignment.reviewDeadline}
+                {formatDisplayDateTime(assignment.reviewDeadline).date}
               </div>
-              <div className="text-sm text-gray-500">{assignment.time}</div>
+              <div className="text-sm text-gray-500">{formatDisplayDateTime(assignment.reviewDeadline).time}</div>
             </div>
             <div className="col-span-2 flex justify-center">
               <span
