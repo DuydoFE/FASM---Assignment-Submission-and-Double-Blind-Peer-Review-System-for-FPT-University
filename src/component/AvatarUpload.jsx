@@ -3,14 +3,6 @@ import { Avatar, Button, message, Spin, Upload } from 'antd';
 import { UserOutlined, CameraOutlined } from '@ant-design/icons';
 import useCloudinaryUpload from '../assets/hook/useCloudinaryUpload';
 
-/**
- * Component upload avatar với preview
- * @param {Object} props
- * @param {string} props.currentAvatar - URL avatar hiện tại
- * @param {Function} props.onAvatarChanged - Callback khi upload xong, nhận URL mới
- * @param {number} props.size - Kích thước avatar (default: 120)
- * @returns {JSX.Element}
- */
 const AvatarUpload = ({ 
   currentAvatar, 
   onAvatarChanged,
@@ -90,7 +82,7 @@ const AvatarUpload = ({
       </div>
       
       <div style={{ marginTop: 10, color: '#999', fontSize: 12 }}>
-        {uploading ? 'Đang upload...' : 'Click biểu tượng camera để thay đổi'}
+        {uploading ? 'Uploading...' : 'Click camera icon to change'}
       </div>
     </div>
   );
