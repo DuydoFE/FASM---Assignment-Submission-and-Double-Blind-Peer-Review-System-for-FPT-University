@@ -5,14 +5,6 @@ import useCloudinaryUpload from '../assets/hook/useCloudinaryUpload';
 
 const { Dragger } = Upload;
 
-/**
- * Component upload hình ảnh lên Cloudinary
- * @param {Object} props
- * @param {Function} props.onUploadSuccess - Callback khi upload thành công, nhận vào URL
- * @param {string} props.folder - Thư mục trên Cloudinary để lưu ảnh
- * @param {boolean} props.multiple - Cho phép upload nhiều ảnh
- * @returns {JSX.Element}
- */
 const CloudinaryImageUpload = ({ 
   onUploadSuccess, 
   folder = 'uploads',
