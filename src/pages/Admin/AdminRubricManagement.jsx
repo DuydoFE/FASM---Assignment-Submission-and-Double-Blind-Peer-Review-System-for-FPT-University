@@ -109,8 +109,7 @@ export default function AdminRubricManagement() {
     return res?.message || defaultMsg;
   };
 
-  const handleCreateRubric = async (e) => {
-    e.preventDefault();
+  const handleCreateRubric = async (values) => {
     if (!newRubric.title.trim()) {
       toast.error("Please enter a title.");
       return;
@@ -131,7 +130,7 @@ export default function AdminRubricManagement() {
       if (res?.statusCode === 200 || res?.statusCode === 201) {
         toast.success(getApiMessage(res, "Rubric created successfully!"));
         setShowCreateModal(false);
-        setNewRubric({ title: "", majorId: 0, isPublic: true });
+        setNewRubric({ title: "", majorId: 0, courseId: 0, isPublic: true });
         await loadRubrics();
       } else {
         toast.error(getApiMessage(res, "Failed to create rubric."));
@@ -142,8 +141,7 @@ export default function AdminRubricManagement() {
     }
   };
 
-  const handleUpdateRubric = async (e) => {
-    e.preventDefault();
+  const handleUpdateRubric = async (values) => {
     if (!newRubric.title.trim()) {
       toast.error("Please enter a title.");
       return;
