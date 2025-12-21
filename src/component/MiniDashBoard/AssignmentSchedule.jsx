@@ -28,7 +28,6 @@ const AssignmentSchedule = ({ studentId }) => {
       if (selectedAcademicYear) {
         try {
           const response = await getSemestersByAcademicYear(selectedAcademicYear);
-          // Response structure: { data: [...], message: "...", statusCode: 200 }
           setSemestersForYear(response.data || []);
         } catch (error) {
           console.error("Error fetching semesters:", error);
@@ -155,10 +154,9 @@ const AssignmentSchedule = ({ studentId }) => {
     const days = [];
     const totalCells = 42; // 6 rows × 7 days
 
-    // Add empty cells for days before the first day of the month
     for (let i = 0; i < firstDayOfMonth; i++) {
       days.push(
-        <div key={`empty-${i}`} className="h-20 bg-gray-50 border border-gray-100"></div>
+        <div key={`empty-${i}`} className="h-24 bg-gray-50 border border-gray-100"></div>
       );
     }
 
@@ -172,39 +170,53 @@ const AssignmentSchedule = ({ studentId }) => {
         currentYear === currentDate.getFullYear();
 
       days.push(
-        <div
+        <motion.div
           key={day}
-          className={`h-20 border border-gray-200 p-1 overflow-hidden ${
-            isToday ? "bg-orange-50 border-orange-300" : "bg-white hover:bg-gray-50"
+          whileHover={{
+            scale: 1.2,
+            zIndex: 50,
+            transition: { duration: 0.2 }
+          }}
+          className={`h-24 border border-gray-200 p-1.5 overflow-visible relative cursor-pointer shadow-sm hover:shadow-xl ${
+            isToday ? "bg-orange-50 border-orange-300" : "bg-white"
           }`}
         >
           <div className={`text-xs font-semibold mb-1 ${isToday ? "text-orange-600" : "text-gray-700"}`}>
             {day}
           </div>
-          <div className="space-y-0.5">
-            {dayAssignments.slice(0, 2).map((assignment) => {
+          <div className="space-y-1">
+            {dayAssignments.map((assignment, index) => {
               const isInReview = assignment.status === "InReview";
-              const bgColor = isInReview ? "bg-purple-100" : "bg-blue-100";
-              const textColor = isInReview ? "text-purple-700" : "text-blue-700";
+              const statusBgColor = isInReview ? "bg-yellow-400" : "bg-green-500";
+              const statusTextColor = isInReview ? "text-yellow-900" : "text-white";
               
               return (
                 <div
                   key={assignment.assignmentId}
-                  className={`text-[10px] ${bgColor} ${textColor} px-1 py-0.5 rounded`}
-                  title={`${assignment.title} - ${assignment.status}`}
+                  className={`relative text-[10px] bg-white border border-gray-200 p-1.5 rounded shadow-sm ${
+                    index >= 2 ? "hidden group-hover:block" : ""
+                  }`}
+                  title={`${assignment.title} - ${assignment.sectionCode} - ${assignment.status}`}
                 >
-                  <div className="font-semibold truncate">{assignment.title}</div>
-                  <div className="text-[9px] opacity-75">{assignment.status}</div>
+                  {/* Status badge in corner */}
+                  <div className={`absolute top-0 right-0 ${statusBgColor} ${statusTextColor} text-[8px] px-1.5 py-0.5 rounded-bl rounded-tr font-semibold shadow-sm`}>
+                    {assignment.status}
+                  </div>
+                  
+                  <div className="pr-14">
+                    <div className="font-semibold text-gray-800 line-clamp-2">{assignment.title}</div>
+                    <div className="text-[9px] text-gray-600 mt-0.5">{assignment.sectionCode}</div>
+                  </div>
                 </div>
               );
             })}
             {dayAssignments.length > 2 && (
-              <div className="text-[9px] text-gray-500 pl-1">
+              <div className="text-[9px] text-blue-600 font-medium pl-1 group-hover:hidden">
                 +{dayAssignments.length - 2} more
               </div>
             )}
           </div>
-        </div>
+        </motion.div>
       );
     }
 
@@ -212,7 +224,7 @@ const AssignmentSchedule = ({ studentId }) => {
     const remainingCells = totalCells - days.length;
     for (let i = 0; i < remainingCells; i++) {
       days.push(
-        <div key={`empty-end-${i}`} className="h-20 bg-gray-50 border border-gray-100"></div>
+        <div key={`empty-end-${i}`} className="h-24 bg-gray-50 border border-gray-100"></div>
       );
     }
 
@@ -343,7 +355,7 @@ const AssignmentSchedule = ({ studentId }) => {
                     <div className="text-gray-500">Loading assignments...</div>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-7 gap-1">{renderCalendarDays()}</div>
+                  <div className="grid grid-cols-7 gap-1 group">{renderCalendarDays()}</div>
                 )}
               </div>
 
@@ -354,11 +366,11 @@ const AssignmentSchedule = ({ studentId }) => {
                   <span className="text-gray-600">Today</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 bg-blue-100 rounded"></div>
+                  <div className="w-4 h-4 bg-green-500 rounded"></div>
                   <span className="text-gray-600">Active (Deadline)</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 bg-purple-100 rounded"></div>
+                  <div className="w-4 h-4 bg-yellow-400 rounded"></div>
                   <span className="text-gray-600">InReview (Review Deadline)</span>
                 </div>
               </div>
