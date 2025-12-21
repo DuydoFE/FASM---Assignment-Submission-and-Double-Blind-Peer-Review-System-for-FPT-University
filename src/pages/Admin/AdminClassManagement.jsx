@@ -1,23 +1,25 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { 
-  Table, 
-  Input, 
-  Select, 
-  Button, 
-  Tag, 
-  Space, 
-  Card, 
-  Modal, 
+import {
+  Table,
+  Input,
+  Select,
+  Button,
+  Tag,
+  Space,
+  Card,
+  Modal,
   Form,
   message,
-  ConfigProvider 
+  ConfigProvider,
+  Upload
 } from "antd";
 import {
   EyeOutlined,
   SearchOutlined,
   PlusOutlined,
-  EditOutlined
+  EditOutlined,
+  UploadOutlined
 } from "@ant-design/icons";
 
 import {
@@ -27,6 +29,7 @@ import {
   getAllSemesters,
   createCourseInstance,
   updateCourseInstance,
+  importCourseInstances,
 } from "../../service/adminService";
 
 const { Option } = Select;
@@ -61,6 +64,9 @@ export default function AdminClassManagement() {
   const [showAddForm, setShowAddForm] = useState(false);
   const [showUpdateForm, setShowUpdateForm] = useState(false);
   const [updateClass, setUpdateClass] = useState(null);
+  const [showImportModal, setShowImportModal] = useState(false);
+  const [importFileList, setImportFileList] = useState([]);
+  const [importLoading, setImportLoading] = useState(false);
 
   useEffect(() => {
     const fetchFiltersData = async () => {
@@ -204,6 +210,93 @@ export default function AdminClassManagement() {
     setShowUpdateForm(true);
   };
 
+  const handleImportClass = async () => {
+    if (importFileList.length === 0) {
+      message.error("Please select an Excel file to import!");
+      return;
+    }
+
+    setImportLoading(true);
+    try {
+      const file = importFileList[0].originFileObj;
+      const res = await importCourseInstances(file);
+      
+      // Display all messages from the API response
+      if (res.data && Array.isArray(res.data)) {
+        res.data.forEach(msg => {
+          if (msg.includes("successfully") || msg.includes("imported")) {
+            message.success(msg);
+          } else if (msg.includes("error") || msg.includes("failed") || msg.includes("Error")) {
+            message.error(msg);
+          } else if (msg.includes("warning") || msg.includes("skipped")) {
+            message.warning(msg);
+          } else {
+            message.info(msg);
+          }
+        });
+      } else if (res.message) {
+        message.success(res.message);
+      } else {
+        message.success("Classes imported successfully!");
+      }
+
+      setShowImportModal(false);
+      setImportFileList([]);
+
+      // Refresh the class list if a campus is selected
+      if (filters.campus) {
+        const classRes = await getCourseInstancesByCampusId(Number(filters.campus));
+        setClasses(Array.isArray(classRes?.data) ? classRes.data : []);
+      }
+    } catch (err) {
+      console.error(err);
+      
+      // Handle error messages from the API
+      if (err.data && Array.isArray(err.data)) {
+        err.data.forEach(msg => {
+          message.error(msg);
+        });
+      } else if (err.data && err.data.message) {
+        message.error(err.data.message);
+      } else if (err.message) {
+        message.error(err.message);
+      } else {
+        message.error("Failed to import classes!");
+      }
+    } finally {
+      setImportLoading(false);
+    }
+  };
+
+  const uploadProps = {
+    beforeUpload: (file) => {
+      const isExcel = file.type === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' ||
+                      file.type === 'application/vnd.ms-excel' ||
+                      file.name.endsWith('.xlsx') ||
+                      file.name.endsWith('.xls');
+      
+      if (!isExcel) {
+        message.error('You can only upload Excel files (.xlsx, .xls)!');
+        return Upload.LIST_IGNORE;
+      }
+      
+      const isLt5M = file.size / 1024 / 1024 < 5;
+      if (!isLt5M) {
+        message.error('File must be smaller than 5MB!');
+        return Upload.LIST_IGNORE;
+      }
+      
+      return false; // Prevent auto upload
+    },
+    fileList: importFileList,
+    onChange: ({ fileList }) => {
+      setImportFileList(fileList.slice(-1)); // Only keep the last file
+    },
+    onRemove: () => {
+      setImportFileList([]);
+    },
+  };
+
   const displayedClasses = classes.filter((c) => {
     const matchSearch =
       c.courseName?.toLowerCase().includes(filters.search.toLowerCase()) ||
@@ -248,6 +341,12 @@ export default function AdminClassManagement() {
       title: "Students",
       dataIndex: "studentCount",
       key: "studentCount",
+      align: "center",
+    },
+    {
+      title: "Instructors",
+      dataIndex: "instructorCount",
+      key: "instructorCount",
       align: "center",
     },
     {
@@ -305,75 +404,88 @@ export default function AdminClassManagement() {
         </div>
 
         {/* Filters */}
-        <Card 
+        <Card
           className="mb-6 shadow-sm border-orange-100 animate-slide-up"
           style={{ animationDelay: '0.1s' }}
         >
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-            <Select
-              placeholder="Select Campus"
-              allowClear
-              value={filters.campus || undefined}
-              onChange={(value) => handleFilterChange("campus", value || "")}
-              className="w-full"
-              size="large"
-            >
-              {campuses.map((c) => (
-                <Option key={c.campusId} value={c.campusId}>
-                  {c.name || c.campusName}
-                </Option>
-              ))}
-            </Select>
+          <div className="space-y-4">
+            {/* Filter Row */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <Select
+                placeholder="Select Campus"
+                allowClear
+                value={filters.campus || undefined}
+                onChange={(value) => handleFilterChange("campus", value || "")}
+                className="w-full"
+                size="large"
+              >
+                {campuses.map((c) => (
+                  <Option key={c.campusId} value={c.campusId}>
+                    {c.name || c.campusName}
+                  </Option>
+                ))}
+              </Select>
 
-            <Select
-              placeholder="All Semesters"
-              allowClear
-              value={filters.semester || undefined}
-              onChange={(value) => handleFilterChange("semester", value || "")}
-              className="w-full"
-              size="large"
-            >
-              {semesters.map((s) => (
-                <Option key={s.semesterId} value={s.semesterId}>
-                  {s.name || s.semesterName}
-                </Option>
-              ))}
-            </Select>
+              <Select
+                placeholder="All Semesters"
+                allowClear
+                value={filters.semester || undefined}
+                onChange={(value) => handleFilterChange("semester", value || "")}
+                className="w-full"
+                size="large"
+              >
+                {semesters.map((s) => (
+                  <Option key={s.semesterId} value={s.semesterId}>
+                    {s.name || s.semesterName}
+                  </Option>
+                ))}
+              </Select>
 
-            <Select
-              placeholder="All Courses"
-              allowClear
-              value={filters.course || undefined}
-              onChange={(value) => handleFilterChange("course", value || "")}
-              className="w-full"
-              size="large"
-            >
-              {courses.map((course) => (
-                <Option key={course.courseId} value={course.courseId}>
-                  {course.courseCode}
-                </Option>
-              ))}
-            </Select>
+              <Select
+                placeholder="All Courses"
+                allowClear
+                value={filters.course || undefined}
+                onChange={(value) => handleFilterChange("course", value || "")}
+                className="w-full"
+                size="large"
+              >
+                {courses.map((course) => (
+                  <Option key={course.courseId} value={course.courseId}>
+                    {course.courseCode}
+                  </Option>
+                ))}
+              </Select>
 
+              <Input
+                placeholder="Search class name..."
+                prefix={<SearchOutlined className="text-orange-500" />}
+                value={filters.search}
+                onChange={(e) => handleFilterChange("search", e.target.value)}
+                allowClear
+                size="large"
+              />
+            </div>
 
-            <Input
-              placeholder="Search class name..."
-              prefix={<SearchOutlined className="text-orange-500" />}
-              value={filters.search}
-              onChange={(e) => handleFilterChange("search", e.target.value)}
-              allowClear
-              size="large"
-            />
-
-            <Button
-              type="primary"
-              icon={<PlusOutlined />}
-              onClick={() => setShowAddForm(true)}
-              size="large"
-              className="hover:scale-105 transition-transform"
-            >
-              Create Class
-            </Button>
+            {/* Action Buttons Row */}
+            <div className="flex justify-end gap-3">
+              <Button
+                icon={<UploadOutlined />}
+                onClick={() => setShowImportModal(true)}
+                size="large"
+                className="hover:scale-105 transition-transform"
+              >
+                Import Class
+              </Button>
+              <Button
+                type="primary"
+                icon={<PlusOutlined />}
+                onClick={() => setShowAddForm(true)}
+                size="large"
+                className="hover:scale-105 transition-transform"
+              >
+                Create Class
+              </Button>
+            </div>
           </div>
         </Card>
 
@@ -636,6 +748,53 @@ export default function AdminClassManagement() {
               </Button>
             </div>
           </Form>
+        </Modal>
+
+        {/* Import Modal */}
+        <Modal
+          open={showImportModal}
+          onCancel={() => {
+            setShowImportModal(false);
+            setImportFileList([]);
+          }}
+          footer={null}
+          width={600}
+          destroyOnClose
+          title="Import Classes from Excel"
+        >
+          <div className="mt-4">
+            <p className="mb-4 text-gray-600">
+              Upload an Excel file to import multiple classes. The file should contain the required class information.
+            </p>
+            
+            <Upload.Dragger {...uploadProps} maxCount={1}>
+              <p className="ant-upload-drag-icon">
+                <UploadOutlined style={{ color: '#ea580c', fontSize: 48 }} />
+              </p>
+              <p className="ant-upload-text">Click or drag Excel file to this area to upload</p>
+              <p className="ant-upload-hint">
+                Support for .xlsx and .xls files. Maximum file size: 5MB
+              </p>
+            </Upload.Dragger>
+
+            <div className="flex justify-end gap-3 mt-6">
+              <Button onClick={() => {
+                setShowImportModal(false);
+                setImportFileList([]);
+              }}>
+                Cancel
+              </Button>
+              <Button
+                type="primary"
+                icon={<UploadOutlined />}
+                onClick={handleImportClass}
+                loading={importLoading}
+                disabled={importFileList.length === 0}
+              >
+                Import
+              </Button>
+            </div>
+          </div>
         </Modal>
 
         <style jsx global>{`
