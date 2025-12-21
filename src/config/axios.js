@@ -1,4 +1,5 @@
 import axios from "axios";
+import { toast } from "react-toastify";
 
 // Lấy baseURL từ env
 const baseUrl = import.meta.env.VITE_API_BASE_URL;
@@ -24,13 +25,36 @@ api.interceptors.request.use(
   }
 );
 
-// Nếu muốn handle lỗi response
-// api.interceptors.response.use(
-//   (response) => response,
-//   (error) => {
-//     console.error("Response error:", error);
-//     return Promise.reject(error);
-//   }
-// );
+// Handle response errors globally
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    // Handle 403 Forbidden
+    if (error.response && error.response.status === 403) {
+      // Get full message from backend
+      const errorMessage = error.response.data?.message;
+      
+      if (errorMessage) {
+        // Show error message from backend
+        toast.error(errorMessage, {
+          position: "top-center",
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+        });
+        
+        // Redirect to home page after a short delay
+        setTimeout(() => {
+          window.location.href = "/";
+        }, 2000);
+      }
+    }
+    
+    console.error("Response error:", error);
+    return Promise.reject(error);
+  }
+);
 
 export default api;
