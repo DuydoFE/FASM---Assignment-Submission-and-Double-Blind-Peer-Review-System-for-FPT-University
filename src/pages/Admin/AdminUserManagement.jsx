@@ -304,7 +304,21 @@ export default function AdminUserManagement() {
       key: "fullName",
       render: (_, record) => (
         <div className="font-semibold text-gray-800 flex items-center gap-3">
-          <div className="w-9 h-9 rounded-full bg-orange-500 flex items-center justify-center text-white font-bold text-sm">
+          {record.avatarUrl ? (
+            <img
+              src={record.avatarUrl}
+              alt={`${record.firstName} ${record.lastName}`}
+              className="w-9 h-9 rounded-full object-cover border-2 border-orange-200"
+              onError={(e) => {
+                e.target.style.display = 'none';
+                e.target.nextSibling.style.display = 'flex';
+              }}
+            />
+          ) : null}
+          <div
+            className="w-9 h-9 rounded-full bg-orange-500 flex items-center justify-center text-white font-bold text-sm"
+            style={{ display: record.avatarUrl ? 'none' : 'flex' }}
+          >
             {record.firstName?.[0]?.toUpperCase()}{record.lastName?.[0]?.toUpperCase()}
           </div>
           <span>{`${record.firstName} ${record.lastName}`}</span>
