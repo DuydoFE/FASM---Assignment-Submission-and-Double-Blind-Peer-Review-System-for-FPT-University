@@ -79,24 +79,56 @@ const ExportExcelModal = ({
         return;
       }
 
-      const exportData = allSubmissions.map((item) => ({
-        Username: item.username,
-        "Student Code": item.studentCode,
-        "Course Name": item.courseName,
-        "Class Name": item.className,
-        "Assignment Title": item.assignmentTitle,
-        "Final Score": item.finalScore,
-      }));
+      // Group submissions by student
+      const studentMap = new Map();
+      
+      allSubmissions.forEach((item) => {
+        const studentKey = item.studentCode;
+        
+        if (!studentMap.has(studentKey)) {
+          studentMap.set(studentKey, {
+            Username: item.username,
+            "Student Code": item.studentCode,
+            "Course Name": item.courseName,
+            "Class Name": item.className,
+            assignments: {}
+          });
+        }
+        
+        // Add assignment score to student's record
+        const student = studentMap.get(studentKey);
+        student.assignments[item.assignmentTitle] = item.finalScore;
+      });
+
+      // Get all unique assignment titles for column headers
+      const assignmentTitles = [...new Set(allSubmissions.map(item => item.assignmentTitle))];
+      
+      // Transform data into pivot table format
+      const exportData = Array.from(studentMap.values()).map(student => {
+        const row = {
+          Username: student.Username,
+          "Student Code": student["Student Code"],
+          "Course Name": student["Course Name"],
+          "Class Name": student["Class Name"]
+        };
+        
+        // Add each assignment score as a separate column
+        assignmentTitles.forEach(title => {
+          row[title] = student.assignments[title] !== undefined ? student.assignments[title] : 0;
+        });
+        
+        return row;
+      });
 
       const worksheet = XLSX.utils.json_to_sheet(exportData);
 
+      // Set column widths dynamically
       const wscols = [
         { wch: 20 }, // Username
         { wch: 15 }, // Student Code
         { wch: 30 }, // Course Name
         { wch: 15 }, // Class Name
-        { wch: 40 }, // Assignment Title
-        { wch: 10 }, // Final Score
+        ...assignmentTitles.map(() => ({ wch: 15 })) // Dynamic assignment columns
       ];
       worksheet["!cols"] = wscols;
 
