@@ -76,14 +76,14 @@ const JoinClassModal = ({ isOpen, onClose, course, onEnrollSuccess }) => {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••••"
-              className="w-full pl-12 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+              className="w-full pl-12 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none text-black placeholder:text-gray-400"
             />
             <button onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500">
               {showPassword ? <EyeOff /> : <Eye />}
             </button>
           </div>
 
-          <p className="text-xs text-gray-500 mt-2 text-left">Password is provided by the instructor during the first class</p>
+          <p className="text-xs text-black mt-2 text-left">Password is provided by the instructor during the first class</p>
           {enrollError && (
               <p className="text-sm text-red-500 mt-3 text-center">{enrollError.message}</p>
           )}

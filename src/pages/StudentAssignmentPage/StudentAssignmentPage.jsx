@@ -111,10 +111,19 @@ const StudentAssignmentPage = () => {
     setSelectedCourse(null);
   };
 
-  const handleEnrollSuccess = () => {
+  const handleEnrollSuccess = async () => {
+    // Invalidate available courses query
     queryClient.invalidateQueries({
       queryKey: ["studentCourseRegistrations", studentId],
     });
+
+    // Reload enrolled courses
+    try {
+      const response = await courseService.getEnrolledCoursesByStudentId(currentUser.userId);
+      setEnrolledCourses(response.data.data);
+    } catch (err) {
+      console.error("Error reloading enrolled courses:", err);
+    }
 
     toast.success("Enrolled in class successfully!");
   };
