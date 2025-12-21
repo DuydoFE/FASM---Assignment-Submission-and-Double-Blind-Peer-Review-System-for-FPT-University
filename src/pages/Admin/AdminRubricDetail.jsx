@@ -1,6 +1,9 @@
 import React, { useEffect, useState, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Toaster, toast } from "react-hot-toast";
+import { Table, Dropdown, Button, Modal, Form, Input, Tag } from "antd";
+import { EditOutlined, DeleteOutlined, MoreOutlined, ArrowLeftOutlined, PlusOutlined } from "@ant-design/icons";
+import { motion } from "framer-motion";
 import {
     getRubricTemplateById,
     createCriteriaTemplate,
@@ -65,23 +68,6 @@ export default function AdminRubricDetail() {
     }, [rubric]);
 
     const availableWeight = Math.max(0, 100 - usedWeight);
-
-    const reloadCriteria = async () => {
-        try {
-            const res = await getRubricTemplateById(id);
-            if (res?.statusCode === 200) {
-                setRubric(prev => ({
-                    ...prev,
-                    templateId: res.data.templateId,
-                    title: res.data.title,
-                    isPublic: res.data.isPublic,
-                    criteriaTemplates: res.data.criteriaTemplates || [],
-                }));
-            }
-        } catch (err) {
-            console.error(err);
-        }
-    };
 
     const handleCreateCriteria = async (e) => {
         e.preventDefault();
@@ -215,377 +201,421 @@ export default function AdminRubricDetail() {
         }
     };
 
+    const columns = [
+        {
+            title: "Title",
+            dataIndex: "title",
+            key: "title",
+            width: "25%",
+            render: (text) => <span className="font-medium">{text}</span>,
+        },
+        {
+            title: "Max Score",
+            dataIndex: "maxScore",
+            key: "maxScore",
+            width: "10%",
+            align: "center",
+        },
+        {
+            title: "Weight",
+            dataIndex: "weight",
+            key: "weight",
+            width: "10%",
+            align: "center",
+            render: (weight) => (
+                <Tag color="blue">{weight}%</Tag>
+            ),
+        },
+        {
+            title: "Description",
+            dataIndex: "description",
+            key: "description",
+            width: "45%",
+            render: (text) => text || "-",
+        },
+        {
+            title: "Actions",
+            key: "actions",
+            width: "10%",
+            align: "center",
+            render: (_, record) => {
+                const items = [
+                    {
+                        key: "edit",
+                        label: (
+                            <motion.div
+                                whileHover={{ x: 5 }}
+                                className="flex items-center gap-2"
+                            >
+                                <EditOutlined /> Edit
+                            </motion.div>
+                        ),
+                        onClick: () => {
+                            if (rubric.isPublic) {
+                                toast.error("The rubric is currently PUBLIC, so criteria cannot be edited. Please switch it back to PRIVATE first.");
+                                return;
+                            }
+                            openEditModal(record);
+                        },
+                    },
+                    {
+                        type: "divider",
+                    },
+                    {
+                        key: "delete",
+                        label: (
+                            <motion.div
+                                whileHover={{ x: 5 }}
+                                className="flex items-center gap-2 text-red-600"
+                            >
+                                <DeleteOutlined /> Delete
+                            </motion.div>
+                        ),
+                        danger: true,
+                        onClick: () => {
+                            if (rubric.isPublic) {
+                                toast.error("The rubric is currently PUBLIC, so criteria cannot be deleted. Please switch it back to PRIVATE first.");
+                                return;
+                            }
+                            handleDeleteCriteria(record.criteriaTemplateId);
+                        },
+                    },
+                ];
+
+                return (
+                    <Dropdown menu={{ items }} trigger={["click"]} placement="bottomRight">
+                        <motion.div
+                            whileHover={{ scale: 1.1 }}
+                            whileTap={{ scale: 0.95 }}
+                        >
+                            <Button
+                                type="text"
+                                icon={<MoreOutlined style={{ fontSize: "20px" }} />}
+                            />
+                        </motion.div>
+                    </Dropdown>
+                );
+            },
+        },
+    ];
+
     if (loading) return <p className="p-4 text-center text-gray-500">Loading...</p>;
     if (!rubric) return <p className="p-4 text-center text-gray-500">No rubric found</p>;
 
     return (
         <div className="space-y-6 p-6">
             <Toaster position="top-right" reverseOrder={false} />
-            <button className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300" onClick={() => navigate(-1)}>
-                ← Back
-            </button>
-
-            <h2 className="text-3xl font-bold text-orange-500">{rubric.title}</h2>
-
-            <div className="flex items-center gap-3 mt-2">
-                <span className={`px-3 py-1 rounded-full text-sm 
-        ${rubric.isPublic ? "bg-green-100 text-green-700" : "bg-gray-200 text-gray-600"}`}>
-                    {rubric.isPublic ? "Public" : "Private"}
-                </span>
-
-                <button
-                    className={`px-4 py-2 rounded text-white 
-    ${rubric.isPublic ? "bg-red-500 hover:bg-red-600" : "bg-blue-500 hover:bg-blue-600"}`}
-                    onClick={() => {
-                        if (!rubric.isPublic && usedWeight < 100) {
-                            toast.error("You can only public a rubric when the total weight is exactly 100%.");
-                            return;
-                        }
-
-                        setPendingToggle({
-                            templateId: rubric.templateId,
-                            newStatus: !rubric.isPublic
-                        });
-
-                        setShowConfirmModal(true);
-                    }}
+            
+            <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.5 }}
+            >
+                <Button
+                    icon={<ArrowLeftOutlined />}
+                    onClick={() => navigate(-1)}
+                    size="large"
                 >
-                    {rubric.isPublic ? "Set to Private" : "Set to Public"}
-                </button>
-            </div>
+                    Back
+                </Button>
+            </motion.div>
 
-            <div className="mt-6 flex justify-between items-center">
-                <h3 className="text-2xl font-semibold mb-4 border-b pb-2">
+            <motion.div
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.1 }}
+            >
+                <h2 className="text-3xl font-bold text-orange-500">{rubric.title}</h2>
+            </motion.div>
+
+            <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.5, delay: 0.2 }}
+                className="flex items-center gap-3 mt-2"
+            >
+                <Tag color={rubric.isPublic ? "success" : "default"} className="px-3 py-1 text-sm">
+                    {rubric.isPublic ? "Public" : "Private"}
+                </Tag>
+
+                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                    <Button
+                        type="primary"
+                        danger={rubric.isPublic}
+                        style={!rubric.isPublic ? { backgroundColor: "#1890ff", borderColor: "#1890ff" } : {}}
+                        onClick={() => {
+                            if (!rubric.isPublic && usedWeight < 100) {
+                                toast.error("You can only public a rubric when the total weight is exactly 100%.");
+                                return;
+                            }
+
+                            setPendingToggle({
+                                templateId: rubric.templateId,
+                                newStatus: !rubric.isPublic
+                            });
+
+                            setShowConfirmModal(true);
+                        }}
+                    >
+                        {rubric.isPublic ? "Set to Private" : "Set to Public"}
+                    </Button>
+                </motion.div>
+            </motion.div>
+
+            <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.3 }}
+                className="mt-6 flex justify-between items-center"
+            >
+                <h3 className="text-2xl font-semibold">
                     Criteria
                     <span className="ml-3 text-sm text-gray-600">
                         Available weight: <b className={`ml-1 ${availableWeight > 0 ? "text-green-600" : "text-red-600"}`}>{availableWeight}%</b>
                     </span>
                 </h3>
 
-                <button
-                    className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
-                    onClick={() => {
-                        if (rubric.isPublic) {
-                            toast.error("The rubric is currently PUBLIC, so criteria cannot be added. Please switch it back to PRIVATE first.");
-                            return;
-                        }
-                        if (availableWeight <= 0) {
-                            toast.error("No weight available. Please adjust existing criteria before adding new one.");
-                            return;
-                        }
-                        setShowCreateModal(true);
-                    }}
-                >
-                    + Add Criteria
-                </button>
-            </div>
+                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                    <Button
+                        type="primary"
+                        icon={<PlusOutlined />}
+                        style={{ backgroundColor: "#52c41a", borderColor: "#52c41a" }}
+                        onClick={() => {
+                            if (rubric.isPublic) {
+                                toast.error("The rubric is currently PUBLIC, so criteria cannot be added. Please switch it back to PRIVATE first.");
+                                return;
+                            }
+                            if (availableWeight <= 0) {
+                                toast.error("No weight available. Please adjust existing criteria before adding new one.");
+                                return;
+                            }
+                            setShowCreateModal(true);
+                        }}
+                    >
+                        Add Criteria
+                    </Button>
+                </motion.div>
+            </motion.div>
 
-            {rubric.criteriaTemplates && rubric.criteriaTemplates.length > 0 ? (
-                <div className="overflow-x-auto">
-                    <table className="min-w-full border border-gray-200 rounded-lg overflow-hidden table-fixed">
-                        <thead className="bg-orange-100">
-                            <tr>
-                                <th className="p-3 w-[20%] text-left">Title</th>
-                                <th className="p-3 w-[10%] text-center">Max Score</th>
-                                <th className="p-3 w-[10%] text-center">Weight</th>
-                                <th className="p-3 w-[40%] text-left">Description</th>
-                                <th className="p-3 w-[20%] text-center">Actions</th>
-                            </tr>
-                        </thead>
-
-                        <tbody>
-                            {rubric.criteriaTemplates.map((c, idx) => (
-                                <tr
-                                    key={c.criteriaTemplateId}
-                                    className={idx % 2 === 0 ? "bg-white" : "bg-gray-50"}
-                                >
-                                    <td className="p-3 font-medium break-words">
-                                        {c.title}
-                                    </td>
-
-                                    <td className="p-3 text-center">
-                                        {c.maxScore}
-                                    </td>
-
-                                    <td className="p-3 text-center">
-                                        {c.weight}%
-                                    </td>
-
-                                    <td className="p-3 break-words">
-                                        {c.description || "-"}
-                                    </td>
-
-                                    <td className="p-3 text-center space-x-3">
-                                        <button
-                                            className="text-blue-600 hover:underline"
-                                            onClick={() => {
-                                                if (rubric.isPublic) {
-                                                    toast.error("The rubric is currently PUBLIC, so criteria cannot be edited. Please switch it back to PRIVATE first.");
-                                                    return;
-                                                }
-                                                openEditModal(c);
-                                            }}
-                                        >
-                                            Edit
-                                        </button>
-                                        <button
-                                            className="text-red-600 hover:underline"
-                                            onClick={() => {
-                                                if (rubric.isPublic) {
-                                                    toast.error("The rubric is currently PUBLIC, so criteria cannot be deleted. Please switch it back to PRIVATE first.");
-                                                    return;
-                                                }
-                                                handleDeleteCriteria(c.criteriaTemplateId);
-                                            }}
-                                        >
-                                            Delete
-                                        </button>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-            ) : (
-                <p className="text-gray-500">No criteria available</p>
-            )}
+            <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.5, delay: 0.4 }}
+            >
+                <Table
+                    columns={columns}
+                    dataSource={rubric.criteriaTemplates || []}
+                    rowKey="criteriaTemplateId"
+                    pagination={false}
+                    locale={{ emptyText: "No criteria available" }}
+                />
+            </motion.div>
 
             {/* CREATE MODAL */}
-            {showCreateModal && (
-                <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-                    <div className="bg-white rounded-xl shadow-lg p-6 w-full max-w-lg">
-                        <h3 className="text-xl font-semibold mb-4 border-b pb-2">Create New Criteria</h3>
-                        <form className="space-y-4" onSubmit={handleCreateCriteria}>
-                            {/* Title */}
-                            <div>
-                                <label className="font-medium">Title</label>
-                                <input
-                                    type="text"
-                                    required
-                                    placeholder="Enter title"
-                                    className="border rounded p-3 w-full mt-1"
-                                    value={criteriaForm.title}
-                                    onChange={(e) => setCriteriaForm({ ...criteriaForm, title: e.target.value })}
-                                />
-                            </div>
+            <Modal
+                title="Create New Criteria"
+                open={showCreateModal}
+                onCancel={() => setShowCreateModal(false)}
+                footer={null}
+            >
+                <Form onFinish={handleCreateCriteria} layout="vertical">
+                    <Form.Item
+                        label="Title"
+                        name="title"
+                        rules={[{ required: true, message: "Please enter a title" }]}
+                    >
+                        <Input
+                            placeholder="Enter title"
+                            value={criteriaForm.title}
+                            onChange={(e) => setCriteriaForm({ ...criteriaForm, title: e.target.value })}
+                            size="large"
+                        />
+                    </Form.Item>
 
-                            {/* Description */}
-                            <div>
-                                <label className="font-medium">Description</label>
-                                <textarea
-                                    placeholder="Enter description"
-                                    className="border rounded p-3 w-full mt-1"
-                                    value={criteriaForm.description}
-                                    onChange={(e) => setCriteriaForm({ ...criteriaForm, description: e.target.value })}
-                                />
-                            </div>
+                    <Form.Item label="Description" name="description">
+                        <Input.TextArea
+                            placeholder="Enter description"
+                            value={criteriaForm.description}
+                            onChange={(e) => setCriteriaForm({ ...criteriaForm, description: e.target.value })}
+                            rows={4}
+                        />
+                    </Form.Item>
 
-                            {/* Weight + Max Score */}
-                            <div className="flex gap-3">
-                                <div className="w-1/2">
-                                    <label className="font-medium">Weight (%)</label>
-                                    <input
-                                        type="number"
-                                        required
-                                        placeholder="Weight"
-                                        className="border rounded p-3 w-full mt-1"
-                                        min={0}
-                                        max={availableWeight}
-                                        value={criteriaForm.weight}
-                                        onChange={(e) => {
-                                            let val = Number(e.target.value);
-                                            if (isNaN(val)) val = 0;
-                                            if (val > availableWeight) val = availableWeight;
-                                            if (val < 0) val = 0;
-                                            setCriteriaForm({ ...criteriaForm, weight: val });
-                                        }}
-                                    />
-                                    <p className="text-xs text-gray-500 mt-1">You can use up to <b>{availableWeight}%</b> weight.</p>
-                                </div>
-                            </div>
+                    <Form.Item
+                        label={`Weight (%) - Available: ${availableWeight}%`}
+                        name="weight"
+                        rules={[
+                            { required: true, message: "Please enter weight" },
+                        ]}
+                    >
+                        <Input
+                            type="number"
+                            placeholder="Weight"
+                            value={criteriaForm.weight}
+                            onChange={(e) => {
+                                let val = Number(e.target.value);
+                                if (isNaN(val)) val = 0;
+                                if (val > availableWeight) val = availableWeight;
+                                if (val < 0) val = 0;
+                                setCriteriaForm({ ...criteriaForm, weight: val });
+                            }}
+                            size="large"
+                            min={0}
+                            max={availableWeight}
+                        />
+                    </Form.Item>
 
-                            {/* Actions */}
-                            <div className="flex justify-end gap-3 mt-4">
-                                <button type="button" className="px-4 py-2 border rounded" onClick={() => setShowCreateModal(false)}>
-                                    Cancel
-                                </button>
-                                <button type="submit" className="px-4 py-2 bg-green-500 text-white rounded">
-                                    Create
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            )}
+                    <Form.Item>
+                        <div className="flex justify-end gap-3">
+                            <Button onClick={() => setShowCreateModal(false)}>Cancel</Button>
+                            <Button
+                                type="primary"
+                                htmlType="submit"
+                                style={{ backgroundColor: "#52c41a", borderColor: "#52c41a" }}
+                            >
+                                Create
+                            </Button>
+                        </div>
+                    </Form.Item>
+                </Form>
+            </Modal>
 
             {/* EDIT MODAL */}
-            {showEditModal && (
-                <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-                    <div className="bg-white rounded-xl shadow-lg p-6 w-full max-w-lg">
-                        <h3 className="text-xl font-semibold mb-4 border-b pb-2">Edit Criteria</h3>
-                        <form className="space-y-4" onSubmit={handleUpdateCriteria}>
-                            {/* Title */}
-                            <div>
-                                <label className="font-medium">Title</label>
-                                <input
-                                    type="text"
-                                    required
-                                    placeholder="Enter title"
-                                    className="border rounded p-3 w-full mt-1"
-                                    value={criteriaForm.title}
-                                    onChange={(e) =>
-                                        setCriteriaForm({ ...criteriaForm, title: e.target.value })
-                                    }
-                                />
-                            </div>
+            <Modal
+                title="Edit Criteria"
+                open={showEditModal}
+                onCancel={() => setShowEditModal(false)}
+                footer={null}
+            >
+                <Form onFinish={handleUpdateCriteria} layout="vertical">
+                    <Form.Item
+                        label="Title"
+                        name="title"
+                        initialValue={criteriaForm.title}
+                        rules={[{ required: true, message: "Please enter a title" }]}
+                    >
+                        <Input
+                            placeholder="Enter title"
+                            value={criteriaForm.title}
+                            onChange={(e) => setCriteriaForm({ ...criteriaForm, title: e.target.value })}
+                            size="large"
+                        />
+                    </Form.Item>
 
-                            {/* Description */}
-                            <div>
-                                <label className="font-medium">Description</label>
-                                <textarea
-                                    placeholder="Enter description"
-                                    className="border rounded p-3 w-full mt-1"
-                                    value={criteriaForm.description}
-                                    onChange={(e) =>
-                                        setCriteriaForm({ ...criteriaForm, description: e.target.value })
-                                    }
-                                />
-                            </div>
+                    <Form.Item label="Description" name="description" initialValue={criteriaForm.description}>
+                        <Input.TextArea
+                            placeholder="Enter description"
+                            value={criteriaForm.description}
+                            onChange={(e) => setCriteriaForm({ ...criteriaForm, description: e.target.value })}
+                            rows={4}
+                        />
+                    </Form.Item>
 
-                            {/* Weight */}
-                            <div className="w-1/2">
-                                <label className="font-medium">Weight (%)</label>
-                                <input
-                                    type="number"
-                                    required
-                                    placeholder="Weight"
-                                    className="border rounded p-3 w-full mt-1"
-                                    min={0}
-                                    max={Math.min(100, availableWeight + (currentCriteria?.weight || 0))}
-                                    value={criteriaForm.weight}
-                                    onChange={(e) => {
-                                        let val = Number(e.target.value);
-                                        const maxAllowed = Math.min(
-                                            100,
-                                            availableWeight + (currentCriteria?.weight || 0)
-                                        );
-                                        if (isNaN(val)) val = 0;
-                                        if (val > maxAllowed) val = maxAllowed;
-                                        if (val < 0) val = 0;
-                                        setCriteriaForm({ ...criteriaForm, weight: val });
-                                    }}
-                                />
-                                <p className="text-xs text-gray-500 mt-1">
-                                    You can use up to{" "}
-                                    <b>{Math.min(100, availableWeight + (currentCriteria?.weight || 0))}%</b>{" "}
-                                    for this item.
-                                </p>
-                            </div>
+                    <Form.Item
+                        label={`Weight (%) - Available: ${Math.min(100, availableWeight + (currentCriteria?.weight || 0))}%`}
+                        name="weight"
+                        initialValue={criteriaForm.weight}
+                        rules={[
+                            { required: true, message: "Please enter weight" },
+                        ]}
+                    >
+                        <Input
+                            type="number"
+                            placeholder="Weight"
+                            value={criteriaForm.weight}
+                            onChange={(e) => {
+                                let val = Number(e.target.value);
+                                const maxAllowed = Math.min(100, availableWeight + (currentCriteria?.weight || 0));
+                                if (isNaN(val)) val = 0;
+                                if (val > maxAllowed) val = maxAllowed;
+                                if (val < 0) val = 0;
+                                setCriteriaForm({ ...criteriaForm, weight: val });
+                            }}
+                            size="large"
+                            min={0}
+                            max={Math.min(100, availableWeight + (currentCriteria?.weight || 0))}
+                        />
+                    </Form.Item>
 
-                            {/* Actions */}
-                            <div className="flex justify-end gap-3 mt-4">
-                                <button
-                                    type="button"
-                                    className="px-4 py-2 border rounded"
-                                    onClick={() => setShowEditModal(false)}
-                                >
-                                    Cancel
-                                </button>
-
-                                <button
-                                    type="submit"
-                                    className={`px-4 py-2 bg-blue-600 text-white rounded ${criteriaForm.title === currentCriteria?.title &&
-                                            criteriaForm.description === currentCriteria?.description &&
-                                            criteriaForm.weight === currentCriteria?.weight
-                                            ? "opacity-50 cursor-not-allowed"
-                                            : ""
-                                        }`}
-                                    disabled={
-                                        criteriaForm.title === currentCriteria?.title &&
-                                        criteriaForm.description === currentCriteria?.description &&
-                                        criteriaForm.weight === currentCriteria?.weight
-                                    }
-                                >
-                                    Save Changes
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            )}
-
-            {showConfirmModal && (
-                <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-                    <div className="bg-white rounded-xl shadow-lg p-6 w-full max-w-sm">
-                        <h3 className="text-lg font-semibold mb-3">Confirm Action</h3>
-                        <p className="text-gray-600 mb-6">
-                            Are you sure you want to change the public status of this rubric?
-                        </p>
-
+                    <Form.Item>
                         <div className="flex justify-end gap-3">
-                            <button
-                                onClick={() => setShowConfirmModal(false)}
-                                className="px-4 py-2 border rounded"
+                            <Button onClick={() => setShowEditModal(false)}>Cancel</Button>
+                            <Button
+                                type="primary"
+                                htmlType="submit"
+                                disabled={
+                                    criteriaForm.title === currentCriteria?.title &&
+                                    criteriaForm.description === currentCriteria?.description &&
+                                    criteriaForm.weight === currentCriteria?.weight
+                                }
                             >
-                                Cancel
-                            </button>
-
-                            <button
-                                onClick={async () => {
-                                    try {
-                                        const res = await toggleRubricTemplatePublicStatus(
-                                            pendingToggle.templateId,
-                                            pendingToggle.newStatus
-                                        );
-
-                                        if (res.statusCode === 100 || res.statusCode === 200) {
-                                            toast.success("Status updated successfully!");
-                                            await fetchRubric();
-                                        } else {
-                                            toast.error(res.message || "Failed to update status.");
-                                        }
-                                    } catch (err) {
-                                        toast.error("Error updating status.");
-                                    }
-
-                                    setShowConfirmModal(false);
-                                }}
-                                className="px-4 py-2 bg-blue-600 text-white rounded"
-                            >
-                                Confirm
-                            </button>
+                                Save Changes
+                            </Button>
                         </div>
-                    </div>
-                </div>
-            )}
-            {confirmConfig.open && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60]">
-                    <div className="bg-white rounded-xl shadow-lg p-6 w-full max-w-sm">
-                        <h3 className="text-lg font-semibold mb-3">
-                            {confirmConfig.title}
-                        </h3>
-                        <p className="text-gray-600 mb-6">
-                            {confirmConfig.message}
-                        </p>
+                    </Form.Item>
+                </Form>
+            </Modal>
 
-                        <div className="flex justify-end gap-3">
-                            <button
-                                onClick={() => setConfirmConfig({ open: false })}
-                                className="px-4 py-2 border rounded"
-                            >
-                                Cancel
-                            </button>
+            {/* TOGGLE PUBLIC STATUS MODAL */}
+            <Modal
+                title="Confirm Action"
+                open={showConfirmModal}
+                onCancel={() => setShowConfirmModal(false)}
+                footer={[
+                    <Button key="cancel" onClick={() => setShowConfirmModal(false)}>
+                        Cancel
+                    </Button>,
+                    <Button
+                        key="confirm"
+                        type="primary"
+                        onClick={async () => {
+                            try {
+                                const res = await toggleRubricTemplatePublicStatus(
+                                    pendingToggle.templateId,
+                                    pendingToggle.newStatus
+                                );
 
-                            <button
-                                onClick={confirmConfig.onConfirm}
-                                className="px-4 py-2 bg-red-600 text-white rounded"
-                            >
-                                Confirm
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
+                                if (res.statusCode === 100 || res.statusCode === 200) {
+                                    toast.success("Status updated successfully!");
+                                    await fetchRubric();
+                                } else {
+                                    toast.error(res.message || "Failed to update status.");
+                                }
+                            } catch (err) {
+                                toast.error("Error updating status.");
+                            }
+
+                            setShowConfirmModal(false);
+                        }}
+                    >
+                        Confirm
+                    </Button>,
+                ]}
+            >
+                <p>Are you sure you want to change the public status of this rubric?</p>
+            </Modal>
+
+            {/* CRITERIA UPDATE/DELETE CONFIRM MODAL */}
+            <Modal
+                title={confirmConfig.title}
+                open={confirmConfig.open}
+                onCancel={() => setConfirmConfig({ open: false })}
+                footer={[
+                    <Button key="cancel" onClick={() => setConfirmConfig({ open: false })}>
+                        Cancel
+                    </Button>,
+                    <Button
+                        key="confirm"
+                        type="primary"
+                        danger={confirmConfig.title === "Delete Criteria"}
+                        onClick={confirmConfig.onConfirm}
+                    >
+                        Confirm
+                    </Button>,
+                ]}
+            >
+                <p>{confirmConfig.message}</p>
+            </Modal>
         </div>
     );
 }
