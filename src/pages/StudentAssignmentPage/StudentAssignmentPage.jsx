@@ -51,6 +51,7 @@ const StudentAssignmentPage = () => {
   const [selectedCourse, setSelectedCourse] = useState(null);
   const [semesters, setSemesters] = useState([]);
   const [selectedSemester, setSelectedSemester] = useState("");
+  const [selectedAvailableSemester, setSelectedAvailableSemester] = useState("");
 
   useEffect(() => {
     const fetchSemesters = async () => {
@@ -366,6 +367,35 @@ const StudentAssignmentPage = () => {
                 <p className="text-sm text-gray-600">Discover and join new classes</p>
               </div>
             </div>
+
+            {/* Semester Filter for Available Courses */}
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.55 }}
+              className="mb-4 flex items-center gap-3"
+            >
+              <Filter className="w-5 h-5 text-blue-600" />
+              <Select
+                placeholder="All Semesters"
+                allowClear
+                value={selectedAvailableSemester || undefined}
+                onChange={(value) => setSelectedAvailableSemester(value || "")}
+                className="w-64"
+                size="large"
+              >
+                {semesters.map((semester) => (
+                  <Option key={semester.semesterId} value={semester.semesterId}>
+                    {semester.name || semester.semesterName}
+                  </Option>
+                ))}
+              </Select>
+              {selectedAvailableSemester && (
+                <span className="text-sm text-gray-600">
+                  Showing {availableCourses.filter(c => c.semesterId === selectedAvailableSemester).length} courses
+                </span>
+              )}
+            </motion.div>
             
             <motion.div
               initial={{ opacity: 0, scale: 0.98 }}
@@ -395,49 +425,34 @@ const StudentAssignmentPage = () => {
               <AnimatePresence mode="wait">
                 {!isLoadingRegistrations &&
                   !isErrorRegistrations &&
-                  availableCourses.map((course, index) => {
-                    const Icon = getCourseIcon(course.courseCode).component;
-                    const iconColor = getCourseIcon(course.courseCode).color;
+                  availableCourses
+                    .filter(course => selectedAvailableSemester ? course.semesterId === selectedAvailableSemester : true)
+                    .map((course, index) => {
+                      const Icon = getCourseIcon(course.courseCode).component;
+                      const iconColor = getCourseIcon(course.courseCode).color;
 
-                    return (
-                      <motion.div
-                        key={course.courseInstanceId}
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ duration: 0.4, delay: index * 0.1 }}
-                      >
-                        <CourseListItem
-                          icon={Icon}
-                          iconColor={iconColor}
-                          title={course.courseName}
-                          code={`Class Code: ${course.courseInstanceName}`}
-                          status={course.status}
-                          onJoinClick={() => handleOpenModal(course)}
-                        />
-                      </motion.div>
-                    );
-                  })}
+                      return (
+                        <motion.div
+                          key={course.courseInstanceId}
+                          initial={{ opacity: 0, x: -20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ duration: 0.4, delay: index * 0.1 }}
+                        >
+                          <CourseListItem
+                            icon={Icon}
+                            iconColor={iconColor}
+                            title={course.courseName}
+                            code={`Class Code: ${course.courseInstanceName}`}
+                            semester={course.semester}
+                            status={course.status}
+                            onJoinClick={() => handleOpenModal(course)}
+                          />
+                        </motion.div>
+                      );
+                    })}
               </AnimatePresence>
             </motion.div>
           </motion.div>
-        </motion.div>
-
-        {/* Help Section */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.7 }}
-          className="text-center mt-8"
-        >
-          <motion.a
-            whileHover={{ scale: 1.05, y: -2 }}
-            whileTap={{ scale: 0.95 }}
-            href="#"
-            className="inline-flex items-center text-sm text-gray-600 hover:text-blue-600 bg-white px-6 py-3 rounded-full shadow-md hover:shadow-lg transition-all duration-300"
-          >
-            <HelpCircle className="w-4 h-4 mr-2" />
-            Need Help?
-          </motion.a>
         </motion.div>
         
         <JoinClassModal
