@@ -42,7 +42,7 @@ const CreateAssignmentModal = ({ isOpen, onClose, onSubmit, courseInstanceId }) 
   const fetchRubrics = async () => {
     setLoadingRubrics(true);
     try {
-      const data = await getRubricTemplatesByUserId(currentUser.id);
+      const data = await getRubricTemplatesByUserId(currentUser.id, courseInstanceId);
       if (data && data.length > 0) {
         setRubrics(data);
       } else {
@@ -58,10 +58,10 @@ const CreateAssignmentModal = ({ isOpen, onClose, onSubmit, courseInstanceId }) 
   };
 
   useEffect(() => {
-    if (isOpen) {
+    if (isOpen && courseInstanceId) {
       fetchRubrics();
     }
-  }, [isOpen]);
+  }, [isOpen, courseInstanceId]);
 
   // 🔥 FIXED HANDLECHANGE
   const handleChange = (e) => {

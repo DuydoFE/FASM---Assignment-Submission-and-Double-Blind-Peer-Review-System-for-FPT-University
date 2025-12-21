@@ -77,9 +77,11 @@ export const getRubricsTemplate = async () => {
   }
 };
 
-export const getRubricTemplatesByUserId = async (userId) => {
+export const getRubricTemplatesByUserId = async (userId, courseInstanceId) => {
   try {
-    const response = await api.get(`/RubricTemplate/user/${userId}`);
+    const response = await api.get(`/RubricTemplate/user/${userId}`, {
+      params: { courseInstanceId }
+    });
     return response.data.data;
   } catch (error) {
     console.error('Error fetching rubric templates by user:', error);
