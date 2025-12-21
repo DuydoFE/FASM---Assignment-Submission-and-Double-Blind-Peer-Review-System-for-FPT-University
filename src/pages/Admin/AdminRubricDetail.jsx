@@ -13,7 +13,7 @@ import {
 } from "../../service/adminService";
 
 export default function AdminRubricDetail() {
-
+    const [form] = Form.useForm();
     const [showConfirmModal, setShowConfirmModal] = useState(false);
     const [pendingToggle, setPendingToggle] = useState(null);
     const { id } = useParams();
@@ -69,9 +69,7 @@ export default function AdminRubricDetail() {
 
     const availableWeight = Math.max(0, 100 - usedWeight);
 
-    const handleCreateCriteria = async (e) => {
-        e.preventDefault();
-
+    const handleCreateCriteria = async (values) => {
         if (criteriaForm.maxScore < 0 || criteriaForm.maxScore > 10) {
             toast.error("Max Score must be between 0 and 10");
             return;
@@ -87,13 +85,16 @@ export default function AdminRubricDetail() {
             const res = await createCriteriaTemplate(payload);
             if (res?.statusCode === 201 || res?.statusCode === 200) {
                 toast.success("Criteria created successfully");
+                
+                // Clear form first
+                form.resetFields();
+                setCriteriaForm({ title: "", description: "", weight: 0, maxScore: 10, scoringType: "Scale", scoreLabel: "0-10" });
+                
+                // Close modal
                 setShowCreateModal(false);
-                setCriteriaForm({ title: "", description: "", weight: 0, maxScore: 0, scoringType: "Scale", scoreLabel: "0-10" });
-
-                setRubric((prev) => ({
-                    ...prev,
-                    criteriaTemplates: [...(prev.criteriaTemplates || []), res.data],
-                }));
+                
+                // Then reload rubric data from server
+                await fetchRubric();
             } else {
                 toast.error(res?.message || "Failed to create criteria");
             }
@@ -118,9 +119,7 @@ export default function AdminRubricDetail() {
         setShowEditModal(true);
     };
 
-    const handleUpdateCriteria = (e) => {
-        e.preventDefault();
-
+    const handleUpdateCriteria = (values) => {
         setConfirmConfig({
             open: true,
             title: "Save Changes",
@@ -389,6 +388,9 @@ export default function AdminRubricDetail() {
                                 toast.error("No weight available. Please adjust existing criteria before adding new one.");
                                 return;
                             }
+                            // Reset form and state before opening
+                            form.resetFields();
+                            setCriteriaForm({ title: "", description: "", weight: 0, maxScore: 10, scoringType: "Scale", scoreLabel: "0-10" });
                             setShowCreateModal(true);
                         }}
                     >
@@ -415,10 +417,19 @@ export default function AdminRubricDetail() {
             <Modal
                 title="Create New Criteria"
                 open={showCreateModal}
-                onCancel={() => setShowCreateModal(false)}
+                onCancel={() => {
+                    form.resetFields();
+                    setCriteriaForm({ title: "", description: "", weight: 0, maxScore: 10, scoringType: "Scale", scoreLabel: "0-10" });
+                    setShowCreateModal(false);
+                }}
                 footer={null}
+                destroyOnClose
             >
-                <Form onFinish={handleCreateCriteria} layout="vertical">
+                <Form
+                    form={form}
+                    onFinish={handleCreateCriteria}
+                    layout="vertical"
+                >
                     <Form.Item
                         label="Title"
                         name="title"
@@ -467,7 +478,11 @@ export default function AdminRubricDetail() {
 
                     <Form.Item>
                         <div className="flex justify-end gap-3">
-                            <Button onClick={() => setShowCreateModal(false)}>Cancel</Button>
+                            <Button onClick={() => {
+                                form.resetFields();
+                                setCriteriaForm({ title: "", description: "", weight: 0, maxScore: 10, scoringType: "Scale", scoreLabel: "0-10" });
+                                setShowCreateModal(false);
+                            }}>Cancel</Button>
                             <Button
                                 type="primary"
                                 htmlType="submit"

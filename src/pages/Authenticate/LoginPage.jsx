@@ -164,7 +164,7 @@ const LoginPage = () => {
               <div>
                 <input
                   type="text"
-                  placeholder="Nhập tài khoản wifi Student"
+                  placeholder="Input Username"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   className="w-full p-3 bg-zinc-900/50 border border-white/10 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500 transition-all"
@@ -173,7 +173,7 @@ const LoginPage = () => {
                 <div className="relative">
                 <input
                   type={showPassword ? "text" : "password"} 
-                  placeholder="Nhập mật khẩu"
+                  placeholder="Input Password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="w-full p-3 pr-10 bg-zinc-900/50 border border-white/10 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500 transition-all"
