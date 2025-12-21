@@ -6,6 +6,7 @@ import { getAssignmentsByCourseInstanceId } from '../../service/assignmentServic
 import { getSubmissionSummary } from '../../service/instructorSubmission';
 import { getCurrentAccount } from '../../utils/accountUtils';
 import { autoGradeZero } from '../../service/instructorGrading';
+import { getCourseInstanceById } from '../../service/courseInstanceService';
 
 import GradingFilterSection from '../../component/InstructorGrading/GradingFilterSection';
 import GradingEmptyState from '../../component/InstructorGrading/GradingEmptyState';
@@ -24,6 +25,7 @@ const InstructorManageGrading = () => {
   const [assignments, setAssignments] = useState([]);
   const [students, setStudents] = useState([]);
   const [assignmentInfo, setAssignmentInfo] = useState(null);
+  const [courseInstanceData, setCourseInstanceData] = useState(null);
   
   const [selectedAssignmentId, setSelectedAssignmentId] = useState('');
   
@@ -55,8 +57,18 @@ const InstructorManageGrading = () => {
   useEffect(() => {
     if (courseInstanceId) {
       fetchAssignments();
+      fetchCourseInstanceData();
     }
   }, [courseInstanceId]);
+
+  const fetchCourseInstanceData = async () => {
+    try {
+      const response = await getCourseInstanceById(courseInstanceId);
+      setCourseInstanceData(response);
+    } catch (error) {
+      console.error('Failed to fetch course instance data:', error);
+    }
+  };
 
   // When assignments are loaded and we have pending return state, set the assignment and fetch data
   useEffect(() => {
@@ -230,7 +242,17 @@ const InstructorManageGrading = () => {
   return (
     <div className="min-h-screen bg-white-50 p-6">
       <div className="max-w-7xl mx-auto">
-        <h1 className="text-2xl font-bold text-gray-800 mb-6">Instructor Scores Table</h1>
+        <div className="mb-8">
+          <h1 className="text-2xl font-bold text-gray-800 mb-4">Instructor Scores Table</h1>
+          <div className="flex items-center space-x-4">
+            <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium">
+              Course: {courseInstanceData?.courseCode || "N/A"}
+            </span>
+            <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium">
+              Class: {courseInstanceData?.sectionCode || "N/A"}
+            </span>
+          </div>
+        </div>
         
         <GradingFilterSection
           assignments={assignments}

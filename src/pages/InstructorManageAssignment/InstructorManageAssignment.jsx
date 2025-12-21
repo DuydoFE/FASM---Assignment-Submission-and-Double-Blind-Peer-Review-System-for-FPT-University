@@ -1,17 +1,10 @@
 import React, { useState, useEffect } from "react";
 import {
   Plus,
-  FileText,
-  Calendar,
-  Trash2,
-  Edit,
-  MoreVertical,
-  Upload,
   FileSpreadsheet,
 } from "lucide-react";
 import { toast } from "react-toastify";
 import { useNavigate, useLocation, useParams } from "react-router-dom";
-import { Dropdown, Table } from "antd";
 import {
   getAssignmentsByCourseInstanceId,
   createAssignment,
@@ -19,7 +12,6 @@ import {
   updateAssignment,
   assignmentService,
 } from "../../service/assignmentService";
-import { submissionService } from "../../service/submissionService";
 import { getCourseInstanceById } from "../../service/courseInstanceService";
 import CreateAssignmentModal from "../../component/Assignment/CreateAssignmentModal";
 import EditAssignmentModal from "../../component/Assignment/EditAssignmentModal";
@@ -27,6 +19,8 @@ import DeleteAssignmentModal from "../../component/Assignment/DeleteAssignmentMo
 import PublishAssignmentModal from "../../component/Assignment/PublishAssignmentModal";
 import ExportExcelModal from "../../component/Assignment/ExportExcelModal";
 import UpdateDeadlineModal from "../../component/Assignment/UpdateDeadlineModal";
+import InstructorAssignmentStatsCards from "../../component/Assignment/InstructorAssignmentStatsCards";
+import InstructorManageAssignmentTable from "../../component/Assignment/InstructorManageAssignmentTable";
 
 const InstructorManageAssignment = () => {
   const navigate = useNavigate();
@@ -104,7 +98,6 @@ const InstructorManageAssignment = () => {
     try {
       const response = await getCourseInstanceById(courseInstanceId);
       console.log("Course Instance API Response:", response);
-      // getCourseInstanceById already returns response.data.data
       console.log("Course Instance Data:", response);
       setCourseInstanceData(response);
     } catch (error) {
@@ -129,7 +122,6 @@ const InstructorManageAssignment = () => {
       const [year, month, day] = newDeadline.split("-");
       const [hours, minutes] = newTime.split(":");
       
-      // Format as local datetime string without timezone conversion
       const seconds = "00";
       const localDateTimeString = `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
 
@@ -138,7 +130,6 @@ const InstructorManageAssignment = () => {
         localDateTimeString
       );
 
-      // Update assignment with the new datetime string (same format as API)
       setAssignments((prev) =>
         prev.map((a) =>
           a.id === selectedAssignment.id
@@ -214,7 +205,7 @@ const InstructorManageAssignment = () => {
         setShowEditModal(false);
         setEditingAssignment(null);
         await fetchAssignments();
-        return true; // Return true on success
+        return true;
       } else {
         throw new Error("Failed to update assignment");
       }
@@ -224,7 +215,7 @@ const InstructorManageAssignment = () => {
         error.response?.data?.message ||
           "Failed to update assignment. Please try again."
       );
-      return false; // Return false on error to keep modal open
+      return false;
     }
   };
 
@@ -238,8 +229,7 @@ const InstructorManageAssignment = () => {
       const message =
         error?.response?.data?.message || "Failed to create assignment";
       toast.error(message);
-      // Don't close modal on error - let user fix the issue and retry
-      throw error; // Re-throw to prevent modal from closing
+      throw error;
     }
   };
 
@@ -273,187 +263,6 @@ const InstructorManageAssignment = () => {
     setSelectedAssignment(null);
   };
 
-  const getDropdownItems = (assignment) => [
-    ...(assignment.status === "Draft"
-      ? [
-          {
-            label: (
-              <div className="flex items-center gap-2 px-2 py-1">
-                <Upload className="w-4 h-4 text-yellow-600" />
-                <span>Publish Assignment</span>
-              </div>
-            ),
-            onClick: () => handlePublishClick(assignment),
-          },
-        ]
-      : []),
-    ...(assignment.status === "Active"
-      ? [
-          {
-            label: (
-              <div className="flex items-center gap-2 px-2 py-1">
-                <Calendar className="w-4 h-4 text-blue-600" />
-                <span>Extend Deadline</span>
-              </div>
-            ),
-            onClick: () => handleUpdateDeadlineClick(assignment),
-          },
-        ]
-      : []),
-    ...(assignment.status === "Draft" || assignment.status === "Upcoming"
-      ? [
-          {
-            label: (
-              <div className="flex items-center gap-2 px-2 py-1">
-                <Edit className="w-4 h-4 text-green-600" />
-                <span>Edit Assignment</span>
-              </div>
-            ),
-            onClick: () => handleEditClick(assignment),
-          },
-        ]
-      : []),
-    {
-      label: (
-        <div className="flex items-center gap-2 px-2 py-1">
-          <FileText className="w-4 h-4 text-gray-600" />
-          <span>View Submissions</span>
-        </div>
-      ),
-      onClick: () => handleViewSubmissions(assignment),
-    },
-    ...(assignment.status === "Draft" || assignment.status === "Upcoming"
-      ? [
-          {
-            type: "divider",
-          },
-          {
-            label: (
-              <div className="flex items-center gap-2 px-2 py-1">
-                <Trash2 className="w-4 h-4 text-red-600" />
-                <span>Delete Assignment</span>
-              </div>
-            ),
-            onClick: () => handleDeleteClick(assignment),
-          },
-        ]
-      : []),
-  ];
-
-  const filteredAssignments = assignments;
-
-  const getDeadlineColor = (deadline) => {
-    if (!deadline) return "text-gray-900";
-    const today = new Date();
-    const deadlineDate = new Date(deadline);
-    const diffTime = deadlineDate - today;
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-    if (diffDays < 0) return "text-red-500";
-    if (diffDays <= 3) return "text-orange-500";
-    return "text-gray-900";
-  };
-
-  const formatDisplayDateTime = (dateTimeStr) => {
-    if (!dateTimeStr) return { date: '', time: '' };
-    try {
-      // Display raw datetime from API: "2025-12-25T00:00:00"
-      // Format: DD/MM/YYYY HH:mm
-      const cleanStr = dateTimeStr.replace('Z', '').split('.')[0];
-      const [datePart, timePart] = cleanStr.split('T');
-      if (!datePart || !timePart) return { date: '', time: '' };
-      
-      const [year, month, day] = datePart.split('-');
-      const [hours, minutes] = timePart.split(':');
-      return {
-        date: `${day}/${month}/${year}`,
-        time: `${hours}:${minutes}`
-      };
-    } catch (error) {
-      console.error('Error formatting datetime:', error, dateTimeStr);
-      return { date: '', time: '' };
-    }
-  };
-
-  const columns = [
-    {
-      title: 'Assignment Name',
-      dataIndex: 'title',
-      key: 'title',
-      width: '25%',
-      render: (text) => (
-        <h3 className="font-semibold text-gray-900 text-base truncate">
-          {text}
-        </h3>
-      ),
-    },
-    {
-      title: 'Deadline',
-      dataIndex: 'deadline',
-      key: 'deadline',
-      width: '20%',
-      align: 'center',
-      render: (deadline) => {
-        const { date, time } = formatDisplayDateTime(deadline);
-        return (
-          <div className="space-y-1">
-            <div className={`font-medium text-base ${getDeadlineColor(deadline)}`}>
-              {date}
-            </div>
-            <div className="text-sm text-gray-500">{time}</div>
-          </div>
-        );
-      },
-    },
-    {
-      title: 'Review Deadline',
-      dataIndex: 'reviewDeadline',
-      key: 'reviewDeadline',
-      width: '20%',
-      align: 'center',
-      render: (reviewDeadline) => {
-        const { date, time } = formatDisplayDateTime(reviewDeadline);
-        return (
-          <div className="space-y-1">
-            <div className={`font-medium text-base ${getDeadlineColor(reviewDeadline)}`}>
-              {date}
-            </div>
-            <div className="text-sm text-gray-500">{time}</div>
-          </div>
-        );
-      },
-    },
-    {
-      title: 'Status',
-      dataIndex: 'status',
-      key: 'status',
-      width: '15%',
-      align: 'center',
-      render: (status, record) => (
-        <span className={`px-2 py-1 rounded-full text-xs font-medium ${record.statusColor}`}>
-          {status}
-        </span>
-      ),
-    },
-    {
-      title: 'Actions',
-      key: 'actions',
-      width: '20%',
-      align: 'center',
-      render: (_, record) => (
-        <Dropdown
-          menu={{ items: getDropdownItems(record) }}
-          trigger={["click"]}
-          placement="bottomRight"
-        >
-          <button className="p-2 hover:bg-gray-100 rounded-md transition-colors">
-            <MoreVertical className="w-5 h-5 text-gray-600" />
-          </button>
-        </Dropdown>
-      ),
-    },
-  ];
-
   if (loading) {
     return (
       <div className="p-8 text-center">
@@ -469,7 +278,7 @@ const InstructorManageAssignment = () => {
         courseName: courseInstanceData.courseName,
         sectionCode: courseInstanceData.sectionCode,
         campusName: courseInstanceData.campusName,
-        totalStudents: 35, // You can get this from API if available
+        totalStudents: 35,
       }
     : assignments.length > 0
     ? {
@@ -519,36 +328,21 @@ const InstructorManageAssignment = () => {
         </div>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 gap-6 mb-8">
-        <div className="bg-white p-6 rounded-xl border border-gray-200">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-gray-600 text-sm font-medium">
-                Total Assignments
-              </p>
-              <p className="text-3xl font-bold text-gray-900 mt-1">
-                {assignments.length}
-              </p>
-            </div>
-            <div className="bg-blue-100 p-3 rounded-lg">
-              <FileText className="w-6 h-6 text-blue-600" />
-            </div>
-          </div>
-        </div>
-      </div>
+      {/* Stats Cards Component */}
+      <InstructorAssignmentStatsCards assignments={assignments} />
 
-      {/* Assignment Table */}
-      <Table
-        columns={columns}
-        dataSource={filteredAssignments}
-        rowKey="id"
+      {/* Assignment Table Component */}
+      <InstructorManageAssignmentTable
+        assignments={assignments}
         loading={loading}
-        pagination={false}
-        className="bg-white rounded-xl border border-gray-200"
+        onUpdateDeadline={handleUpdateDeadlineClick}
+        onDelete={handleDeleteClick}
+        onEdit={handleEditClick}
+        onViewSubmissions={handleViewSubmissions}
+        onPublish={handlePublishClick}
       />
 
-      {/* Update Deadline Modal */}
+      {/* Modals */}
       <UpdateDeadlineModal
         isOpen={showUpdateDeadlineModal}
         onClose={handleCloseDeadlineModal}
@@ -556,7 +350,6 @@ const InstructorManageAssignment = () => {
         assignment={selectedAssignment}
       />
 
-      {/* Delete Assignment Modal */}
       <DeleteAssignmentModal
         isOpen={showDeleteModal}
         onClose={handleCloseDeleteModal}
@@ -564,7 +357,6 @@ const InstructorManageAssignment = () => {
         assignment={selectedAssignment}
       />
 
-      {/* Create Assignment Modal */}
       <CreateAssignmentModal
         isOpen={showModal}
         onClose={() => setShowModal(false)}
@@ -572,7 +364,6 @@ const InstructorManageAssignment = () => {
         courseInstanceId={courseInstanceId}
       />
 
-      {/* Edit Assignment Modal */}
       <EditAssignmentModal
         isOpen={showEditModal}
         onClose={() => {
@@ -583,7 +374,6 @@ const InstructorManageAssignment = () => {
         assignment={editingAssignment}
       />
 
-      {/* Export Excel Modal */}
       <ExportExcelModal
         isOpen={showExportModal}
         onClose={() => setShowExportModal(false)}
@@ -592,7 +382,6 @@ const InstructorManageAssignment = () => {
         classId={courseInstanceId}
       />
 
-      {/* Publish Assignment Modal */}
       <PublishAssignmentModal
         isOpen={showPublishModal}
         onClose={handleClosePublishModal}

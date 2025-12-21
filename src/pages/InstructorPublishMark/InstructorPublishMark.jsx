@@ -6,6 +6,7 @@ import { getAssignmentsByCourseInstanceId } from '../../service/assignmentServic
 import { getSubmissionSummary } from '../../service/instructorSubmission';
 import { getCurrentAccount } from '../../utils/accountUtils';
 import { publishGrades } from '../../service/instructorGrading';
+import { getCourseInstanceById } from '../../service/courseInstanceService';
 
 import FilterSection from '../../component/InstructorPublish/FilterSection';
 import EmptyState from '../../component/InstructorPublish/EmptyState';
@@ -23,6 +24,7 @@ const InstructorPublishMark = () => {
   const [assignments, setAssignments] = useState([]);
   const [students, setStudents] = useState([]);
   const [assignmentInfo, setAssignmentInfo] = useState(null);
+  const [courseInstanceData, setCourseInstanceData] = useState(null);
   
   const [selectedAssignmentId, setSelectedAssignmentId] = useState('');
   
@@ -38,8 +40,18 @@ const InstructorPublishMark = () => {
   useEffect(() => {
     if (courseInstanceId) {
       fetchAssignments();
+      fetchCourseInstanceData();
     }
   }, [courseInstanceId]);
+
+  const fetchCourseInstanceData = async () => {
+    try {
+      const response = await getCourseInstanceById(courseInstanceId);
+      setCourseInstanceData(response);
+    } catch (error) {
+      console.error('Failed to fetch course instance data:', error);
+    }
+  };
 
   const fetchAssignments = async () => {
     setLoading(prev => ({ ...prev, assignments: true }));
@@ -164,7 +176,17 @@ const InstructorPublishMark = () => {
   return (
     <div className="min-h-screen bg-white-50 p-6">
       <div className="max-w-7xl mx-auto">
-        <h1 className="text-2xl font-bold text-gray-800 mb-6">Assignment Scores Table</h1>
+        <div className="mb-8">
+          <h1 className="text-2xl font-bold text-gray-800 mb-4">Assignment Scores Table</h1>
+          <div className="flex items-center space-x-4">
+            <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium">
+              Course: {courseInstanceData?.courseCode || "N/A"}
+            </span>
+            <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium">
+              Class: {courseInstanceData?.sectionCode || "N/A"}
+            </span>
+          </div>
+        </div>
         
         <FilterSection
           assignments={assignments}
