@@ -1,6 +1,6 @@
 import React, { useState, useRef } from "react";
 import { ChevronDown, Loader2, AlertCircle, Download, Upload } from "lucide-react";
-import { Input, Button, Modal } from "antd";
+import { Input, Button, Modal, Table } from "antd";
 import * as XLSX from "xlsx";
 import { toast } from "react-toastify";
 import { exportSubmissionsExcel, importSubmissionsExcel } from "../../service/instructorGrading";
@@ -247,6 +247,136 @@ const GradingTable = ({
     }
   };
 
+  const columns = [
+    {
+      title: 'No.',
+      key: 'index',
+      width: '5%',
+      render: (_, __, index) => index + 1,
+    },
+    {
+      title: 'Student Code',
+      dataIndex: 'studentCode',
+      key: 'studentCode',
+      width: '12%',
+    },
+    {
+      title: 'Full Name',
+      dataIndex: 'studentName',
+      key: 'studentName',
+      width: '15%',
+      render: (name) => <span className="text-gray-800">{name}</span>,
+    },
+    {
+      title: 'Score',
+      key: 'score',
+      width: '12%',
+      render: (_, student) => (
+        <span
+          className={`inline-flex items-center justify-center w-20 h-10 border-2 rounded-lg font-semibold ${getScoreStyle(
+            student.status === "Graded" ? student.instructorScore :
+            (student.instructorScore === 0 || student.instructorScore === 0.0) ? null : student.instructorScore
+          )}`}
+        >
+          {student.status === "Graded"
+            ? (student.instructorScore !== null &&
+               student.instructorScore !== undefined
+                ? `${student.instructorScore.toFixed(1)}`
+                : "--")
+            : ((student.status === "Submitted" || student.status === "Not Submitted") &&
+               (student.instructorScore === 0 || student.instructorScore === 0.0)
+                ? "--"
+                : (student.instructorScore !== null &&
+                   student.instructorScore !== undefined
+                    ? `${student.instructorScore.toFixed(1)}`
+                    : "--"))}{" "}
+          / {assignmentInfo?.maxScore || 10}
+        </span>
+      ),
+    },
+    {
+      title: 'Feedback',
+      dataIndex: 'feedback',
+      key: 'feedback',
+      width: '18%',
+      render: (feedback) => (
+        <span className="text-gray-500 max-w-xs truncate block">
+          {feedback || "No feedback yet"}
+        </span>
+      ),
+    },
+    {
+      title: 'Submission Time',
+      dataIndex: 'submittedAt',
+      key: 'submittedAt',
+      width: '12%',
+      render: (submittedAt) => {
+        const submissionTime = formatDateTime(submittedAt);
+        return submittedAt ? (
+          <div className={getSubmissionTimeStyle()}>
+            {submissionTime.date}
+            <br />
+            {submissionTime.time}
+          </div>
+        ) : (
+          <span className="text-gray-400">--</span>
+        );
+      },
+    },
+    {
+      title: (
+        <div
+          onClick={handleStatusClick}
+          className="cursor-pointer hover:text-orange-600 select-none flex items-center gap-1"
+        >
+          Status <ChevronDown size={16} />
+        </div>
+      ),
+      dataIndex: 'status',
+      key: 'status',
+      width: '12%',
+      render: (status) => (
+        <span
+          className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${getStatusStyle(status)}`}
+        >
+          {status}
+        </span>
+      ),
+    },
+    {
+      title: 'Action',
+      key: 'action',
+      width: '14%',
+      render: (_, student) => {
+        if (student.status === "Submitted" && student.assignmentStatus === "Closed") {
+          return (
+            <Button
+              onClick={() => onGradeClick(student.submissionId, student.status)}
+              type="primary"
+              className="bg-blue-500 hover:!bg-blue-600"
+            >
+              Grade
+            </Button>
+          );
+        } else if (
+          (student.status === "Graded" && student.assignmentStatus === "Closed") ||
+          (student.assignmentStatus === "GradesPublished" && student.regradeRequestStatus === "Approved")
+        ) {
+          return (
+            <Button
+              onClick={() => onGradeClick(student.submissionId, student.status)}
+              type="primary"
+              className="bg-orange-500 hover:!bg-orange-600"
+            >
+              Re-grade
+            </Button>
+          );
+        }
+        return null;
+      },
+    },
+  ];
+
   return (
     <>
       {/* Assignment Info Card */}
@@ -354,149 +484,21 @@ const GradingTable = ({
       )}
 
       {/* Table */}
-      <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-        {loading.summary ? (
-          <div className="flex items-center justify-center py-12">
-            <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
-            <span className="ml-3 text-gray-600">Loading students...</span>
-          </div>
-        ) : (
-          <table className="w-full">
-            <thead className="bg-gray-50 border-b border-gray-200">
-              <tr>
-                <th className="px-6 py-3 text-left text-sm font-medium text-gray-600">
-                  No.
-                </th>
-                <th className="px-6 py-3 text-left text-sm font-medium text-gray-600">
-                  Student Code
-                </th>
-                <th className="px-6 py-3 text-left text-sm font-medium text-gray-600">
-                  Full Name
-                </th>
-                <th className="px-6 py-3 text-left text-sm font-medium text-gray-600">
-                  Score
-                </th>
-                <th className="px-6 py-3 text-left text-sm font-medium text-gray-600">
-                  Feedback
-                </th>
-                <th className="px-6 py-3 text-left text-sm font-medium text-gray-600">
-                  Submission Time
-                </th>
-                <th
-                  onClick={handleStatusClick}
-                  className="px-6 py-3 text-left text-sm font-medium text-gray-600 cursor-pointer hover:text-orange-600 select-none flex items-center gap-1"
-                >
-                  Status <ChevronDown size={16} />
-                </th>
-                <th className="px-6 py-3 text-left text-sm font-medium text-gray-600">
-                  Action
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200">
-              {filteredStudents.length > 0 ? (
-                filteredStudents.map((student, index) => {
-                  const submissionTime = formatDateTime(student.submittedAt);
-                  return (
-                    <tr key={student.studentId} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 text-sm text-gray-600">
-                        {index + 1}
-                      </td>
-                      <td className="px-6 py-4 text-sm text-gray-600">
-                        {student.studentCode}
-                      </td>
-                      <td className="px-6 py-4 text-sm text-gray-800">
-                        {student.studentName}
-                      </td>
-                      <td className="px-6 py-4">
-                        <span
-                          className={`inline-flex items-center justify-center w-20 h-10 border-2 rounded-lg font-semibold ${getScoreStyle(
-                            student.status === "Graded" ? student.instructorScore :
-                            (student.instructorScore === 0 || student.instructorScore === 0.0) ? null : student.instructorScore
-                          )}`}
-                        >
-                          {student.status === "Graded"
-                            ? (student.instructorScore !== null &&
-                               student.instructorScore !== undefined
-                                ? `${student.instructorScore.toFixed(1)}`
-                                : "--")
-                            : ((student.status === "Submitted" || student.status === "Not Submitted") &&
-                               (student.instructorScore === 0 || student.instructorScore === 0.0)
-                                ? "--"
-                                : (student.instructorScore !== null &&
-                                   student.instructorScore !== undefined
-                                    ? `${student.instructorScore.toFixed(1)}`
-                                    : "--"))}{" "}
-                          / {assignmentInfo?.maxScore || 10}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 text-sm text-gray-500 max-w-xs truncate">
-                        {student.feedback || "No feedback yet"}
-                      </td>
-                      <td className="px-6 py-4 text-sm">
-                        {student.submittedAt ? (
-                          <div className={getSubmissionTimeStyle()}>
-                            {submissionTime.date}
-                            <br />
-                            {submissionTime.time}
-                          </div>
-                        ) : (
-                          <span className="text-gray-400">--</span>
-                        )}
-                      </td>
-                      <td className="px-6 py-4">
-                        <span
-                          className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${getStatusStyle(
-                            student.status
-                          )}`}
-                        >
-                          {student.status}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4">
-                        {student.status === "Submitted" &&
-                        student.assignmentStatus === "Closed" ? (
-                          <Button
-                            onClick={() =>
-                              onGradeClick(student.submissionId, student.status)
-                            }
-                            type="primary"
-                            className="bg-blue-500 hover:!bg-blue-600"
-                          >
-                            Grade
-                          </Button>
-                        ) : (student.status === "Graded" &&
-                            student.assignmentStatus === "Closed") ||
-                          (student.assignmentStatus === "GradesPublished" &&
-                            student.regradeRequestStatus === "Approved") ? (
-                          <Button
-                            onClick={() =>
-                              onGradeClick(student.submissionId, student.status)
-                            }
-                            type="primary"
-                            className="bg-orange-500 hover:!bg-orange-600"
-                          >
-                            Re-grade
-                          </Button>
-                        ) : null}
-                      </td>
-                    </tr>
-                  );
-                })
-              ) : (
-                <tr>
-                  <td
-                    colSpan="7"
-                    className="px-6 py-12 text-center text-gray-500"
-                  >
-                    No students found
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        )}
-      </div>
+      <Table
+        columns={columns}
+        dataSource={filteredStudents}
+        rowKey="studentId"
+        loading={loading.summary}
+        pagination={false}
+        locale={{
+          emptyText: (
+            <div className="px-6 py-12 text-center text-gray-500">
+              No students found
+            </div>
+          ),
+        }}
+        className="bg-white rounded-lg border border-gray-200"
+      />
 
       {/* Action Button: Auto Grade Zero - only show when assignment is Closed or Cancelled */}
       {assignmentStatus && ['Closed', 'Cancelled'].includes(assignmentStatus) && (

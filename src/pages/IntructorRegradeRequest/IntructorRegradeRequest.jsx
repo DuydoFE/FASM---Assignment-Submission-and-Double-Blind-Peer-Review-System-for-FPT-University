@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Search, Eye, Loader2, MoreVertical, RefreshCw, CheckCircle, FileEdit } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import { Dropdown, Input, Button, Pagination } from 'antd';
+import { Dropdown, Input, Button, Pagination, Table } from 'antd';
 import { getRegradeRequestsForInstructor } from '../../service/regradeService';
 import { getCurrentAccount } from '../../utils/accountUtils';
 import SolveRegradeRequestModal from '../../component/RegradeRequest/SolveRegradeRequestModal';
@@ -236,11 +236,124 @@ const InstructorRegradeRequest = () => {
         return matchesSearch && matchesStatus;
     });
 
-    // Pagination
-    const indexOfLastRequest = currentPage * itemsPerPage;
-    const indexOfFirstRequest = indexOfLastRequest - itemsPerPage;
-    const currentRequests = filteredRequests.slice(indexOfFirstRequest, indexOfLastRequest);
-    const totalPages = Math.ceil(filteredRequests.length / itemsPerPage);
+    const columns = [
+        {
+            title: 'Student',
+            key: 'student',
+            width: '15%',
+            render: (_, request) => (
+                <div className="flex flex-col">
+                    <span className="text-sm font-medium text-gray-900">{request.name}</span>
+                    <span className="text-xs text-gray-500">{request.mssv}</span>
+                    <span className="text-xs text-gray-400">{request.email}</span>
+                </div>
+            ),
+        },
+        {
+            title: 'Course',
+            dataIndex: 'courseName',
+            key: 'courseName',
+            width: '12%',
+            render: (text) => <span className="text-sm text-gray-900">{text}</span>,
+        },
+        {
+            title: 'Class',
+            dataIndex: 'className',
+            key: 'className',
+            width: '10%',
+            render: (text) => <span className="text-sm text-gray-900">{text}</span>,
+        },
+        {
+            title: 'Assignment',
+            dataIndex: 'assignmentTitle',
+            key: 'assignmentTitle',
+            width: '15%',
+            render: (text) => (
+                <span
+                    className="text-sm text-gray-900 max-w-xs truncate block"
+                    title={text?.length > 25 ? text : undefined}
+                >
+                    {text?.length > 25 ? `${text.substring(0, 25)}...` : text}
+                </span>
+            ),
+        },
+        {
+            title: 'Old Score',
+            dataIndex: 'oldScore',
+            key: 'oldScore',
+            width: '10%',
+            align: 'center',
+            render: (score) => (
+                <span className="text-sm font-semibold text-gray-600">
+                    {score !== null && score !== undefined ? `${score}/10` : '--'}
+                </span>
+            ),
+        },
+        {
+            title: 'New Score',
+            dataIndex: 'finalScore',
+            key: 'finalScore',
+            width: '10%',
+            align: 'center',
+            render: (score) => (
+                <span className="text-sm font-semibold text-indigo-600">
+                    {score !== null && score !== undefined ? `${score}/10` : 'N/A'}
+                </span>
+            ),
+        },
+        {
+            title: 'Request Time',
+            dataIndex: 'requestTime',
+            key: 'requestTime',
+            width: '12%',
+            align: 'center',
+            render: (time) => (
+                <span className="text-sm text-gray-600 whitespace-nowrap">{time}</span>
+            ),
+        },
+        {
+            title: 'Status',
+            dataIndex: 'status',
+            key: 'status',
+            width: '10%',
+            align: 'center',
+            render: (status) => (
+                <span className={getStatusStyle(status)}>{status}</span>
+            ),
+        },
+        {
+            title: 'Actions',
+            key: 'actions',
+            width: '10%',
+            align: 'center',
+            render: (_, request) => {
+                if (request.status === "Pending") {
+                    return (
+                        <Button
+                            onClick={() => handleSolveClick(request)}
+                            type="primary"
+                            className="bg-blue-600 hover:!bg-blue-700"
+                        >
+                            Solve
+                        </Button>
+                    );
+                } else if (request.status === "Approved") {
+                    return (
+                        <Dropdown
+                            menu={{ items: getDropdownItems(request) }}
+                            trigger={['click']}
+                            placement="bottomRight"
+                        >
+                            <button className="p-2 hover:bg-gray-100 rounded-md transition-colors">
+                                <MoreVertical className="w-5 h-5 text-gray-600" />
+                            </button>
+                        </Dropdown>
+                    );
+                }
+                return null;
+            },
+        },
+    ];
 
     if (loading) {
         return (
@@ -317,116 +430,21 @@ const InstructorRegradeRequest = () => {
                 </div>
 
                 {/* Review Requests Table */}
-                <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-                    <div className="overflow-x-auto">
-                        <table className="w-full">
-                            <thead className="bg-gray-50 border-b border-gray-200">
-                                <tr>
-                                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Student</th>
-                                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Course</th>
-                                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Class</th>
-                                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Assignment</th>
-                                    <th className="px-6 py-4 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">Old Score</th>
-                                    <th className="px-6 py-4 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">New Score</th>
-                                    <th className="px-6 py-4 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">Request Time</th>
-                                    <th className="px-6 py-4 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">Status</th>
-                                    <th className="px-6 py-4 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-gray-200">
-                                {currentRequests.map((request) => (
-                                    <tr key={request.requestId} className="hover:bg-gray-50 transition-colors">
-                                        <td className="px-6 py-4">
-                                            <div className="flex flex-col">
-                                                <span className="text-sm font-medium text-gray-900">{request.name}</span>
-                                                <span className="text-xs text-gray-500">{request.mssv}</span>
-                                                <span className="text-xs text-gray-400">{request.email}</span>
-                                            </div>
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            <span className="text-sm text-gray-900">
-                                                {request.courseName}
-                                            </span>
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            <span className="text-sm text-gray-900">
-                                                {request.className}
-                                            </span>
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            <span
-                                                className="text-sm text-gray-900 max-w-xs truncate block"
-                                                title={request.assignmentTitle?.length > 25 ? request.assignmentTitle : undefined}
-                                            >
-                                                {request.assignmentTitle?.length > 25
-                                                    ? `${request.assignmentTitle.substring(0, 25)}...`
-                                                    : request.assignmentTitle}
-                                            </span>
-                                        </td>
-                                        <td className="px-6 py-4 text-center">
-                                            <span className="text-sm font-semibold text-gray-600">
-                                                {request.oldScore !== null && request.oldScore !== undefined ? `${request.oldScore}/10` : '--'}
-                                            </span>
-                                        </td>
-                                        <td className="px-6 py-4 text-center">
-                                            <span className="text-sm font-semibold text-indigo-600">
-                                                {request.finalScore !== null && request.finalScore !== undefined ? `${request.finalScore}/10` : 'N/A'}
-                                            </span>
-                                        </td>
-                                        <td className="px-6 py-4 text-center">
-                                            <span className="text-sm text-gray-600 whitespace-nowrap">
-                                                {request.requestTime}
-                                            </span>
-                                        </td>
-                                        <td className="px-6 py-4 text-center">
-                                            <span className={getStatusStyle(request.status)}>
-                                                {request.status}
-                                            </span>
-                                        </td>
-                                        <td className="px-6 py-4 text-center">
-                                            {request.status === "Pending" ? (
-                                                <Button
-                                                    onClick={() => handleSolveClick(request)}
-                                                    type="primary"
-                                                    className="bg-blue-600 hover:!bg-blue-700"
-                                                >
-                                                    Solve
-                                                </Button>
-                                            ) : request.status === "Approved" ? (
-                                                <Dropdown
-                                                    menu={{ items: getDropdownItems(request) }}
-                                                    trigger={['click']}
-                                                    placement="bottomRight"
-                                                >
-                                                    <button className="p-2 hover:bg-gray-100 rounded-md transition-colors">
-                                                        <MoreVertical className="w-5 h-5 text-gray-600" />
-                                                    </button>
-                                                </Dropdown>
-                                            ) : (
-                                                null
-                                            )}
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
-
-                    {/* Pagination */}
-                    {filteredRequests.length > itemsPerPage && (
-                        <div className="mt-6 flex items-center justify-center py-4">
-                            <Pagination
-                                current={currentPage}
-                                total={filteredRequests.length}
-                                pageSize={itemsPerPage}
-                                onChange={(page) => setCurrentPage(page)}
-                                showSizeChanger={false}
-                                showTotal={(total, range) => `${range[0]}-${range[1]} of ${total} requests`}
-                                className="ant-pagination"
-                            />
-                        </div>
-                    )}
-                </div>
+                <Table
+                    columns={columns}
+                    dataSource={filteredRequests}
+                    rowKey="requestId"
+                    loading={loading}
+                    pagination={{
+                        current: currentPage,
+                        pageSize: itemsPerPage,
+                        total: filteredRequests.length,
+                        onChange: (page) => setCurrentPage(page),
+                        showSizeChanger: false,
+                        showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} requests`,
+                    }}
+                    className="bg-white rounded-xl shadow-sm"
+                />
 
                 {/* Empty State */}
                 {filteredRequests.length === 0 && (

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { ArrowLeft, ChevronDown, BookOpen, Users } from 'lucide-react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
+import { Table, Button } from 'antd';
 import { submissionService } from '../../service/submissionService';
 
 const InstructorManageSubmission = () => {
@@ -89,6 +90,62 @@ const InstructorManageSubmission = () => {
   const gradedCount = submissions.filter(s => s.status === 'Graded').length;
   const notSubmittedCount = submissions.filter(s => s.status === 'Not Submitted').length;
 
+  const columns = [
+    {
+      title: 'Student Code',
+      dataIndex: 'mssv',
+      key: 'mssv',
+      width: '20%',
+    },
+    {
+      title: 'Full Name',
+      dataIndex: 'name',
+      key: 'name',
+      width: '25%',
+      render: (name) => <span className="text-gray-800">{name}</span>,
+    },
+    {
+      title: (
+        <div
+          onClick={handleStatusClick}
+          className="cursor-pointer select-none hover:text-orange-600 transition flex items-center gap-1"
+        >
+          Submission Status
+          <ChevronDown size={16} />
+        </div>
+      ),
+      dataIndex: 'status',
+      key: 'status',
+      width: '20%',
+      render: (status, record) => (
+        <span className={`inline-flex px-3 py-1 rounded-full text-xs font-medium ${record.statusColor}`}>
+          {status}
+        </span>
+      ),
+    },
+    {
+      title: 'Submission Time',
+      dataIndex: 'submitTime',
+      key: 'submitTime',
+      width: '20%',
+    },
+    {
+      title: 'Actions',
+      key: 'actions',
+      width: '15%',
+      render: (_, student) =>
+        student.status !== "Not Submitted" ? (
+          <Button
+            onClick={() => handleViewDetails(student)}
+            type="primary"
+            className="bg-blue-500 hover:!bg-blue-600"
+          >
+            View Detail
+          </Button>
+        ) : null,
+    },
+  ];
+
   if (loading) {
     return (
       <div className="max-w-7xl mx-auto p-6 bg-white text-center">
@@ -103,13 +160,13 @@ const InstructorManageSubmission = () => {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-4">
-          <button
+          <Button
             onClick={() => navigate(-1)}
-            className="inline-flex items-center gap-2 p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            icon={<ArrowLeft className="w-5 h-5" />}
+            className="inline-flex items-center gap-2"
           >
-            <ArrowLeft className="w-5 h-5 text-gray-600" />
-            <span className="text-gray-600">Back</span>
-          </button>
+            Back
+          </Button>
         </div>
         <div className="text-right">
           <h1 className="text-xl font-semibold text-gray-800">
@@ -176,51 +233,14 @@ const InstructorManageSubmission = () => {
       </div>
 
       {/* Table */}
-      <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-        <table className="w-full">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="px-6 py-4 text-left text-sm font-medium text-gray-600">Student Code</th>
-              <th className="px-6 py-4 text-left text-sm font-medium text-gray-600">Full Name</th>
-              <th
-                onClick={handleStatusClick}
-                className="px-6 py-4 text-left text-sm font-medium text-gray-600 cursor-pointer select-none hover:text-orange-600 transition"
-              >
-                <div className="flex items-center gap-1">
-                  Submission Status
-                  <ChevronDown size={16} />
-                </div>
-              </th>
-              <th className="px-6 py-4 text-left text-sm font-medium text-gray-600">Submission Time</th>
-              <th className="px-6 py-4 text-left text-sm font-medium text-gray-600">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-200">
-            {filteredStudents.map((student, index) => (
-              <tr key={index} className="hover:bg-gray-50">
-                <td className="px-6 py-4 text-sm text-gray-600">{student.mssv}</td>
-                <td className="px-6 py-4 text-sm text-gray-800">{student.name}</td>
-                <td className="px-6 py-4">
-                  <span className={`inline-flex px-3 py-1 rounded-full text-xs font-medium ${student.statusColor}`}>
-                    {student.status}
-                  </span>
-                </td>
-                <td className="px-6 py-4 text-sm text-gray-600">{student.submitTime}</td>
-                <td className="px-6 py-4">
-                  {student.status !== "Not Submitted" && (
-                    <button
-                      onClick={() => handleViewDetails(student)}
-                      className="px-4 py-2 bg-blue-500 text-white text-sm rounded-lg hover:bg-blue-600 transition-colors"
-                    >
-                      View Details
-                    </button>
-                  )}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      <Table
+        columns={columns}
+        dataSource={filteredStudents}
+        rowKey={(record, index) => index}
+        loading={loading}
+        pagination={false}
+        className="bg-white rounded-lg border border-gray-200"
+      />
     </div>
   );
 };
