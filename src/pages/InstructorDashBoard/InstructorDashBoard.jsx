@@ -9,6 +9,7 @@ import {
   Clock,
 } from "lucide-react";
 import { Input, Card } from "antd";
+import { motion } from "framer-motion";
 import { getInstructorCourses } from "../../service/courseInstructorService";
 import { getCurrentAccount } from "../../utils/accountUtils";
 import { useNavigate } from "react-router-dom";
@@ -129,37 +130,49 @@ const InstructorDashboard = () => {
       {/* Stats Cards */}
       <div className="grid grid-cols-4 gap-6 mb-8">
         {/* Total Classes */}
-        <Card bordered={true}>
-          <div className="flex items-center">
-            <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mr-4">
-              <Book className="w-6 h-6 text-purple-600" />
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.1 }}
+        >
+          <Card bordered={true}>
+            <div className="flex items-center">
+              <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mr-4">
+                <Book className="w-6 h-6 text-purple-600" />
+              </div>
+              <div>
+                <p className="text-sm text-gray-500 mb-1">Total Classes</p>
+                <p className="text-3xl font-bold text-gray-900">
+                  {courses.length}
+                </p>
+              </div>
             </div>
-            <div>
-              <p className="text-sm text-gray-500 mb-1">Total Classes</p>
-              <p className="text-3xl font-bold text-gray-900">
-                {courses.length}
-              </p>
-            </div>
-          </div>
-        </Card>
+          </Card>
+        </motion.div>
 
         {/* Total Students */}
-        <Card bordered={true}>
-          <div className="flex items-center">
-            <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mr-4">
-              <Users className="w-6 h-6 text-green-600" />
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+        >
+          <Card bordered={true}>
+            <div className="flex items-center">
+              <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mr-4">
+                <Users className="w-6 h-6 text-green-600" />
+              </div>
+              <div>
+                <p className="text-sm text-gray-500 mb-1">Total Students</p>
+                <p className="text-3xl font-bold text-gray-900">
+                  {courses.reduce(
+                    (total, course) => total + (course.studentCount || 0),
+                    0
+                  )}
+                </p>
+              </div>
             </div>
-            <div>
-              <p className="text-sm text-gray-500 mb-1">Total Students</p>
-              <p className="text-3xl font-bold text-gray-900">
-                {courses.reduce(
-                  (total, course) => total + (course.studentCount || 0),
-                  0
-                )}
-              </p>
-            </div>
-          </div>
-        </Card>
+          </Card>
+        </motion.div>
       </div>
 
       {loading && (
@@ -170,62 +183,74 @@ const InstructorDashboard = () => {
       )}
 
       {/* Semester Classes Section */}
-      <Card
-        title={
-          <div className="flex justify-between items-center">
-            <h2 className="text-lg font-semibold text-gray-900">
-              Classes This Semester
-            </h2>
-            <Input
-              placeholder="Search course..."
-              prefix={<Search className="w-5 h-5 text-gray-400" />}
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              size="large"
-              className="w-80"
-              style={{
-                borderRadius: '8px',
-                fontSize: '16px',
-              }}
-            />
-          </div>
-        }
-        bordered={true}
-        className="mb-8"
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.3 }}
       >
-        {/* Course Cards */}
-        <div className="grid grid-cols-3 gap-6">
-          {!loading &&
-            courses
-              .filter(
-                (course) =>
-                  // Only show courses with status 'active' (Ongoing)
-                  course.status === "active" &&
-                  (course.courseCode
-                    .toLowerCase()
-                    .includes(searchTerm.toLowerCase()) ||
-                    course.courseInstanceName
+        <Card
+          title={
+            <div className="flex justify-between items-center">
+              <h2 className="text-lg font-semibold text-gray-900">
+                Classes This Semester
+              </h2>
+              <Input
+                placeholder="Search course..."
+                prefix={<Search className="w-5 h-5 text-gray-400" />}
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                size="large"
+                className="w-80"
+                style={{
+                  borderRadius: '8px',
+                  fontSize: '16px',
+                }}
+              />
+            </div>
+          }
+          bordered={true}
+          className="mb-8"
+        >
+          {/* Course Cards */}
+          <div className="grid grid-cols-3 gap-6">
+            {!loading &&
+              courses
+                .filter(
+                  (course) =>
+                    // Only show courses with status 'active' (Ongoing)
+                    course.status === "active" &&
+                    (course.courseCode
                       .toLowerCase()
-                      .includes(searchTerm.toLowerCase()))
-              )
-              .map((course) => (
-                <Card
-                  key={course.id}
-                  hoverable
-                  onClick={() => {
-                    try {
-                      sessionStorage.setItem(
-                        "currentCourseInstanceId",
-                        String(course.courseInstanceId)
-                      );
-                    } catch (e) {
-                      /* ignore */
-                    }
-                    navigate(
-                      `/instructor/class-statistic/${course.courseInstanceId}`
-                    );
-                  }}
-                >
+                      .includes(searchTerm.toLowerCase()) ||
+                      course.courseInstanceName
+                        .toLowerCase()
+                        .includes(searchTerm.toLowerCase()))
+                )
+                .map((course, index) => (
+                  <motion.div
+                    key={course.id}
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 0.3, delay: index * 0.1 }}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    <Card
+                      hoverable
+                      onClick={() => {
+                        try {
+                          sessionStorage.setItem(
+                            "currentCourseInstanceId",
+                            String(course.courseInstanceId)
+                          );
+                        } catch (e) {
+                          /* ignore */
+                        }
+                        navigate(
+                          `/instructor/class-statistic/${course.courseInstanceId}`
+                        );
+                      }}
+                    >
                   <div className="mb-3">
                     <div className="flex items-center justify-between">
                       <span className="text-sm font-medium text-blue-600">
@@ -255,21 +280,28 @@ const InstructorDashboard = () => {
                       <span>{course.semester}</span>
                     </div>
                   </div>
-                </Card>
-              ))}
-        </div>
-        {!loading && courses.length === 0 && (
-          <div className="text-center py-12">
-            <div className="text-gray-400 mb-4">
-              <Search size={48} className="mx-auto" />
-            </div>
-            <h3 className="text-lg font-medium text-gray-600 mb-2">
-              No courses found
-            </h3>
-            <p className="text-gray-500">Try adjusting your search terms</p>
+                    </Card>
+                  </motion.div>
+                ))}
           </div>
-        )}
-      </Card>
+          {!loading && courses.length === 0 && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.5 }}
+              className="text-center py-12"
+            >
+              <div className="text-gray-400 mb-4">
+                <Search size={48} className="mx-auto" />
+              </div>
+              <h3 className="text-lg font-medium text-gray-600 mb-2">
+                No courses found
+              </h3>
+              <p className="text-gray-500">Try adjusting your search terms</p>
+            </motion.div>
+          )}
+        </Card>
+      </motion.div>
     </div>
   );
 };

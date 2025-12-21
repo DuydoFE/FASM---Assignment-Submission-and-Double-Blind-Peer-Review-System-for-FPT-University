@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useLocation, useParams } from "react-router-dom";
 import { Search, Users, Trash2, Plus } from "lucide-react";
 import { Input, Table } from "antd";
+import { motion } from "framer-motion";
 import { getCurrentAccount } from "../../utils/accountUtils";
 import {
   getStudentsInCourse,
@@ -271,7 +272,12 @@ const InstructorManageClass = () => {
 
   return (
     <div>
-      <div className="flex justify-between items-center mb-6">
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="flex justify-between items-center mb-6"
+      >
         <div>
           <h2 className="text-2xl font-bold text-gray-900">Student List</h2>
           <div className="flex items-center mt-2 space-x-4">
@@ -310,9 +316,14 @@ const InstructorManageClass = () => {
             }}
           />
         </div>
-      </div>
+      </motion.div>
 
-      <Table
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.1 }}
+      >
+        <Table
         columns={columns}
         dataSource={filteredStudents}
         rowKey="code"
@@ -333,8 +344,9 @@ const InstructorManageClass = () => {
             </div>
           ),
         }}
-        className="bg-white rounded-lg shadow-sm"
-      />
+          className="bg-white rounded-lg shadow-sm"
+        />
+      </motion.div>
 
       <AddStudentModal
         isOpen={isAddModalOpen}

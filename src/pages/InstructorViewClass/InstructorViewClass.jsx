@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { Search, BookOpen, Play, CheckCircle, Clock, ChevronDown, Key } from 'lucide-react';
 import { Input, Table, Select } from 'antd';
+import { motion } from 'framer-motion';
 import { getCurrentAccount } from '../../utils/accountUtils';
 import { useNavigate } from 'react-router-dom';
 import { getInstructorCourses } from '../../service/courseInstructorService';
@@ -209,17 +210,27 @@ const InstructorViewClass = () => {
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
-        <div className="mb-8">
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="mb-8"
+        >
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            All Classes 
+            All Classes
           </h1>
           <p className="text-gray-600">
             Manage and track your teaching progress
           </p>
-        </div>
+        </motion.div>
 
         {/* Search and Filters */}
-        <div className="mb-8 flex gap-4 flex-wrap">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.1 }}
+          className="mb-8 flex gap-4 flex-wrap"
+        >
           <Input
             placeholder="Search by course name or code..."
             prefix={<Search className="w-5 h-5 text-gray-400" />}
@@ -245,49 +256,78 @@ const InstructorViewClass = () => {
               }))
             ]}
           />
-        </div>
+        </motion.div>
 
         {/* Statistics Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-          <div className="bg-blue-50 border border-blue-200 rounded-xl p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-gray-600 font-medium mb-1">Total Courses</p>
-                <p className="text-3xl font-bold text-gray-700">{totalClasses} courses</p>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+          >
+            <div className="bg-blue-50 border border-blue-200 rounded-xl p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-gray-600 font-medium mb-1">Total Courses</p>
+                  <p className="text-3xl font-bold text-gray-700">{totalClasses} courses</p>
+                </div>
               </div>
             </div>
-          </div>
+          </motion.div>
 
-          <div className="bg-green-50 border border-green-200 rounded-xl p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-green-600 font-medium mb-1">Ongoing</p>
-                <p className="text-3xl font-bold text-green-700">{ongoingClasses} courses</p>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.3 }}
+          >
+            <div className="bg-green-50 border border-green-200 rounded-xl p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-green-600 font-medium mb-1">Ongoing</p>
+                  <p className="text-3xl font-bold text-green-700">{ongoingClasses} courses</p>
+                </div>
               </div>
             </div>
-          </div>
+          </motion.div>
 
-          <div className="bg-orange-50 border border-orange-200 rounded-xl p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-orange-600 font-medium mb-1">Completed</p>
-                <p className="text-3xl font-bold text-orange-700">{completedClasses} courses</p>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.4 }}
+          >
+            <div className="bg-orange-50 border border-orange-200 rounded-xl p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-orange-600 font-medium mb-1">Completed</p>
+                  <p className="text-3xl font-bold text-orange-700">{completedClasses} courses</p>
+                </div>
               </div>
             </div>
-          </div>
+          </motion.div>
 
-          <div className="bg-blue-50 border border-blue-200 rounded-xl p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-blue-600 font-medium mb-1">Upcoming</p>
-                <p className="text-3xl font-bold text-blue-700">{upcomingClasses} courses</p>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.5 }}
+          >
+            <div className="bg-blue-50 border border-blue-200 rounded-xl p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-blue-600 font-medium mb-1">Upcoming</p>
+                  <p className="text-3xl font-bold text-blue-700">{upcomingClasses} courses</p>
+                </div>
               </div>
             </div>
-          </div>
+          </motion.div>
         </div>
 
         {/* Classes Table */}
-        <Table
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.6 }}
+        >
+          <Table
           columns={columns}
           dataSource={filteredClasses}
           rowKey="id"
@@ -324,8 +364,9 @@ const InstructorViewClass = () => {
               </div>
             ),
           }}
-          className="bg-white rounded-xl shadow-sm border border-gray-200"
-        />
+            className="bg-white rounded-xl shadow-sm border border-gray-200"
+          />
+        </motion.div>
       </div>
 
       {/* Password Modal */}

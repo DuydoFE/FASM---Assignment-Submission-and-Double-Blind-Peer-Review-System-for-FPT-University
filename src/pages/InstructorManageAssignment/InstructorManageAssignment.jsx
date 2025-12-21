@@ -3,6 +3,7 @@ import {
   Plus,
   FileSpreadsheet,
 } from "lucide-react";
+import { motion } from "framer-motion";
 import { toast } from "react-toastify";
 import { useNavigate, useLocation, useParams } from "react-router-dom";
 import {
@@ -293,7 +294,12 @@ const InstructorManageAssignment = () => {
   return (
     <div className="p-8">
       {/* Header */}
-      <div className="flex justify-between items-center mb-8">
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="flex justify-between items-center mb-8"
+      >
         <div>
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
             Assignment Management
@@ -326,21 +332,33 @@ const InstructorManageAssignment = () => {
             <span>Create Assignment</span>
           </button>
         </div>
-      </div>
+      </motion.div>
 
       {/* Stats Cards Component */}
-      <InstructorAssignmentStatsCards assignments={assignments} />
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.1 }}
+      >
+        <InstructorAssignmentStatsCards assignments={assignments} />
+      </motion.div>
 
       {/* Assignment Table Component */}
-      <InstructorManageAssignmentTable
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.2 }}
+      >
+        <InstructorManageAssignmentTable
         assignments={assignments}
         loading={loading}
         onUpdateDeadline={handleUpdateDeadlineClick}
         onDelete={handleDeleteClick}
         onEdit={handleEditClick}
         onViewSubmissions={handleViewSubmissions}
-        onPublish={handlePublishClick}
-      />
+          onPublish={handlePublishClick}
+        />
+      </motion.div>
 
       {/* Modals */}
       <UpdateDeadlineModal

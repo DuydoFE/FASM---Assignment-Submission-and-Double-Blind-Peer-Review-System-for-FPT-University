@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
+import { motion } from 'framer-motion';
 
 import { getAssignmentsByCourseInstanceId } from '../../service/assignmentService';
 import { getSubmissionSummary } from '../../service/instructorSubmission';
@@ -242,7 +243,12 @@ const InstructorManageGrading = () => {
   return (
     <div className="min-h-screen bg-white-50 p-6">
       <div className="max-w-7xl mx-auto">
-        <div className="mb-8">
+        <motion.div
+          className="mb-8"
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+        >
           <h1 className="text-2xl font-bold text-gray-800 mb-4">Instructor Scores Table</h1>
           <div className="flex items-center space-x-4">
             <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium">
@@ -252,24 +258,41 @@ const InstructorManageGrading = () => {
               Class: {courseInstanceData?.sectionCode || "N/A"}
             </span>
           </div>
-        </div>
+        </motion.div>
         
-        <GradingFilterSection
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.1 }}
+        >
+          <GradingFilterSection
           assignments={assignments}
           selectedAssignmentId={selectedAssignmentId}
           setSelectedAssignmentId={setSelectedAssignmentId}
           loading={loading}
           onViewMark={handleViewMark}
-        />
+          />
+        </motion.div>
 
         {!showTable && (
-          <GradingEmptyState
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+          >
+            <GradingEmptyState
             selectedAssignmentId={selectedAssignmentId}
-          />
+            />
+          </motion.div>
         )}
 
         {showTable && (
-          <GradingTable
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+          >
+            <GradingTable
             assignmentInfo={assignmentInfo}
             searchTerm={searchTerm}
             setSearchTerm={setSearchTerm}
@@ -283,7 +306,8 @@ const InstructorManageGrading = () => {
             assignmentId={selectedAssignmentId}
             currentUserId={currentUser?.id}
             onRefreshData={handleViewMarkFromRestore}
-          />
+            />
+          </motion.div>
         )}
 
         <AutoGradeZeroModal

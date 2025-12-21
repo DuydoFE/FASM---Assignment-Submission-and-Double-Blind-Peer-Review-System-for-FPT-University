@@ -3,6 +3,7 @@ import { Search, Eye, Loader2, MoreVertical, RefreshCw, CheckCircle, FileEdit } 
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { Dropdown, Input, Button, Pagination, Table } from 'antd';
+import { motion } from 'framer-motion';
 import { getRegradeRequestsForInstructor } from '../../service/regradeService';
 import { getCurrentAccount } from '../../utils/accountUtils';
 import SolveRegradeRequestModal from '../../component/RegradeRequest/SolveRegradeRequestModal';
@@ -386,7 +387,12 @@ const InstructorRegradeRequest = () => {
         <div className="min-h-screen bg-gray-50 p-6">
             <div className="max-w-7xl mx-auto">
                 {/* Header */}
-                <div className="flex justify-between items-center mb-6">
+                <motion.div
+                    initial={{ opacity: 0, y: -20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5 }}
+                    className="flex justify-between items-center mb-6"
+                >
                     <h1 className="text-2xl font-bold text-gray-900">Regrade Requests</h1>
                     <Input
                         placeholder="Search by name, email..."
@@ -400,37 +406,72 @@ const InstructorRegradeRequest = () => {
                             fontSize: '16px',
                         }}
                     />
-                </div>
+                </motion.div>
 
                 {/* Stats Cards */}
-                <div className="mb-6">
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: 0.1 }}
+                    className="mb-6"
+                >
                     <h2 className="text-lg font-semibold text-gray-900 mb-4">Overview</h2>
                     <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
-                        <div className="bg-blue-50 rounded-lg shadow-sm p-6 border-blue-500">
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.9 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            transition={{ duration: 0.3, delay: 0.2 }}
+                            className="bg-blue-50 rounded-lg shadow-sm p-6 border-blue-500"
+                        >
                             <div className="text-sm text-gray-600 mb-1">Total Requests</div>
                             <div className="text-3xl font-bold text-gray-900">{totalRequests}</div>
-                        </div>
-                        <div className="bg-yellow-50 rounded-lg shadow-sm p-6 border-yellow-500">
+                        </motion.div>
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.9 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            transition={{ duration: 0.3, delay: 0.3 }}
+                            className="bg-yellow-50 rounded-lg shadow-sm p-6 border-yellow-500"
+                        >
                             <div className="text-sm text-yellow-700 mb-1">Pending</div>
                             <div className="text-3xl font-bold text-yellow-800">{pendingRequests}</div>
-                        </div>
-                        <div className="bg-blue-50 rounded-lg shadow-sm p-6 border-blue-500">
+                        </motion.div>
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.9 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            transition={{ duration: 0.3, delay: 0.4 }}
+                            className="bg-blue-50 rounded-lg shadow-sm p-6 border-blue-500"
+                        >
                             <div className="text-sm text-blue-700 mb-1">Approved</div>
                             <div className="text-3xl font-bold text-blue-800">{approvedRequests}</div>
-                        </div>
-                        <div className="bg-green-50 rounded-lg shadow-sm p-6 border-green-500">
+                        </motion.div>
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.9 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            transition={{ duration: 0.3, delay: 0.5 }}
+                            className="bg-green-50 rounded-lg shadow-sm p-6 border-green-500"
+                        >
                             <div className="text-sm text-green-700 mb-1">Completed</div>
                             <div className="text-3xl font-bold text-green-800">{completedRequests}</div>
-                        </div>
-                        <div className="bg-red-50 rounded-lg shadow-sm p-6 border-red-500">
+                        </motion.div>
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.9 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            transition={{ duration: 0.3, delay: 0.6 }}
+                            className="bg-red-50 rounded-lg shadow-sm p-6 border-red-500"
+                        >
                             <div className="text-sm text-red-700 mb-1">Rejected</div>
                             <div className="text-3xl font-bold text-red-800">{rejectedRequests}</div>
-                        </div>
+                        </motion.div>
                     </div>
-                </div>
+                </motion.div>
 
                 {/* Review Requests Table */}
-                <Table
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: 0.7 }}
+                >
+                    <Table
                     columns={columns}
                     dataSource={filteredRequests}
                     rowKey="requestId"
@@ -443,16 +484,22 @@ const InstructorRegradeRequest = () => {
                         showSizeChanger: false,
                         showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} requests`,
                     }}
-                    className="bg-white rounded-xl shadow-sm"
-                />
+                        className="bg-white rounded-xl shadow-sm"
+                    />
 
-                {/* Empty State */}
-                {filteredRequests.length === 0 && (
-                    <div className="text-center py-12">
-                        <div className="text-gray-500 text-lg mb-2">No requests found</div>
-                        <div className="text-gray-400">Try adjusting the filter or search keywords</div>
-                    </div>
-                )}
+                    {/* Empty State */}
+                    {filteredRequests.length === 0 && (
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            transition={{ duration: 0.5 }}
+                            className="text-center py-12"
+                        >
+                            <div className="text-gray-500 text-lg mb-2">No requests found</div>
+                            <div className="text-gray-400">Try adjusting the filter or search keywords</div>
+                        </motion.div>
+                    )}
+                </motion.div>
             </div>
 
             {/* Modal */}
