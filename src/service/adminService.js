@@ -289,6 +289,27 @@ export const deleteCourseInstance = async (id) => {
   return res.data;
 };
 
+// Import lớp học từ file Excel
+export const importCourseInstances = async (file) => {
+  try {
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const res = await api.post("/CourseInstance/import-excel", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+
+    return res.data;
+  } catch (error) {
+    if (error.response) {
+      throw error.response;
+    }
+    throw new Error("Cannot connect to server");
+  }
+};
+
 // Cập nhật Enroll Key cho lớp học
 export const updateEnrollKey = async (courseInstanceId, data) => {
   const res = await api.put(`/CourseInstance/${courseInstanceId}/enroll-key`, data);

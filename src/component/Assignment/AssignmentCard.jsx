@@ -8,6 +8,7 @@ import {
   CheckCircleOutlined,
   CloseCircleOutlined,
   InfoCircleOutlined,
+  FileTextOutlined,
 } from "@ant-design/icons";
 
 const formatDate = (dateString) => {
@@ -31,17 +32,17 @@ const getAssignmentStyles = (assignment) => {
         badgeClasses: "bg-green-100 text-green-700",
         icon: <CheckCircleOutlined style={{ fontSize: '24px', color: '#3b82f6' }} />,
       };
-      case "Upcoming":
+    case "Upcoming":
       return {
         cardBg: "bg-blue-50",
         borderColor: "border-blue-200",
         badgeClasses: "bg-blue-100 text-blue-700",
-        icon: <CheckCircleOutlined style={{ fontSize: '24px', color: '#3b82f6' }} />,
+        icon: <InfoCircleOutlined style={{ fontSize: '24px', color: '#3b82f6' }} />,
       };
-      case "Active":
+    case "Active":
       return {
         cardBg: "bg-green-50",
-        borderColor: "border-blue-200",
+        borderColor: "border-green-200",
         badgeClasses: "bg-green-100 text-green-700",
         icon: <CheckCircleOutlined style={{ fontSize: '24px', color: '#22c55e' }} />,
       };
@@ -59,7 +60,6 @@ const getAssignmentStyles = (assignment) => {
         badgeClasses: "bg-yellow-100 text-yellow-700",
         icon: <ClockCircleOutlined style={{ fontSize: '24px', color: '#eab308' }} />,
       };
-
     default:
       return {
         cardBg: "bg-white",
@@ -84,7 +84,7 @@ const AssignmentCard = ({ assignment, courseId }) => {
   const styles = getAssignmentStyles(assignment);
 
   return (
-    <div className={`rounded-lg border ${styles.cardBg} ${styles.borderColor}`}>
+    <div className={`rounded-lg border ${styles.cardBg} ${styles.borderColor} hover:shadow-lg transition-shadow duration-300`}>
       <div className="p-6">
         <div className="flex justify-between items-start">
           <div className="flex items-center">
@@ -93,7 +93,7 @@ const AssignmentCard = ({ assignment, courseId }) => {
               <h3 className="font-bold text-lg text-gray-800">
                 {assignment.title}
               </h3>
-              <p className="text-sm text-gray-600">{assignment.description}</p>
+              <p className="text-sm text-gray-600 mt-1">{assignment.description}</p>
             </div>
           </div>
           {assignment.status && (
@@ -107,46 +107,39 @@ const AssignmentCard = ({ assignment, courseId }) => {
 
         <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-gray-600 mt-4 ml-10">
           <div className="flex items-center">
-            <CalendarOutlined style={{ fontSize: '16px', marginRight: '6px' }} />
-            Start Date:{" "}
-            <span className="font-semibold ml-1">
+            <CalendarOutlined style={{ fontSize: '16px', marginRight: '6px', color: '#6b7280' }} />
+            <span className="text-gray-500">Start Date:</span>
+            <span className="font-semibold ml-1 text-gray-700">
               {formatDate(assignment.startDate)}
             </span>
           </div>
           <div className="flex items-center text-red-600">
             <ClockCircleOutlined style={{ fontSize: '16px', marginRight: '6px' }} />
-            Deadline:{" "}
+            <span className="text-red-500">Deadline:</span>
             <span className="font-semibold ml-1">
               {formatDate(assignment.deadline)}
             </span>
           </div>
           <div className="flex items-center text-purple-600">
             <EyeOutlined style={{ fontSize: '16px', marginRight: '6px' }} />
-            Review:{" "}
+            <span className="text-purple-500">Review:</span>
             <span className="font-semibold ml-1">
               {formatDate(assignment.reviewDeadline)}
             </span>
           </div>
         </div>
-
-        <div className="mt-4 ml-10">
-          <p className="font-semibold text-gray-700">Guideline:</p>
-          <p className="text-sm text-gray-600">
-            {assignment.guidelines || "Không có hướng dẫn chi tiết."}
-          </p>
-        </div>
       </div>
 
       <div
-        className={`p-4 border-t ${styles.borderColor} flex justify-end items-center space-x-3`}
+        className={`p-4 border-t ${styles.borderColor} flex justify-end items-center space-x-3 bg-white/50`}
       >
         <button
           onClick={handleViewScore}
           disabled={assignment.status !== "GradesPublished"}
-          className={`flex items-center px-4 py-2 font-semibold rounded-md text-sm transition-colors
+          className={`flex items-center px-4 py-2 font-semibold rounded-md text-sm transition-all duration-200
             ${
               assignment.status === "GradesPublished"
-                ? "bg-green-600 text-white hover:bg-green-700"
+                ? "bg-green-600 text-white hover:bg-green-700 hover:shadow-md"
                 : "bg-gray-300 text-gray-500 cursor-not-allowed"
             }
           `}
@@ -157,9 +150,9 @@ const AssignmentCard = ({ assignment, courseId }) => {
 
         <button
           onClick={handleNavigate}
-          className="flex items-center px-4 py-2 text-white font-semibold rounded-md text-sm bg-blue-600 hover:bg-blue-700"
+          className="flex items-center px-4 py-2 text-white font-semibold rounded-md text-sm bg-blue-600 hover:bg-blue-700 hover:shadow-md transition-all duration-200"
         >
-          <EyeOutlined style={{ fontSize: '16px', marginRight: '8px' }} />
+          <FileTextOutlined style={{ fontSize: '16px', marginRight: '8px' }} />
           Detail and Submit
         </button>
       </div>
