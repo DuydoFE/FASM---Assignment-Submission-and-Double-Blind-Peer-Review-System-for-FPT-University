@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
+import { motion } from "framer-motion";
 import {
   getAssignmentsOverview,
   getSubmissionStatistics,
@@ -149,7 +150,12 @@ const InstructorClassDashboard = () => {
   return (
     <div className="max-w-7xl mx-auto px-6 py-8">
       {/* Header with Course Info */}
-      <div className="mb-8">
+      <motion.div
+        className="mb-8"
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+      >
         <h1 className="text-3xl font-bold text-gray-900 mb-4">Class Statistics</h1>
         <div className="flex items-center space-x-4">
           <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium">
@@ -159,27 +165,37 @@ const InstructorClassDashboard = () => {
             Class: {courseInstanceData?.sectionCode || "N/A"}
           </span>
         </div>
-      </div>
+      </motion.div>
 
       {/* Hàng đầu tiên */}
-      <div className="grid grid-cols-12 gap-6">
+      <motion.div
+        className="grid grid-cols-12 gap-6"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.1 }}
+      >
         <div className="col-span-9">
           <AssignmentStatusChart data={assignmentStatusData} />
         </div>
         <div className="col-span-3">
           <SubmissionStatusChart data={submissionData} />
         </div>
-      </div>
+      </motion.div>
 
       {/* Hàng thứ hai */}
-      <div className="grid grid-cols-12 gap-6 mt-6">
+      <motion.div
+        className="grid grid-cols-12 gap-6 mt-6"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.2 }}
+      >
         <div className="col-span-12">
           <ScoreDistributionChart
             bins={distributionBins}
             counts={distributionCounts}
           />
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 };

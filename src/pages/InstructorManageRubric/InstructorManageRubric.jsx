@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Search, Eye, Loader, Pencil } from 'lucide-react';
 import { Input, Pagination, Table } from 'antd';
+import { motion } from 'framer-motion';
 import { getRubricTemplatesByUserId, getRubricByUserId } from '../../service/rubricService';
 import { toast } from 'react-toastify';
 import { getCurrentAccount } from '../../utils/accountUtils';
@@ -301,13 +302,23 @@ const InstructorManageRubric = () => {
         <div className="p-8">
             <div className="max-w-7xl mx-auto">
                 {/* Header */}
-                <div className="mb-8">
+                <motion.div
+                    initial={{ opacity: 0, y: -20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5 }}
+                    className="mb-8"
+                >
                     <h1 className="text-4xl font-bold text-gray-900 mb-2">Manage Rubrics</h1>
                     <p className="text-gray-600">Create and manage rubrics for courses</p>
-                </div>
+                </motion.div>
 
                 {/* Search */}
-                <div className="flex gap-4 mb-8">
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: 0.1 }}
+                    className="flex gap-4 mb-8"
+                >
                     <Input
                         placeholder="Search rubrics..."
                         prefix={<Search className="w-5 h-5 text-gray-400" />}
@@ -320,10 +331,15 @@ const InstructorManageRubric = () => {
                             fontSize: '16px',
                         }}
                     />
-                </div>
+                </motion.div>
 
                 {/* Template Section */}
-                <div className="mb-12">
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: 0.2 }}
+                    className="mb-12"
+                >
                     <h2 className="text-2xl font-bold text-gray-900 mb-2">Rubric Templates</h2>
                     <p className="text-gray-600 mb-6">Choose a suitable template to create rubrics</p>
 
@@ -353,10 +369,14 @@ const InstructorManageRubric = () => {
                             className="bg-white rounded-lg shadow-sm"
                         />
                     )}
-                </div>
+                </motion.div>
 
                 {/* My Rubrics Section */}
-                <div>
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: 0.3 }}
+                >
                     <h2 className="text-2xl font-bold text-gray-900 mb-2">My Rubrics</h2>
                     <p className="text-gray-600 mb-4">Rubrics you've created and are currently using</p>
 
@@ -398,7 +418,7 @@ const InstructorManageRubric = () => {
                         }}
                         className="bg-white rounded-xl shadow-sm border border-gray-200"
                     />
-                </div>
+                </motion.div>
             </div>
         </div>
     );

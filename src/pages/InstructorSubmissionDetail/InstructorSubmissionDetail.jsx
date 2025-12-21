@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { ChevronLeft, ChevronRight, FileText, Eye, Download, ArrowLeft, BookOpen, Users } from 'lucide-react';
+import { ChevronLeft, ChevronRight, FileText, Eye, Download, ArrowLeft, BookOpen, Users, Clock } from 'lucide-react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
+import { motion } from 'framer-motion';
 import { submissionService } from '../../service/submissionService';
 import { downloadFile } from '../../utils/fileDownload';
 
@@ -138,7 +139,12 @@ const InstructorSubmissionDetail = () => {
   return (
     <div className="max-w-6xl mx-auto p-6 bg-white min-h-screen">
       {/* Breadcrumb & Back Button */}
-      <div className="flex items-center justify-between mb-6">
+      <motion.div
+        className="flex items-center justify-between mb-6"
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+      >
         <nav className="flex items-center gap-2 text-sm text-gray-500">
           <span>Class List</span>
           <ChevronRight className="w-4 h-4" />
@@ -158,10 +164,15 @@ const InstructorSubmissionDetail = () => {
           <ArrowLeft className="w-5 h-5 text-gray-600" />
           <span className="text-gray-600">Back</span>
         </button>
-      </div>
+      </motion.div>
 
       {/* Course and Class Info */}
-      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-4 mb-6">
+      <motion.div
+        className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-4 mb-6"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.1 }}
+      >
         <div className="flex items-center gap-6">
           <div className="flex items-center gap-3">
             <div className="bg-blue-100 p-2 rounded-lg">
@@ -187,10 +198,15 @@ const InstructorSubmissionDetail = () => {
             </div>
           </div>
         </div>
-      </div>
+      </motion.div>
 
       {/* Student Header */}
-      <div className="flex items-center justify-between mb-8">
+      <motion.div
+        className="flex items-center justify-between mb-8"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.2 }}
+      >
         <div className="flex items-center gap-4">
           <div className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center text-white font-semibold">
             {studentInitials}
@@ -221,10 +237,15 @@ const InstructorSubmissionDetail = () => {
             </>
           )}
         </div>
-      </div>
+      </motion.div>
 
       {/* Assignment Details */}
-      <div className="mb-8">
+      <motion.div
+        className="mb-8"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.3 }}
+      >
         <h2 className="text-xl font-semibold text-gray-800 mb-3">
           {submissionData?.assignment?.title || 'Assignment'}
         </h2>
@@ -232,11 +253,16 @@ const InstructorSubmissionDetail = () => {
           {submissionData?.assignment?.description || 'No description available'}
         </p>
 
-      </div>
+      </motion.div>
 
       {/* Grading Info */}
       {submissionData?.status === 'Graded' && (
-        <div className="mb-8 bg-blue-50 border border-blue-200 rounded-lg p-4">
+        <motion.div
+          className="mb-8 bg-blue-50 border border-blue-200 rounded-lg p-4"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.4 }}
+        >
           <h3 className="text-lg font-medium text-gray-800 mb-3">Grading Information</h3>
           <div className="grid grid-cols-3 gap-4">
             <div>
@@ -269,12 +295,17 @@ const InstructorSubmissionDetail = () => {
               Graded on: {new Date(submissionData.gradedAt).toLocaleString('vi-VN')}
             </p>
           )}
-        </div>
+        </motion.div>
       )}
 
       {/* Submitted File */}
       {submissionData?.fileUrl && submissionData.fileUrl !== 'Not Submitted' && (
-        <div className="mb-8">
+        <motion.div
+          className="mb-8"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.5 }}
+        >
           <h3 className="text-lg font-medium text-gray-800 mb-4">Submitted File</h3>
 
           <div className="border border-gray-200 rounded-lg p-4">
@@ -289,7 +320,10 @@ const InstructorSubmissionDetail = () => {
                   </p>
                   <div className="flex items-center gap-4 text-sm text-gray-500">
                     {submissionData.submittedAt && (
-                      <span>🕒 Updated: {new Date(submissionData.submittedAt).toLocaleString('vi-VN')}</span>
+                      <span className="flex items-center gap-1">
+                        <Clock className="w-4 h-4" />
+                        Updated: {new Date(submissionData.submittedAt).toLocaleString('vi-VN')}
+                      </span>
                     )}
                   </div>
                 </div>
@@ -318,12 +352,17 @@ const InstructorSubmissionDetail = () => {
               </div>
             </div>
           </div>
-        </div>
+        </motion.div>
       )}
 
       {/* File Preview Placeholder */}
       {submissionData?.fileUrl && submissionData.fileUrl !== 'Not Submitted' && (
-        <div className="mb-8">
+        <motion.div
+          className="mb-8"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.6 }}
+        >
           <div className="border border-gray-200 rounded-lg p-8 bg-gray-50">
             <div className="text-center">
               <div className="w-16 h-20 mx-auto mb-4 border-2 border-gray-300 rounded-lg bg-white flex items-center justify-center">
@@ -335,24 +374,22 @@ const InstructorSubmissionDetail = () => {
               </p>
             </div>
           </div>
-        </div>
+        </motion.div>
       )}
 
       {/* Bottom Actions */}
-      <div className="flex items-center justify-between pt-6 border-t border-gray-200">
-        <button
-          onClick={() => navigate(-1)}
-          className="flex items-center gap-2 px-4 py-2 text-gray-600 hover:bg-gray-50 rounded-lg"
-        >
-          <ChevronLeft className="w-4 h-4" />
-          Back to List
-        </button>
+      <motion.div
+        className="flex items-center justify-between pt-6 border-t border-gray-200"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.7 }}
+      >
         {submissionData?.status !== 'Graded' && (
           <button className="px-6 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600">
             Grade Submission
           </button>
         )}
-      </div>
+      </motion.div>
     </div>
   );
 };

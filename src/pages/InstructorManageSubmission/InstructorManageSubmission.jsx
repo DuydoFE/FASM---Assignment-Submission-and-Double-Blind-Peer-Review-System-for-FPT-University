@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { ArrowLeft, ChevronDown, BookOpen, Users } from 'lucide-react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
+import { motion } from 'framer-motion';
 import { Table, Button } from 'antd';
 import { submissionService } from '../../service/submissionService';
 
@@ -158,7 +159,12 @@ const InstructorManageSubmission = () => {
   return (
     <div className="max-w-7xl mx-auto p-6 bg-white">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+      <motion.div
+        className="flex items-center justify-between mb-6"
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+      >
         <div className="flex items-center gap-4">
           <Button
             onClick={() => navigate(-1)}
@@ -178,10 +184,15 @@ const InstructorManageSubmission = () => {
               : 'N/A'}
           </p>
         </div>
-      </div>
+      </motion.div>
 
       {/* Course and Class Info */}
-      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-4 mb-6">
+      <motion.div
+        className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-4 mb-6"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.1 }}
+      >
         <div className="flex items-center gap-6">
           <div className="flex items-center gap-3">
             <div className="bg-blue-100 p-2 rounded-lg">
@@ -207,13 +218,25 @@ const InstructorManageSubmission = () => {
             </div>
           </div>
         </div>
-      </div>
+      </motion.div>
 
       {/* Title */}
-      <h2 className="text-2xl font-bold text-gray-800 mb-6">Manage Submissions</h2>
+      <motion.h2
+        className="text-2xl font-bold text-gray-800 mb-6"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.2 }}
+      >
+        Manage Submissions
+      </motion.h2>
 
       {/* Statistics */}
-      <div className="grid grid-cols-4 gap-6 mb-8">
+      <motion.div
+        className="grid grid-cols-4 gap-6 mb-8"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.3 }}
+      >
         <div className="bg-gray-50 p-4 rounded-lg">
           <p className="text-sm text-gray-600 mb-1">Total Students</p>
           <p className="text-3xl font-bold text-gray-800">{totalStudents}</p>
@@ -230,17 +253,23 @@ const InstructorManageSubmission = () => {
           <p className="text-sm text-gray-600 mb-1">Not Submitted</p>
           <p className="text-3xl font-bold text-gray-600">{notSubmittedCount}</p>
         </div>
-      </div>
+      </motion.div>
 
       {/* Table */}
-      <Table
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.4 }}
+      >
+        <Table
         columns={columns}
         dataSource={filteredStudents}
         rowKey={(record, index) => index}
         loading={loading}
         pagination={false}
-        className="bg-white rounded-lg border border-gray-200"
-      />
+          className="bg-white rounded-lg border border-gray-200"
+        />
+      </motion.div>
     </div>
   );
 };

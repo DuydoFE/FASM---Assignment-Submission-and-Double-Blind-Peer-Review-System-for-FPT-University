@@ -1,5 +1,5 @@
 import React from 'react';
-import { Loader2, Sparkles, Zap, AlertTriangle } from 'lucide-react';
+import { Loader2, Sparkles, Zap, AlertTriangle, NotebookText, Calculator, MessageCircle } from 'lucide-react';
 import { Input, Button } from 'antd';
 
 const { TextArea } = Input;
@@ -23,7 +23,7 @@ const GradingRightColumn = ({
             <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
                 <div className="flex items-center justify-between mb-6">
                     <div className="flex items-center">
-                        <span className="text-xl mr-2">📋</span>
+                        <NotebookText className="w-5 h-5 text-gray-700 mr-2" />
                         <h2 className="font-semibold text-gray-900 text-lg">Grading Criteria</h2>
                     </div>
                     <Button
@@ -135,7 +135,7 @@ const GradingRightColumn = ({
             {/* Auto Calculation */}
             <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
                 <div className="flex items-center mb-4">
-                    <span className="text-xl mr-2">🧮</span>
+                    <Calculator className="w-5 h-5 text-gray-700 mr-2" />
                     <h2 className="font-semibold text-gray-900">Auto Score Calculation</h2>
                 </div>
                 <div className="space-y-2 text-sm mb-4">
@@ -162,7 +162,7 @@ const GradingRightColumn = ({
             {/* General Feedback */}
             <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
                 <div className="flex items-center mb-4">
-                    <span className="text-xl mr-2">💬</span>
+                    <MessageCircle className="w-5 h-5 text-gray-700 mr-2" />
                     <h2 className="font-semibold text-gray-900">General Feedback</h2>
                 </div>
                 <div>
@@ -193,7 +193,6 @@ const GradingRightColumn = ({
                     type="primary"
                     size="large"
                     className="flex-1 bg-orange-500 hover:!bg-orange-600"
-                    icon={submitting ? <Loader2 className="w-5 h-5 animate-spin" /> : <span>📋</span>}
                 >
                     {submitting ? "Submitting..." : submitButtonText}
                 </Button>
