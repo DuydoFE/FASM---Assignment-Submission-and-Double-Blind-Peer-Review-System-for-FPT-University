@@ -7,19 +7,20 @@ const EnrolledCourseCard = ({
   subjectCode,
   title,
   classCode,
+  classId, 
   lecturer,
-  studentCount, 
+  studentCount,
   schedule,
   assignmentCount,
   status,
-  instructorNames, 
-  enrolledAt, 
+  instructorNames,
+  enrolledAt,
 }) => {
   const navigate = useNavigate();
   const [isHovered, setIsHovered] = useState(false);
 
   const handleViewAssignments = () => {
-    navigate(`/assignment/${classCode}`);
+    navigate(`/assignment/${classId || classCode}`);
   };
 
   return (

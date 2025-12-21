@@ -114,7 +114,7 @@ const AssignmentDetailPage = () => {
                     </span>
                     <div className="flex items-center">
                       <ClockCircleOutlined style={{ fontSize: '16px', marginRight: '6px', color: '#9ca3af' }} />
-                      <span className="text-sm">Year: {new Date(courseInstanceData.createdAt).getFullYear()}</span>
+                      <span className="text-sm">Year: {new Date(courseInstanceData.startDate).getFullYear()}</span>
                     </div>
                   </div>
                 </div>

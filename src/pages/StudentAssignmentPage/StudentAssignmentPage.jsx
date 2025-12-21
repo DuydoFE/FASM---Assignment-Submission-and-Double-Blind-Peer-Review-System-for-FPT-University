@@ -182,7 +182,8 @@ const StudentAssignmentPage = () => {
               <EnrolledCourseCard
                 subjectCode={course.courseCode}
                 title={`${course.courseName} - ${course.courseCode}`}
-                classCode={course.courseInstanceId}
+                classCode={course.courseInstanceName || course.courseInstanceId}
+                classId={course.courseInstanceId}
                 lecturer={
                   course.instructorNames && course.instructorNames.length > 0
                     ? course.instructorNames.join(", ")
