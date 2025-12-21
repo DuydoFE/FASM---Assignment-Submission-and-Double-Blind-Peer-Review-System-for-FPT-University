@@ -28,7 +28,17 @@ const InstructorManageRubric = () => {
                 console.error('No user ID found');
                 return;
             }
-            const response = await getRubricTemplatesByUserId(currentUser.id);
+            
+            // Get courseInstanceId from URL parameter first, fallback to sessionStorage
+            const courseInstanceId = urlCourseInstanceId || sessionStorage.getItem('currentCourseInstanceId');
+            
+            if (!courseInstanceId) {
+                console.error('No courseInstanceId found in URL or sessionStorage');
+                setTemplatesLoading(false);
+                return;
+            }
+            
+            const response = await getRubricTemplatesByUserId(currentUser.id, courseInstanceId);
 
             const formattedTemplates = response.map(template => ({
                 templateId: template.templateId,
@@ -50,7 +60,7 @@ const InstructorManageRubric = () => {
 
     useEffect(() => {
         fetchTemplates();
-    }, []);
+    }, [urlCourseInstanceId]);
 
     useEffect(() => {
         const fetchRubrics = async () => {
