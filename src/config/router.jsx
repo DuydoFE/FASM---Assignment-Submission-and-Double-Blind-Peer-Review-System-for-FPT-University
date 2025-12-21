@@ -5,6 +5,7 @@ import MainLayout from "../layout/MainLayout";
 import HomePage from "../pages/HomePage/HomePage";
 import LoginPage from "../pages/Authenticate/LoginPage";
 import AccessDeniedPage from "../pages/AccessDenied/AccessDeniedPage";
+import ForbiddenPage from "../pages/AccessDenied/ForbiddenPage";
 import NotFoundPage from "../pages/NotFound/NotFoundPage";
 
 import StudentDashBoard from "../pages/StudentDashBoard/StudentDashBoard";
@@ -169,6 +170,10 @@ export const router = createBrowserRouter([
   {
     path: "/access-denied",
     element: <AccessDeniedPage />,
+  },
+  {
+    path: "/forbidden",
+    element: <ForbiddenPage />,
   },
   {
     path: "/test",

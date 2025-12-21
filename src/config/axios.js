@@ -35,20 +35,8 @@ api.interceptors.response.use(
       const errorMessage = error.response.data?.message;
       
       if (errorMessage) {
-        // Show error message from backend
-        toast.error(errorMessage, {
-          position: "top-center",
-          autoClose: 3000,
-          hideProgressBar: false,
-          closeOnClick: true,
-          pauseOnHover: true,
-          draggable: true,
-        });
-        
-        // Redirect to home page after a short delay
-        setTimeout(() => {
-          window.location.href = "/";
-        }, 2000);
+        // Redirect to forbidden page with error message
+        window.location.href = `/forbidden?message=${encodeURIComponent(errorMessage)}`;
       }
     }
     
