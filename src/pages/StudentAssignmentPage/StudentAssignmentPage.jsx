@@ -10,7 +10,9 @@ import {
   Server,
   Globe,
   Code,
+  Filter,
 } from "lucide-react";
+import { Select } from "antd";
 import CourseListItem from "../../component/Assignment/CourseListItem";
 import EnrolledCourseCard from "../../component/Assignment/EnrolledCourseCard";
 import JoinClassModal from "../../component/Assignment/JoinClassModal";
@@ -21,6 +23,9 @@ import { toast } from "react-toastify";
 
 import { courseService } from "../../service/courseService";
 import { selectUser } from "../../redux/features/userSlice";
+import { getAllSemesters } from "../../service/adminService";
+
+const { Option } = Select;
 
 const getCourseIcon = (courseCode) => {
   if (courseCode.startsWith("PRM"))
@@ -44,6 +49,20 @@ const StudentAssignmentPage = () => {
   const [error, setError] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedCourse, setSelectedCourse] = useState(null);
+  const [semesters, setSemesters] = useState([]);
+  const [selectedSemester, setSelectedSemester] = useState("");
+
+  useEffect(() => {
+    const fetchSemesters = async () => {
+      try {
+        const response = await getAllSemesters();
+        setSemesters(Array.isArray(response?.data) ? response.data : []);
+      } catch (err) {
+        console.error("Error loading semesters:", err);
+      }
+    };
+    fetchSemesters();
+  }, []);
 
   useEffect(() => {
     if (currentUser && currentUser.userId) {
@@ -162,10 +181,15 @@ const StudentAssignmentPage = () => {
       );
     }
 
+    // Filter courses by semester
+    const filteredCourses = selectedSemester
+      ? enrolledCourses.filter(course => course.semesterId === selectedSemester)
+      : enrolledCourses;
+
     return (
       <div className="space-y-4">
         <AnimatePresence>
-          {enrolledCourses.map((course, index) => (
+          {filteredCourses.map((course, index) => (
             <motion.div
               key={course.courseStudentId}
               initial={{ opacity: 0, y: 20, scale: 0.95 }}
@@ -191,7 +215,7 @@ const StudentAssignmentPage = () => {
                 }
                 studentCount={course.studentCount}
                 schedule="N/A"
-                assignmentCount={0}
+                semester={course.semester}
                 status={course.status}
                 instructorNames={course.instructorNames}
                 enrolledAt={course.enrolledAt}
@@ -284,6 +308,35 @@ const StudentAssignmentPage = () => {
             />
             Enrolled Classes
           </motion.h2>
+
+          {/* Semester Filter */}
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.35 }}
+            className="mb-6 flex items-center gap-3"
+          >
+            <Filter className="w-5 h-5 text-blue-600" />
+            <Select
+              placeholder="All Semesters"
+              allowClear
+              value={selectedSemester || undefined}
+              onChange={(value) => setSelectedSemester(value || "")}
+              className="w-64"
+              size="large"
+            >
+              {semesters.map((semester) => (
+                <Option key={semester.semesterId} value={semester.semesterId}>
+                  {semester.name || semester.semesterName}
+                </Option>
+              ))}
+            </Select>
+            {selectedSemester && (
+              <span className="text-sm text-gray-600">
+                Showing {enrolledCourses.filter(c => c.semesterId === selectedSemester).length} classes
+              </span>
+            )}
+          </motion.div>
           
           <motion.div
             initial={{ opacity: 0 }}

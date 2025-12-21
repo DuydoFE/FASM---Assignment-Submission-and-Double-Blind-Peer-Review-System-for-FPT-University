@@ -7,11 +7,11 @@ const EnrolledCourseCard = ({
   subjectCode,
   title,
   classCode,
-  classId, 
+  classId,
   lecturer,
   studentCount,
   schedule,
-  assignmentCount,
+  semester,
   status,
   instructorNames,
   enrolledAt,
@@ -95,13 +95,16 @@ const EnrolledCourseCard = ({
             <span className="font-medium">{studentCount} Students</span>
           </motion.div>
          
-          <motion.div
-            whileHover={{ x: 5 }}
-            className="flex items-center bg-gray-50 p-3 rounded-lg group-hover:bg-indigo-50 transition-colors duration-300"
-          >
-            <BookCopy className="w-5 h-5 mr-2 text-indigo-500" />
-            <span className="font-medium">{assignmentCount} Assignments</span>
-          </motion.div>
+          {semester && (
+            <motion.div
+              whileHover={{ x: 5 }}
+              className="flex items-center bg-gray-50 p-3 rounded-lg group-hover:bg-indigo-50 transition-colors duration-300"
+            >
+              <BookCopy className="w-5 h-5 mr-2 text-indigo-500" />
+              <span className="font-medium">Semester:</span>
+              <span className="ml-1 text-gray-600">{semester}</span>
+            </motion.div>
+          )}
           
           {enrolledAt && (
             <motion.div
