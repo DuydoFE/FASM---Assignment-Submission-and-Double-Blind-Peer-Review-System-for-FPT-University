@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Search, Eye, Loader, Pencil } from 'lucide-react';
-import { Input, Pagination } from 'antd';
+import { Input, Pagination, Table } from 'antd';
 import { getRubricTemplatesByUserId, getRubricByUserId } from '../../service/rubricService';
 import { toast } from 'react-toastify';
 import { getCurrentAccount } from '../../utils/accountUtils';
@@ -101,32 +101,191 @@ const InstructorManageRubric = () => {
         template.title.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
-    // Reset template pagination when template search query changes
-    useEffect(() => {
-        setCurrentPage(1);
-    }, [searchQuery]);
-
-    // Reset rubric pagination when rubric search query changes
-    useEffect(() => {
-        setCurrentRubricPage(1);
-    }, [rubricSearchQuery]);
-
     const handleViewCriteriaTemplateClick = (e, template) => {
         e.stopPropagation();
         navigate(`/instructor/manage-criteria-template/${template.templateId}`);
     };
 
-    // Template pagination
-    const indexOfLastItem = currentPage * itemsPerPage;
-    const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-    const currentTemplates = filteredTemplates.slice(indexOfFirstItem, indexOfLastItem);
-    const totalPages = Math.ceil(filteredTemplates.length / itemsPerPage);
+    const templateColumns = [
+        {
+            title: 'Rubric Name',
+            dataIndex: 'title',
+            key: 'title',
+            width: '20%',
+            render: (title) => (
+                <div className="font-semibold text-gray-900">{title}</div>
+            ),
+        },
+        {
+            title: 'Course',
+            key: 'course',
+            width: '15%',
+            render: (_, record) => (
+                <div className="text-sm text-gray-900">
+                    {record.assignments.length > 0 && record.assignments[0].courseName ? (
+                        <>
+                            <div>{record.assignments[0].courseName.split(' - ')[0] || record.courseName}</div>
+                            <div className="text-xs text-gray-500 mt-0.5">
+                                {record.assignments[0].courseName.split(' - ')[1] || ''}
+                            </div>
+                        </>
+                    ) : (
+                        <span className="text-gray-500">{record.courseName}</span>
+                    )}
+                </div>
+            ),
+        },
+        {
+            title: 'Class',
+            key: 'class',
+            width: '15%',
+            render: (_, record) => (
+                <div className="text-sm text-gray-900">
+                    {record.assignments.length > 0 && record.assignments[0].className ? (
+                        <>
+                            <div>{record.assignments[0].className.split(' - ')[0] || record.className}</div>
+                            <div className="text-xs text-gray-500 mt-0.5">
+                                {record.assignments[0].className.split(' - ')[1] || ''}
+                            </div>
+                        </>
+                    ) : (
+                        <div className="text-gray-500">{record.className}</div>
+                    )}
+                </div>
+            ),
+        },
+        {
+            title: 'Used in Assignments',
+            key: 'assignments',
+            width: '30%',
+            render: (_, record) => (
+                record.assignments.length === 0 ? (
+                    <span className="text-sm text-gray-500">— No assignments</span>
+                ) : (
+                    <div className="flex flex-wrap gap-2">
+                        {record.assignments.slice(0, 2).map((assignment, idx) => (
+                            <span
+                                key={idx}
+                                className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-teal-100 text-teal-700 border border-teal-200"
+                            >
+                                {assignment.title}
+                            </span>
+                        ))}
+                        {record.assignments.length > 2 && (
+                            <span className="text-xs text-gray-600 self-center">
+                                +{record.assignments.length - 2} more
+                            </span>
+                        )}
+                    </div>
+                )
+            ),
+        },
+        {
+            title: 'Total Criteria',
+            dataIndex: 'criteriaCount',
+            key: 'criteriaCount',
+            width: '10%',
+            align: 'center',
+            render: (count) => (
+                <div className="flex items-center justify-center gap-2 text-blue-600">
+                    <span className="font-semibold">{count}</span>
+                </div>
+            ),
+        },
+        {
+            title: 'Actions',
+            key: 'actions',
+            width: '10%',
+            align: 'center',
+            render: (_, record) => (
+                <button
+                    className="p-2 text-blue-600 rounded-lg hover:bg-blue-50 transition border border-blue-200"
+                    title="View Criteria Template"
+                    onClick={(e) => handleViewCriteriaTemplateClick(e, record)}
+                >
+                    <Eye className="w-5 h-5" />
+                </button>
+            ),
+        },
+    ];
 
-    // Rubric pagination
-    const indexOfLastRubric = currentRubricPage * itemsPerPage;
-    const indexOfFirstRubric = indexOfLastRubric - itemsPerPage;
-    const currentRubrics = filteredRubrics.slice(indexOfFirstRubric, indexOfLastRubric);
-    const totalRubricPages = Math.ceil(filteredRubrics.length / itemsPerPage);
+    const rubricColumns = [
+        {
+            title: 'Rubric Title',
+            dataIndex: 'title',
+            key: 'title',
+            width: '30%',
+            render: (title) => (
+                <div className="font-semibold text-gray-900 truncate">{title}</div>
+            ),
+        },
+        {
+            title: 'Course - Class',
+            key: 'courseClass',
+            width: '30%',
+            render: (_, record) => (
+                <div className="font-semibold text-gray-700 truncate">
+                    {record.assignmentsUsingTemplate?.[0]
+                        ? record.assignmentsUsingTemplate[0].className
+                        : "—"}
+                </div>
+            ),
+        },
+        {
+            title: 'Assignment',
+            dataIndex: 'assignmentTitle',
+            key: 'assignmentTitle',
+            width: '20%',
+            render: (title) => (
+                <div className="font-medium text-gray-800 truncate">{title}</div>
+            ),
+        },
+        {
+            title: 'Total Criteria',
+            dataIndex: 'criteriaCount',
+            key: 'criteriaCount',
+            width: '10%',
+            align: 'center',
+            render: (count) => (
+                <div className="font-semibold text-gray-800">{count || 0}</div>
+            ),
+        },
+        {
+            title: 'Actions',
+            key: 'actions',
+            width: '10%',
+            align: 'center',
+            render: (_, record) => (
+                <div className="flex justify-center gap-2">
+                    {(record.assignmentStatus === 'Draft') ? (
+                        <button
+                            className="p-2 rounded-lg hover:bg-blue-50 text-blue-600 transition border border-blue-200"
+                            title="Edit Rubric and Criteria"
+                            onClick={() =>
+                                navigate(`/instructor/manage-criteria/${record.rubricId}`, {
+                                    state: { from: "/instructor/manage-rubric" },
+                                })
+                            }
+                        >
+                            <Pencil className="w-5 h-5" />
+                        </button>
+                    ) : (
+                        <button
+                            className="p-2 rounded-lg hover:bg-gray-100 text-gray-600 transition border border-gray-200"
+                            title="View Rubric and Criteria"
+                            onClick={() =>
+                                navigate(`/instructor/manage-criteria/${record.rubricId}`, {
+                                    state: { from: "/instructor/manage-rubric" },
+                                })
+                            }
+                        >
+                            <Eye className="w-5 h-5" />
+                        </button>
+                    )}
+                </div>
+            ),
+        },
+    ];
 
     return (
         <div className="p-8">
@@ -168,109 +327,21 @@ const InstructorManageRubric = () => {
                             <p className="text-gray-500">No templates available</p>
                         </div>
                     ) : (
-                        <>
-                            {/* Table */}
-                            <div className="bg-white rounded-lg shadow-sm overflow-hidden">
-                                <table className="w-full">
-                                    <thead className="bg-gray-50 border-b border-gray-200">
-                                        <tr>
-                                            <th className="text-left px-6 py-4 text-sm font-semibold text-gray-700">Rubric Name</th>
-                                            <th className="text-left px-6 py-4 text-sm font-semibold text-gray-700">Course</th>
-                                            <th className="text-left px-6 py-4 text-sm font-semibold text-gray-700">Class</th>
-                                            <th className="text-left px-6 py-4 text-sm font-semibold text-gray-700">Used in Assignments</th>
-                                            <th className="text-center px-6 py-4 text-sm font-semibold text-gray-700">Total Criteria</th>
-                                            <th className="text-center px-6 py-4 text-sm font-semibold text-gray-700">Actions</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="divide-y divide-gray-200">
-                                        {currentTemplates.map((template) => (
-                                            <tr key={template.templateId} className="hover:bg-gray-50 transition">
-                                                <td className="px-6 py-5">
-                                                    <div className="font-semibold text-gray-900">{template.title}</div>
-                                                </td>
-                                                <td className="px-6 py-5">
-                                                    <div className="text-sm text-gray-900">
-                                                        {template.assignments.length > 0 && template.assignments[0].courseName ? (
-                                                            <>
-                                                                <div>{template.assignments[0].courseName.split(' - ')[0] || template.courseName}</div>
-                                                                <div className="text-xs text-gray-500 mt-0.5">
-                                                                    {template.assignments[0].courseName.split(' - ')[1] || ''}
-                                                                </div>
-                                                            </>
-                                                        ) : (
-                                                            <span className="text-gray-500">{template.courseName}</span>
-                                                        )}
-                                                    </div>
-                                                </td>
-                                                <td className="px-6 py-5">
-                                                    <div className="text-sm text-gray-900">
-                                                        {template.assignments.length > 0 && template.assignments[0].className ? (
-                                                            <>
-                                                                <div>{template.assignments[0].className.split(' - ')[0] || template.className}</div>
-                                                                <div className="text-xs text-gray-500 mt-0.5">
-                                                                    {template.assignments[0].className.split(' - ')[1] || ''}
-                                                                </div>
-                                                            </>
-                                                        ) : (
-                                                            <div className="text-gray-500">{template.className}</div>
-                                                        )}
-                                                    </div>
-                                                </td>
-                                                <td className="px-6 py-5">
-                                                    {template.assignments.length === 0 ? (
-                                                        <span className="text-sm text-gray-500">— No assignments</span>
-                                                    ) : (
-                                                        <div className="flex flex-wrap gap-2">
-                                                            {template.assignments.slice(0, 2).map((assignment, idx) => (
-                                                                <span
-                                                                    key={idx}
-                                                                    className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-teal-100 text-teal-700 border border-teal-200"
-                                                                >
-                                                                    {assignment.title}
-                                                                </span>
-                                                            ))}
-                                                            {template.assignments.length > 2 && (
-                                                                <span className="text-xs text-gray-600 self-center">
-                                                                    +{template.assignments.length - 2} more
-                                                                </span>
-                                                            )}
-                                                        </div>
-                                                    )}
-                                                </td>
-                                                <td className="px-6 py-5">
-                                                    <div className="flex items-center justify-center gap-2 text-blue-600">
-                                                        <span className="font-semibold">{template.criteriaCount}</span>
-                                                    </div>
-                                                </td>
-                                                <td className="px-6 py-5">
-                                                    <div className="flex items-center justify-center gap-2">
-                                                        <button
-                                                            className="p-2 text-blue-600 rounded-lg hover:bg-blue-50 transition border border-blue-200"
-                                                            title="View Criteria Template"
-                                                            onClick={(e) => handleViewCriteriaTemplateClick(e, template)}
-                                                        >
-                                                            <Eye className="w-5 h-5" />
-                                                        </button>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            </div>
-
-                            {/* Footer with Pagination */}
-                            <div className="mt-6 flex justify-end">
-                                <Pagination
-                                    current={currentPage}
-                                    pageSize={itemsPerPage}
-                                    total={filteredTemplates.length}
-                                    onChange={(page) => setCurrentPage(page)}
-                                    showSizeChanger={false}
-                                    showTotal={(total, range) => `${range[0]}-${range[1]} of ${total} templates`}
-                                />
-                            </div>
-                        </>
+                        <Table
+                            columns={templateColumns}
+                            dataSource={filteredTemplates}
+                            rowKey="templateId"
+                            loading={templatesLoading}
+                            pagination={{
+                                current: currentPage,
+                                pageSize: itemsPerPage,
+                                total: filteredTemplates.length,
+                                onChange: (page) => setCurrentPage(page),
+                                showSizeChanger: false,
+                                showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} templates`,
+                            }}
+                            className="bg-white rounded-lg shadow-sm"
+                        />
                     )}
                 </div>
 
@@ -295,99 +366,28 @@ const InstructorManageRubric = () => {
                         />
                     </div>
 
-                    <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-                        {/* Table Header */}
-                        <div className="grid grid-cols-10 px-6 py-3 bg-gray-100 border-b border-gray-200 text-sm font-semibold text-gray-700">
-                            <div className="col-span-3">Rubric Title</div>
-                            <div className="col-span-3">Course - Class</div>
-                            <div className="col-span-2">Assignment</div>
-                            <div className="col-span-1 text-center">Total Criteria</div>
-                            <div className="col-span-1 text-center">Actions</div>
-                        </div>
-
-                        {/* Loading / Empty / Data */}
-                        {loading ? (
-                            <div className="px-6 py-10 text-center text-gray-500">
-                                <Loader className="w-6 h-6 animate-spin mx-auto mb-2 text-orange-500" />
-                                Loading rubrics...
-                            </div>
-                        ) : currentRubrics.length === 0 ? (
-                            <div className="px-6 py-10 text-center text-gray-500">No rubrics found</div>
-                        ) : (
-                            currentRubrics.map((rubric, index) => (
-                                <div
-                                    key={rubric.rubricId}
-                                    className={`grid grid-cols-10 px-6 py-4 text-sm items-center border-b border-gray-100 transition-colors ${index % 2 === 0 ? "bg-white" : "bg-gray-50"
-                                        } hover:bg-orange-50/40`}
-                                >
-                                    {/* Rubric Title */}
-                                    <div className="col-span-3 font-semibold text-gray-900 truncate">
-                                        {rubric.title}
-                                    </div>
-
-                                    {/* Course - Class */}
-                                    <div className="col-span-3 font-semibold text-gray-700 truncate">
-                                        {rubric.assignmentsUsingTemplate?.[0]
-                                            ? rubric.assignmentsUsingTemplate[0].className
-                                            : "—"}
-                                    </div>
-
-                                    {/* Assignment */}
-                                    <div className="col-span-2 font-medium text-gray-800 truncate">
-                                        {rubric.assignmentTitle}
-                                    </div>
-
-                                    {/* Criteria Count */}
-                                    <div className="col-span-1 text-center font-semibold text-gray-800">
-                                        {rubric.criteriaCount || 0}
-                                    </div>
-
-                                    {/* Actions */}
-                                    <div className="col-span-1 flex justify-center gap-2">
-                                        {(rubric.assignmentStatus === 'Draft') ? (
-                                            <button
-                                                className="p-2 rounded-lg hover:bg-blue-50 text-blue-600 transition border border-blue-200"
-                                                title="Edit Rubric and Criteria"
-                                                onClick={() =>
-                                                    navigate(`/instructor/manage-criteria/${rubric.rubricId}`, {
-                                                        state: { from: "/instructor/manage-rubric" },
-                                                    })
-                                                }
-                                            >
-                                                <Pencil className="w-5 h-5" />
-                                            </button>
-                                        ) : (
-                                            <button
-                                                className="p-2 rounded-lg hover:bg-gray-100 text-gray-600 transition border border-gray-200"
-                                                title="View Rubric and Criteria"
-                                                onClick={() =>
-                                                    navigate(`/instructor/manage-criteria/${rubric.rubricId}`, {
-                                                        state: { from: "/instructor/manage-rubric" },
-                                                    })
-                                                }
-                                            >
-                                                <Eye className="w-5 h-5" />
-                                            </button>
-                                        )}
-                                    </div>
+                    <Table
+                        columns={rubricColumns}
+                        dataSource={filteredRubrics}
+                        rowKey="rubricId"
+                        loading={loading}
+                        pagination={{
+                            current: currentRubricPage,
+                            pageSize: itemsPerPage,
+                            total: filteredRubrics.length,
+                            onChange: (page) => setCurrentRubricPage(page),
+                            showSizeChanger: false,
+                            showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} rubrics`,
+                        }}
+                        locale={{
+                            emptyText: (
+                                <div className="px-6 py-10 text-center text-gray-500">
+                                    No rubrics found
                                 </div>
-                            ))
-                        )}
-                    </div>
-
-                    {/* Rubric Pagination */}
-                    {!loading && filteredRubrics.length > itemsPerPage && (
-                        <div className="mt-6 flex justify-end">
-                            <Pagination
-                                current={currentRubricPage}
-                                pageSize={itemsPerPage}
-                                total={filteredRubrics.length}
-                                onChange={(page) => setCurrentRubricPage(page)}
-                                showSizeChanger={false}
-                                showTotal={(total, range) => `${range[0]}-${range[1]} of ${total} rubrics`}
-                            />
-                        </div>
-                    )}
+                            ),
+                        }}
+                        className="bg-white rounded-xl shadow-sm border border-gray-200"
+                    />
                 </div>
             </div>
         </div>

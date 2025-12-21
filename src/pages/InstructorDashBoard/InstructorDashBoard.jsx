@@ -8,7 +8,7 @@ import {
   AlertTriangle,
   Clock,
 } from "lucide-react";
-import { Input } from "antd";
+import { Input, Card } from "antd";
 import { getInstructorCourses } from "../../service/courseInstructorService";
 import { getCurrentAccount } from "../../utils/accountUtils";
 import { useNavigate } from "react-router-dom";
@@ -129,7 +129,7 @@ const InstructorDashboard = () => {
       {/* Stats Cards */}
       <div className="grid grid-cols-4 gap-6 mb-8">
         {/* Total Classes */}
-        <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+        <Card bordered={true}>
           <div className="flex items-center">
             <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mr-4">
               <Book className="w-6 h-6 text-purple-600" />
@@ -141,10 +141,10 @@ const InstructorDashboard = () => {
               </p>
             </div>
           </div>
-        </div>
+        </Card>
 
         {/* Total Students */}
-        <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+        <Card bordered={true}>
           <div className="flex items-center">
             <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mr-4">
               <Users className="w-6 h-6 text-green-600" />
@@ -159,7 +159,7 @@ const InstructorDashboard = () => {
               </p>
             </div>
           </div>
-        </div>
+        </Card>
       </div>
 
       {loading && (
@@ -170,109 +170,106 @@ const InstructorDashboard = () => {
       )}
 
       {/* Semester Classes Section */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 mb-8">
-        {/* Section Header */}
-        <div className="px-6 py-4 border-b border-gray-200">
+      <Card
+        title={
           <div className="flex justify-between items-center">
             <h2 className="text-lg font-semibold text-gray-900">
               Classes This Semester
             </h2>
-            <div className="flex items-center space-x-4">
-              <Input
-                placeholder="Search course..."
-                prefix={<Search className="w-5 h-5 text-gray-400" />}
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                size="large"
-                className="w-80"
-                style={{
-                  borderRadius: '8px',
-                  fontSize: '16px',
-                }}
-              />
-            </div>
+            <Input
+              placeholder="Search course..."
+              prefix={<Search className="w-5 h-5 text-gray-400" />}
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              size="large"
+              className="w-80"
+              style={{
+                borderRadius: '8px',
+                fontSize: '16px',
+              }}
+            />
           </div>
-        </div>
-
+        }
+        bordered={true}
+        className="mb-8"
+      >
         {/* Course Cards */}
-        <div className="p-6">
-          <div className="grid grid-cols-3 gap-6">
-            {!loading &&
-              courses
-                .filter(
-                  (course) =>
-                    // Only show courses with status 'active' (Ongoing)
-                    course.status === "active" &&
-                    (course.courseCode
+        <div className="grid grid-cols-3 gap-6">
+          {!loading &&
+            courses
+              .filter(
+                (course) =>
+                  // Only show courses with status 'active' (Ongoing)
+                  course.status === "active" &&
+                  (course.courseCode
+                    .toLowerCase()
+                    .includes(searchTerm.toLowerCase()) ||
+                    course.courseInstanceName
                       .toLowerCase()
-                      .includes(searchTerm.toLowerCase()) ||
-                      course.courseInstanceName
-                        .toLowerCase()
-                        .includes(searchTerm.toLowerCase()))
-                )
-                .map((course) => (
-                  <div
-                    key={course.id}
-                    className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow bg-white cursor-pointer"
-                    onClick={() => {
-                      try {
-                        sessionStorage.setItem(
-                          "currentCourseInstanceId",
-                          String(course.courseInstanceId)
-                        );
-                      } catch (e) {
-                        /* ignore */
-                      }
-                      navigate(
-                        `/instructor/class-statistic/${course.courseInstanceId}`
+                      .includes(searchTerm.toLowerCase()))
+              )
+              .map((course) => (
+                <Card
+                  key={course.id}
+                  hoverable
+                  onClick={() => {
+                    try {
+                      sessionStorage.setItem(
+                        "currentCourseInstanceId",
+                        String(course.courseInstanceId)
                       );
-                    }}
-                  >
-                    <div className="mb-3">
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm font-medium text-blue-600">
-                          {course.courseCode} - {course.courseInstanceName}
-                        </span>
-                        <span
-                          className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium ${getStatusStyle(
-                            course.status
-                          )}`}
-                        >
-                          {getStatusIcon(course.status)}
-                          {course.statusText}
-                        </span>
-                      </div>
-                    </div>
-                    <h3 className="font-medium text-gray-900 mb-4 text-base">
-                      {course.courseName}
-                    </h3>
-
-                    <div className="space-y-2">
-                      <div className="flex items-center text-sm text-gray-500">
-                        <Users className="w-4 h-4 mr-2" />
-                        <span>{course.studentCount} students</span>
-                      </div>
-                      <div className="flex items-center text-sm text-gray-500">
-                        <Clock className="w-4 h-4 mr-2" />
-                        <span>{course.semester}</span>
-                      </div>
+                    } catch (e) {
+                      /* ignore */
+                    }
+                    navigate(
+                      `/instructor/class-statistic/${course.courseInstanceId}`
+                    );
+                  }}
+                >
+                  <div className="mb-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium text-blue-600">
+                        {course.courseCode} - {course.courseInstanceName}
+                      </span>
+                      <span
+                        className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium ${getStatusStyle(
+                          course.status
+                        )}`}
+                      >
+                        {getStatusIcon(course.status)}
+                        {course.statusText}
+                      </span>
                     </div>
                   </div>
-                ))}
-          </div>
-          {!loading && courses.length === 0 && (
-            <div className="text-center py-12">
-              <div className="text-gray-400 mb-4">
-                <Search size={48} className="mx-auto" />
-              </div>
-              <h3 className="text-lg font-medium text-gray-600 mb-2">
-                No courses found
-              </h3>
-              <p className="text-gray-500">Try adjusting your search terms</p>
-            </div>
-          )}
+                  <h3 className="font-medium text-gray-900 mb-4 text-base">
+                    {course.courseName}
+                  </h3>
+
+                  <div className="space-y-2">
+                    <div className="flex items-center text-sm text-gray-500">
+                      <Users className="w-4 h-4 mr-2" />
+                      <span>{course.studentCount} students</span>
+                    </div>
+                    <div className="flex items-center text-sm text-gray-500">
+                      <Clock className="w-4 h-4 mr-2" />
+                      <span>{course.semester}</span>
+                    </div>
+                  </div>
+                </Card>
+              ))}
         </div>
-      </div>
+        {!loading && courses.length === 0 && (
+          <div className="text-center py-12">
+            <div className="text-gray-400 mb-4">
+              <Search size={48} className="mx-auto" />
+            </div>
+            <h3 className="text-lg font-medium text-gray-600 mb-2">
+              No courses found
+            </h3>
+            <p className="text-gray-500">Try adjusting your search terms</p>
+          </div>
+        )}
+      </Card>
     </div>
   );
 };

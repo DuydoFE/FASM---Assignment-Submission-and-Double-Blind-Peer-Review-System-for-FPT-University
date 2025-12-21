@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useLocation, useParams } from "react-router-dom";
 import { Search, Users, Trash2, Plus } from "lucide-react";
-import { Input } from "antd";
+import { Input, Table } from "antd";
 import { getCurrentAccount } from "../../utils/accountUtils";
 import {
   getStudentsInCourse,
@@ -115,6 +115,63 @@ const InstructorManageClass = () => {
       student.email.toLowerCase().includes(searchTerm.toLowerCase())
     );
   });
+
+  const columns = [
+    {
+      title: 'Image',
+      dataIndex: 'id',
+      key: 'id',
+      width: '10%',
+      render: (id, record) => (
+        <div
+          className={`w-10 h-10 ${record.bgColor} rounded-full flex items-center justify-center font-semibold`}
+        >
+          {id}
+        </div>
+      ),
+    },
+    {
+      title: 'Student Code',
+      dataIndex: 'code',
+      key: 'code',
+      width: '20%',
+      render: (code) => (
+        <div className="font-medium text-gray-900">{code}</div>
+      ),
+    },
+    {
+      title: 'Full Name',
+      dataIndex: 'name',
+      key: 'name',
+      width: '25%',
+      render: (name) => (
+        <div className="text-gray-900">{name}</div>
+      ),
+    },
+    {
+      title: 'Email',
+      dataIndex: 'email',
+      key: 'email',
+      width: '30%',
+      render: (email) => (
+        <div className="text-gray-600">{email}</div>
+      ),
+    },
+    {
+      title: 'Action',
+      key: 'action',
+      width: '15%',
+      render: (_, record) => (
+        <button
+          className="text-red-500 hover:text-red-700 disabled:opacity-50"
+          onClick={() => handleDeleteClick(record)}
+          disabled={deleting}
+        >
+          <Trash2 className="w-5 h-5" />
+        </button>
+      ),
+    },
+  ];
 
   const handleAddStudent = async (e) => {
     e.preventDefault();
@@ -255,63 +312,29 @@ const InstructorManageClass = () => {
         </div>
       </div>
 
-      <div className="bg-white rounded-lg overflow-hidden shadow-sm">
-        {loading ? (
-          <div className="p-8 text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-4"></div>
-            <p className="text-gray-500">Loading students...</p>
-          </div>
-        ) : (
-          <div>
-            <div className="grid grid-cols-5 gap-4 px-6 py-4 bg-gray-50 text-sm font-medium text-gray-700">
-              <div>Image</div>
-              <div>Student Code</div>
-              <div>Full Name</div>
-              <div>Email</div>
-              <div>Action</div>
+      <Table
+        columns={columns}
+        dataSource={filteredStudents}
+        rowKey="code"
+        loading={loading}
+        pagination={false}
+        locale={{
+          emptyText: (
+            <div className="text-center py-12">
+              <div className="text-gray-400 mb-4">
+                <Search size={48} className="mx-auto" />
+              </div>
+              <h3 className="text-lg font-medium text-gray-600 mb-2">
+                No results found
+              </h3>
+              <p className="text-gray-500">
+                Try adjusting your search keywords
+              </p>
             </div>
-
-            {filteredStudents.map((student) => (
-              <div
-                key={student.code}
-                className="grid grid-cols-5 gap-4 px-6 py-4 border-t border-gray-100 hover:bg-gray-50 items-center"
-              >
-                <div
-                  className={`w-10 h-10 ${student.bgColor} rounded-full flex items-center justify-center font-semibold`}
-                >
-                  {student.id}
-                </div>
-                <div className="font-medium text-gray-900">{student.code}</div>
-                <div className="text-gray-900">{student.name}</div>
-                <div className="text-gray-600">{student.email}</div>
-                <div>
-                  <button
-                    className="text-red-500 hover:text-red-700 disabled:opacity-50"
-                    onClick={() => handleDeleteClick(student)}
-                    disabled={deleting}
-                  >
-                    <Trash2 className="w-5 h-5" />
-                  </button>
-                </div>
-              </div>
-            ))}
-
-            {!loading && filteredStudents.length === 0 && (
-              <div className="text-center py-12">
-                <div className="text-gray-400 mb-4">
-                  <Search size={48} className="mx-auto" />
-                </div>
-                <h3 className="text-lg font-medium text-gray-600 mb-2">
-                  No results found
-                </h3>
-                <p className="text-gray-500">
-                  Try adjusting your search keywords
-                </p>
-              </div>
-            )}
-          </div>
-        )}
-      </div>
+          ),
+        }}
+        className="bg-white rounded-lg shadow-sm"
+      />
 
       <AddStudentModal
         isOpen={isAddModalOpen}

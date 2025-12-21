@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 import { toast } from "react-toastify";
 import { useNavigate, useLocation, useParams } from "react-router-dom";
-import { Dropdown } from "antd";
+import { Dropdown, Table } from "antd";
 import {
   getAssignmentsByCourseInstanceId,
   createAssignment,
@@ -342,15 +342,6 @@ const InstructorManageAssignment = () => {
 
   const filteredAssignments = assignments;
 
-  if (loading) {
-    return (
-      <div className="p-8 text-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-4"></div>
-        <p className="text-gray-500">Loading assignments...</p>
-      </div>
-    );
-  }
-
   const getDeadlineColor = (deadline) => {
     if (!deadline) return "text-gray-900";
     const today = new Date();
@@ -383,6 +374,94 @@ const InstructorManageAssignment = () => {
       return { date: '', time: '' };
     }
   };
+
+  const columns = [
+    {
+      title: 'Assignment Name',
+      dataIndex: 'title',
+      key: 'title',
+      width: '25%',
+      render: (text) => (
+        <h3 className="font-semibold text-gray-900 text-base truncate">
+          {text}
+        </h3>
+      ),
+    },
+    {
+      title: 'Deadline',
+      dataIndex: 'deadline',
+      key: 'deadline',
+      width: '20%',
+      align: 'center',
+      render: (deadline) => {
+        const { date, time } = formatDisplayDateTime(deadline);
+        return (
+          <div className="space-y-1">
+            <div className={`font-medium text-base ${getDeadlineColor(deadline)}`}>
+              {date}
+            </div>
+            <div className="text-sm text-gray-500">{time}</div>
+          </div>
+        );
+      },
+    },
+    {
+      title: 'Review Deadline',
+      dataIndex: 'reviewDeadline',
+      key: 'reviewDeadline',
+      width: '20%',
+      align: 'center',
+      render: (reviewDeadline) => {
+        const { date, time } = formatDisplayDateTime(reviewDeadline);
+        return (
+          <div className="space-y-1">
+            <div className={`font-medium text-base ${getDeadlineColor(reviewDeadline)}`}>
+              {date}
+            </div>
+            <div className="text-sm text-gray-500">{time}</div>
+          </div>
+        );
+      },
+    },
+    {
+      title: 'Status',
+      dataIndex: 'status',
+      key: 'status',
+      width: '15%',
+      align: 'center',
+      render: (status, record) => (
+        <span className={`px-2 py-1 rounded-full text-xs font-medium ${record.statusColor}`}>
+          {status}
+        </span>
+      ),
+    },
+    {
+      title: 'Actions',
+      key: 'actions',
+      width: '20%',
+      align: 'center',
+      render: (_, record) => (
+        <Dropdown
+          menu={{ items: getDropdownItems(record) }}
+          trigger={["click"]}
+          placement="bottomRight"
+        >
+          <button className="p-2 hover:bg-gray-100 rounded-md transition-colors">
+            <MoreVertical className="w-5 h-5 text-gray-600" />
+          </button>
+        </Dropdown>
+      ),
+    },
+  ];
+
+  if (loading) {
+    return (
+      <div className="p-8 text-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-4"></div>
+        <p className="text-gray-500">Loading assignments...</p>
+      </div>
+    );
+  }
 
   const courseInfo = courseInstanceData
     ? {
@@ -460,66 +539,14 @@ const InstructorManageAssignment = () => {
       </div>
 
       {/* Assignment Table */}
-      <div className="bg-white rounded-xl border border-gray-200 overflow-visible">
-        <div className="grid grid-cols-12 gap-4 px-6 py-4 bg-gray-50 border-b border-gray-200 text-sm font-medium text-gray-700">
-          <div className="col-span-3">Assignment Name</div>
-          <div className="col-span-2 text-center">Deadline</div>
-          <div className="col-span-2 text-center">Review Deadline</div>
-          <div className="col-span-2 text-center">Status</div>
-          <div className="col-span-2 text-center">Actions</div>
-        </div>
-
-        {filteredAssignments.map((assignment) => (
-          <div
-            key={assignment.id}
-            className="grid grid-cols-12 gap-4 px-6 py-4 border-b border-gray-100 hover:bg-gray-50 items-center transition-colors relative"
-          >
-            <div className="col-span-3 space-y-1">
-              <h3 className="font-semibold text-gray-900 text-base truncate">
-                {assignment.title}
-              </h3>
-            </div>
-            <div className="col-span-2 text-center space-y-1">
-              <div
-                className={`font-medium text-base ${getDeadlineColor(
-                  assignment.deadline
-                )}`}
-              >
-                {formatDisplayDateTime(assignment.deadline).date}
-              </div>
-              <div className="text-sm text-gray-500">{formatDisplayDateTime(assignment.deadline).time}</div>
-            </div>
-            <div className="col-span-2 text-center space-y-1">
-              <div
-                className={`font-medium text-base ${getDeadlineColor(
-                  assignment.reviewDeadline
-                )}`}
-              >
-                {formatDisplayDateTime(assignment.reviewDeadline).date}
-              </div>
-              <div className="text-sm text-gray-500">{formatDisplayDateTime(assignment.reviewDeadline).time}</div>
-            </div>
-            <div className="col-span-2 flex justify-center">
-              <span
-                className={`px-2 py-1 rounded-full text-xs font-medium ${assignment.statusColor}`}
-              >
-                <span>{assignment.status}</span>
-              </span>
-            </div>
-            <div className="col-span-2 flex justify-center items-center">
-              <Dropdown
-                menu={{ items: getDropdownItems(assignment) }}
-                trigger={["click"]}
-                placement="bottomRight"
-              >
-                <button className="p-2 hover:bg-gray-100 rounded-md transition-colors">
-                  <MoreVertical className="w-5 h-5 text-gray-600" />
-                </button>
-              </Dropdown>
-            </div>
-          </div>
-        ))}
-      </div>
+      <Table
+        columns={columns}
+        dataSource={filteredAssignments}
+        rowKey="id"
+        loading={loading}
+        pagination={false}
+        className="bg-white rounded-xl border border-gray-200"
+      />
 
       {/* Update Deadline Modal */}
       <UpdateDeadlineModal

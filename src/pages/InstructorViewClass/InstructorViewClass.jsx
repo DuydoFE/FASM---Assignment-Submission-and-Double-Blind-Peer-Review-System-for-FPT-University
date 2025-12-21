@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { Search, BookOpen, Play, CheckCircle, Clock, ChevronDown, Key } from 'lucide-react';
-import { Input } from 'antd';
+import { Input, Table } from 'antd';
 import { getCurrentAccount } from '../../utils/accountUtils';
 import { useNavigate } from 'react-router-dom';
 import { getInstructorCourses } from '../../service/courseInstructorService';
@@ -122,6 +122,81 @@ const InstructorViewClass = () => {
     }
   };
 
+  const columns = [
+    {
+      title: 'Course',
+      dataIndex: 'code',
+      key: 'code',
+      width: '20%',
+      render: (code) => (
+        <h3 className="font-semibold text-gray-900">{code}</h3>
+      ),
+    },
+    {
+      title: 'Semester',
+      dataIndex: 'semester',
+      key: 'semester',
+      width: '15%',
+      render: (semester) => (
+        <span className="font-semibold text-gray-900">{semester}</span>
+      ),
+    },
+    {
+      title: 'Class',
+      dataIndex: 'className',
+      key: 'className',
+      width: '25%',
+      render: (className) => (
+        <span className="font-semibold text-gray-900">{className}</span>
+      ),
+    },
+    {
+      title: 'Students',
+      dataIndex: 'studentCount',
+      key: 'studentCount',
+      width: '10%',
+      render: (count) => (
+        <span className="font-semibold text-gray-900">{count}</span>
+      ),
+    },
+    {
+      title: (
+        <div
+          onClick={handleStatusClick}
+          className="cursor-pointer select-none hover:text-orange-600 transition flex items-center gap-1"
+        >
+          Status
+          <ChevronDown size={16} />
+        </div>
+      ),
+      dataIndex: 'status',
+      key: 'status',
+      width: '20%',
+      render: (status, record) => (
+        <span className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium ${getStatusStyle(status)}`}>
+          {getStatusIcon(status)}
+          {record.statusText}
+        </span>
+      ),
+    },
+    {
+      title: 'Actions',
+      key: 'actions',
+      width: '10%',
+      render: (_, record) => (
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            handleKeyClick(e, record);
+          }}
+          className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+        >
+          <Key className="text-gray-400" size={16} />
+        </button>
+      ),
+    },
+  ];
+
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-6xl mx-auto">
@@ -203,101 +278,45 @@ const InstructorViewClass = () => {
         </div>
 
         {/* Classes Table */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-          {isLoading ? (
-            <div className="p-8 text-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-4"></div>
-              <p className="text-gray-500">Loading data...</p>
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-gray-50 border-b border-gray-200">
-                  <tr>
-                    <th className="text-left py-4 px-6 font-medium text-gray-700">
-                      Course
-                    </th>
-                    <th className="text-left py-4 px-6 font-medium text-gray-700">
-                      Semester
-                    </th>
-                    <th className="text-left py-4 px-6 font-medium text-gray-700">
-                      Class
-                    </th>
-                    <th className="text-left py-4 px-6 font-medium text-gray-700">
-                      Students
-                    </th>
-                    <th
-                      onClick={handleStatusClick}
-                      className="text-left py-4 px-6 font-medium text-gray-700 cursor-pointer select-none hover:text-orange-600 transition flex items-center gap-1"
-                    >
-                      Status
-                      <ChevronDown size={16} />
-                    </th>
-                    <th className="text-left py-4 px-6 font-medium text-gray-700">
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-200">
-                  {filteredClasses.map((cls) => (
-                    <tr
-                      key={cls.id}
-                      className={`hover:bg-gray-50 transition-colors ${cls.status !== 'Upcoming' ? 'cursor-pointer' : 'cursor-not-allowed opacity-60'}`}
-                      onClick={() => {
-                        if (cls.status === 'Upcoming') return;
-                        try { sessionStorage.setItem('currentCourseInstanceId', String(cls.courseInstanceId)); } catch (e) { /* ignore */ }
-                        navigate(`/instructor/class-statistic/${cls.courseInstanceId}`);
-                      }}
-                    >
-                      <td className="py-4 px-6">
-                        <div>
-                          <h3 className="font-semibold text-gray-900 mb-1">{cls.code}</h3>
-                        </div>
-                      </td>
-                      <td className="py-4 px-6">
-                        <span className="font-semibold text-gray-900 mb-1">{cls.semester}</span>
-                      </td>
-                      <td className="py-4 px-6">
-                        <span className="font-semibold text-gray-900 mb-1">{cls.className}</span>
-                      </td>
-                      <td className="py-4 px-6">
-                        <span className="font-semibold text-gray-900 mb-1">{cls.studentCount}</span>
-                      </td>
-                      <td className="py-4 px-6">
-                        <span className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium ${getStatusStyle(cls.status)}`}>
-                          {getStatusIcon(cls.status)}
-                          {cls.statusText}
-                        </span>
-                      </td>
-                      <td className="py-4 px-6">
-                        <button
-                          onClick={(e) => handleKeyClick(e, cls)}
-                          className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                        >
-                          <Key className="text-gray-400" size={16} />
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
-
-        {!isLoading && filteredClasses.length === 0 && (
-          <div className="text-center py-12">
-            <div className="text-gray-400 mb-4">
-              <Search size={48} className="mx-auto" />
-            </div>
-            <h3 className="text-lg font-medium text-gray-600 mb-2">
-              No results found
-            </h3>
-            <p className="text-gray-500">
-              Try adjusting your search keywords or status filter
-            </p>
-          </div>
-        )}
+        <Table
+          columns={columns}
+          dataSource={filteredClasses}
+          rowKey="id"
+          loading={isLoading}
+          pagination={{
+            pageSize: 5,
+            showSizeChanger: true,
+            showTotal: (total) => `Total ${total} classes`,
+          }}
+          onRow={(record) => ({
+            onClick: () => {
+              if (record.status === 'Upcoming') return;
+              try {
+                sessionStorage.setItem('currentCourseInstanceId', String(record.courseInstanceId));
+              } catch (e) {
+                /* ignore */
+              }
+              navigate(`/instructor/class-statistic/${record.courseInstanceId}`);
+            },
+            className: record.status !== 'Upcoming' ? 'cursor-pointer' : 'cursor-not-allowed opacity-60',
+          })}
+          locale={{
+            emptyText: (
+              <div className="text-center py-12">
+                <div className="text-gray-400 mb-4">
+                  <Search size={48} className="mx-auto" />
+                </div>
+                <h3 className="text-lg font-medium text-gray-600 mb-2">
+                  No results found
+                </h3>
+                <p className="text-gray-500">
+                  Try adjusting your search keywords or status filter
+                </p>
+              </div>
+            ),
+          }}
+          className="bg-white rounded-xl shadow-sm border border-gray-200"
+        />
       </div>
 
       {/* Password Modal */}

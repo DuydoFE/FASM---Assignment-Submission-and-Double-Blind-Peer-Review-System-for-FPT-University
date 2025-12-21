@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { ChevronDown, Loader2, AlertCircle } from "lucide-react";
-import { Input, Button, Modal } from "antd";
+import { Input, Button, Modal, Table } from "antd";
 
 const { Search } = Input;
 
@@ -99,6 +99,123 @@ const GradesTable = ({
     } catch (e) {}
   };
 
+  const columns = [
+    {
+      title: 'No.',
+      key: 'index',
+      width: '8%',
+      render: (_, __, index) => index + 1,
+    },
+    {
+      title: 'Student Code',
+      dataIndex: 'studentCode',
+      key: 'studentCode',
+      width: '12%',
+    },
+    {
+      title: 'Full Name',
+      dataIndex: 'studentName',
+      key: 'studentName',
+      width: '18%',
+      render: (name) => <span className="text-gray-800">{name}</span>,
+    },
+    {
+      title: 'Average Peer Review Score',
+      dataIndex: 'peerReview',
+      key: 'peerReview',
+      width: '18%',
+      align: 'center',
+      render: (peerReview, student) => (
+        <span
+          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+            student.status === "Not Submitted" ||
+            student.status === "Submitted" ||
+            isPeerReviewNotGraded(student)
+              ? "text-gray-400 bg-gray-50"
+              : getGradeColor(peerReview)
+          }`}
+        >
+          {student.status === "Not Submitted" ||
+          student.status === "Submitted" ||
+          isPeerReviewNotGraded(student)
+            ? "--"
+            : peerReview !== null && peerReview !== undefined
+            ? peerReview.toFixed(1)
+            : "--"}
+        </span>
+      ),
+    },
+    {
+      title: 'Instructor Score',
+      dataIndex: 'instructorGrade',
+      key: 'instructorGrade',
+      width: '14%',
+      align: 'center',
+      render: (instructorGrade, student) => (
+        <span
+          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+            student.status === "Not Submitted" ||
+            student.status === "Submitted"
+              ? "text-gray-400 bg-gray-50"
+              : getGradeColor(instructorGrade)
+          }`}
+        >
+          {student.status === "Not Submitted" ||
+          student.status === "Submitted"
+            ? "--"
+            : instructorGrade !== null && instructorGrade !== undefined
+            ? instructorGrade.toFixed(1)
+            : "--"}
+        </span>
+      ),
+    },
+    {
+      title: 'Final Score',
+      dataIndex: 'finalGrade',
+      key: 'finalGrade',
+      width: '12%',
+      align: 'center',
+      render: (finalGrade, student) => (
+        <span
+          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+            student.status === "Not Submitted" ||
+            student.status === "Submitted"
+              ? "text-gray-400 bg-gray-50"
+              : getGradeColor(finalGrade)
+          }`}
+        >
+          {student.status === "Not Submitted" ||
+          student.status === "Submitted"
+            ? "--"
+            : finalGrade !== null && finalGrade !== undefined
+            ? finalGrade.toFixed(1)
+            : "--"}
+        </span>
+      ),
+    },
+    {
+      title: (
+        <div
+          onClick={handleStatusClick}
+          className="cursor-pointer hover:text-orange-600 select-none flex items-center justify-center gap-1"
+        >
+          Status <ChevronDown size={16} />
+        </div>
+      ),
+      dataIndex: 'status',
+      key: 'status',
+      width: '18%',
+      align: 'center',
+      render: (status) => (
+        <span
+          className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${getStatusStyle(status)}`}
+        >
+          {status}
+        </span>
+      ),
+    },
+  ];
+
   return (
     <>
       {/* Assignment Info Card */}
@@ -174,138 +291,21 @@ const GradesTable = ({
       />
 
       {/* Table */}
-      <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-        {loading.summary ? (
-          <div className="flex items-center justify-center py-12">
-            <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
-            <span className="ml-3 text-gray-600">Loading grades...</span>
-          </div>
-        ) : (
-          <table className="w-full">
-            <thead className="bg-gray-50 border-b border-gray-200">
-              <tr>
-                <th className="px-6 py-3 text-left text-sm font-medium text-gray-600">
-                  No.
-                </th>
-                <th className="px-6 py-3 text-left text-sm font-medium text-gray-600">
-                  Student Code
-                </th>
-                <th className="px-6 py-3 text-left text-sm font-medium text-gray-600">
-                  Full Name
-                </th>
-                <th className="px-6 py-3 text-center text-sm font-medium text-gray-600">
-                  Average Peer Review Score
-                </th>
-                <th className="px-6 py-3 text-center text-sm font-medium text-gray-600">
-                  Instructor Score
-                </th>
-                <th className="px-6 py-3 text-center text-sm font-medium text-gray-600">
-                  Final Score
-                </th>
-                <th
-                  onClick={handleStatusClick}
-                  className="px-6 py-3 text-center text-sm font-medium text-gray-600 cursor-pointer hover:text-orange-600 select-none"
-                >
-                  <div className="flex items-center justify-center gap-1">
-                    Status <ChevronDown size={16} />
-                  </div>
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200">
-              {filteredStudents.length > 0 ? (
-                filteredStudents.map((student, index) => (
-                  <tr key={student.studentId} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 text-sm text-gray-600">
-                      {index + 1}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-600">
-                      {student.studentCode}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-800">
-                      {student.studentName}
-                    </td>
-                    <td className="px-6 py-4 text-center">
-                      <span
-                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                          student.status === "Not Submitted" ||
-                          student.status === "Submitted" ||
-                          isPeerReviewNotGraded(student)
-                            ? "text-gray-400 bg-gray-50"
-                            : getGradeColor(student.peerReview)
-                        }`}
-                      >
-                        {student.status === "Not Submitted" ||
-                        student.status === "Submitted" ||
-                        isPeerReviewNotGraded(student)
-                          ? "--"
-                          : student.peerReview !== null &&
-                            student.peerReview !== undefined
-                          ? student.peerReview.toFixed(1)
-                          : "--"}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-center">
-                      <span
-                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                          student.status === "Not Submitted" ||
-                          student.status === "Submitted"
-                            ? "text-gray-400 bg-gray-50"
-                            : getGradeColor(student.instructorGrade)
-                        }`}
-                      >
-                        {student.status === "Not Submitted" ||
-                        student.status === "Submitted"
-                          ? "--"
-                          : student.instructorGrade !== null &&
-                            student.instructorGrade !== undefined
-                          ? student.instructorGrade.toFixed(1)
-                          : "--"}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-center">
-                      <span
-                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                          student.status === "Not Submitted" ||
-                          student.status === "Submitted"
-                            ? "text-gray-400 bg-gray-50"
-                            : getGradeColor(student.finalGrade)
-                        }`}
-                      >
-                        {student.status === "Not Submitted" ||
-                        student.status === "Submitted"
-                          ? "--"
-                          : student.finalGrade !== null &&
-                            student.finalGrade !== undefined
-                          ? student.finalGrade.toFixed(1)
-                          : "--"}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-center">
-                      <span
-                        className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${getStatusStyle(
-                          student.status
-                        )}`}
-                      >
-                        {student.status}
-                      </span>
-                    </td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td
-                    colSpan="7"
-                    className="px-6 py-12 text-center text-gray-500"
-                  >
-                    No students found
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        )}
-      </div>
+      <Table
+        columns={columns}
+        dataSource={filteredStudents}
+        rowKey="studentId"
+        loading={loading.summary}
+        pagination={false}
+        locale={{
+          emptyText: (
+            <div className="px-6 py-12 text-center text-gray-500">
+              No students found
+            </div>
+          ),
+        }}
+        className="bg-white rounded-lg border border-gray-200"
+      />
 
       {/* Action Button: Publish Grades - only show when assignment is Closed or Cancelled */}
       {["Closed", "Cancelled"].includes(assignmentStatus) && (
