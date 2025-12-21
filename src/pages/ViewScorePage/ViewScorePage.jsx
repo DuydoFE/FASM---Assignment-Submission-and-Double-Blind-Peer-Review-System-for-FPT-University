@@ -360,7 +360,7 @@ const ViewScorePage = () => {
           </h3>
           <div className="bg-white p-6 rounded-lg shadow-md border">
             <p className="text-gray-600 italic">
-              "{scoreData.feedback || "Không có nhận xét."}"
+              "{scoreData.feedback || "."}"
             </p>
           </div>
         </div>
