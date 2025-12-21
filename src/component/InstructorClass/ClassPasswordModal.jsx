@@ -1,16 +1,43 @@
-import React, { useState } from 'react';
-import { Modal, Button } from 'antd';
+import React, { useState, useEffect } from 'react';
+import { Modal, Button, Input, Spin } from 'antd';
 import { Eye, EyeOff } from 'lucide-react';
+import { getEnrollKey } from '../../service/courseInstanceService';
+import { toast } from 'react-toastify';
 
 const ClassPasswordModal = ({
   isOpen,
   onClose,
   selectedClass,
   initialPassword = '',
-  onSave
+  onSave,
+  userId
 }) => {
   const [password, setPassword] = useState(initialPassword);
   const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [originalPassword, setOriginalPassword] = useState('');
+
+  useEffect(() => {
+    const fetchEnrollKey = async () => {
+      if (isOpen && selectedClass?.id && userId) {
+        setIsLoading(true);
+        try {
+          const response = await getEnrollKey(selectedClass.id, userId);
+          const enrollKey = response?.data || '';
+          setPassword(enrollKey);
+          setOriginalPassword(enrollKey);
+        } catch (error) {
+          const errorMessage = error.response?.data?.message || 'Failed to fetch enrollment key';
+          setPassword(initialPassword);
+          setOriginalPassword(initialPassword);
+        } finally {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    fetchEnrollKey();
+  }, [isOpen, selectedClass?.id, userId, initialPassword]);
 
   const PasswordRequirement = ({ met, text }) => (
   <div className="flex items-center gap-3">
@@ -33,6 +60,7 @@ const ClassPasswordModal = ({
   const hasUppercase = /[A-Z]/.test(password);
   const hasNumber = /[0-9]/.test(password);
   const isPasswordValid = hasMinLength && hasLowercase && hasUppercase && hasNumber;
+  const hasPasswordChanged = password !== originalPassword;
 
   const handleSave = () => {
     if (isPasswordValid) {
@@ -42,7 +70,7 @@ const ClassPasswordModal = ({
   };
 
   const handleClose = () => {
-    setPassword(initialPassword);
+    setPassword(originalPassword);
     setShowPassword(false);
     onClose();
   };
@@ -53,14 +81,14 @@ const ClassPasswordModal = ({
       onCancel={handleClose}
       width={900}
       footer={[
-        <Button key="cancel" onClick={handleClose}>
+        <Button key="cancel" onClick={handleClose} disabled={isLoading}>
           Cancel
         </Button>,
         <Button
           key="submit"
           type="primary"
           onClick={handleSave}
-          disabled={!isPasswordValid}
+          disabled={!isPasswordValid || isLoading || !hasPasswordChanged}
           className="bg-orange-500 hover:!bg-orange-600"
         >
           Update Password
@@ -68,7 +96,8 @@ const ClassPasswordModal = ({
       ]}
       closable={false}
     >
-      <div className="flex overflow-hidden -mx-6 -my-5">
+      <Spin spinning={isLoading} tip="Loading enrollment key...">
+        <div className="flex overflow-hidden -mx-6 -my-5">
         {/* Left Side - Class Info */}
         <div className="w-2/5 bg-gradient-to-br from-blue-50 to-blue-100 p-8 flex flex-col">
           <div className="mb-6">
@@ -111,11 +140,11 @@ const ClassPasswordModal = ({
               Class Password
             </label>
             <div className="relative">
-              <input
+              <Input
                 type={showPassword ? "text" : "password"}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                className="w-full px-4 py-3"
                 placeholder="Enter password..."
               />
               <button
@@ -140,6 +169,7 @@ const ClassPasswordModal = ({
           </div>
         </div>
       </div>
+      </Spin>
     </Modal>
   );
 };

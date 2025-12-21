@@ -62,8 +62,9 @@ const InstructorViewClass = () => {
 
   const handleSavePassword = async (password) => {
     try {
-      await updateEnrollKey(selectedClass.id, password, currentUser.id);
-      toast.success("Updated enroll key successfully!");
+      const response = await updateEnrollKey(selectedClass.id, password, currentUser.id);
+      const message = response?.message || "Updated enroll key successfully!";
+      toast.success(message);
       
       // Update local state
       setClasses(prevClasses =>
@@ -74,7 +75,8 @@ const InstructorViewClass = () => {
         )
       );
     } catch (error) {
-      toast.error("Failed to update enroll key. Please try again.");
+      const errorMessage = error.response?.data?.message || "Failed to update enroll key. Please try again.";
+      toast.error(errorMessage);
     }
   };
 
@@ -376,6 +378,7 @@ const InstructorViewClass = () => {
         selectedClass={selectedClass}
         initialPassword={selectedClass?.enrollmentKey || ''}
         onSave={handleSavePassword}
+        userId={currentUser?.id}
       />
     </div>
   );
