@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useParams, Link } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   RightOutlined,
   ClockCircleOutlined,
@@ -7,6 +8,7 @@ import {
   CheckCircleOutlined,
   WarningOutlined,
   FilterOutlined,
+  HomeOutlined,
 } from "@ant-design/icons";
 import StatCard from "../../component/Assignment/StatCard";
 import AssignmentCard from "../../component/Assignment/AssignmentCard";
@@ -24,6 +26,26 @@ const ASSIGNMENT_STATUSES = [
   { value: "Closed", label: "Closed" },
   { value: "Cancelled", label: "Cancelled" },
 ];
+
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1,
+      delayChildren: 0.2,
+    },
+  },
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.5, ease: "easeOut" },
+  },
+};
 
 const AssignmentDetailPage = () => {
   const { courseId } = useParams();
@@ -64,115 +86,208 @@ const AssignmentDetailPage = () => {
   };
 
   if (isLoading || isLoadingCourseInstance) {
-    return <div className="text-center p-8">Loading class data...</div>;
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.5 }}
+          className="text-center"
+        >
+          <motion.div
+            animate={{ rotate: 360 }}
+            transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+            className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full mx-auto mb-4"
+          />
+          <p className="text-lg font-semibold text-gray-700">Loading class data...</p>
+        </motion.div>
+      </div>
+    );
   }
 
   if (isError || isErrorCourseInstance) {
     return (
-      <div className="text-center p-8 text-red-500">
-        The exercise list could not be loaded.
+      <div className="min-h-screen bg-gradient-to-br from-red-50 via-white to-orange-50 flex items-center justify-center">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="text-center bg-white p-8 rounded-2xl shadow-2xl border-2 border-red-300"
+        >
+          <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <WarningOutlined className="text-4xl text-red-500" />
+          </div>
+          <h2 className="text-2xl font-bold text-red-600 mb-2">Error</h2>
+          <p className="text-gray-600">The exercise list could not be loaded.</p>
+        </motion.div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
       <div className="max-w-7xl mx-auto p-6 md:p-8">
         {/* Breadcrumbs */}
-        <div className="mb-6 flex items-center text-sm text-gray-600 fade-in-down">
+        <motion.div
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.5 }}
+          className="mb-6 flex items-center text-sm"
+        >
           <Link
             to="/my-assignments"
-            className="hover:text-blue-600 transition-colors duration-200 font-medium"
+            className="flex items-center gap-2 text-gray-500 hover:text-blue-600 transition-colors duration-200 font-medium group"
           >
-            My Assignments
+            <HomeOutlined className="text-base group-hover:scale-110 transition-transform" />
+            <span className="text-sm">My Assignments</span>
           </Link>
-          <RightOutlined style={{ fontSize: '16px', margin: '0 8px', color: '#9ca3af' }} />
-          <span className="font-semibold text-gray-800">
+          <RightOutlined className="text-gray-400 mx-2 text-xs" />
+          <span className="font-medium text-gray-700 text-sm">
             {courseInstanceData?.courseCode || courseId} - {courseInstanceData?.courseName}
           </span>
-        </div>
+        </motion.div>
 
         {/* Header */}
         {courseInstanceData && (
-          <div className="mb-8 scale-in" style={{ animationDelay: "0.1s" }}>
-            <div className="bg-gradient-to-br from-white to-gray-50 rounded-xl shadow-md p-6 border border-gray-200 hover:shadow-xl hover:border-blue-300 transition-all duration-300">
-              <div className="flex justify-between items-start flex-wrap gap-4">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-2">
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, ease: "easeOut" }}
+            className="mb-8"
+          >
+            <motion.div
+              whileHover={{ scale: 1.01, y: -2 }}
+              transition={{ duration: 0.3 }}
+              className="bg-white rounded-3xl shadow-2xl p-8 border-2 border-blue-100 overflow-hidden relative"
+            >
+              {/* Decorative Background Elements */}
+              <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-blue-100 to-purple-100 rounded-full blur-3xl opacity-30 -mr-32 -mt-32"></div>
+              <div className="absolute bottom-0 left-0 w-64 h-64 bg-gradient-to-tr from-purple-100 to-pink-100 rounded-full blur-3xl opacity-30 -ml-32 -mb-32"></div>
+
+              <div className="relative z-10 flex justify-between items-start flex-wrap gap-6">
+                <div className="flex-1 min-w-0">
+                  <motion.div
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.2, duration: 0.5 }}
+                    className="flex items-center gap-3 mb-4"
+                  >
                     <div className="w-1 h-6 bg-gradient-to-b from-blue-600 to-blue-400 rounded-full"></div>
-                    <p className="text-blue-600 font-semibold text-lg">
-                      {courseInstanceData.courseCode}
-                      {courseInstanceData.campusName && <span className="text-gray-400 ml-2">• {courseInstanceData.campusName}</span>}
-                    </p>
-                  </div>
-                  <h1 className="text-3xl md:text-4xl font-medium text-gray-900 mb-3 typing-animation">
+                    <div>
+                      <p className="text-blue-600 font-semibold text-base flex items-center gap-2">
+                        {courseInstanceData.courseCode}
+                        {courseInstanceData.campusName && (
+                          <>
+                            <span className="text-gray-300">•</span>
+                            <span className="text-gray-400 text-sm font-medium">{courseInstanceData.campusName}</span>
+                          </>
+                        )}
+                      </p>
+                    </div>
+                  </motion.div>
+
+                  <motion.h1
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.3, duration: 0.5 }}
+                    className="text-3xl md:text-4xl font-medium text-gray-900 mb-3"
+                  >
                     {courseInstanceData.courseName}
-                  </h1>
-                  <div className="flex items-center text-gray-600 space-x-3">
-                    <span className="px-3 py-1 bg-gray-100 rounded-full text-sm font-medium">
+                  </motion.h1>
+
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.4, duration: 0.5 }}
+                    className="flex items-center gap-3 flex-wrap"
+                  >
+                    <span className="px-3 py-1 bg-gray-100 rounded-full text-sm font-medium text-gray-700">
                       {courseInstanceData.courseCode}
                     </span>
-                    <div className="flex items-center">
-                      <ClockCircleOutlined style={{ fontSize: '16px', marginRight: '6px', color: '#9ca3af' }} />
-                      <span className="text-sm">Year: {new Date(courseInstanceData.startDate).getFullYear()}</span>
+                    <div className="flex items-center gap-2">
+                      <ClockCircleOutlined className="text-gray-500 text-sm" />
+                      <span className="text-sm text-gray-600">
+                        Year: {new Date(courseInstanceData.startDate).getFullYear()}
+                      </span>
                     </div>
-                  </div>
+                  </motion.div>
                 </div>
-                <div className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-green-50 to-emerald-50 text-green-700 rounded-full border border-green-200 shadow-sm">
-                  <CheckCircleOutlined style={{ fontSize: '18px' }} />
+
+                <motion.div
+                  initial={{ scale: 0, rotate: -180 }}
+                  animate={{ scale: 1, rotate: 0 }}
+                  transition={{ delay: 0.5, type: "spring", stiffness: 200 }}
+                  whileHover={{ scale: 1.05, rotate: 5 }}
+                  className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-green-50 to-emerald-50 text-green-700 rounded-full border border-green-200 shadow-sm"
+                >
+                  <CheckCircleOutlined className="text-lg" />
                   <span className="font-semibold">Enrolled</span>
-                </div>
+                </motion.div>
               </div>
-            </div>
-          </div>
+            </motion.div>
+          </motion.div>
         )}
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 mb-8">
-          <div className="fade-in-up" style={{ animationDelay: "0.15s" }}>
+        <motion.div
+          variants={containerVariants}
+          initial="hidden"
+          animate="visible"
+          className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 mb-8"
+        >
+          <motion.div variants={itemVariants}>
             <StatCard
               icon={BookOutlined}
               value={stats.total}
               label="All assignments"
               color="blue"
             />
-          </div>
-          <div className="fade-in-up" style={{ animationDelay: "0.2s" }}>
+          </motion.div>
+          <motion.div variants={itemVariants}>
             <StatCard
               icon={CheckCircleOutlined}
               value={stats.submitted}
               label="Submitted"
               color="green"
             />
-          </div>
-          <div className="fade-in-up" style={{ animationDelay: "0.25s" }}>
+          </motion.div>
+          <motion.div variants={itemVariants}>
             <StatCard
               icon={ClockCircleOutlined}
               value={stats.dueSoon}
               label="About to expire"
               color="red"
             />
-          </div>
-          <div className="fade-in-up" style={{ animationDelay: "0.3s" }}>
+          </motion.div>
+          <motion.div variants={itemVariants}>
             <StatCard
               icon={WarningOutlined}
               value={stats.warning}
               label="Note the time"
               color="yellow"
             />
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
 
         {/* Filter Section */}
-        <div className="bg-gray-50 p-5 rounded-xl border border-gray-200 shadow-sm mb-6 slide-in-left" style={{ animationDelay: "0.35s" }}>
+        <motion.div
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.3, duration: 0.5 }}
+          whileHover={{ scale: 1.01 }}
+          className="bg-white p-6 rounded-2xl border-2 border-gray-200 shadow-lg mb-8"
+        >
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-blue-50 rounded-lg">
-                <FilterOutlined style={{ fontSize: '20px', color: '#2563eb' }} />
-              </div>
+              <motion.div
+                whileHover={{ rotate: 180 }}
+                transition={{ duration: 0.3 }}
+                className="p-2 bg-blue-50 rounded-lg"
+              >
+                <FilterOutlined className="text-xl text-blue-600" />
+              </motion.div>
               <h3 className="font-semibold text-gray-800 text-lg">Filter Assignments</h3>
             </div>
-            
+
             <div className="flex items-center gap-4 w-full md:w-auto">
               <div className="flex items-center flex-1 md:flex-initial">
                 <label
@@ -194,7 +309,7 @@ const AssignmentDetailPage = () => {
                   ))}
                 </select>
               </div>
-              
+
               <div className="text-sm text-gray-600 bg-gray-50 px-4 py-2 rounded-lg whitespace-nowrap">
                 Result: <span className="font-semibold text-blue-600">{filteredAssignments.length}</span>
                 <span className="text-gray-400 mx-1">/</span>
@@ -202,33 +317,35 @@ const AssignmentDetailPage = () => {
               </div>
             </div>
           </div>
-        </div>
+        </motion.div>
 
         {/* Assignments List */}
-        <div className="space-y-6">
+        <AnimatePresence mode="wait">
           {filteredAssignments.length > 0 ? (
-            filteredAssignments.map((assignment, index) => (
-              <div
-                key={assignment.assignmentId}
-                className="fade-in-up"
-                style={{ animationDelay: `${0.4 + index * 0.08}s` }}
-              >
-                <AssignmentCard assignment={assignment} courseId={courseId} />
-                {assignment.peerWeight > 0 && (
-                  <PeerReviewInfoCard
-                    completed={assignment.completedReviewsCount}
-                    required={assignment.numPeerReviewsRequired}
-                    courseId={courseId}
-                    assignmentId={assignment.assignmentId}
-                  />
-                )}
-              </div>
-            ))
+            <div className="space-y-6">
+              {filteredAssignments.map((assignment, index) => (
+                <div
+                  key={assignment.assignmentId}
+                  className="fade-in-up"
+                  style={{ animationDelay: `${0.4 + index * 0.08}s` }}
+                >
+                  <AssignmentCard assignment={assignment} courseId={courseId} />
+                  {assignment.peerWeight > 0 && (
+                    <PeerReviewInfoCard
+                      completed={assignment.completedReviewsCount}
+                      required={assignment.numPeerReviewsRequired}
+                      courseId={courseId}
+                      assignmentId={assignment.assignmentId}
+                    />
+                  )}
+                </div>
+              ))}
+            </div>
           ) : (
             <div className="text-center bg-gray-50 p-16 rounded-xl border-2 border-dashed border-gray-300 scale-in" style={{ animationDelay: "0.4s" }}>
               <div className="max-w-md mx-auto">
                 <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <BookOutlined style={{ fontSize: '32px', color: '#9ca3af' }} />
+                  <BookOutlined className="text-4xl text-gray-400" />
                 </div>
                 <h3 className="text-2xl font-bold text-gray-800 mb-2">No assignments found</h3>
                 <p className="text-gray-600">
@@ -239,21 +356,10 @@ const AssignmentDetailPage = () => {
               </div>
             </div>
           )}
-        </div>
+        </AnimatePresence>
       </div>
 
       <style jsx>{`
-        @keyframes fadeInDown {
-          from {
-            opacity: 0;
-            transform: translateY(-20px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-
         @keyframes fadeInUp {
           from {
             opacity: 0;
@@ -276,60 +382,12 @@ const AssignmentDetailPage = () => {
           }
         }
 
-        @keyframes slideInLeft {
-          from {
-            opacity: 0;
-            transform: translateX(-30px);
-          }
-          to {
-            opacity: 1;
-            transform: translateX(0);
-          }
-        }
-
-        .fade-in-down {
-          animation: fadeInDown 0.5s ease-out;
-        }
-
         .fade-in-up {
           animation: fadeInUp 0.6s ease-out backwards;
         }
 
         .scale-in {
           animation: scaleIn 0.5s ease-out backwards;
-        }
-
-        .slide-in-left {
-          animation: slideInLeft 0.5s ease-out backwards;
-        }
-
-        @keyframes typing {
-          0% {
-            width: 0;
-            opacity: 0;
-          }
-          1% {
-            opacity: 1;
-          }
-          50% {
-            width: 100%;
-            opacity: 1;
-          }
-          90% {
-            width: 100%;
-            opacity: 1;
-          }
-          100% {
-            width: 0;
-            opacity: 0;
-          }
-        }
-
-        .typing-animation {
-          overflow: hidden;
-          white-space: nowrap;
-          display: inline-block;
-          animation: typing 6s steps(40, end) infinite;
         }
       `}</style>
     </div>

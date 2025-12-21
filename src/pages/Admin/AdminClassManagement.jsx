@@ -153,18 +153,39 @@ export default function AdminClassManagement() {
     };
 
     try {
-      await createCourseInstance(payload);
-      message.success("Class created successfully!");
+      const res = await createCourseInstance(payload);
+      
+      // Display full message from API response
+      if (res?.message) {
+        message.success(res.message);
+      } else if (res?.data?.message) {
+        message.success(res.data.message);
+      } else {
+        message.success("Class created successfully!");
+      }
+      
+      // Close modal and reset form on success
       setShowAddForm(false);
       form.resetFields();
 
+      // Refresh class list
       if (filters.campus) {
-        const res = await getCourseInstancesByCampusId(Number(filters.campus));
-        setClasses(Array.isArray(res?.data) ? res.data : []);
+        const refreshRes = await getCourseInstancesByCampusId(Number(filters.campus));
+        setClasses(Array.isArray(refreshRes?.data) ? refreshRes.data : []);
       }
     } catch (err) {
       console.error(err);
-      message.error(err.response?.data?.message || "Failed to create class!");
+      
+      // Display full error message from API
+      if (err.response?.data?.message) {
+        message.error(err.response.data.message);
+      } else if (err.response?.data) {
+        message.error(JSON.stringify(err.response.data));
+      } else if (err.message) {
+        message.error(err.message);
+      } else {
+        message.error("Failed to create class!");
+      }
     }
   };
 
@@ -182,18 +203,39 @@ export default function AdminClassManagement() {
         endDate: new Date(values.endDate).toISOString(),
       };
 
-      await updateCourseInstance(requestPayload);
-      message.success("Class updated successfully!");
+      const res = await updateCourseInstance(requestPayload);
+      
+      // Display full message from API response
+      if (res?.message) {
+        message.success(res.message);
+      } else if (res?.data?.message) {
+        message.success(res.data.message);
+      } else {
+        message.success("Class updated successfully!");
+      }
+      
+      // Close modal and reset form on success
       setShowUpdateForm(false);
       updateForm.resetFields();
 
+      // Refresh class list
       if (filters.campus) {
-        const res = await getCourseInstancesByCampusId(Number(filters.campus));
-        setClasses(Array.isArray(res?.data) ? res.data : []);
+        const refreshRes = await getCourseInstancesByCampusId(Number(filters.campus));
+        setClasses(Array.isArray(refreshRes?.data) ? refreshRes.data : []);
       }
     } catch (err) {
       console.error(err);
-      message.error(err.response?.data?.message || "Class update failed!");
+      
+      // Display full error message from API
+      if (err.response?.data?.message) {
+        message.error(err.response.data.message);
+      } else if (err.response?.data) {
+        message.error(JSON.stringify(err.response.data));
+      } else if (err.message) {
+        message.error(err.message);
+      } else {
+        message.error("Class update failed!");
+      }
     }
   };
 
@@ -221,43 +263,54 @@ export default function AdminClassManagement() {
       const file = importFileList[0].originFileObj;
       const res = await importCourseInstances(file);
       
-      // Display all messages from the API response
-      if (res.data && Array.isArray(res.data)) {
+      // Display messages from the API response
+      if (res?.message) {
+        message.success(res.message);
+      } else if (res?.data?.message) {
+        message.success(res.data.message);
+      } else if (Array.isArray(res?.data)) {
+        // If response is an array of messages
         res.data.forEach(msg => {
-          if (msg.includes("successfully") || msg.includes("imported")) {
-            message.success(msg);
-          } else if (msg.includes("error") || msg.includes("failed") || msg.includes("Error")) {
-            message.error(msg);
-          } else if (msg.includes("warning") || msg.includes("skipped")) {
-            message.warning(msg);
+          const msgStr = typeof msg === 'string' ? msg : JSON.stringify(msg);
+          if (msgStr.toLowerCase().includes("successfully") || msgStr.toLowerCase().includes("imported")) {
+            message.success(msgStr);
+          } else if (msgStr.toLowerCase().includes("error") || msgStr.toLowerCase().includes("failed")) {
+            message.error(msgStr);
+          } else if (msgStr.toLowerCase().includes("warning") || msgStr.toLowerCase().includes("skipped")) {
+            message.warning(msgStr);
           } else {
-            message.info(msg);
+            message.info(msgStr);
           }
         });
-      } else if (res.message) {
-        message.success(res.message);
       } else {
         message.success("Classes imported successfully!");
       }
 
+      // Close modal and clear file list
       setShowImportModal(false);
       setImportFileList([]);
 
-      // Refresh the class list if a campus is selected
+      // Refresh class list if campus is selected
       if (filters.campus) {
-        const classRes = await getCourseInstancesByCampusId(Number(filters.campus));
-        setClasses(Array.isArray(classRes?.data) ? classRes.data : []);
+        const refreshRes = await getCourseInstancesByCampusId(Number(filters.campus));
+        setClasses(Array.isArray(refreshRes?.data) ? refreshRes.data : []);
       }
     } catch (err) {
       console.error(err);
       
-      // Handle error messages from the API
-      if (err.data && Array.isArray(err.data)) {
-        err.data.forEach(msg => {
-          message.error(msg);
+      // Display error messages from the API
+      if (err.response?.data?.message) {
+        message.error(err.response.data.message);
+      } else if (Array.isArray(err.response?.data)) {
+        err.response.data.forEach(msg => {
+          const msgStr = typeof msg === 'string' ? msg : JSON.stringify(msg);
+          message.error(msgStr);
         });
-      } else if (err.data && err.data.message) {
-        message.error(err.data.message);
+      } else if (err.response?.data) {
+        const errorMsg = typeof err.response.data === 'string'
+          ? err.response.data
+          : JSON.stringify(err.response.data);
+        message.error(errorMsg);
       } else if (err.message) {
         message.error(err.message);
       } else {
