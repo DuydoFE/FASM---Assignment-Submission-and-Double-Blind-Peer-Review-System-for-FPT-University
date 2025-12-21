@@ -14,7 +14,6 @@ const JoinClassModal = ({ isOpen, onClose, course, onEnrollSuccess }) => {
   const { mutate: enroll, isLoading: isEnrolling, error: enrollError } = useMutation({
     mutationFn: courseService.enrollInCourse,
     onSuccess: () => {
-      // Bây giờ onEnrollSuccess sẽ luôn là một hàm, không bao giờ là undefined
       onEnrollSuccess(); 
       onClose();
     },
@@ -65,11 +64,11 @@ const JoinClassModal = ({ isOpen, onClose, course, onEnrollSuccess }) => {
         </div>
         
         <div className="text-center">
-          <h3 className="text-2xl font-bold text-gray-900 mb-2">Nhập mật khẩu lớp học</h3>
-          <p className="text-gray-600 mb-6">Vui lòng nhập mật khẩu để tham gia lớp học <span className="font-semibold">{course.courseName}</span>.</p>
+          <h3 className="text-2xl font-bold text-gray-900 mb-2">Enter Class Password</h3>
+          <p className="text-gray-600 mb-6">Please enter the password to join the class <span className="font-semibold">{course.courseName}</span>.</p>
           
           <div className="relative">
-            <label htmlFor="password" className="sr-only">Mật khẩu lớp học</label>
+            <label htmlFor="password" className="sr-only">Class password</label>
             <Key className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
             <input
               id="password"
@@ -83,8 +82,8 @@ const JoinClassModal = ({ isOpen, onClose, course, onEnrollSuccess }) => {
               {showPassword ? <EyeOff /> : <Eye />}
             </button>
           </div>
-          
-          <p className="text-xs text-gray-500 mt-2 text-left">Mật khẩu được cung cấp bởi giảng viên trong buổi học đầu tiên</p>
+
+          <p className="text-xs text-gray-500 mt-2 text-left">Password is provided by the instructor during the first class</p>
           {enrollError && (
               <p className="text-sm text-red-500 mt-3 text-center">{enrollError.message}</p>
           )}
@@ -95,11 +94,11 @@ const JoinClassModal = ({ isOpen, onClose, course, onEnrollSuccess }) => {
             <div className="flex">
                 <Info className="w-5 h-5 mr-3 flex-shrink-0"/>
                 <div>
-                    <h4 className="font-bold mb-2">Lưu ý quan trọng</h4>
+                    <h4 className="font-bold mb-2">Note</h4>
                     <ul className="list-disc list-inside space-y-1">
-                        <li>Mật khẩu phân biệt chữ hoa và chữ thường</li>
-                        <li>Liên hệ giảng viên nếu bạn chưa nhận được mật khẩu</li>
-                        <li>Mỗi lớp học có mật khẩu riêng để bảo mật</li>
+                        <li>Password is case-sensitive.</li>
+                        <li>Contact your instructor if you haven't received the password</li>
+                        <li>Each class has a unique password for security</li>
                     </ul>
                 </div>
             </div>
@@ -107,14 +106,14 @@ const JoinClassModal = ({ isOpen, onClose, course, onEnrollSuccess }) => {
 
        <div className="flex justify-end space-x-4 mt-8">
           <button onClick={onClose} className="px-6 py-2 border rounded-md text-gray-700 hover:bg-gray-100 font-semibold" disabled={isEnrolling}>
-            Hủy bỏ
+            Cancel
           </button>
           <button 
             onClick={handleJoinClass} 
             className="px-6 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 font-semibold flex items-center disabled:bg-gray-400"
-            disabled={isEnrolling || !password} // Vô hiệu hóa khi đang gửi hoặc chưa nhập pass
+            disabled={isEnrolling || !password} 
           >
-            {isEnrolling ? 'Đang xử lý...' : 'Tham gia lớp'}
+            {isEnrolling ? 'Processing...' : 'Enroll Class'}
           </button>
         </div>
       </div>

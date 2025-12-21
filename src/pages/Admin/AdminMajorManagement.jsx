@@ -6,14 +6,9 @@ import {
   updateMajor,
   deleteMajor,
 } from "../../service/adminService";
-
-const ModalWrapper = ({ children }) => (
-  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-    <div className="bg-white rounded-2xl shadow-xl p-6 w-full max-w-md">
-      {children}
-    </div>
-  </div>
-);
+import { Table, Button, Modal, Form, Input, Select, Dropdown, Tag } from "antd";
+import { EditOutlined, DeleteOutlined, PlusOutlined, MoreOutlined, BookOutlined, CheckCircleOutlined, CloseCircleOutlined } from "@ant-design/icons";
+import { motion } from "framer-motion";
 
 export default function AdminMajorManagement() {
   const [majors, setMajors] = useState([]);
@@ -31,6 +26,7 @@ export default function AdminMajorManagement() {
   const [originalMajor, setOriginalMajor] = useState(null);
 
   const [confirmAction, setConfirmAction] = useState(null);
+
   const validateNewMajor = () => {
     if (!newMajor.majorCode.trim()) {
       toast.error("Major Code is required");
@@ -44,6 +40,7 @@ export default function AdminMajorManagement() {
 
     return true;
   };
+
   const isAddFormInvalid =
     !newMajor.majorCode.trim() || !newMajor.majorName.trim();
 
@@ -83,7 +80,6 @@ export default function AdminMajorManagement() {
     editingMajor.majorCode === originalMajor.majorCode &&
     editingMajor.majorName === originalMajor.majorName &&
     editingMajor.isActive === originalMajor.isActive;
-
 
   const getMessageFromResponse = (res) => {
     return (
@@ -131,241 +127,274 @@ export default function AdminMajorManagement() {
     }
   };
 
+  const columns = [
+    {
+      title: "Code",
+      dataIndex: "majorCode",
+      key: "majorCode",
+      width: "30%",
+      render: (text) => <span className="font-medium">{text}</span>,
+    },
+    {
+      title: "Name",
+      dataIndex: "majorName",
+      key: "majorName",
+      width: "50%",
+    },
+    {
+      title: "Status",
+      dataIndex: "isActive",
+      key: "isActive",
+      width: "10%",
+      align: "center",
+      render: (isActive) =>
+        isActive ? (
+          <Tag icon={<CheckCircleOutlined />} color="success">
+            Active
+          </Tag>
+        ) : (
+          <Tag icon={<CloseCircleOutlined />} color="error">
+            Inactive
+          </Tag>
+        ),
+    },
+    {
+      title: "Actions",
+      key: "actions",
+      width: "10%",
+      align: "center",
+      render: (_, record) => {
+        const items = [
+          {
+            key: "edit",
+            label: (
+              <motion.div whileHover={{ x: 5 }} className="flex items-center gap-2">
+                <EditOutlined /> Update
+              </motion.div>
+            ),
+            onClick: () => openEdit(record),
+          },
+          { type: "divider" },
+          {
+            key: "delete",
+            label: (
+              <motion.div whileHover={{ x: 5 }} className="flex items-center gap-2">
+                <DeleteOutlined /> Delete
+              </motion.div>
+            ),
+            danger: true,
+            onClick: () =>
+              setConfirmAction({
+                type: "delete",
+                payload: record.majorId,
+              }),
+          },
+        ];
+
+        return (
+          <Dropdown menu={{ items }} trigger={["click"]}>
+            <Button type="text" icon={<MoreOutlined />} />
+          </Dropdown>
+        );
+      },
+    },
+  ];
+
   return (
-    <div className="bg-white p-8 rounded-2xl shadow-lg border border-gray-200 space-y-6">
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+      className="bg-white p-8 rounded-2xl shadow-lg border border-gray-200 space-y-6"
+    >
       <Toaster position="top-right" />
 
-      <h2 className="text-3xl font-bold mb-2 text-orange-600">
-        Major Management
-      </h2>
+      <div className="flex items-center justify-between">
+        <motion.h2
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="text-3xl font-bold text-[#F36F21] flex items-center gap-2"
+        >
+          <BookOutlined /> Major Management
+        </motion.h2>
 
-      {/* Add Button */}
-      <button
-        onClick={() => setShowAddModal(true)}
-        className="px-6 py-3 rounded-xl font-semibold transition-all bg-[#F36F21] text-white shadow-md shadow-orange-200 hover:bg-[#D95C18] hover:-translate-y-0.5 mb-2"
+        <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+          <Button
+            type="primary"
+            icon={<PlusOutlined />}
+            onClick={() => setShowAddModal(true)}
+            style={{
+              background: "#F36F21",
+              borderColor: "#F36F21",
+              height: "40px",
+              fontWeight: "600",
+            }}
+          >
+            Create Major
+          </Button>
+        </motion.div>
+      </div>
+
+      <div className="overflow-hidden rounded-xl border border-gray-200">
+        <Table
+          columns={columns}
+          dataSource={majors}
+          rowKey="majorId"
+          loading={loading}
+          pagination={{ pageSize: 10 }}
+        />
+      </div>
+
+      {/* ADD MODAL */}
+      <Modal
+        title={<span className="text-xl font-semibold text-[#F36F21]">Add New Major</span>}
+        open={showAddModal}
+        onCancel={() => {
+          setShowAddModal(false);
+          setNewMajor({ majorCode: "", majorName: "" });
+        }}
+        footer={null}
+        width={500}
       >
-        + Create Major
-      </button>
-
-      {/* ================= ADD MODAL ================= */}
-      {showAddModal && (
-        <ModalWrapper>
-          <h3 className="text-xl font-semibold mb-4 text-orange-600">
-            Add New Major
-          </h3>
-
-          <div className="flex flex-col gap-4">
-            <label className="font-medium">Major Code</label>
-            <input
-              type="text"
+        <Form layout="vertical" className="mt-4">
+          <Form.Item label="Major Code" required>
+            <Input
               placeholder="Major Code"
               value={newMajor.majorCode}
               onChange={(e) =>
                 setNewMajor({ ...newMajor, majorCode: e.target.value })
               }
-              className="border p-2 rounded-lg"
             />
+          </Form.Item>
 
-            <label className="font-medium">Major Name</label>
-            <input
-              type="text"
+          <Form.Item label="Major Name" required>
+            <Input
               placeholder="Major Name"
               value={newMajor.majorName}
               onChange={(e) =>
                 setNewMajor({ ...newMajor, majorName: e.target.value })
               }
-              className="border p-2 rounded-lg"
             />
+          </Form.Item>
 
-            <div className="flex justify-end gap-3 mt-4">
-              <button
-                disabled={isAddFormInvalid}
-                onClick={() => {
-                  if (!validateNewMajor()) return;
-                  setConfirmAction({ type: "create" });
-                }}
-                className={`px-5 py-2 rounded-lg text-white ${isAddFormInvalid
-                  ? "bg-gray-400 cursor-not-allowed"
-                  : "bg-green-600 hover:bg-green-700"
-                  }`}
-              >
-                Save
-              </button>
-
-              <button
-                onClick={() => setShowAddModal(false)}
-                className="bg-gray-500 text-white px-5 py-2 rounded-lg"
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        </ModalWrapper>
-      )}
-
-      {/* ================= EDIT MODAL ================= */}
-      {showEditModal && editingMajor && (
-        <ModalWrapper>
-          <h3 className="text-xl font-semibold mb-4 text-blue-600">
-            Update Major
-          </h3>
-
-          <div className="flex flex-col gap-3">
-            <label className="font-medium">Major Code</label>
-            <input
-              type="text"
-              value={editingMajor.majorCode}
-              onChange={(e) =>
-                setEditingMajor({
-                  ...editingMajor,
-                  majorCode: e.target.value,
-                })
-              }
-              className="border p-2 rounded-lg"
-            />
-
-            <label className="font-medium">Major Name</label>
-            <input
-              type="text"
-              value={editingMajor.majorName}
-              onChange={(e) =>
-                setEditingMajor({
-                  ...editingMajor,
-                  majorName: e.target.value,
-                })
-              }
-              className="border p-2 rounded-lg"
-            />
-
-            <label className="font-medium">Status</label>
-            <select
-              value={editingMajor.isActive}
-              onChange={(e) =>
-                setEditingMajor({
-                  ...editingMajor,
-                  isActive: e.target.value === "true",
-                })
-              }
-              className="border p-2 rounded-lg"
+          <div className="flex justify-end gap-3 mt-4">
+            <Button onClick={() => setShowAddModal(false)}>Cancel</Button>
+            <Button
+              type="primary"
+              disabled={isAddFormInvalid}
+              onClick={() => {
+                if (!validateNewMajor()) return;
+                setConfirmAction({ type: "create" });
+              }}
+              style={{ background: isAddFormInvalid ? undefined : "#52c41a" }}
             >
-              <option value="true">Active</option>
-              <option value="false">Deactive</option>
-            </select>
+              Save
+            </Button>
+          </div>
+        </Form>
+      </Modal>
+
+      {/* EDIT MODAL */}
+      <Modal
+        title={<span className="text-xl font-semibold text-[#F36F21]">Update Major</span>}
+        open={showEditModal}
+        onCancel={() => {
+          setShowEditModal(false);
+          setEditingMajor(null);
+          setOriginalMajor(null);
+        }}
+        footer={null}
+        width={500}
+      >
+        {editingMajor && (
+          <Form layout="vertical" className="mt-4">
+            <Form.Item label="Major Code" required>
+              <Input
+                value={editingMajor.majorCode}
+                onChange={(e) =>
+                  setEditingMajor({
+                    ...editingMajor,
+                    majorCode: e.target.value,
+                  })
+                }
+              />
+            </Form.Item>
+
+            <Form.Item label="Major Name" required>
+              <Input
+                value={editingMajor.majorName}
+                onChange={(e) =>
+                  setEditingMajor({
+                    ...editingMajor,
+                    majorName: e.target.value,
+                  })
+                }
+              />
+            </Form.Item>
+
+            <Form.Item label="Status" required>
+              <Select
+                value={editingMajor.isActive}
+                onChange={(value) =>
+                  setEditingMajor({
+                    ...editingMajor,
+                    isActive: value,
+                  })
+                }
+              >
+                <Select.Option value={true}>Active</Select.Option>
+                <Select.Option value={false}>Inactive</Select.Option>
+              </Select>
+            </Form.Item>
 
             <div className="flex justify-end gap-3 mt-4">
-              <button
-                onClick={() => setConfirmAction({ type: "update" })}
-                className={`px-5 py-2 rounded-lg text-white ${isUnchanged
-                  ? "bg-gray-400 cursor-not-allowed"
-                  : "bg-blue-600 hover:bg-blue-700"
-                  }`}
-                disabled={isUnchanged}
-              >
-                Save
-              </button>
-
-              <button
+              <Button
                 onClick={() => {
                   setShowEditModal(false);
                   setEditingMajor(null);
                   setOriginalMajor(null);
                 }}
-                className="bg-gray-500 text-white px-5 py-2 rounded-lg"
               >
                 Cancel
-              </button>
+              </Button>
+              <Button
+                type="primary"
+                onClick={() => setConfirmAction({ type: "update" })}
+                disabled={isUnchanged}
+                style={{ background: isUnchanged ? undefined : "#1890ff" }}
+              >
+                Save
+              </Button>
             </div>
-          </div>
-        </ModalWrapper>
-      )}
+          </Form>
+        )}
+      </Modal>
 
-      {/* ================= CONFIRM MODAL ================= */}
-      {confirmAction && (
-        <ModalWrapper>
-          <h3 className="text-lg font-semibold mb-4 text-red-600">
-            Are you sure?
-          </h3>
-
-          <p className="mb-6">This action cannot be undone.</p>
-
-          <div className="flex justify-end gap-3">
-            <button
-              className="bg-gray-400 text-white px-5 py-2 rounded-lg"
-              onClick={() => setConfirmAction(null)}
-            >
-              Cancel
-            </button>
-
-            <button
-              className="bg-red-600 text-white px-5 py-2 rounded-lg"
-              onClick={handleConfirm}
-            >
-              Confirm
-            </button>
-          </div>
-        </ModalWrapper>
-      )}
-
-      {/* ================= TABLE ================= */}
-      <div className="overflow-hidden rounded-xl border border-gray-200">
-        <table className="w-full table-fixed border-collapse">
-          <thead className="bg-[#FFF3EB] text-[#F36F21] font-semibold border-b-2 border-[#F36F21]">
-            <tr className="border-b hover:bg-orange-50 last:border-b-0">
-              <th className="px-4 py-3 text-left border-b">Code</th>
-              <th className="px-4 py-3 text-left border-b">Name</th>
-              <th className="px-4 py-3 text-center border-b">Actions</th>
-            </tr>
-          </thead>
-
-          <tbody>
-            {loading ? (
-              <tr>
-                <td colSpan="3" className="text-center p-4">
-                  Loading...
-                </td>
-              </tr>
-            ) : majors.length === 0 ? (
-              <tr>
-                <td colSpan="3" className="text-center p-4">
-                  No majors available
-                </td>
-              </tr>
-            ) : (
-              majors.map((item) => (
-                <tr
-                  key={item.majorId}
-                  className="border-b hover:bg-orange-50"
-                >
-                  <td className="px-4 py-3">{item.majorCode}</td>
-                  <td className="px-4 py-3">{item.majorName}</td>
-                  <td className="px-4 py-3">
-                    <div className="flex justify-center items-center gap-3">
-                      <button
-                        onClick={() => openEdit(item)}
-                        className="px-4 py-2 rounded-xl text-sm font-semibold transition-all bg-blue-600 text-white shadow-md shadow-blue-200 hover:bg-blue-700 hover:-translate-y-0.5"
-                      >
-                        Update
-                      </button>
-
-                      <button
-                        onClick={() =>
-                          setConfirmAction({
-                            type: "delete",
-                            payload: item.majorId,
-                          })
-                        }
-                        className="px-4 py-2 rounded-xl text-sm font-semibold transition-all bg-red-50 text-red-700 border border-red-200 hover:bg-red-100"
-                      >
-                        Delete
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
-    </div>
+      {/* CONFIRM MODAL */}
+      <Modal
+        title={
+          <span className="text-lg font-semibold text-red-600">
+            ⚠️ Confirm Action
+          </span>
+        }
+        open={confirmAction !== null}
+        onCancel={() => setConfirmAction(null)}
+        footer={[
+          <Button key="cancel" onClick={() => setConfirmAction(null)}>
+            Cancel
+          </Button>,
+          <Button
+            key="confirm"
+            type="primary"
+            danger
+            onClick={handleConfirm}
+          >
+            Confirm
+          </Button>,
+        ]}
+      >
+        <p>This action cannot be undone. Are you sure?</p>
+      </Modal>
+    </motion.div>
   );
 }

@@ -7,6 +7,9 @@ import {
   deleteSemester,
 } from "../../service/adminService";
 import toast, { Toaster } from "react-hot-toast";
+import { Table, Button, Modal, Form, Select, Input, Dropdown, Space } from "antd";
+import { EditOutlined, DeleteOutlined, PlusOutlined, MoreOutlined, CalendarOutlined } from "@ant-design/icons";
+import { motion } from "framer-motion";
 
 const getApiMessage = (errorOrResponse) => {
   if (!errorOrResponse) return "Unknown error";
@@ -27,6 +30,7 @@ export default function AdminSemesterManagement() {
   });
   const [editing, setEditing] = useState(null);
   const [showAddForm, setShowAddForm] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
   const [filterYearId, setFilterYearId] = useState("");
   const [confirmModal, setConfirmModal] = useState({
     isOpen: false,
@@ -34,6 +38,7 @@ export default function AdminSemesterManagement() {
     semesterId: null,
     callback: null,
   });
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     loadAcademicYears();
@@ -41,11 +46,14 @@ export default function AdminSemesterManagement() {
   }, []);
 
   const loadSemesters = async () => {
+    setLoading(true);
     try {
       const res = await getAllSemesters();
       if (res?.data) setSemesters(res.data);
     } catch (err) {
       toast.error(getApiMessage(err));
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -108,44 +116,6 @@ export default function AdminSemesterManagement() {
     };
   };
 
-  <select
-    className="border p-3 rounded-xl"
-    value={newSemester.name}
-    onChange={(e) => {
-      const updatedName = e.target.value;
-      const selectedYearObj = academicYears.find(
-        (y) => y.academicYearId === Number(newSemester.academicYearId)
-      );
-
-      const shortName = updatedName.split(" ")[0];
-
-      const dates = getPresetDates(shortName, selectedYearObj);
-
-      setNewSemester({
-        ...newSemester,
-        name: updatedName,
-        startDate: dates.startDate,
-        endDate: dates.endDate,
-      });
-    }}
-  >
-    <option value="">Select Semester Name</option>
-    {newSemester.academicYearId &&
-      semesterOptions(
-        academicYears.find((y) => y.academicYearId === newSemester.academicYearId)?.name
-      ).map((option) => (
-        <option
-          key={option}
-          value={option}
-          disabled={semesters.some(
-            (s) => s.name === option && s.academicYearId === newSemester.academicYearId
-          )}
-        >
-          {option}
-        </option>
-      ))}
-  </select>
-
   const handleSubmit = async () => {
     if (!newSemester.name || !newSemester.startDate || !newSemester.endDate)
       return toast.error("Please fill all fields");
@@ -167,6 +137,7 @@ export default function AdminSemesterManagement() {
       toast.success(getApiMessage(res));
       loadSemesters();
       setShowAddForm(false);
+      setNewSemester({ academicYearId: "", name: "", startDate: "", endDate: "" });
     } catch (err) {
       toast.error(getApiMessage(err));
     }
@@ -224,9 +195,10 @@ export default function AdminSemesterManagement() {
           )
         );
         setEditing(null);
+        setShowEditModal(false);
         toast.success(getApiMessage(res));
       }
-    } catch {
+    } catch (err) {
       toast.error(getApiMessage(err));
     }
   };
@@ -235,452 +207,395 @@ export default function AdminSemesterManagement() {
     ? semesters.filter((s) => s.academicYearId === Number(filterYearId))
     : [];
 
+  const columns = [
+    {
+      title: "Academic Year",
+      dataIndex: "academicYearName",
+      key: "academicYearName",
+      width: "25%",
+    },
+    {
+      title: "Name",
+      dataIndex: "name",
+      key: "name",
+      width: "25%",
+    },
+    {
+      title: "Start",
+      dataIndex: "startDate",
+      key: "startDate",
+      width: "20%",
+      render: (text) => text?.split("T")[0] || "-",
+    },
+    {
+      title: "End",
+      dataIndex: "endDate",
+      key: "endDate",
+      width: "20%",
+      render: (text) => text?.split("T")[0] || "-",
+    },
+    {
+      title: "Actions",
+      key: "actions",
+      width: "10%",
+      align: "center",
+      render: (_, record) => {
+        const items = [
+          {
+            key: "edit",
+            label: (
+              <motion.div whileHover={{ x: 5 }} className="flex items-center gap-2">
+                <EditOutlined /> Update
+              </motion.div>
+            ),
+            onClick: () => {
+              setEditing({
+                ...record,
+                startDate: record.startDate ? record.startDate.slice(0, 16) : "",
+                endDate: record.endDate ? record.endDate.slice(0, 16) : "",
+              });
+              setShowEditModal(true);
+            },
+          },
+          { type: "divider" },
+          {
+            key: "delete",
+            label: (
+              <motion.div whileHover={{ x: 5 }} className="flex items-center gap-2">
+                <DeleteOutlined /> Delete
+              </motion.div>
+            ),
+            danger: true,
+            onClick: () =>
+              setConfirmModal({
+                isOpen: true,
+                type: "delete",
+                semesterId: record.semesterId,
+                callback: () => handleDelete(record.semesterId),
+              }),
+          },
+        ];
+
+        return (
+          <Dropdown menu={{ items }} trigger={["click"]}>
+            <Button type="text" icon={<MoreOutlined />} />
+          </Dropdown>
+        );
+      },
+    },
+  ];
+
   return (
-    <div className="bg-white p-6 rounded-2xl shadow-lg border border-gray-200">
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+      className="bg-white p-8 rounded-2xl shadow-lg border border-gray-200 space-y-6"
+    >
       <Toaster position="top-right" reverseOrder={false} />
 
-      <h2 className="text-3xl font-bold mb-6 text-orange-600">Semester Management</h2>
+      <motion.h2
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        className="text-3xl font-bold text-[#F36F21] flex items-center gap-2"
+      >
+        <CalendarOutlined /> Semester Management
+      </motion.h2>
 
-      {/* Filter by Academic Year */}
-      <div className="flex items-center gap-3 mb-6">
-        <select
-          className="border p-3 rounded-xl"
-          value={filterYearId}
-          onChange={(e) => setFilterYearId(e.target.value)}
+      <div className="bg-white p-4 rounded-xl shadow-md flex flex-wrap items-center gap-4">
+        <Select
+          placeholder="Select Academic Year to filter"
+          style={{ minWidth: 250 }}
+          value={filterYearId || undefined}
+          onChange={(value) => setFilterYearId(value)}
+          allowClear
         >
-          <option value="">Select Academic Year to filter</option>
           {academicYears.map((year) => (
-            <option key={year.academicYearId} value={year.academicYearId}>
+            <Select.Option key={year.academicYearId} value={year.academicYearId}>
               {year.name}
-            </option>
+            </Select.Option>
           ))}
-        </select>
+        </Select>
 
-        <button
-          onClick={() => setShowAddForm(!showAddForm)}
-          className="bg-[#F36F21] text-white px-6 py-3 rounded-xl hover:bg-orange-600 hover:opacity-90 transition-all duration-200 hover:-translate-y-[1px]"
-        >
-          {showAddForm ? "Cancel" : "+ Create Semester"}
-        </button>
+        <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+          <Button
+            type="primary"
+            icon={<PlusOutlined />}
+            onClick={() => setShowAddForm(true)}
+            style={{
+              background: "#F36F21",
+              borderColor: "#F36F21",
+              height: "40px",
+              fontWeight: "600",
+            }}
+          >
+            Create Semester
+          </Button>
+        </motion.div>
       </div>
 
-      {/* Add New Semester Form */}
-      {showAddForm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-2xl shadow-lg w-96 relative">
-            <h3 className="text-xl font-semibold mb-4 text-orange-600">Add New Semester</h3>
+      <div className="overflow-hidden rounded-xl border border-gray-200">
+        <Table
+          columns={columns}
+          dataSource={displayedSemesters}
+          rowKey="semesterId"
+          loading={loading}
+          pagination={{ pageSize: 10 }}
+          locale={{
+            emptyText: !filterYearId
+              ? "Select an academic year to see semesters"
+              : "No semesters found",
+          }}
+        />
+      </div>
 
-            {/* Close button */}
-            <button
-              className="absolute top-3 right-3 text-gray-500 hover:text-gray-700"
-              onClick={() => setShowAddForm(false)}
+      {/* CREATE MODAL */}
+      <Modal
+        title={<span className="text-xl font-semibold text-[#F36F21]">Add New Semester</span>}
+        open={showAddForm}
+        onCancel={() => {
+          setShowAddForm(false);
+          setNewSemester({ academicYearId: "", name: "", startDate: "", endDate: "" });
+        }}
+        footer={null}
+        width={500}
+      >
+        <Form layout="vertical" className="mt-4">
+          <Form.Item label="Academic Year" required>
+            <Select
+              placeholder="Select Academic Year"
+              value={newSemester.academicYearId || undefined}
+              onChange={(value) =>
+                setNewSemester({ ...newSemester, academicYearId: value })
+              }
             >
-              ✕
-            </button>
+              {academicYears.map((year) => (
+                <Select.Option key={year.academicYearId} value={year.academicYearId}>
+                  {year.name}
+                </Select.Option>
+              ))}
+            </Select>
+          </Form.Item>
 
-            <div className="grid grid-cols-1 gap-4">
-              {/* Academic Year */}
-              <label className="font-medium">Academic Year</label>
-              <select
-                className="border p-3 rounded-xl w-full"
-                value={newSemester.academicYearId}
-                onChange={(e) =>
-                  setNewSemester({ ...newSemester, academicYearId: Number(e.target.value) })
-                }
-              >
-                <option value="">Select Academic Year</option>
-                {academicYears.map((year) => (
-                  <option key={year.academicYearId} value={year.academicYearId}>
-                    {year.name}
-                  </option>
+          <Form.Item label="Semester Name" required>
+            <Select
+              placeholder="Select Semester Name"
+              value={newSemester.name || undefined}
+              onChange={(value) => {
+                const selectedYear = academicYears.find(
+                  (y) => y.academicYearId === Number(newSemester.academicYearId)
+                );
+                const dates = getPresetDates(value.split(" ")[0], selectedYear);
+                setNewSemester({
+                  ...newSemester,
+                  name: value,
+                  startDate: dates.startDate,
+                  endDate: dates.endDate,
+                });
+              }}
+              disabled={!newSemester.academicYearId}
+            >
+              {newSemester.academicYearId &&
+                semesterOptions(
+                  academicYears.find((y) => y.academicYearId === newSemester.academicYearId)?.name
+                ).map((option) => (
+                  <Select.Option
+                    key={option}
+                    value={option}
+                    disabled={semesters.some(
+                      (s) => s.name === option && s.academicYearId === newSemester.academicYearId
+                    )}
+                  >
+                    {option}
+                  </Select.Option>
                 ))}
-              </select>
+            </Select>
+          </Form.Item>
 
-              {/* Semester Name */}
-              <label className="font-medium">Semester Name</label>
-              <select
-                className="border p-3 rounded-xl w-full"
-                value={newSemester.name}
-                onChange={(e) => {
-                  const updatedName = e.target.value;
+          <Form.Item label="Start Date">
+            <Input
+              type="datetime-local"
+              value={newSemester.startDate}
+              disabled
+              className="bg-gray-100 cursor-not-allowed"
+            />
+          </Form.Item>
 
-                  const selectedYear = academicYears.find(
-                    (y) => y.academicYearId === Number(newSemester.academicYearId)
-                  );
+          <Form.Item label="End Date">
+            <Input
+              type="datetime-local"
+              value={newSemester.endDate}
+              disabled
+              className="bg-gray-100 cursor-not-allowed"
+            />
+          </Form.Item>
 
-                  const dates = getPresetDates(updatedName.split(" ")[0], selectedYear);
+          <div className="flex justify-end gap-3 mt-4">
+            <Button onClick={() => setShowAddForm(false)}>Cancel</Button>
+            <Button type="primary" onClick={handleSubmit} style={{ background: "#F36F21" }}>
+              Create
+            </Button>
+          </div>
+        </Form>
+      </Modal>
 
-                  setNewSemester({
-                    ...newSemester,
-                    name: updatedName,
+      {/* EDIT MODAL */}
+      <Modal
+        title={<span className="text-xl font-semibold text-[#F36F21]">Edit Semester</span>}
+        open={showEditModal}
+        onCancel={() => {
+          setShowEditModal(false);
+          setEditing(null);
+        }}
+        footer={null}
+        width={500}
+      >
+        {editing && (
+          <Form layout="vertical" className="mt-4">
+            <Form.Item label="Academic Year" required>
+              <Select
+                value={editing.academicYearId}
+                onChange={(value) => {
+                  const selectedYear = academicYears.find((y) => y.academicYearId === value);
+                  const semesterShortName = editing.name.split(" ")[0] || "";
+                  const dates = getPresetDates(semesterShortName, selectedYear);
+                  setEditing({
+                    ...editing,
+                    academicYearId: value,
                     startDate: dates.startDate,
                     endDate: dates.endDate,
                   });
                 }}
               >
-                <option value="">Select Semester Name</option>
-                {newSemester.academicYearId &&
+                {academicYears.map((year) => (
+                  <Select.Option key={year.academicYearId} value={year.academicYearId}>
+                    {year.name}
+                  </Select.Option>
+                ))}
+              </Select>
+            </Form.Item>
+
+            <Form.Item label="Semester Name" required>
+              <Select
+                value={editing.name}
+                onChange={(value) => {
+                  const selectedYear = academicYears.find(
+                    (y) => y.academicYearId === editing.academicYearId
+                  );
+                  const shortName = value.split(" ")[0];
+                  const dates = getPresetDates(shortName, selectedYear);
+                  setEditing({
+                    ...editing,
+                    name: value,
+                    startDate: dates.startDate,
+                    endDate: dates.endDate,
+                  });
+                }}
+              >
+                {editing.academicYearId &&
                   semesterOptions(
-                    academicYears.find(
-                      (y) => y.academicYearId === newSemester.academicYearId
-                    )?.name
+                    academicYears.find((y) => y.academicYearId === editing.academicYearId)?.name
                   ).map((option) => (
-                    <option
+                    <Select.Option
                       key={option}
                       value={option}
                       disabled={semesters.some(
                         (s) =>
-                          s.name === option &&
-                          s.academicYearId === newSemester.academicYearId
-                      )}
-                    >
-                      {option}
-                    </option>
-                  ))}
-              </select>
-
-              {/* Start Date */}
-              <label className="font-medium">Start Date</label>
-              <input
-                type="datetime-local"
-                className="border p-3 rounded-xl w-full bg-gray-100 cursor-not-allowed"
-                value={newSemester.startDate}
-                readOnly
-              />
-
-              {/* End Date */}
-              <label className="font-medium">End Date</label>
-              <input
-                type="datetime-local"
-                className="border p-3 rounded-xl w-full bg-gray-100 cursor-not-allowed"
-                value={newSemester.endDate}
-                readOnly
-              />
-
-              <button
-                onClick={handleSubmit}
-                className="bg-blue-500 text-white px-6 py-3 rounded-xl w-full hover:bg-blue-600 hover:opacity-90 transition-all duration-200 hover:-translate-y-[1px]"
-              >
-                Create
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Edit Semester Modal */}
-      {editing && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-2xl shadow-lg w-96 relative">
-            <h3 className="text-xl font-semibold mb-4 text-orange-600">Edit Semester</h3>
-
-            {/* Close button */}
-            <button
-              className="absolute top-3 right-3 text-gray-500 hover:text-gray-700"
-              onClick={() => setEditing(null)}
-            >
-              ✕
-            </button>
-
-            <div className="grid grid-cols-1 gap-4">
-              {/* Academic Year */}
-              <label className="font-medium">Academic Year</label>
-              <select
-                className="border p-3 rounded-xl w-full"
-                value={editing.academicYearId}
-                onChange={(e) => {
-                  const yearId = Number(e.target.value);
-                  const selectedYear = academicYears.find(y => y.academicYearId === yearId);
-                  const semesterShortName = editing.name.split(" ")[0] || "";
-                  const dates = getPresetDates(semesterShortName, selectedYear);
-
-                  setEditing({
-                    ...editing,
-                    academicYearId: yearId,
-                    startDate: dates.startDate,
-                    endDate: dates.endDate,
-                  });
-                }}
-              >
-                <option value="">Select Academic Year</option>
-                {academicYears.map(year => (
-                  <option key={year.academicYearId} value={year.academicYearId}>
-                    {year.name}
-                  </option>
-                ))}
-              </select>
-
-              {/* Semester Name */}
-              <label className="font-medium">Semester Name</label>
-              <select
-                className="border p-3 rounded-xl w-full"
-                value={editing.name}
-                onChange={(e) => {
-                  const updatedName = e.target.value;
-                  const selectedYear = academicYears.find(
-                    y => y.academicYearId === editing.academicYearId
-                  );
-                  const shortName = updatedName.split(" ")[0];
-                  const dates = getPresetDates(shortName, selectedYear);
-
-                  setEditing({
-                    ...editing,
-                    name: updatedName,
-                    startDate: dates.startDate,
-                    endDate: dates.endDate,
-                  });
-                }}
-              >
-                <option value="">Select Semester Name</option>
-                {editing.academicYearId &&
-                  semesterOptions(
-                    academicYears.find(
-                      y => y.academicYearId === editing.academicYearId
-                    )?.name
-                  ).map(option => (
-                    <option
-                      key={option}
-                      value={option}
-                      disabled={semesters.some(
-                        s =>
                           s.name === option &&
                           s.academicYearId === editing.academicYearId &&
                           s.semesterId !== editing.semesterId
                       )}
                     >
                       {option}
-                    </option>
+                    </Select.Option>
                   ))}
-              </select>
+              </Select>
+            </Form.Item>
 
-              {/* Start Date */}
-              <label className="font-medium">Start Date</label>
-              <input
+            <Form.Item label="Start Date">
+              <Input
                 type="datetime-local"
-                className="border p-3 rounded-xl w-full bg-gray-100 cursor-not-allowed"
                 value={editing.startDate || ""}
-                readOnly
+                disabled
+                className="bg-gray-100 cursor-not-allowed"
               />
+            </Form.Item>
 
-              {/* End Date */}
-              <label className="font-medium">End Date</label>
-              <input
+            <Form.Item label="End Date">
+              <Input
                 type="datetime-local"
-                className="border p-3 rounded-xl w-full bg-gray-100 cursor-not-allowed"
                 value={editing.endDate || ""}
-                readOnly
+                disabled
+                className="bg-gray-100 cursor-not-allowed"
               />
+            </Form.Item>
 
-              {/* Action buttons */}
-              <div className="flex gap-3">
-                <button
-                  onClick={() =>
-                    setConfirmModal({
-                      isOpen: true,
-                      type: "edit",
-                      semesterId: editing.semesterId,
-                      callback: handleSaveEdit,
-                    })
-                  }
-                  className={`bg-blue-500 text-white px-6 py-3 rounded-xl flex-1 transition-all duration-200 ${hasChanged(editing)
-                    ? "hover:bg-blue-600 hover:opacity-90 hover:-translate-y-[1px]"
-                    : "opacity-50 cursor-not-allowed"}
-`}
-                  disabled={!hasChanged(editing)}
-                >
-                  Save
-                </button>
-                <button
-                  onClick={() => setEditing(null)}
-                  className="bg-gray-300 text-black px-6 py-3 rounded-xl hover:bg-gray-400 flex-1"
-                >
-                  Cancel
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* List Semesters */}
-      <div className="overflow-hidden rounded-xl border border-gray-200">
-        <table className="w-full border-collapse">
-          <thead>
-            <tr className="bg-[#FFF3EB] text-[#F36F21] text-left">
-              <th className="p-3 border-b">Academic Year</th>
-              <th className="p-3 border-b">Name</th>
-              <th className="p-3 border-b">Start</th>
-              <th className="p-3 border-b">End</th>
-              <th className="p-3 border-b w-40">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {displayedSemesters.map((sem) => (
-              <tr key={sem.semesterId} className="border-b hover:bg-orange-50">
-                <td className="p-3">
-                  {editing?.semesterId === sem.semesterId ? (
-                    <select
-                      className="border p-2 rounded-lg"
-                      value={editing.academicYearId}
-                      onChange={(e) =>
-                        setEditing({ ...editing, academicYearId: Number(e.target.value) })
-                      }
-                    >
-                      {academicYears.map((year) => (
-                        <option key={year.academicYearId} value={year.academicYearId}>
-                          {year.name}
-                        </option>
-                      ))}
-                    </select>
-                  ) : (
-                    sem.academicYearName
-                  )}
-                </td>
-                <td className="p-3">
-                  {editing?.semesterId === sem.semesterId ? (
-                    <input
-                      type="text"
-                      className="border p-2 rounded-lg"
-                      value={editing.name}
-                      onChange={(e) => setEditing({ ...editing, name: e.target.value })}
-                    />
-                  ) : (
-                    sem.name
-                  )}
-                </td>
-                <td className="p-3">
-                  {editing?.semesterId === sem.semesterId ? (
-                    <input
-                      type="datetime-local"
-                      className="border p-2 rounded-lg"
-                      value={editing.startDate || ""}
-                      onChange={(e) => setEditing({ ...editing, startDate: e.target.value })}
-                    />
-                  ) : (
-                    sem.startDate?.split("T")[0]
-                  )}
-                </td>
-                <td className="p-3">
-                  {editing?.semesterId === sem.semesterId ? (
-                    <input
-                      type="datetime-local"
-                      className="border p-2 rounded-lg"
-                      value={editing.endDate || ""}
-                      onChange={(e) => setEditing({ ...editing, endDate: e.target.value })}
-                    />
-                  ) : (
-                    sem.endDate?.split("T")[0]
-                  )}
-                </td>
-                <td className="p-3 flex gap-2">
-                  {editing?.semesterId === sem.semesterId ? (
-                    <>
-                      {/* Save */}
-                      <button
-                        onClick={() =>
-                          setConfirmModal({
-                            isOpen: true,
-                            type: "edit",
-                            semesterId: editing.semesterId,
-                            callback: () => handleSaveEdit(),
-                          })
-                        }
-                        className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600"
-                      >
-                        Save
-                      </button>
-
-                      {/* Cancel */}
-                      <button
-                        onClick={() => setEditing(null)}
-                        className="bg-gray-300 text-black px-4 py-2 rounded-lg hover:bg-gray-400"
-                      >
-                        Cancel
-                      </button>
-                    </>
-                  ) : (
-                    <>
-                      {/* Edit */}
-                      <button
-                        onClick={() =>
-                          setEditing({
-                            ...sem,
-                            startDate: sem.startDate ? sem.startDate.slice(0, 16) : "",
-                            endDate: sem.endDate ? sem.endDate.slice(0, 16) : "",
-                          })
-                        }
-                        className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 hover:opacity-90 transition-all duration-200 hover:-translate-y-[1px]"
-                      >
-                        Update
-                      </button>
-
-                      {/* Delete */}
-                      <button
-                        onClick={() =>
-                          setConfirmModal({
-                            isOpen: true,
-                            type: "delete",
-                            semesterId: sem.semesterId,
-                            callback: () => handleDelete(sem.semesterId),
-                          })
-                        }
-                        className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 hover:opacity-90 transition-all duration-200 hover:-translate-y-[1px]"
-                      >
-                        Delete
-                      </button>
-                    </>
-                  )}
-                </td>
-              </tr>
-            ))}
-            {!filterYearId && (
-              <tr>
-                <td colSpan={6} className="p-3 text-center text-gray-500">
-                  Select an academic year to see semesters
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
-      {confirmModal.isOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-xl shadow-lg w-96">
-            <h3
-              className={`text-lg font-semibold mb-4 flex items-center gap-2
-    ${confirmModal.type === "delete"
-                  ? "text-red-600"
-                  : "text-[#F36F21]"}
-  `}
-            >
-              {confirmModal.type === "delete" ? "⚠️" : "ℹ️"}
-              {confirmModal.type === "delete"
-                ? "Are you sure you want to delete this semester?"
-                : "Are you sure you want to save changes?"}
-            </h3>
-            <div className="flex justify-end gap-3">
-              <button
-                className="px-4 py-2 bg-gray-300 rounded-lg hover:bg-gray-400"
-                onClick={() => {
-                  setConfirmModal({ ...confirmModal, isOpen: false });
-                  if (confirmModal.type === "edit") setEditing(null);
-                }}
+            <div className="flex justify-end gap-3 mt-4">
+              <Button onClick={() => setShowEditModal(false)}>Cancel</Button>
+              <Button
+                type="primary"
+                onClick={() =>
+                  setConfirmModal({
+                    isOpen: true,
+                    type: "edit",
+                    semesterId: editing.semesterId,
+                    callback: handleSaveEdit,
+                  })
+                }
+                disabled={!hasChanged(editing)}
+                style={{ background: hasChanged(editing) ? "#1890ff" : undefined }}
               >
-                Cancel
-              </button>
-              <button
-                className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
-                onClick={() => {
-                  if (confirmModal.callback) confirmModal.callback();
-                  setConfirmModal({ ...confirmModal, isOpen: false });
-                }}
-              >
-                Confirm
-              </button>
+                Save
+              </Button>
             </div>
-          </div>
-        </div>
-      )}
-    </div>
+          </Form>
+        )}
+      </Modal>
+
+      {/* CONFIRM MODAL */}
+      <Modal
+        title={
+          <span className={confirmModal.type === "delete" ? "text-red-600" : "text-[#F36F21]"}>
+            {confirmModal.type === "delete" ? "⚠️ " : "ℹ️ "}
+            {confirmModal.type === "delete"
+              ? "Delete Semester"
+              : "Save Changes"}
+          </span>
+        }
+        open={confirmModal.isOpen}
+        onCancel={() => {
+          setConfirmModal({ ...confirmModal, isOpen: false });
+          if (confirmModal.type === "edit") setEditing(null);
+        }}
+        footer={[
+          <Button
+            key="cancel"
+            onClick={() => {
+              setConfirmModal({ ...confirmModal, isOpen: false });
+              if (confirmModal.type === "edit") setEditing(null);
+            }}
+          >
+            Cancel
+          </Button>,
+          <Button
+            key="confirm"
+            type="primary"
+            danger={confirmModal.type === "delete"}
+            onClick={() => {
+              if (confirmModal.callback) confirmModal.callback();
+              setConfirmModal({ ...confirmModal, isOpen: false });
+            }}
+          >
+            Confirm
+          </Button>,
+        ]}
+      >
+        <p>
+          {confirmModal.type === "delete"
+            ? "Are you sure you want to delete this semester?"
+            : "Are you sure you want to save changes?"}
+        </p>
+      </Modal>
+    </motion.div>
   );
 }

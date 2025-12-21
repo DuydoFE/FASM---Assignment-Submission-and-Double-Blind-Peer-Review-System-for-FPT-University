@@ -6,16 +6,9 @@ import {
   updateCourse,
   deleteCourse,
 } from "../../service/adminService";
-import { FaCheckCircle, FaTimesCircle, FaSearch } from "react-icons/fa";
-
-/* ================= MODAL WRAPPER ================= */
-const ModalWrapper = ({ children }) => (
-  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-    <div className="bg-white rounded-2xl shadow-xl p-6 w-full max-w-md">
-      {children}
-    </div>
-  </div>
-);
+import { Table, Button, Modal, Form, Input, Select, Dropdown, Tag } from "antd";
+import { EditOutlined, DeleteOutlined, PlusOutlined, MoreOutlined, BookOutlined, SearchOutlined, CheckCircleOutlined, CloseCircleOutlined } from "@ant-design/icons";
+import { motion } from "framer-motion";
 
 export default function AdminCourseManagement() {
   const [courses, setCourses] = useState([]);
@@ -65,7 +58,8 @@ export default function AdminCourseManagement() {
   useEffect(() => {
     setFilteredCourses(
       courses.filter((c) =>
-        c.courseCode.toLowerCase().includes(searchQuery.toLowerCase())
+        c.courseCode.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        c.courseName.toLowerCase().includes(searchQuery.toLowerCase())
       )
     );
   }, [searchQuery, courses]);
@@ -124,236 +118,286 @@ export default function AdminCourseManagement() {
     });
   };
 
+  const columns = [
+    {
+      title: "Course Code",
+      dataIndex: "courseCode",
+      key: "courseCode",
+      width: "25%",
+      render: (text) => <span className="font-medium">{text}</span>,
+    },
+    {
+      title: "Course Name",
+      dataIndex: "courseName",
+      key: "courseName",
+      width: "45%",
+    },
+    {
+      title: "Status",
+      dataIndex: "isActive",
+      key: "isActive",
+      width: "15%",
+      align: "center",
+      render: (isActive) =>
+        isActive ? (
+          <Tag icon={<CheckCircleOutlined />} color="success">
+            Active
+          </Tag>
+        ) : (
+          <Tag icon={<CloseCircleOutlined />} color="error">
+            Inactive
+          </Tag>
+        ),
+    },
+    {
+      title: "Actions",
+      key: "actions",
+      width: "15%",
+      align: "center",
+      render: (_, record) => {
+        const items = [
+          {
+            key: "edit",
+            label: (
+              <motion.div whileHover={{ x: 5 }} className="flex items-center gap-2">
+                <EditOutlined /> Update
+              </motion.div>
+            ),
+            onClick: () => {
+              setEditCourse(record);
+              setOriginalCourse(record);
+              setShowEditModal(true);
+            },
+          },
+          { type: "divider" },
+          {
+            key: "delete",
+            label: (
+              <motion.div whileHover={{ x: 5 }} className="flex items-center gap-2">
+                <DeleteOutlined /> Delete
+              </motion.div>
+            ),
+            danger: true,
+            onClick: () => handleDelete(record.courseId),
+          },
+        ];
+
+        return (
+          <Dropdown menu={{ items }} trigger={["click"]}>
+            <Button type="text" icon={<MoreOutlined />} />
+          </Dropdown>
+        );
+      },
+    },
+  ];
+
   return (
-    <div className="bg-white p-6 rounded-2xl shadow-lg border">
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+      className="bg-white p-8 rounded-2xl shadow-lg border border-gray-200 space-y-6"
+    >
       <Toaster position="top-right" />
 
-      <h2 className="text-3xl font-bold mb-6 text-orange-600">
-        Course Management
-      </h2>
-
-      {/* ===== Search + Create ===== */}
-      <div className="flex justify-between mb-4">
-        <div className="relative w-80">
-          <input
-            className="border p-3 w-full rounded-xl pl-10"
-            placeholder="Search by course code..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-          <FaSearch className="absolute top-4 left-3 text-gray-500" />
-        </div>
-
-        <button
-          onClick={() => setShowAddModal(true)}
-          className="px-6 py-3 rounded-xl font-semibold transition-all bg-[#F36F21] text-white shadow-md shadow-orange-200 hover:bg-[#D95C18] hover:-translate-y-0.5"
+      <div className="flex items-center justify-between">
+        <motion.h2
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="text-3xl font-bold text-[#F36F21] flex items-center gap-2"
         >
-          + Create Course
-        </button>
+          <BookOutlined /> Course Management
+        </motion.h2>
       </div>
 
-      {/* ===== TABLE ===== */}
-      <div className="rounded-xl border overflow-hidden">
-        <table className="w-full table-fixed">
-          <thead className="bg-[#FFF3EB] text-[#F36F21] font-semibold border-b-2 border-[#F36F21]">
-            <tr>
-              <th className="p-3 text-left uppercase text-sm">Course Code</th>
-              <th className="p-3 text-left uppercase text-sm">Course Name</th>
-              <th className="p-3 text-center uppercase text-sm">Status</th>
-              <th className="p-3 text-center uppercase text-sm">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {loading ? (
-              <tr>
-                <td colSpan="4" className="p-4 text-center">Loading...</td>
-              </tr>
-            ) : filteredCourses.length === 0 ? (
-              <tr>
-                <td colSpan="4" className="p-4 text-center">No data</td>
-              </tr>
-            ) : (
-              filteredCourses.map((c) => (
-                <tr key={c.courseId} className="border-b hover:bg-[#FFF3EB] transition">
-                  <td className="p-3">{c.courseCode}</td>
-                  <td className="p-3">{c.courseName}</td>
-                  <td className="p-3 text-center">
-                    {c.isActive ? (
-                      <FaCheckCircle className="text-green-600 inline" />
-                    ) : (
-                      <FaTimesCircle className="text-red-600 inline" />
-                    )}
-                  </td>
-                  <td className="p-3 flex gap-2 justify-center">
-                    <button
-                      className="px-4 py-2 rounded-xl text-sm font-semibold transition-all bg-blue-600 text-white shadow-md shadow-blue-200 hover:bg-blue-700 hover:-translate-y-0.5"
-                      onClick={() => {
-                        setEditCourse(c);
-                        setOriginalCourse(c);
-                        setShowEditModal(true);
-                      }}
-                    >
-                      Update
-                    </button>
-                    <button
-                      className="px-4 py-2 rounded-xl text-sm font-semibold transition-all bg-red-50 text-red-700 border border-red-200 hover:bg-red-100"
-                      onClick={() => handleDelete(c.courseId)}
-                    >
-                      Delete
-                    </button>
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
+      <div className="bg-white p-4 rounded-xl shadow-md flex flex-wrap items-center gap-4">
+        <Input
+          placeholder="Search by course code or name..."
+          prefix={<SearchOutlined />}
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          style={{ width: 300 }}
+          allowClear
+        />
 
-      {/* ===== ADD MODAL ===== */}
-      {showAddModal && (
-        <ModalWrapper>
-          <h3 className="text-xl font-semibold mb-4">Create Course</h3>
-
-          <label className="block mb-1 font-medium">Course Code</label>
-          <input
-            className="border p-3 rounded-lg w-full mb-3"
-            placeholder="Course Code"
-            value={newCourse.courseCode}
-            onChange={(e) =>
-              setNewCourse({ ...newCourse, courseCode: e.target.value })
-            }
-          />
-
-          <label className="block mb-1 font-medium">Course Name</label>
-          <input
-            className="border p-3 rounded-lg w-full mb-3"
-            placeholder="Course Name"
-            value={newCourse.courseName}
-            onChange={(e) =>
-              setNewCourse({ ...newCourse, courseName: e.target.value })
-            }
-          />
-
-          <label className="block mb-1 font-medium">Status</label>
-          <select
-            className="border p-3 rounded-lg w-full mb-4"
-            value={newCourse.isActive}
-            onChange={(e) =>
-              setNewCourse({
-                ...newCourse,
-                isActive: e.target.value === "true",
-              })
-            }
+        <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+          <Button
+            type="primary"
+            icon={<PlusOutlined />}
+            onClick={() => setShowAddModal(true)}
+            style={{
+              background: "#F36F21",
+              borderColor: "#F36F21",
+              height: "40px",
+              fontWeight: "600",
+            }}
           >
-            <option value="true">Active</option>
-            <option value="false">Deactive</option>
-          </select>
+            Create Course
+          </Button>
+        </motion.div>
+      </div>
 
-          <div className="flex justify-end gap-3">
-            <button
-              className="px-4 py-2 rounded-xl font-semibold bg-gray-300 text-gray-700 hover:bg-gray-400"
+      <div className="overflow-hidden rounded-xl border border-gray-200">
+        <Table
+          columns={columns}
+          dataSource={filteredCourses}
+          rowKey="courseId"
+          loading={loading}
+          pagination={{ pageSize: 10 }}
+        />
+      </div>
+
+      {/* ADD MODAL */}
+      <Modal
+        title={<span className="text-xl font-semibold text-[#F36F21]">Create Course</span>}
+        open={showAddModal}
+        onCancel={() => {
+          setShowAddModal(false);
+          setNewCourse({ courseCode: "", courseName: "", isActive: true });
+        }}
+        footer={null}
+        width={500}
+      >
+        <Form layout="vertical" className="mt-4">
+          <Form.Item label="Course Code" required>
+            <Input
+              placeholder="Course Code"
+              value={newCourse.courseCode}
+              onChange={(e) =>
+                setNewCourse({ ...newCourse, courseCode: e.target.value })
+              }
+            />
+          </Form.Item>
+
+          <Form.Item label="Course Name" required>
+            <Input
+              placeholder="Course Name"
+              value={newCourse.courseName}
+              onChange={(e) =>
+                setNewCourse({ ...newCourse, courseName: e.target.value })
+              }
+            />
+          </Form.Item>
+
+          <Form.Item label="Status" required>
+            <Select
+              value={newCourse.isActive}
+              onChange={(value) =>
+                setNewCourse({
+                  ...newCourse,
+                  isActive: value,
+                })
+              }
+            >
+              <Select.Option value={true}>Active</Select.Option>
+              <Select.Option value={false}>Inactive</Select.Option>
+            </Select>
+          </Form.Item>
+
+          <div className="flex justify-end gap-3 mt-4">
+            <Button onClick={() => setShowAddModal(false)}>Cancel</Button>
+            <Button
+              type="primary"
               onClick={handleCreate}
+              style={{ background: "#52c41a" }}
             >
               Save
-            </button>
-            <button
-              className="px-4 py-2 rounded-xl font-semibold transition-all bg-gray-300 text-gray-700 hover:bg-gray-400"
-              onClick={() => setShowAddModal(false)}
-            >
-              Cancel
-            </button>
+            </Button>
           </div>
-        </ModalWrapper>
-      )}
+        </Form>
+      </Modal>
 
-      {/* ===== EDIT MODAL ===== */}
-      {showEditModal && (
-        <ModalWrapper>
-          <h3 className="text-xl font-semibold mb-4">Update Course</h3>
+      {/* EDIT MODAL */}
+      <Modal
+        title={<span className="text-xl font-semibold text-[#F36F21]">Update Course</span>}
+        open={showEditModal}
+        onCancel={() => {
+          setShowEditModal(false);
+          setEditCourse({ courseId: 0, courseCode: "", courseName: "", isActive: true });
+          setOriginalCourse(null);
+        }}
+        footer={null}
+        width={500}
+      >
+        <Form layout="vertical" className="mt-4">
+          <Form.Item label="Course Code" required>
+            <Input
+              value={editCourse.courseCode}
+              onChange={(e) =>
+                setEditCourse({ ...editCourse, courseCode: e.target.value })
+              }
+            />
+          </Form.Item>
 
-          <label className="block mb-1 font-medium">Course Code</label>
-          <input
-            className="border p-3 rounded-lg w-full mb-3"
-            value={editCourse.courseCode}
-            onChange={(e) =>
-              setEditCourse({ ...editCourse, courseCode: e.target.value })
-            }
-          />
+          <Form.Item label="Course Name" required>
+            <Input
+              value={editCourse.courseName}
+              onChange={(e) =>
+                setEditCourse({ ...editCourse, courseName: e.target.value })
+              }
+            />
+          </Form.Item>
 
-          <label className="block mb-1 font-medium">Course Name</label>
-          <input
-            className="border p-3 rounded-lg w-full mb-3"
-            value={editCourse.courseName}
-            onChange={(e) =>
-              setEditCourse({ ...editCourse, courseName: e.target.value })
-            }
-          />
+          <Form.Item label="Status" required>
+            <Select
+              value={editCourse.isActive}
+              onChange={(value) =>
+                setEditCourse({
+                  ...editCourse,
+                  isActive: value,
+                })
+              }
+            >
+              <Select.Option value={true}>Active</Select.Option>
+              <Select.Option value={false}>Inactive</Select.Option>
+            </Select>
+          </Form.Item>
 
-          <label className="block mb-1 font-medium">Status</label>
-          <select
-            className="border p-3 rounded-lg w-full mb-4"
-            value={editCourse.isActive}
-            onChange={(e) =>
-              setEditCourse({
-                ...editCourse,
-                isActive: e.target.value === "true",
-              })
-            }
-          >
-            <option value="true">Active</option>
-            <option value="false">Deactive</option>
-          </select>
-
-          <div className="flex justify-end gap-3">
-            <button
-              className={`px-4 py-2 rounded-xl font-semibold transition-all${isChanged
-                ? "bg-blue-600 text-white shadow-md shadow-blue-200 hover:bg-blue-700 hover:-translate-y-0.5"
-                : "bg-gray-300 text-gray-600 cursor-not-allowed"
-                }`}
+          <div className="flex justify-end gap-3 mt-4">
+            <Button onClick={() => setShowEditModal(false)}>Cancel</Button>
+            <Button
+              type="primary"
               onClick={handleUpdate}
               disabled={!isChanged}
+              style={{ background: isChanged ? "#1890ff" : undefined }}
             >
               Save
-            </button>
-            <button
-              className="bg-gray-400 text-white px-4 py-2 rounded"
-              onClick={() => setShowEditModal(false)}
-            >
-              Cancel
-            </button>
+            </Button>
           </div>
-        </ModalWrapper>
-      )}
+        </Form>
+      </Modal>
 
-      {/* ===== CONFIRM MODAL ===== */}
-      {confirmConfig && (
-        <ModalWrapper>
-          <h3 className="text-xl font-semibold mb-4 text-red-600">
-            Confirm Action
-          </h3>
-
-          <p className="mb-6">{confirmConfig.message}</p>
-
-          <div className="flex justify-end gap-3">
-            <button
-              className="bg-red-600 text-white px-4 py-2 rounded-lg"
-              onClick={async () => {
-                await confirmConfig.onConfirm();
-                setConfirmConfig(null);
-              }}
-            >
-              Yes
-            </button>
-
-            <button
-              className="bg-gray-400 text-white px-4 py-2 rounded-lg"
-              onClick={() => setConfirmConfig(null)}
-            >
-              Cancel
-            </button>
-          </div>
-        </ModalWrapper>
-      )}
-    </div>
+      {/* CONFIRM MODAL */}
+      <Modal
+        title={
+          <span className="text-lg font-semibold text-red-600">
+            ⚠️ Confirm Action
+          </span>
+        }
+        open={confirmConfig !== null}
+        onCancel={() => setConfirmConfig(null)}
+        footer={[
+          <Button
+            key="cancel"
+            onClick={() => setConfirmConfig(null)}
+          >
+            Cancel
+          </Button>,
+          <Button
+            key="confirm"
+            type="primary"
+            danger
+            onClick={async () => {
+              await confirmConfig.onConfirm();
+              setConfirmConfig(null);
+            }}
+          >
+            Confirm
+          </Button>,
+        ]}
+      >
+        <p>{confirmConfig?.message}</p>
+      </Modal>
+    </motion.div>
   );
 }

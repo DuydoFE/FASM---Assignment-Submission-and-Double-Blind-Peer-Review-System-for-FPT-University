@@ -10,6 +10,11 @@ import {
   getAllCampuses,
   getAllMajors,
 } from "../../service/adminService";
+import useCloudinaryUpload from "../../assets/hook/useCloudinaryUpload";
+import { Upload, Progress } from "antd";
+import { InboxOutlined } from "@ant-design/icons";
+
+const { Dragger } = Upload;
 
 export default function AdminUserDetailsManagement() {
   const { id } = useParams();
@@ -29,6 +34,8 @@ export default function AdminUserDetailsManagement() {
     studentCode: "",
     avatarUrl: "",
   });
+  
+  const { uploadImage, uploading, progress } = useCloudinaryUpload();
   const isStudent = user?.roles?.includes("Student");
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [confirmConfig, setConfirmConfig] = useState({
@@ -253,16 +260,16 @@ export default function AdminUserDetailsManagement() {
 
             {/* Modal edit */}
             {editing && (
-              <div className="fixed inset-0 z-50 flex items-center justify-center">
+              <div className="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto">
                 {/* Overlay */}
                 <div
-                  className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+                  className="fixed inset-0 bg-black/40 backdrop-blur-sm"
                   onClick={() => setEditing(false)}
                 ></div>
 
                 {/* Modal */}
-                <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-2xl p-6 z-10">
-                  <h3 className="text-xl font-bold text-orange-600 mb-4">Edit User</h3>
+                <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-2xl p-6 z-10 my-8 max-h-[90vh] overflow-y-auto">
+                  <h3 className="text-xl font-bold text-orange-600 mb-4 sticky top-0 bg-white pb-2 border-b">Edit User</h3>
                   <form
                     onSubmit={(e) => {
                       e.preventDefault();
@@ -362,13 +369,78 @@ export default function AdminUserDetailsManagement() {
                       />
                     </div>
                     <div className="mt-2">
-                      <label className="block text-gray-500 text-sm mb-1">Avatar URL</label>
-                      <input
-                        type="text"
-                        value={form.avatarUrl}
-                        onChange={(e) => setForm({ ...form, avatarUrl: e.target.value })}
-                        className="w-full border rounded-lg p-2"
-                      />
+                      <label className="block text-gray-500 text-sm mb-1">Avatar Image</label>
+                      
+                      {/* Current Avatar Preview */}
+                      {form.avatarUrl && (
+                        <div className="mb-3 flex items-center gap-3">
+                          <img
+                            src={form.avatarUrl}
+                            alt="Current avatar"
+                            className="w-20 h-20 rounded-full object-cover border-2 border-orange-200"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setForm({ ...form, avatarUrl: "" })}
+                            className="text-red-600 text-sm hover:underline"
+                          >
+                            Remove Avatar
+                          </button>
+                        </div>
+                      )}
+
+                      {/* Cloudinary Upload */}
+                      <Dragger
+                        name="file"
+                        multiple={false}
+                        beforeUpload={(file) => {
+                          const isImage = file.type.startsWith('image/');
+                          if (!isImage) {
+                            toast.error('You can only upload image files!');
+                            return Upload.LIST_IGNORE;
+                          }
+                          const isLt5M = file.size / 1024 / 1024 < 5;
+                          if (!isLt5M) {
+                            toast.error('Image must be smaller than 5MB!');
+                            return Upload.LIST_IGNORE;
+                          }
+                          return true;
+                        }}
+                        customRequest={async ({ file }) => {
+                          try {
+                            const url = await uploadImage(file, {
+                              folder: 'avatars',
+                              tags: 'user_avatar'
+                            });
+                            setForm({ ...form, avatarUrl: url });
+                            toast.success('Avatar uploaded successfully!');
+                          } catch (err) {
+                            toast.error(`Upload failed: ${err.message}`);
+                          }
+                          return false;
+                        }}
+                        showUploadList={false}
+                        disabled={uploading}
+                        className="border-2 border-dashed border-gray-300 rounded-lg hover:border-orange-400"
+                      >
+                        <p className="ant-upload-drag-icon">
+                          <InboxOutlined className="text-4xl text-orange-500" />
+                        </p>
+                        <p className="ant-upload-text text-gray-700">
+                          Click or drag file to upload avatar
+                        </p>
+                        <p className="ant-upload-hint text-gray-500">
+                          Supports: JPG, PNG, GIF, WebP (max 5MB)
+                        </p>
+                      </Dragger>
+
+                      {/* Progress Bar */}
+                      {uploading && (
+                        <div className="mt-3">
+                          <p className="text-sm text-gray-600 mb-1">Uploading...</p>
+                          <Progress percent={progress} status="active" strokeColor="#F36F21" />
+                        </div>
+                      )}
                     </div>
 
                     {/* Buttons */}

@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Toaster, toast } from "react-hot-toast";
+import { Table, Dropdown, Input, Select, Button, Modal, Form, Tag } from "antd";
+import { EyeOutlined, EditOutlined, DeleteOutlined, MoreOutlined, CheckCircleOutlined, CloseCircleOutlined, PlusOutlined } from "@ant-design/icons";
+import { motion } from "framer-motion";
 import {
   getAllMajors,
   getAllCourses,
@@ -23,6 +26,7 @@ export default function AdminRubricManagement() {
   const [selectedMajorId, setSelectedMajorId] = useState(0);
   const [selectedCourseId, setSelectedCourseId] = useState(0);
   const [courses, setCourses] = useState([]);
+  const [openDropdownId, setOpenDropdownId] = useState(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -204,258 +208,322 @@ export default function AdminRubricManagement() {
       r.title.toLowerCase().includes(search.toLowerCase())
   );
 
+  const columns = [
+    {
+      title: "Title",
+      dataIndex: "title",
+      key: "title",
+      render: (text) => <span className="font-medium">{text}</span>,
+    },
+    {
+      title: "Course",
+      dataIndex: "courseName",
+      key: "courseName",
+    },
+    {
+      title: "# Criteria",
+      dataIndex: "criteriaCount",
+      key: "criteriaCount",
+      align: "center",
+    },
+    {
+      title: "Assignments Using",
+      dataIndex: "assignmentsUsing",
+      key: "assignmentsUsing",
+      align: "center",
+    },
+    {
+      title: "Public",
+      dataIndex: "isPublic",
+      key: "isPublic",
+      align: "center",
+      render: (isPublic) => (
+        <motion.div
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          transition={{ type: "spring", stiffness: 500, damping: 30 }}
+        >
+          {isPublic ? (
+            <CheckCircleOutlined style={{ fontSize: "20px", color: "#52c41a" }} />
+          ) : (
+            <CloseCircleOutlined style={{ fontSize: "20px", color: "#ff4d4f" }} />
+          )}
+        </motion.div>
+      ),
+    },
+    {
+      title: "Actions",
+      key: "actions",
+      align: "center",
+      width: 80,
+      render: (_, record) => {
+        const items = [
+          {
+            key: "view",
+            label: (
+              <motion.div
+                whileHover={{ x: 5 }}
+                className="flex items-center gap-2"
+              >
+                <EyeOutlined /> View
+              </motion.div>
+            ),
+            onClick: () => navigate(`/admin/rubrics/${record.id}`),
+          },
+          {
+            key: "edit",
+            label: (
+              <motion.div
+                whileHover={{ x: 5 }}
+                className="flex items-center gap-2"
+              >
+                <EditOutlined /> Update
+              </motion.div>
+            ),
+            onClick: () => openEditModal(record),
+          },
+          {
+            type: "divider",
+          },
+          {
+            key: "delete",
+            label: (
+              <motion.div
+                whileHover={{ x: 5 }}
+                className="flex items-center gap-2 text-red-600"
+              >
+                <DeleteOutlined /> Delete
+              </motion.div>
+            ),
+            danger: true,
+            onClick: () => handleDeleteRubric(record.id),
+          },
+        ];
+
+        return (
+          <Dropdown menu={{ items }} trigger={["click"]} placement="bottomRight">
+            <motion.div
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <Button
+                type="text"
+                icon={<MoreOutlined style={{ fontSize: "20px" }} />}
+              />
+            </motion.div>
+          </Dropdown>
+        );
+      },
+    },
+  ];
+
   return (
     <div className="bg-white p-8 rounded-2xl shadow-lg border border-gray-200 space-y-6">
-      <Toaster position="top-right" reverseOrder={false} /> {/* Toast container */}
-      <h2 className="text-3xl font-bold text-[#F36F21] flex items-center gap-2">
-        📋 Rubric Management
-      </h2>
+      <Toaster position="top-right" reverseOrder={false} />
+      
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+      >
+        <h2 className="text-3xl font-bold text-[#F36F21] flex items-center gap-2">
+          📋 Rubric Management
+        </h2>
+      </motion.div>
 
       {/* Search + Course Filter + Add button */}
-      <div className="bg-white p-4 rounded-xl shadow-md flex flex-wrap items-center gap-4">
-        <input
-          type="text"
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.1 }}
+        className="bg-white p-4 rounded-xl shadow-md flex flex-wrap items-center gap-4"
+      >
+        <Input
           placeholder="Search rubrics..."
-          className="border rounded p-2 flex-1 min-w-[200px] focus:outline-orange-500"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
+          style={{ flex: 1, minWidth: "200px" }}
+          size="large"
         />
 
-        <select
-          className="border rounded p-2 min-w-[180px]"
+        <Select
           value={selectedCourseId}
-          onChange={(e) => setSelectedCourseId(Number(e.target.value))}
+          onChange={(value) => setSelectedCourseId(value)}
+          style={{ minWidth: "180px" }}
+          size="large"
         >
-          <option value={0}>-- Select Course --</option>
+          <Select.Option value={0}>-- Select Course --</Select.Option>
           {courses.map((c) => (
-            <option key={c.courseId} value={c.courseId}>
+            <Select.Option key={c.courseId} value={c.courseId}>
               {c.courseCode}
-            </option>
+            </Select.Option>
           ))}
-        </select>
+        </Select>
 
-        <button
-          onClick={() => setShowCreateModal(true)}
-          className="px-4 py-2 rounded-xl font-semibold transition-all bg-[#F36F21] text-white shadow-md shadow-orange-200 hover:bg-[#D95C18] hover:-translate-y-0.5"
-        >
-          + Create Rubric
-        </button>
-      </div>
+        <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+          <Button
+            type="primary"
+            icon={<PlusOutlined />}
+            onClick={() => setShowCreateModal(true)}
+            size="large"
+            style={{ backgroundColor: "#F36F21", borderColor: "#F36F21" }}
+          >
+            Create Rubric
+          </Button>
+        </motion.div>
+      </motion.div>
 
       {/* Rubrics table */}
-      <div className="overflow-hidden rounded-xl border border-gray-200">
-        {loading ? (
-          <p className="p-4 text-center text-gray-500">Loading rubrics...</p>
-        ) : filteredRubrics.length > 0 ? (
-          <table className="w-full table-fixed border-collapse text-sm">
-            <thead className="bg-[#FFF3EB] text-[#F36F21] font-semibold border-b-2 border-[#F36F21]">
-              <tr>
-                <th className="px-4 py-3 text-left">Title</th>
-                <th className="px-4 py-3 text-left">Major</th>
-                <th className="px-4 py-3 text-left">Course</th>
-                <th className="px-4 py-3 text-left"># Criteria</th>
-                <th className="px-4 py-3 text-left">Assignments Using</th>
-                <th className="px-4 py-3 text-center">Public</th>
-                <th className="px-4 py-3 text-center">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredRubrics.map((r, idx) => (
-                <tr
-                  key={r.id}
-                  className={`${idx % 2 === 0 ? "bg-gray-50" : "bg-white"} hover:bg-gray-100`}
-                >
-                  <td className="p-3 font-medium">{r.title}</td>
-                  <td className="px-4 py-3">{r.majorName}</td>
-                  <td className="px-4 py-3">{r.courseName}</td>
-                  <td className="px-4 py-3">{r.criteriaCount}</td>
-                  <td className="px-4 py-3">{r.assignmentsUsing}</td>
-                  <td className="px-4 py-3 text-center">
-                    {r.isPublic ? (
-                      <span className="text-green-600 font-bold">✅</span>
-                    ) : (
-                      <span className="text-red-600 font-bold">❌</span>
-                    )}
-                  </td>
-                  <td className="px-4 py-3">
-                    <div className="flex justify-center items-center gap-3">
-                      <button className="px-3 py-1.5 rounded-lg text-sm font-semibold transition-all bg-green-50 text-green-700 border border-green-200 hover:bg-green-100"
-                        onClick={() => navigate(`/admin/rubrics/${r.id}`)}
-                      >
-                        View
-                      </button>
-
-                      <button className="px-3 py-1.5 rounded-lg text-sm font-semibold transition-all bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100"
-                        onClick={() => openEditModal(r)}
-                      >
-                        Update
-                      </button>
-
-                      <button className="px-3 py-1.5 rounded-lg text-sm font-semibold transition-all bg-red-50 text-red-700 border border-red-200 hover:bg-red-100"
-                        onClick={() => handleDeleteRubric(r.id)}
-                      >
-                        Delete
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        ) : (
-          <p className="p-4 text-center text-gray-500">No rubrics found.</p>
-        )}
-      </div>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.5, delay: 0.2 }}
+      >
+        <Table
+          columns={columns}
+          dataSource={filteredRubrics}
+          loading={loading}
+          rowKey="id"
+          pagination={{
+            pageSize: 10,
+            showSizeChanger: true,
+            showTotal: (total) => `Total ${total} rubrics`,
+          }}
+          locale={{ emptyText: "No rubrics found" }}
+        />
+      </motion.div>
 
       {/* CREATE MODAL */}
-      {showCreateModal && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-          <div className="bg-white rounded-2xl shadow-xl p-6 w-full max-w-lg">
-            <h3 className="text-xl font-semibold mb-4 border-b pb-2">Create New Rubric</h3>
-            <form className="space-y-3" onSubmit={handleCreateRubric}>
-              {/* Title */}
-              <label className="block font-medium">Rubric Title</label>
-              <input
-                type="text"
-                required
-                value={newRubric.title}
-                onChange={(e) => setNewRubric({ ...newRubric, title: e.target.value })}
-                placeholder="Rubric Title"
-                className="border rounded p-3 w-full"
-              />
+      <Modal
+        title="Create New Rubric"
+        open={showCreateModal}
+        onCancel={() => setShowCreateModal(false)}
+        footer={null}
+      >
+        <Form onFinish={handleCreateRubric} layout="vertical">
+          <Form.Item
+            label="Rubric Title"
+            name="title"
+            rules={[{ required: true, message: "Please enter a title" }]}
+          >
+            <Input
+              value={newRubric.title}
+              onChange={(e) => setNewRubric({ ...newRubric, title: e.target.value })}
+              placeholder="Rubric Title"
+              size="large"
+            />
+          </Form.Item>
 
-              {/* Course Dropdown */}
-              <label className="block font-medium mt-2">Course</label>
-              <select
-                required
-                value={newRubric.courseId}
-                onChange={(e) =>
-                  setNewRubric({ ...newRubric, courseId: Number(e.target.value) })
-                }
-                className="border rounded p-3 w-full"
+          <Form.Item
+            label="Course"
+            name="courseId"
+            rules={[{ required: true, message: "Please select a course" }]}
+          >
+            <Select
+              value={newRubric.courseId}
+              onChange={(value) => setNewRubric({ ...newRubric, courseId: value })}
+              size="large"
+            >
+              <Select.Option value={0}>Select Course</Select.Option>
+              {courses.map((c) => (
+                <Select.Option key={c.courseId} value={c.courseId}>
+                  {c.courseCode}
+                </Select.Option>
+              ))}
+            </Select>
+          </Form.Item>
+
+          <Form.Item>
+            <div className="flex justify-end gap-3">
+              <Button onClick={() => setShowCreateModal(false)}>Cancel</Button>
+              <Button
+                type="primary"
+                htmlType="submit"
+                style={{ backgroundColor: "#F36F21", borderColor: "#F36F21" }}
               >
-                <option value={0}>Select Course</option>
-                {courses.map((c) => (
-                  <option key={c.courseId} value={c.courseId}>
-                    {c.courseCode}
-                  </option>
-                ))}
-              </select>
-
-              <div className="flex justify-end gap-3 mt-4">
-                <button
-                  type="button"
-                  className="px-4 py-2 border rounded"
-                  onClick={() => setShowCreateModal(false)}
-                >
-                  Cancel
-                </button>
-                <button type="submit" className="px-4 py-2 bg-orange-500 text-white rounded">
-                  Create
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+                Create
+              </Button>
+            </div>
+          </Form.Item>
+        </Form>
+      </Modal>
 
       {/* EDIT MODAL */}
-      {showEditModal && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl shadow-lg p-6 w-full max-w-lg">
-            <h3 className="text-xl font-semibold mb-4 border-b pb-2">Edit Rubric</h3>
-            <form className="space-y-3" onSubmit={handleUpdateRubric}>
-              {/* Title */}
-              <label className="block font-medium">Rubric Title</label>
-              <input
-                type="text"
-                required
-                value={newRubric.title}
-                onChange={(e) => setNewRubric({ ...newRubric, title: e.target.value })}
-                placeholder="Rubric Title"
-                className="border rounded p-3 w-full"
-              />
-              <label className="block font-medium mt-2">Major</label>
-              <select
-                required
-                value={newRubric.majorId}
-                onChange={(e) =>
-                  setNewRubric({ ...newRubric, majorId: Number(e.target.value) })
-                }
-                className="border rounded p-3 w-full"
-              >
-                <option value={0}>Select Major</option>
-                {majors.map((m) => (
-                  <option key={m.majorId} value={m.majorId}>
-                    {m.majorName}
-                  </option>
-                ))}
-              </select>
+      <Modal
+        title="Edit Rubric"
+        open={showEditModal}
+        onCancel={() => setShowEditModal(false)}
+        footer={null}
+      >
+        <Form onFinish={handleUpdateRubric} layout="vertical">
+          <Form.Item
+            label="Rubric Title"
+            name="title"
+            initialValue={newRubric.title}
+            rules={[{ required: true, message: "Please enter a title" }]}
+          >
+            <Input
+              value={newRubric.title}
+              onChange={(e) => setNewRubric({ ...newRubric, title: e.target.value })}
+              placeholder="Rubric Title"
+              size="large"
+            />
+          </Form.Item>
 
-              <label className="block font-medium mt-2">Course</label>
-              <select
-                required
-                value={newRubric.courseId}
-                onChange={(e) =>
-                  setNewRubric({ ...newRubric, courseId: Number(e.target.value) })
-                }
-                className="border rounded p-3 w-full"
-              >
-                <option value={0}>Select Course</option>
-                {courses.map((c) => (
-                  <option key={c.courseId} value={c.courseId}>
-                    {c.courseCode}
-                  </option>
-                ))}
-              </select>
+          <Form.Item
+            label="Course"
+            name="courseId"
+            initialValue={newRubric.courseId}
+            rules={[{ required: true, message: "Please select a course" }]}
+          >
+            <Select
+              value={newRubric.courseId}
+              onChange={(value) => setNewRubric({ ...newRubric, courseId: value })}
+              size="large"
+            >
+              <Select.Option value={0}>Select Course</Select.Option>
+              {courses.map((c) => (
+                <Select.Option key={c.courseId} value={c.courseId}>
+                  {c.courseCode}
+                </Select.Option>
+              ))}
+            </Select>
+          </Form.Item>
 
-              <div className="flex justify-end gap-3 mt-4">
-                <button
-                  type="button"
-                  className="px-4 py-2 border rounded"
-                  onClick={() => setShowEditModal(false)}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className={`px-4 py-2 text-white rounded ${isChanged ? "bg-blue-600 hover:bg-blue-700" : "bg-gray-400 cursor-not-allowed"
-                    }`}
-                  disabled={!isChanged}
-                >
-                  Save
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+          <Form.Item>
+            <div className="flex justify-end gap-3">
+              <Button onClick={() => setShowEditModal(false)}>Cancel</Button>
+              <Button
+                type="primary"
+                htmlType="submit"
+                disabled={!isChanged}
+                style={{ backgroundColor: "#1890ff", borderColor: "#1890ff" }}
+              >
+                Save
+              </Button>
+            </div>
+          </Form.Item>
+        </Form>
+      </Modal>
 
       {/* DELETE CONFIRM MODAL */}
-      {deleteTarget && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl shadow-lg p-6 w-full max-w-sm text-center">
-            <h3 className="text-lg font-semibold mb-4">Confirm Delete</h3>
-            <p className="mb-4">
-              Are you sure you want to delete <span className="font-bold">{deleteTarget.title}</span>?
-            </p>
-            <div className="flex justify-center gap-3">
-              <button
-                onClick={cancelDeleteRubric}
-                className="px-4 py-2 border rounded"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={confirmDeleteRubric}
-                className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
-              >
-                Delete
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <Modal
+        title="Confirm Delete"
+        open={!!deleteTarget}
+        onCancel={cancelDeleteRubric}
+        footer={[
+          <Button key="cancel" onClick={cancelDeleteRubric}>
+            Cancel
+          </Button>,
+          <Button key="delete" type="primary" danger onClick={confirmDeleteRubric}>
+            Delete
+          </Button>,
+        ]}
+      >
+        <p>
+          Are you sure you want to delete <span className="font-bold">{deleteTarget?.title}</span>?
+        </p>
+      </Modal>
     </div>
   );
 }
