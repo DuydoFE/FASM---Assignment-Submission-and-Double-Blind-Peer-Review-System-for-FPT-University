@@ -6,6 +6,9 @@ import {
   deleteAcademicYear,
 } from "../../service/adminService";
 import { Toaster, toast } from "react-hot-toast";
+import { Table, Button, Modal, Form, Input, Dropdown } from "antd";
+import { EditOutlined, DeleteOutlined, PlusOutlined, MoreOutlined, CalendarOutlined } from "@ant-design/icons";
+import { motion } from "framer-motion";
 
 /* ================= HELPER ================= */
 const getErrorMessage = (error, defaultMsg = "Something went wrong") => {
@@ -14,45 +17,6 @@ const getErrorMessage = (error, defaultMsg = "Something went wrong") => {
   if (error?.message) return error.message;
   return defaultMsg;
 };
-
-/* ================= MODAL ================= */
-const Modal = ({ children, onClose }) => (
-  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-    <div className="bg-white rounded-2xl shadow-xl p-6 w-full max-w-lg relative">
-      <button
-        onClick={onClose}
-        className="absolute top-3 right-3 text-gray-500 hover:text-gray-700"
-      >
-        ✕
-      </button>
-      {children}
-    </div>
-  </div>
-);
-
-const ConfirmModal = ({ title, message, onConfirm, onCancel }) => (
-  <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/50">
-    <div className="bg-white rounded-2xl shadow-xl p-6 w-full max-w-md">
-      <h3 className="text-lg font-semibold mb-3">{title}</h3>
-      <p className="text-gray-600 mb-6">{message}</p>
-
-      <div className="flex justify-end gap-3">
-        <button
-          onClick={onCancel}
-          className="px-4 py-2 border rounded-lg hover:bg-gray-100"
-        >
-          Cancel
-        </button>
-        <button
-          onClick={onConfirm}
-          className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
-        >
-          Confirm
-        </button>
-      </div>
-    </div>
-  </div>
-);
 
 /* ================= MAIN COMPONENT ================= */
 export default function AdminAcademicYearManagement() {
@@ -227,112 +191,155 @@ export default function AdminAcademicYearManagement() {
     });
   };
 
+  /* ================= TABLE COLUMNS ================= */
+  const columns = [
+    {
+      title: "Academic Year",
+      dataIndex: "name",
+      key: "name",
+      width: "40%",
+    },
+    {
+      title: "Start Date",
+      dataIndex: "startDate",
+      key: "startDate",
+      width: "25%",
+      render: (text) => formatDate(text),
+    },
+    {
+      title: "End Date",
+      dataIndex: "endDate",
+      key: "endDate",
+      width: "25%",
+      render: (text) => formatDate(text),
+    },
+    {
+      title: "Actions",
+      key: "actions",
+      width: "10%",
+      align: "center",
+      render: (_, record) => {
+        const items = [
+          {
+            key: "edit",
+            label: (
+              <motion.div whileHover={{ x: 5 }} className="flex items-center gap-2">
+                <EditOutlined /> Update
+              </motion.div>
+            ),
+            onClick: () => handleEdit(record),
+          },
+          { type: "divider" },
+          {
+            key: "delete",
+            label: (
+              <motion.div whileHover={{ x: 5 }} className="flex items-center gap-2">
+                <DeleteOutlined /> Delete
+              </motion.div>
+            ),
+            danger: true,
+            onClick: () => handleDelete(record.id),
+          },
+        ];
+
+        return (
+          <Dropdown menu={{ items }} trigger={["click"]}>
+            <Button type="text" icon={<MoreOutlined />} />
+          </Dropdown>
+        );
+      },
+    },
+  ];
+
   /* ================= RENDER ================= */
   return (
-    <div className="bg-white p-6 rounded-2xl shadow-lg border">
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+      className="bg-white p-8 rounded-2xl shadow-lg border border-gray-200 space-y-6"
+    >
       <Toaster position="top-right" />
 
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-3xl font-bold text-orange-600">
-          Academic Year Management
-        </h2>
-
-        <button
-          onClick={() => setShowAddForm(true)}
-          className="px-6 py-3 rounded-xl font-semibold transition-all
-      bg-[#F36F21] text-white shadow-md shadow-orange-200
-      hover:bg-[#D95C18] hover:-translate-y-0.5"
+      <div className="flex items-center justify-between">
+        <motion.h2
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="text-3xl font-bold text-[#F36F21] flex items-center gap-2"
         >
-          + Create Academic Year
-        </button>
+          <CalendarOutlined /> Academic Year Management
+        </motion.h2>
+
+        <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+          <Button
+            type="primary"
+            icon={<PlusOutlined />}
+            onClick={() => setShowAddForm(true)}
+            style={{
+              background: "#F36F21",
+              borderColor: "#F36F21",
+              height: "40px",
+              fontWeight: "600",
+            }}
+          >
+            Create Academic Year
+          </Button>
+        </motion.div>
       </div>
 
-      <div className="rounded-xl border overflow-hidden">
-        <table className="w-full table-fixed">
-          <thead className="bg-[#FFF3EB] text-[#F36F21] font-semibold border-b-2 border-[#F36F21]">
-            <tr>
-              <th className="p-3 text-left uppercase text-sm">Academic Year</th>
-              <th className="p-3 text-left uppercase text-sm">Start Date</th>
-              <th className="p-3 text-left uppercase text-sm">End Date</th>
-              <th className="p-3 text-center uppercase text-sm">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {loading ? (
-              <tr>
-                <td colSpan="4" className="p-4 text-center">Loading...</td>
-              </tr>
-            ) : (
-              years.map((y) => (
-                <tr
-                  key={y.id}
-                  className="border-b hover:bg-[#FFF3EB] transition"
-                >
-                  <td className="p-3">{y.name}</td>
-                  <td className="p-3">{formatDate(y.startDate)}</td>
-                  <td className="p-3">{formatDate(y.endDate)}</td>
-                  <td className="p-3 flex justify-center gap-2">
-                    <td className="p-3 flex gap-2 justify-center">
-                      <button
-                        onClick={() => handleEdit(y)}
-                        className="px-4 py-2 rounded-xl text-sm font-semibold transition-all
-               bg-blue-600 text-white shadow-md shadow-blue-200
-               hover:bg-blue-700 hover:-translate-y-0.5"
-                      >
-                        Update
-                      </button>
-
-                      <button
-                        onClick={() => handleDelete(y.id)}
-                        className="px-4 py-2 rounded-xl text-sm font-semibold
-               bg-red-50 text-red-700 border border-red-200
-               hover:bg-red-100"
-                      >
-                        Delete
-                      </button>
-                    </td>
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+      <div className="overflow-hidden rounded-xl border border-gray-200">
+        <Table
+          columns={columns}
+          dataSource={years}
+          rowKey="id"
+          loading={loading}
+          pagination={{ pageSize: 10 }}
+        />
       </div>
 
       {/* ================= ADD FORM MODAL ================= */}
-      {showAddForm && (
-        <Modal onClose={() => setShowAddForm(false)}>
-          <h3 className="text-xl font-bold mb-4 text-orange-600">Add Academic Year</h3>
+      <Modal
+        title={<span className="text-xl font-semibold text-[#F36F21]">Add Academic Year</span>}
+        open={showAddForm}
+        onCancel={() => {
+          setShowAddForm(false);
+          setNewYearData({ campusId: 1, name: "", startDate: "", endDate: "" });
+        }}
+        footer={null}
+        width={500}
+      >
+        <Form layout="vertical" className="mt-4">
+          <Form.Item label="Academic Year" required>
+            <Input
+              value={newYearData.name}
+              onChange={(e) => handleYearNameChange(e.target.value)}
+              placeholder="Academic Year (e.g., 2025)"
+              maxLength={4}
+            />
+          </Form.Item>
 
-          <label className="block text-gray-700 mb-1">Academic Year</label>
-          <input
-            value={newYearData.name}
-            onChange={(e) => handleYearNameChange(e.target.value)}
-            placeholder="Academic Year (e.g., 2025)"
-            className="border p-2 rounded-lg w-full mb-3"
-          />
+          <Form.Item label="Start Date">
+            <Input
+              type="datetime-local"
+              disabled
+              value={newYearData.startDate}
+              className="bg-gray-100 cursor-not-allowed"
+            />
+          </Form.Item>
 
-          <label className="block text-gray-700 mb-1">Start Date</label>
-          <input
-            type="datetime-local"
-            disabled
-            value={newYearData.startDate}
-            className="border p-2 rounded-lg w-full mb-3 bg-gray-100"
-          />
-
-          <label className="block text-gray-700 mb-1">End Date</label>
-          <input
-            type="datetime-local"
-            disabled
-            value={newYearData.endDate}
-            className="border p-2 rounded-lg w-full mb-4 bg-gray-100"
-          />
+          <Form.Item label="End Date">
+            <Input
+              type="datetime-local"
+              disabled
+              value={newYearData.endDate}
+              className="bg-gray-100 cursor-not-allowed"
+            />
+          </Form.Item>
 
           <div className="flex justify-end gap-3">
-            <button onClick={() => setShowAddForm(false)} className="bg-gray-300 px-4 py-2 rounded-lg">
-              Cancel
-            </button>
-            <button
+            <Button onClick={() => setShowAddForm(false)}>Cancel</Button>
+            <Button
+              type="primary"
               onClick={() => {
                 if (!/^\d{4}$/.test(newYearData.name)) {
                   toast.error("Academic Year must be yyyy (e.g. 2025)");
@@ -347,72 +354,95 @@ export default function AdminAcademicYearManagement() {
                   },
                 });
               }}
-              className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition"
+              style={{ background: "#F36F21" }}
             >
               Create
-            </button>
+            </Button>
           </div>
-        </Modal>
-      )}
+        </Form>
+      </Modal>
 
       {/* ================= EDIT FORM MODAL ================= */}
-      {showEditForm && (
-        <Modal onClose={() => setShowEditForm(false)}>
-          <h3 className="text-xl font-bold mb-4 text-orange-600">Edit Academic Year</h3>
+      <Modal
+        title={<span className="text-xl font-semibold text-[#F36F21]">Edit Academic Year</span>}
+        open={showEditForm}
+        onCancel={() => {
+          setShowEditForm(false);
+          setEditingId(null);
+        }}
+        footer={null}
+        width={500}
+      >
+        <Form layout="vertical" className="mt-4">
+          <Form.Item label="Academic Year" required>
+            <Input
+              value={editingValues.name}
+              onChange={(e) => handleYearNameChange(e.target.value, true)}
+              placeholder="Academic Year (e.g., 2025)"
+              maxLength={4}
+            />
+          </Form.Item>
 
-          <label className="block text-gray-700 mb-1">Academic Year</label>
-          <input
-            value={editingValues.name}
-            onChange={(e) => handleYearNameChange(e.target.value, true)}
-            placeholder="Academic Year (e.g., 2025)"
-            className="border p-2 rounded-lg w-full mb-3"
-          />
+          <Form.Item label="Start Date">
+            <Input
+              type="datetime-local"
+              disabled
+              value={editingValues.startDate}
+              className="bg-gray-100 cursor-not-allowed"
+            />
+          </Form.Item>
 
-          <label className="block text-gray-700 mb-1">Start Date</label>
-          <input
-            type="datetime-local"
-            disabled
-            value={editingValues.startDate}
-            className="border p-2 rounded-lg w-full mb-3 bg-gray-100"
-          />
-
-          <label className="block text-gray-700 mb-1">End Date</label>
-          <input
-            type="datetime-local"
-            disabled
-            value={editingValues.endDate}
-            className="border p-2 rounded-lg w-full mb-4 bg-gray-100"
-          />
+          <Form.Item label="End Date">
+            <Input
+              type="datetime-local"
+              disabled
+              value={editingValues.endDate}
+              className="bg-gray-100 cursor-not-allowed"
+            />
+          </Form.Item>
 
           <div className="flex justify-end gap-3">
-            <button
-              onClick={() => setShowEditForm(false)}
-              className="px-4 py-2 border rounded-lg hover:bg-gray-100"
-            >
-              Cancel
-            </button>
-            <button
+            <Button onClick={() => setShowEditForm(false)}>Cancel</Button>
+            <Button
+              type="primary"
               onClick={handleSaveEdit}
               disabled={!hasChanges()}
-              className={`px-4 py-2 rounded-xl font-semibold transition-all ${hasChanges()
-                ? "bg-blue-600 text-white shadow-md shadow-blue-200 hover:bg-blue-700 hover:-translate-y-0.5"
-                : "bg-gray-300 text-gray-600 cursor-not-allowed"
-                }`}
+              style={{ background: hasChanges() ? "#1890ff" : undefined }}
             >
               Save
-            </button>
+            </Button>
           </div>
+        </Form>
+      </Modal>
+
+      {/* ================= CONFIRM MODAL ================= */}
+      {confirmConfig && (
+        <Modal
+          title={
+            <span className={confirmConfig.title.includes("Delete") ? "text-red-600" : "text-[#F36F21]"}>
+              {confirmConfig.title.includes("Delete") ? "⚠️ " : "ℹ️ "}
+              {confirmConfig.title}
+            </span>
+          }
+          open={true}
+          onCancel={() => setConfirmConfig(null)}
+          footer={[
+            <Button key="cancel" onClick={() => setConfirmConfig(null)}>
+              Cancel
+            </Button>,
+            <Button
+              key="confirm"
+              type="primary"
+              danger={confirmConfig.title.includes("Delete")}
+              onClick={confirmConfig.onConfirm}
+            >
+              Confirm
+            </Button>,
+          ]}
+        >
+          <p>{confirmConfig.message}</p>
         </Modal>
       )}
-
-      {confirmConfig && (
-        <ConfirmModal
-          title={confirmConfig.title}
-          message={confirmConfig.message}
-          onCancel={() => setConfirmConfig(null)}
-          onConfirm={confirmConfig.onConfirm}
-        />
-      )}
-    </div>
+    </motion.div>
   );
 }
