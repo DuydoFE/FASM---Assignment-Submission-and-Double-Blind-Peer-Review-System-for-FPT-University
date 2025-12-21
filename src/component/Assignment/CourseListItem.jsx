@@ -7,6 +7,7 @@ const CourseListItem = ({
   iconColor,
   title,
   code,
+  semester,
   status,
   onJoinClick,
 }) => {
@@ -39,6 +40,9 @@ const CourseListItem = ({
             {title}
           </motion.p>
           <p className="text-sm text-gray-500 font-medium">{code}</p>
+          {semester && (
+            <p className="text-xs text-gray-400 font-medium mt-1">Semester: {semester}</p>
+          )}
         </div>
       </div>
 

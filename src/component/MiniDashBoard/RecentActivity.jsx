@@ -12,27 +12,27 @@ const getActivityDetails = (activity) => {
     case 'InReview':
       return {
         icon: <MessageSquare className="w-5 h-5 text-yellow-500 mt-1 mr-4" />,
-        description: 'Đã nộp, đang chờ review: ',
+        description: 'Submitted, waiting for review: ',
       };
     case 'Active':
        return {
         icon: <Clock className="w-5 h-5 text-gray-800 mt-1 mr-4" />,
-        description: 'Sắp đến hạn: ',
+        description: 'Due soon: ',
       };
     case 'Cancelled':
       return {
         icon: <XCircle className="w-5 h-5 text-gray-500 mt-1 mr-4" />,
-        description: 'Đã hủy: ',
+        description: 'Cancelled: ',
       };
     case 'Close':
       return {
         icon: <AlertCircle className="w-5 h-5 text-red-500 mt-1 mr-4" />,
-        description: 'Đã đóng: ',
+        description: 'Closed: ',
       };
     default:
       return {
         icon: <FileText className="w-5 h-5 text-gray-400 mt-1 mr-4" />,
-        description: `Trạng thái ${activity.status}: `,
+        description: `Status ${activity.status}: `,
       };
   }
 };
@@ -40,7 +40,7 @@ const getActivityDetails = (activity) => {
 const formatDeadline = (dateString) => {
     if (!dateString) return 'N/A';
     const options = { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' };
-    return new Date(dateString).toLocaleDateString('vi-VN', options);
+    return new Date(dateString).toLocaleDateString('en-US', options);
 }
 
 const RecentActivity = () => {
