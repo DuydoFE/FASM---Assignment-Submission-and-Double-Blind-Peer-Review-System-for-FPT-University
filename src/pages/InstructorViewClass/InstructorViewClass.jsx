@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { Search, BookOpen, Play, CheckCircle, Clock, ChevronDown, Key } from 'lucide-react';
-import { Input, Table } from 'antd';
+import { Input, Table, Select } from 'antd';
 import { getCurrentAccount } from '../../utils/accountUtils';
 import { useNavigate } from 'react-router-dom';
 import { getInstructorCourses } from '../../service/courseInstructorService';
@@ -15,6 +15,7 @@ const InstructorViewClass = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
+  const [semesterFilter, setSemesterFilter] = useState('All');
   const [showKeyModal, setShowKeyModal] = useState(false);
   const [selectedClass, setSelectedClass] = useState(null);
 
@@ -83,13 +84,20 @@ const InstructorViewClass = () => {
     else setStatusFilter('All');
   };
 
+  // Get unique semesters for filter dropdown
+  const uniqueSemesters = useMemo(() => {
+    const semesters = [...new Set(classes.map(cls => cls.semester))].filter(Boolean);
+    return semesters.sort();
+  }, [classes]);
+
   const filteredClasses = useMemo(() => {
     return classes.filter(cls =>
       (cls.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         cls.code.toLowerCase().includes(searchTerm.toLowerCase())) &&
-      (statusFilter === 'All' || cls.status === statusFilter)
+      (statusFilter === 'All' || cls.status === statusFilter) &&
+      (semesterFilter === 'All' || cls.semester === semesterFilter)
     );
-  }, [classes, searchTerm, statusFilter]);
+  }, [classes, searchTerm, statusFilter, semesterFilter]);
 
   const totalClasses = classes.length;
   const ongoingClasses = classes.filter(cls => cls.status === 'Ongoing').length;
@@ -103,7 +111,7 @@ const InstructorViewClass = () => {
       case 'Completed':
         return 'bg-orange-100 text-orange-700 border border-orange-200';
       case 'Upcoming':
-        return 'bg-purple-100 text-purple-700 border border-purple-200';
+        return 'bg-blue-100 text-blue-700 border border-blue-200';
       default:
         return 'bg-gray-100 text-gray-700 border border-gray-200';
     }
@@ -116,7 +124,7 @@ const InstructorViewClass = () => {
       case 'Completed':
         return <div className="w-2 h-2 bg-orange-500 rounded-full"></div>;
       case 'Upcoming':
-        return <div className="w-2 h-2 bg-purple-500 rounded-full"></div>;
+        return <div className="w-2 h-2 bg-blue-500 rounded-full"></div>;
       default:
         return <div className="w-2 h-2 bg-gray-500 rounded-full"></div>;
     }
@@ -210,8 +218,8 @@ const InstructorViewClass = () => {
           </p>
         </div>
 
-        {/* Search */}
-        <div className="mb-8">
+        {/* Search and Filters */}
+        <div className="mb-8 flex gap-4 flex-wrap">
           <Input
             placeholder="Search by course name or code..."
             prefix={<Search className="w-5 h-5 text-gray-400" />}
@@ -224,6 +232,19 @@ const InstructorViewClass = () => {
               fontSize: '18px',
             }}
           />
+          <Select
+            value={semesterFilter}
+            onChange={setSemesterFilter}
+            size="large"
+            style={{ width: 200, borderRadius: '8px' }}
+            options={[
+              { value: 'All', label: 'All Semesters' },
+              ...uniqueSemesters.map(semester => ({
+                value: semester,
+                label: semester
+              }))
+            ]}
+          />
         </div>
 
         {/* Statistics Cards */}
@@ -231,11 +252,8 @@ const InstructorViewClass = () => {
           <div className="bg-blue-50 border border-blue-200 rounded-xl p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-blue-600 font-medium mb-1">Total Courses</p>
-                <p className="text-3xl font-bold text-blue-700">{totalClasses} courses</p>
-              </div>
-              <div className="bg-blue-500 rounded-lg p-3">
-                <BookOpen className="text-white" size={24} />
+                <p className="text-gray-600 font-medium mb-1">Total Courses</p>
+                <p className="text-3xl font-bold text-gray-700">{totalClasses} courses</p>
               </div>
             </div>
           </div>
@@ -246,9 +264,6 @@ const InstructorViewClass = () => {
                 <p className="text-green-600 font-medium mb-1">Ongoing</p>
                 <p className="text-3xl font-bold text-green-700">{ongoingClasses} courses</p>
               </div>
-              <div className="bg-green-500 rounded-lg p-3">
-                <Play className="text-white" size={24} />
-              </div>
             </div>
           </div>
 
@@ -258,20 +273,14 @@ const InstructorViewClass = () => {
                 <p className="text-orange-600 font-medium mb-1">Completed</p>
                 <p className="text-3xl font-bold text-orange-700">{completedClasses} courses</p>
               </div>
-              <div className="bg-orange-500 rounded-lg p-3">
-                <CheckCircle className="text-white" size={24} />
-              </div>
             </div>
           </div>
 
-          <div className="bg-purple-50 border border-purple-200 rounded-xl p-6">
+          <div className="bg-blue-50 border border-blue-200 rounded-xl p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-purple-600 font-medium mb-1">Upcoming</p>
-                <p className="text-3xl font-bold text-purple-700">{upcomingClasses} courses</p>
-              </div>
-              <div className="bg-purple-500 rounded-lg p-3">
-                <Clock className="text-white" size={24} />
+                <p className="text-blue-600 font-medium mb-1">Upcoming</p>
+                <p className="text-3xl font-bold text-blue-700">{upcomingClasses} courses</p>
               </div>
             </div>
           </div>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { ChevronDown, Loader2, AlertCircle } from "lucide-react";
+import { ChevronDown, Loader2, AlertCircle, CheckCircle, FileCheck, XCircle } from "lucide-react";
 import { Input, Button, Modal, Table } from "antd";
 
 const { Search } = Input;
@@ -256,18 +256,21 @@ const GradesTable = ({
           </div>
           <div className="flex gap-6">
             <div className="flex items-center gap-2">
-              <span className="text-green-600 font-medium">
-                ✓ {assignmentInfo.graded || 0} graded
+              <XCircle className="w-5 h-5 text-red-600" />
+              <span className="text-red-600 font-medium">
+                {assignmentInfo.notSubmitted || 0} not submitted
               </span>
             </div>
             <div className="flex items-center gap-2">
+              <CheckCircle className="w-5 h-5 text-blue-600" />
               <span className="text-blue-600 font-medium">
-                📝 {assignmentInfo.submitted || 0} submitted
+                {assignmentInfo.submitted || 0} submitted
               </span>
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-gray-600 font-medium">
-                ⚠ {assignmentInfo.notSubmitted || 0} not submitted
+              <FileCheck className="w-5 h-5 text-green-600" />
+              <span className="text-green-600 font-medium">
+                {assignmentInfo.graded || 0} graded
               </span>
             </div>
             <div className="flex items-center gap-2 ml-auto">

@@ -1,9 +1,21 @@
 import React, { useState, useRef } from "react";
-import { ChevronDown, Loader2, AlertCircle, Download, Upload } from "lucide-react";
+import {
+  ChevronDown,
+  Loader2,
+  AlertCircle,
+  Download,
+  Upload,
+  FileCheck,
+  CheckCircle,
+  XCircle,
+} from "lucide-react";
 import { Input, Button, Modal, Table } from "antd";
 import * as XLSX from "xlsx";
 import { toast } from "react-toastify";
-import { exportSubmissionsExcel, importSubmissionsExcel } from "../../service/instructorGrading";
+import {
+  exportSubmissionsExcel,
+  importSubmissionsExcel,
+} from "../../service/instructorGrading";
 
 const { Search } = Input;
 
@@ -25,11 +37,14 @@ const GradingTable = ({
   const [isExporting, setIsExporting] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
   const fileInputRef = useRef(null);
-  
+
   const formatDateTime = (dateString) => {
     if (!dateString) return { date: "--", time: "" };
     // Check for default/empty datetime value (0001-01-01T00:00:00)
-    if (dateString === "0001-01-01T00:00:00" || dateString.startsWith("0001-01-01")) {
+    if (
+      dateString === "0001-01-01T00:00:00" ||
+      dateString.startsWith("0001-01-01")
+    ) {
       return { date: "--", time: "" };
     }
     const date = new Date(dateString);
@@ -83,13 +98,13 @@ const GradingTable = ({
 
       // Call API to get export data
       const response = await exportSubmissionsExcel(assignmentId);
-      
+
       // Parse the API response - it returns JSON data as blob
       const reader = new FileReader();
       reader.onload = () => {
         try {
           const apiData = JSON.parse(reader.result);
-          
+
           if (!apiData.data || apiData.data.length === 0) {
             toast.error("No submissions to export");
             return;
@@ -99,37 +114,53 @@ const GradingTable = ({
 
           // Prepare Excel data
           const excelData = [];
-          
+
           // Create header row
-          const headers = ["UserName", "StudentCode", "SubmissionId", "ReviewSubmission", "InstructorId", "AssignmentName"];
-          
+          const headers = [
+            "UserName",
+            "StudentCode",
+            "SubmissionId",
+            "ReviewSubmission",
+            "InstructorId",
+            "AssignmentName",
+          ];
+
           // Add dynamic criteria headers
           if (exportData[0]?.criteriaScores?.length > 0) {
-            exportData[0].criteriaScores.forEach(criteria => {
+            exportData[0].criteriaScores.forEach((criteria) => {
               headers.push(`${criteria.criteriaName} (${criteria.weight}%)`);
               headers.push(`${criteria.criteriaName} Feedback`);
             });
           }
-          
+
           headers.push("Final Feedback");
-          
+
           excelData.push(headers);
 
           // Add data rows
-          exportData.forEach(submission => {
+          exportData.forEach((submission) => {
             const row = [
               submission.userName || "",
               submission.studentCode || "",
               submission.submissionId || "",
-              submission.fileUrl ? `https://docs.google.com/viewer?url=${submission.fileUrl}` : "",
+              submission.fileUrl
+                ? `https://docs.google.com/viewer?url=${submission.fileUrl}`
+                : "",
               currentUserId || "",
-              submission.assignmentName || ""
+              submission.assignmentName || "",
             ];
 
             // Add criteria scores and feedback
-            if (submission.criteriaScores && submission.criteriaScores.length > 0) {
-              submission.criteriaScores.forEach(criteria => {
-                row.push(criteria.score !== null && criteria.score !== undefined ? criteria.score : "");
+            if (
+              submission.criteriaScores &&
+              submission.criteriaScores.length > 0
+            ) {
+              submission.criteriaScores.forEach((criteria) => {
+                row.push(
+                  criteria.score !== null && criteria.score !== undefined
+                    ? criteria.score
+                    : ""
+                );
                 row.push(criteria.feedback || "");
               });
             }
@@ -161,31 +192,36 @@ const GradingTable = ({
               columnWidths.push({ wch: 30 }); // Criteria feedback
             });
           }
-          
+
           columnWidths.push({ wch: 30 }); // Final Feedback
 
-          ws['!cols'] = columnWidths;
+          ws["!cols"] = columnWidths;
 
           // Add worksheet to workbook
           XLSX.utils.book_append_sheet(wb, ws, "Grading Data");
 
           // Generate filename
-          const assignmentName = exportData[0]?.assignmentName || assignmentInfo?.title || "Assignment";
+          const assignmentName =
+            exportData[0]?.assignmentName ||
+            assignmentInfo?.title ||
+            "Assignment";
           const className = assignmentInfo?.className || "Class";
-          const fileName = `${assignmentName.replace(/[^a-z0-9]/gi, '_')}_${className.replace(/[^a-z0-9]/gi, '_')}.xlsx`;
+          const fileName = `${assignmentName.replace(
+            /[^a-z0-9]/gi,
+            "_"
+          )}_${className.replace(/[^a-z0-9]/gi, "_")}.xlsx`;
 
           // Export file
           XLSX.writeFile(wb, fileName);
-          
+
           toast.success("Excel file exported successfully");
         } catch (parseError) {
           console.error("Parse error:", parseError);
           toast.error("Failed to process export data");
         }
       };
-      
+
       reader.readAsText(response);
-      
     } catch (error) {
       console.error("Export error:", error);
       toast.error(error.message || "Failed to export Excel file");
@@ -220,16 +256,19 @@ const GradingTable = ({
     try {
       setIsImporting(true);
       const response = await importSubmissionsExcel(assignmentId, file);
-      
+
       // Display backend message if available
-      const message = response?.message || response?.data?.message || "Grades imported successfully!";
+      const message =
+        response?.message ||
+        response?.data?.message ||
+        "Grades imported successfully!";
       toast.success(message);
-      
+
       // Reset file input
       if (fileInputRef.current) {
         fileInputRef.current.value = "";
       }
-      
+
       // Refresh data without reloading the page
       if (onRefreshData) {
         await onRefreshData();
@@ -237,7 +276,7 @@ const GradingTable = ({
     } catch (error) {
       console.error("Error importing grades:", error);
       toast.error(error.message || "Failed to import grades");
-      
+
       // Reset file input
       if (fileInputRef.current) {
         fileInputRef.current.value = "";
@@ -249,56 +288,60 @@ const GradingTable = ({
 
   const columns = [
     {
-      title: 'No.',
-      key: 'index',
-      width: '5%',
+      title: "No.",
+      key: "index",
+      width: "5%",
       render: (_, __, index) => index + 1,
     },
     {
-      title: 'Student Code',
-      dataIndex: 'studentCode',
-      key: 'studentCode',
-      width: '12%',
+      title: "Student Code",
+      dataIndex: "studentCode",
+      key: "studentCode",
+      width: "12%",
     },
     {
-      title: 'Full Name',
-      dataIndex: 'studentName',
-      key: 'studentName',
-      width: '15%',
+      title: "Full Name",
+      dataIndex: "studentName",
+      key: "studentName",
+      width: "15%",
       render: (name) => <span className="text-gray-800">{name}</span>,
     },
     {
-      title: 'Score',
-      key: 'score',
-      width: '12%',
+      title: "Score",
+      key: "score",
+      width: "12%",
       render: (_, student) => (
         <span
           className={`inline-flex items-center justify-center w-20 h-10 border-2 rounded-lg font-semibold ${getScoreStyle(
-            student.status === "Graded" ? student.instructorScore :
-            (student.instructorScore === 0 || student.instructorScore === 0.0) ? null : student.instructorScore
+            student.status === "Graded"
+              ? student.instructorScore
+              : student.instructorScore === 0 || student.instructorScore === 0.0
+              ? null
+              : student.instructorScore
           )}`}
         >
           {student.status === "Graded"
-            ? (student.instructorScore !== null &&
-               student.instructorScore !== undefined
-                ? `${student.instructorScore.toFixed(1)}`
-                : "--")
-            : ((student.status === "Submitted" || student.status === "Not Submitted") &&
-               (student.instructorScore === 0 || student.instructorScore === 0.0)
-                ? "--"
-                : (student.instructorScore !== null &&
-                   student.instructorScore !== undefined
-                    ? `${student.instructorScore.toFixed(1)}`
-                    : "--"))}{" "}
+            ? student.instructorScore !== null &&
+              student.instructorScore !== undefined
+              ? `${student.instructorScore.toFixed(1)}`
+              : "--"
+            : (student.status === "Submitted" ||
+                student.status === "Not Submitted") &&
+              (student.instructorScore === 0 || student.instructorScore === 0.0)
+            ? "--"
+            : student.instructorScore !== null &&
+              student.instructorScore !== undefined
+            ? `${student.instructorScore.toFixed(1)}`
+            : "--"}{" "}
           / {assignmentInfo?.maxScore || 10}
         </span>
       ),
     },
     {
-      title: 'Feedback',
-      dataIndex: 'feedback',
-      key: 'feedback',
-      width: '18%',
+      title: "Feedback",
+      dataIndex: "feedback",
+      key: "feedback",
+      width: "18%",
       render: (feedback) => (
         <span className="text-gray-500 max-w-xs truncate block">
           {feedback || "No feedback yet"}
@@ -306,10 +349,10 @@ const GradingTable = ({
       ),
     },
     {
-      title: 'Submission Time',
-      dataIndex: 'submittedAt',
-      key: 'submittedAt',
-      width: '12%',
+      title: "Submission Time",
+      dataIndex: "submittedAt",
+      key: "submittedAt",
+      width: "12%",
       render: (submittedAt) => {
         const submissionTime = formatDateTime(submittedAt);
         return submittedAt ? (
@@ -332,23 +375,28 @@ const GradingTable = ({
           Status <ChevronDown size={16} />
         </div>
       ),
-      dataIndex: 'status',
-      key: 'status',
-      width: '12%',
+      dataIndex: "status",
+      key: "status",
+      width: "12%",
       render: (status) => (
         <span
-          className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${getStatusStyle(status)}`}
+          className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${getStatusStyle(
+            status
+          )}`}
         >
           {status}
         </span>
       ),
     },
     {
-      title: 'Action',
-      key: 'action',
-      width: '14%',
+      title: "Action",
+      key: "action",
+      width: "14%",
       render: (_, student) => {
-        if (student.status === "Submitted" && student.assignmentStatus === "Closed") {
+        if (
+          student.status === "Submitted" &&
+          student.assignmentStatus === "Closed"
+        ) {
           return (
             <Button
               onClick={() => onGradeClick(student.submissionId, student.status)}
@@ -359,8 +407,10 @@ const GradingTable = ({
             </Button>
           );
         } else if (
-          (student.status === "Graded" && student.assignmentStatus === "Closed") ||
-          (student.assignmentStatus === "GradesPublished" && student.regradeRequestStatus === "Approved")
+          (student.status === "Graded" &&
+            student.assignmentStatus === "Closed") ||
+          (student.assignmentStatus === "GradesPublished" &&
+            student.regradeRequestStatus === "Approved")
         ) {
           return (
             <Button
@@ -376,6 +426,12 @@ const GradingTable = ({
       },
     },
   ];
+
+  // Calculate submission statistics from students array
+  const notSubmittedCount = students?.filter(s => s.status === 'Not Submitted').length || 0;
+  const submittedCount = students?.filter(s => s.status === 'Submitted').length || 0;
+  const gradedCount = students?.filter(s => s.status === 'Graded').length || 0;
+  const totalStudents = students?.length || 0;
 
   return (
     <>
@@ -417,18 +473,28 @@ const GradingTable = ({
             )}
           </div>
 
-          <div className="flex gap-6 mt-2">
+          <div className="flex gap-6">
             <div className="flex items-center gap-2">
-              <span className="text-green-600 font-medium">
-                ✓ {assignmentInfo.submitted || 0}/
-                {assignmentInfo.totalStudents || 0} submitted
+              <XCircle className="w-5 h-5 text-red-600" />
+              <span className="text-red-600 font-medium">
+                {notSubmittedCount} not submitted
               </span>
             </div>
-
             <div className="flex items-center gap-2">
-              <span className="text-yellow-600 font-medium">
-                ⭐ {assignmentInfo.graded || 0}/{assignmentInfo.submitted || 0}{" "}
-                graded
+              <CheckCircle className="w-5 h-5 text-blue-600" />
+              <span className="text-blue-600 font-medium">
+                {submittedCount} submitted
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <FileCheck className="w-5 h-5 text-green-600" />
+              <span className="text-green-600 font-medium">
+                {gradedCount} graded
+              </span>
+            </div>
+            <div className="flex items-center gap-2 ml-auto">
+              <span className="text-gray-700 font-semibold">
+                Total: {totalStudents} students
               </span>
             </div>
           </div>
@@ -449,7 +515,7 @@ const GradingTable = ({
       </div>
 
       {/* Export and Import Buttons - only show when assignment is Closed */}
-      {assignmentStatus === 'Closed' && (
+      {assignmentStatus === "Closed" && (
         <div className="mb-4 flex justify-end gap-2">
           <input
             type="file"
@@ -471,7 +537,9 @@ const GradingTable = ({
           </Button>
           <Button
             onClick={handleExportExcel}
-            disabled={isExporting || !filteredStudents || filteredStudents.length === 0}
+            disabled={
+              isExporting || !filteredStudents || filteredStudents.length === 0
+            }
             icon={<Download size={16} />}
             loading={isExporting}
             type="default"
@@ -501,20 +569,32 @@ const GradingTable = ({
       />
 
       {/* Action Button: Auto Grade Zero - only show when assignment is Closed or Cancelled */}
-      {assignmentStatus && ['Closed', 'Cancelled'].includes(assignmentStatus) && (
-        <div className="flex justify-end mt-6">
-          <Button
-            onClick={onAutoGradeZero}
-            disabled={loading.autoGrading || (students && students.filter(s => s.status === 'Not Submitted').length === 0)}
-            type="primary"
-            danger
-            size="large"
-            icon={loading.autoGrading ? <Loader2 className="w-4 h-4 animate-spin" /> : <AlertCircle className="w-4 h-4" />}
-          >
-            {loading.autoGrading ? "Grading..." : "Auto Grade Zero"}
-          </Button>
-        </div>
-      )}
+      {assignmentStatus &&
+        ["Closed", "Cancelled"].includes(assignmentStatus) && (
+          <div className="flex justify-end mt-6">
+            <Button
+              onClick={onAutoGradeZero}
+              disabled={
+                loading.autoGrading ||
+                (students &&
+                  students.filter((s) => s.status === "Not Submitted")
+                    .length === 0)
+              }
+              type="primary"
+              danger
+              size="large"
+              icon={
+                loading.autoGrading ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <AlertCircle className="w-4 h-4" />
+                )
+              }
+            >
+              {loading.autoGrading ? "Grading..." : "Auto Grade Zero"}
+            </Button>
+          </div>
+        )}
     </>
   );
 };
