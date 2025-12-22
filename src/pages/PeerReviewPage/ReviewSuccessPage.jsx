@@ -17,7 +17,7 @@ const ReviewSuccessPage = () => {
             onClick={() => navigate("/")}
             className="text-blue-600 hover:underline"
           >
-            Về trang chủ
+            Go to Home
           </button>
         </div>
       </div>

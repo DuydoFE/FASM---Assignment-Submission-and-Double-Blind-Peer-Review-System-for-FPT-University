@@ -222,7 +222,7 @@ const SubmissionCard = ({
         ) : (
           <p className="text-gray-500">
             {isSubmissionActive
-              ? "Kéo thả hoặc nhấn để chọn tệp"
+              ? "Drag and drop or click to select file"
               : "Submission is not active"}
           </p>
         )}
@@ -243,7 +243,7 @@ const SubmissionCard = ({
             value={keywords}
             onChange={(e) => setKeywords(e.target.value)}
             className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50 text-black placeholder-gray-500"
-            placeholder="Ví dụ: react, redux, api,..."
+            placeholder="Example: react, redux, api,..."
             disabled={!isSubmissionActive}
           />
         </div>

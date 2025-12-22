@@ -206,7 +206,7 @@ const LoginPage = () => {
             </div>
           </div>
 
-          {/* Cột Phải: Login Google */}
+          {/* Right Column: Google Login */}
           <div className="w-full md:w-1/2 p-8 md:p-12 flex flex-col justify-center bg-zinc-900/30">
             <h2 className="text-xl font-semibold text-white mb-6 text-center md:text-left">
               Alternative Login

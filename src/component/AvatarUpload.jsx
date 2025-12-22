@@ -12,38 +12,38 @@ const AvatarUpload = ({
   const [avatarUrl, setAvatarUrl] = useState(currentAvatar || '');
 
   const handleFileSelect = async (file) => {
-    // Kiểm tra loại file
+    // Check file type
     if (!file.type.startsWith('image/')) {
-      message.error('Vui lòng chọn file hình ảnh!');
+      message.error('Please select an image file!');
       return false;
     }
 
-    // Kiểm tra kích thước (2MB cho avatar)
+    // Check size (2MB for avatar)
     if (file.size > 2 * 1024 * 1024) {
-      message.error('Avatar không được vượt quá 2MB!');
+      message.error('Avatar must not exceed 2MB!');
       return false;
     }
 
     try {
-      // Upload lên Cloudinary với folder riêng cho avatar
+      // Upload to Cloudinary with a separate folder for avatar
       const url = await uploadImage(file, { 
         folder: 'avatars',
         tags: 'user-avatar'
       });
       
-      message.success('Cập nhật avatar thành công!');
+      message.success('Avatar updated successfully!');
       setAvatarUrl(url);
       
-      // Trả URL về component cha
+      // Return URL to parent component
       if (onAvatarChanged) {
         onAvatarChanged(url);
       }
 
     } catch (error) {
-      message.error(`Upload thất bại: ${error.message}`);
+      message.error(`Upload failed: ${error.message}`);
     }
 
-    // Ngăn Ant Design upload tự động
+    // Prevent Ant Design from uploading automatically
     return false;
   };
 

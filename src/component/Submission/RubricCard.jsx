@@ -17,7 +17,7 @@ const RubricCard = ({ assignmentId }) => {
         const data = await assignmentService.getAssignmentRubric(assignmentId);
         setRubric(data);
       } catch (err) {
-        setError("Không thể tải được tiêu chí chấm điểm. Vui lòng thử lại.");
+        setError("Cannot load grading criteria. Please try again.");
         console.error("Error fetching rubric:", err);
       } finally {
         setIsLoading(false);
@@ -30,7 +30,7 @@ const RubricCard = ({ assignmentId }) => {
   if (isLoading) {
     return (
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 text-center">
-        Đang tải tiêu chí chấm điểm...
+        Loading grading criteria...
       </div>
     );
   }
@@ -44,19 +44,19 @@ const RubricCard = ({ assignmentId }) => {
   }
 
   if (!rubric || !rubric.criteria || rubric.criteria.length === 0) {
-    // Không hiển thị gì nếu không có rubric hoặc không có tiêu chí nào
+
     return null;
   }
 
   return (
     <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
-      {/* Tiêu đề card */}
+      {/* Card title */}
       <div className="flex items-center mb-6">
         <ClipboardList className="w-6 h-6 text-blue-600 mr-3" />
         <h2 className="text-xl font-bold text-gray-800">Rubric</h2>
       </div>
 
-      {/* Danh sách các tiêu chí */}
+
       <div className="space-y-6">
         {rubric.criteria.map((criterion, index) => (
           <div 
@@ -72,10 +72,10 @@ const RubricCard = ({ assignmentId }) => {
               </span>
             </div>
             
-            {/* Mô tả chi tiết của tiêu chí */}
+
             {criterion.description && (
               <div className="mt-2 pl-1 text-gray-700 text-sm">
-                {/* Tách description thành từng dòng để hiển thị dạng bullet list */}
+
                 {criterion.description.split('\n').map((line, lineIndex) => (
                   line.trim() && (
                     <p key={lineIndex} className="flex items-start">
