@@ -390,6 +390,7 @@ const InstructorManageAssignment = () => {
         }}
         onSubmit={handleUpdateAssignment}
         assignment={editingAssignment}
+        courseInstanceId={courseInstanceId}
       />
 
       <ExportExcelModal
