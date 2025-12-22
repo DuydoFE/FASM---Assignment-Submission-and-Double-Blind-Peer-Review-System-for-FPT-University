@@ -95,7 +95,7 @@ export default function AdminRubricDetail() {
             const payload = { ...criteriaForm, templateId: rubric.templateId, maxScore: 10 };
             const res = await createCriteriaTemplate(payload);
             if (res?.statusCode === 201 || res?.statusCode === 200) {
-                toast.success("Criteria created successfully");
+                toast.success(res?.description || "Criteria created successfully");
                 
                 // Clear form first
                 form.resetFields();
@@ -107,11 +107,11 @@ export default function AdminRubricDetail() {
                 // Then reload rubric data from server
                 await fetchRubric();
             } else {
-                toast.error(res?.message || "Failed to create criteria");
+                toast.error(res?.description || "Failed to create criteria");
             }
         } catch (err) {
             console.error(err);
-            toast.error("Server error creating criteria");
+            toast.error("The field Description must be a string with a maximum length of 500.");
         }
     };
 
@@ -154,7 +154,7 @@ export default function AdminRubricDetail() {
                 try {
                     const res = await deleteCriteriaTemplate(criteriaId);
                     if (res?.statusCode === 200) {
-                        toast.success("Criteria deleted successfully");
+                        toast.success(res?.description || "Criteria deleted successfully");
                         setRubric((prev) => ({
                             ...prev,
                             criteriaTemplates: prev.criteriaTemplates.filter(
@@ -162,7 +162,7 @@ export default function AdminRubricDetail() {
                             ),
                         }));
                     } else {
-                        toast.error(res?.message || "Failed to delete criteria");
+                        toast.error(res?.description || "Failed to delete criteria");
                     }
                 } catch (err) {
                     toast.error("Server error deleting criteria");
@@ -196,7 +196,7 @@ export default function AdminRubricDetail() {
 
             const res = await updateCriteriaTemplate(payload);
             if (res?.statusCode === 200) {
-                toast.success("Criteria updated successfully");
+                toast.success(res?.description || "Criteria updated successfully");
                 // Clear form first
                 form.resetFields();
                 setCriteriaForm({ title: "", description: "", weight: 0, maxScore: 10, scoringType: "Scale", scoreLabel: "0-10" });
@@ -211,7 +211,7 @@ export default function AdminRubricDetail() {
                     ),
                 }));
             } else {
-                toast.error(res?.message || "Failed to update criteria");
+                toast.error(res?.description || "Failed to update criteria");
             }
         } catch (err) {
             toast.error("Server error updating criteria");
