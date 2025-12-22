@@ -210,7 +210,7 @@ const StudentDashBoard = () => {
                       to="/my-assignments"
                       className="text-sm font-semibold text-orange-600 flex items-center hover:text-orange-700 transition-colors"
                     >
-                      Xem tất cả <ChevronRight className="w-4 h-4 ml-1" />
+                      View All <ChevronRight className="w-4 h-4 ml-1" />
                     </Link>
                   </motion.div>
                 )}

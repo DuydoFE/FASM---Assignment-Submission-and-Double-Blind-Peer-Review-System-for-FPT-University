@@ -59,16 +59,15 @@ const ExportExcelModal = ({
     setIsExporting(true);
     try {
       let allSubmissions = [];
-      // vòng lặp for...of để chạy tuần tự từng cái một
       for (const assignmentId of selectedAssignments) {
-        // Await từng request xong mới chạy cái tiếp theo
+
         const response = await getExportSubmissions(
           user.id,
           classId,
           assignmentId
         );
 
-        // Xử lý dữ liệu gộp vào mảng tổng ngay sau khi nhận response
+        // Process data and merge into the total array immediately after receiving response
         const data = Array.isArray(response) ? response : response.data || [];
         allSubmissions = [...allSubmissions, ...data];
       }

@@ -17,7 +17,7 @@ const ReviewSuccessPage = () => {
             onClick={() => navigate("/")}
             className="text-blue-600 hover:underline"
           >
-            Về trang chủ
+            Go to Home
           </button>
         </div>
       </div>
@@ -40,7 +40,7 @@ const ReviewSuccessPage = () => {
             {reviewResult.assignmentTitle}
           </p>
           <p className="text-sm text-gray-500 mt-1">
-            Sinh viên: {reviewResult.studentName || "Ẩn danh"}
+            Student: {reviewResult.studentName || "Peer Student"}
           </p>
         </div>
 
@@ -79,10 +79,10 @@ const ReviewSuccessPage = () => {
             <div className="bg-gray-50 p-5 rounded-lg border border-gray-200">
               <h4 className="font-bold text-gray-800 mb-2 flex items-center text-sm">
                 <MessageSquare size={16} className="mr-2" />
-                Nhận xét chung
+                
               </h4>
               <p className="text-gray-600 text-sm italic h-24 overflow-y-auto whitespace-pre-line">
-                "{reviewResult.generalFeedback || "Không có nhận xét bổ sung."}"
+                "{reviewResult.generalFeedback || "Not have additional feedback."}"
               </p>
             </div>
           </div>

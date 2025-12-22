@@ -76,8 +76,8 @@ const StudentAssignmentPage = () => {
           );
           setEnrolledCourses(response.data.data);
         } catch (err) {
-          console.error("Lỗi khi tải danh sách lớp học:", err);
-          setError("Không thể tải danh sách lớp học. Vui lòng thử lại.");
+          console.error("Error loading class list:", err);
+          setError("Cannot load class list. Please try again.");
         } finally {
           setIsLoading(false);
         }

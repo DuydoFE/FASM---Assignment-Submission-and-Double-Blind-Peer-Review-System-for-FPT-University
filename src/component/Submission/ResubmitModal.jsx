@@ -119,7 +119,7 @@ const ResubmitModal = ({
                 value={newKeywords}
                 onChange={(e) => setNewKeywords(e.target.value)}
                 className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 text-black placeholder-gray-500"
-                placeholder="Ví dụ: react, redux, api,..."
+                placeholder="Example: react, redux, api,..."
               />
             </div>
           </div>
@@ -138,7 +138,7 @@ const ResubmitModal = ({
                   ) : (
                     <ScanSearch className="w-4 h-4 mr-2" />
                   )}
-                  {/* Đổi text hiển thị */}
+
                   {isCheckingSubmission ? "Checking..." : "Check Submission"}
                 </button>
               )}

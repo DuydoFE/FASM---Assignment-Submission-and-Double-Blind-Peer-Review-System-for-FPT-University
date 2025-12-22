@@ -5,35 +5,35 @@ import { toast } from "react-toastify";
 
 const AiAssistantCard = ({ submissionId, criteria = [] }) => {
   const [isGenerating, setIsGenerating] = useState(false);
-  // 👉 State mới để lưu danh sách feedback theo tiêu chí
+
   const [aiFeedback, setAiFeedback] = useState(null);
 
   const handleGenerateFeedback = async () => {
     if (!submissionId) {
-      toast.error("Không tìm thấy ID bài nộp để tạo phân tích.");
+      toast.error("Submission ID not found to create analysis.");
       return;
     }
 
     setIsGenerating(true);
-    setAiFeedback(null); // Xóa kết quả cũ khi tạo mới
+    setAiFeedback(null); 
     try {
       const response = await reviewService.generateAiReview(submissionId);
       
       if (response.statusCode === 200 && response.data?.feedbacks) {
         setAiFeedback(response.data.feedbacks);
-        toast.success("AI đã phân tích xong theo tiêu chí!");
+        toast.success("AI has finished analyzing by criteria!");
       } else {
-        throw new Error("Dữ liệu trả về không hợp lệ.");
+        throw new Error("Returned data is invalid.");
       }
     } catch (error) {
       console.error(error);
-      toast.error("Tạo phân tích thất bại. Vui lòng thử lại sau.");
+      toast.error("Analysis creation failed. Please try again later.");
     } finally {
       setIsGenerating(false);
     }
   };
 
-  // Hàm helper để tìm trọng số của tiêu chí
+  // Helper function to find criteria weight
   const getCriterionWeight = (criteriaId) => {
     const criterion = criteria.find(c => c.criteriaId === criteriaId);
     return criterion ? criterion.weight : null;
@@ -77,7 +77,7 @@ const AiAssistantCard = ({ submissionId, criteria = [] }) => {
         </button>
       </div>
 
-      {/* 👉 KHỐI HIỂN THỊ KẾT QUẢ MỚI */}
+      {/* 👉 NEW RESULT DISPLAY BLOCK */}
       {aiFeedback && (
         <div className="mt-6 animate-fade-in">
           <h4 className="font-bold text-gray-800 mb-3">Summary by criteria</h4>

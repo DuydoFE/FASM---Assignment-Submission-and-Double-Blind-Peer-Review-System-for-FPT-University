@@ -364,7 +364,7 @@ const StudentSubmitAssignmentPage = () => {
               <>
                 {isLoadingReview ? (
                   <p className="text-center p-4">
-                    Đang tải trạng thái chấm chéo...
+                    Loading cross-marking status...
                   </p>
                 ) : (
                   <motion.div className="space-y-6" variants={containerVariants}>
