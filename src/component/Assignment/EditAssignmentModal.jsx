@@ -37,6 +37,7 @@ const EditAssignmentModal = ({ isOpen, onClose, onSubmit, assignment, courseInst
   const [loadingRubrics, setLoadingRubrics] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
   const [initialFormData, setInitialFormData] = useState(null);
+  const [fileRemoved, setFileRemoved] = useState(false);
   const currentUser = getCurrentAccount();
 
   const formatDateTimeLocal = (dateString) => {
@@ -103,24 +104,34 @@ const EditAssignmentModal = ({ isOpen, onClose, onSubmit, assignment, courseInst
         includeAIScore: assignment.includeAIScore || false
       };
       
-      if (assignment.fileName) {
+      setFormData(initialData);
+      // Check if the file was previously marked for removal
+      // Use the fileRemoved state to determine if file should be shown
+      if (assignment.fileName && !fileRemoved) {
         const existingFile = {
           name: assignment.fileName,
-          size: assignment.fileSize || 0, 
-          type: assignment.fileType || '' 
+          size: assignment.fileSize || 0,
+          type: assignment.fileType || ''
         };
         setSelectedFile(existingFile);
+        setInitialFormData(initialData);
       } else {
+        // If assignment has no file or if we previously marked it for removal, set to null
         setSelectedFile(null);
+        setInitialFormData(initialData);
+        // Reset the fileRemoved flag when the modal is opened with no file
+        if (!assignment.fileName) {
+          setFileRemoved(false);
+        }
       }
-      setFormData(initialData);
-      setInitialFormData(initialData);
       fetchRubrics();
     } else if (!isOpen) {
       // Reset file state when modal is closed
       setSelectedFile(null);
+      // Also reset the fileRemoved flag when modal closes
+      setFileRemoved(false);
     }
-  }, [isOpen, assignment]);
+  }, [isOpen, assignment, fileRemoved]);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -265,8 +276,14 @@ const EditAssignmentModal = ({ isOpen, onClose, onSubmit, assignment, courseInst
   };
 
   const removeFile = () => {
-    
     setSelectedFile({ name: '', size: 0, type: '', removed: true });
+    // Also update the initialFormData to reflect the file removal
+    setInitialFormData(prev => ({
+      ...prev,
+      fileName: null
+    }));
+    // Mark that the file has been removed
+    setFileRemoved(true);
   };
 
   const now = new Date();
@@ -415,6 +432,8 @@ const EditAssignmentModal = ({ isOpen, onClose, onSubmit, assignment, courseInst
       const result = await onSubmit(submitData, fileToSend);
       
       if (result !== false) {
+        // Reset the fileRemoved flag after successful submission
+        setFileRemoved(false);
         onClose();
       }
     } catch (error) {
