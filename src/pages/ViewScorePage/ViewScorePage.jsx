@@ -138,7 +138,7 @@ const ViewScorePage = () => {
   };
 
   const handleViewRequest = async () => {
-    // Kiểm tra xem regradeRequestId có tồn tại không
+    // Check if regradeRequestId exists
     if (!scoreData?.regradeRequestId) {
         toast.error("Regrade Request ID not found.");
         return;
@@ -149,7 +149,7 @@ const ViewScorePage = () => {
     setIsViewModalOpen(true);
 
     try {
-        // Sử dụng regradeRequestId từ dữ liệu điểm
+        // Use regradeRequestId from score data
         const response = await reviewService.getRegradeRequestDetails(scoreData.regradeRequestId);
         setRequestDetails(response.data);
     } catch (error) {

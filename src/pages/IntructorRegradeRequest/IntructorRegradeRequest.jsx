@@ -65,7 +65,7 @@ const InstructorRegradeRequest = () => {
             setError(null);
         } catch (err) {
             console.error('Error fetching regrade requests:', err);
-            setError('Không thể tải danh sách yêu cầu chấm lại');
+            setError('Cannot load regrade request list');
         } finally {
             setLoading(false);
         }
@@ -361,7 +361,7 @@ const InstructorRegradeRequest = () => {
             <div className="min-h-screen bg-gray-50 flex items-center justify-center">
                 <div className="text-center">
                     <Loader2 className="w-8 h-8 animate-spin text-blue-600 mx-auto mb-4" />
-                    <p className="text-gray-600">Đang tải dữ liệu...</p>
+                    <p className="text-gray-600">Loading data...</p>
                 </div>
             </div>
         );
@@ -376,7 +376,7 @@ const InstructorRegradeRequest = () => {
                         onClick={fetchRegradeRequests}
                         className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
                     >
-                        Thử lại
+                        Try again
                     </button>
                 </div>
             </div>

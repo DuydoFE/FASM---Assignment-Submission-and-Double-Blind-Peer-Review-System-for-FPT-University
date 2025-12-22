@@ -15,17 +15,17 @@ const CloudinaryImageUpload = ({
   const [previewUrl, setPreviewUrl] = useState(null);
 
   /**
-   * Xử lý khi chọn file
+   * Handle when selecting a file
    */
   const handleUpload = async (file) => {
     try {
       // Upload lên Cloudinary
       const url = await uploadImage(file, { 
         folder: folder,
-        tags: 'user_upload' // Tag để dễ quản lý trên Cloudinary
+        tags: 'user_upload' // Tag for easy management on Cloudinary
       });
 
-      message.success('Upload hình ảnh thành công!');
+      message.success('Image upload successful!');
       
       // Lưu URL vào state
       setUploadedUrls(prev => [...prev, url]);
@@ -37,15 +37,15 @@ const CloudinaryImageUpload = ({
       }
 
     } catch (err) {
-      message.error(`Upload thất bại: ${err.message}`);
+      message.error(`Upload failed: ${err.message}`);
     }
 
-    // Ngăn Ant Design upload tự động
+    // Prevent Ant Design from uploading automatically
     return false;
   };
 
   /**
-   * Xóa ảnh đã upload
+   * Remove uploaded image
    */
   const handleRemove = (url) => {
     setUploadedUrls(prev => prev.filter(item => item !== url));
@@ -55,18 +55,18 @@ const CloudinaryImageUpload = ({
   };
 
   /**
-   * Kiểm tra file trước khi upload
+   * Check file before upload
    */
   const beforeUpload = (file) => {
     const isImage = file.type.startsWith('image/');
     if (!isImage) {
-      message.error('Bạn chỉ có thể upload file hình ảnh!');
+      message.error('You can only upload image files!');
       return Upload.LIST_IGNORE;
     }
 
     const isLt5M = file.size / 1024 / 1024 < 5;
     if (!isLt5M) {
-      message.error('Hình ảnh phải nhỏ hơn 5MB!');
+      message.error('Image must be smaller than 5MB!');
       return Upload.LIST_IGNORE;
     }
 
@@ -75,7 +75,7 @@ const CloudinaryImageUpload = ({
 
   return (
     <div style={{ maxWidth: 600, margin: '0 auto' }}>
-      <Card title="Upload Hình Ảnh lên Cloudinary">
+      <Card title="Upload Images to Cloudinary">
         <Space direction="vertical" style={{ width: '100%' }} size="large">
           
           {/* Upload Area */}
@@ -91,17 +91,17 @@ const CloudinaryImageUpload = ({
               <InboxOutlined />
             </p>
             <p className="ant-upload-text">
-              Nhấp hoặc kéo thả file vào đây để upload
+              Click or drag and drop files here to upload
             </p>
             <p className="ant-upload-hint">
-              Hỗ trợ: JPG, PNG, GIF, WebP (tối đa 5MB)
+              Supported: JPG, PNG, GIF, WebP (up to 5MB)
             </p>
           </Dragger>
 
           {/* Progress Bar */}
           {uploading && (
             <div>
-              <p>Đang upload...</p>
+              <p>Uploading...</p>
               <Progress percent={progress} status="active" />
             </div>
           )}
@@ -109,14 +109,14 @@ const CloudinaryImageUpload = ({
           {/* Error Message */}
           {error && (
             <div style={{ color: 'red' }}>
-              Lỗi: {error}
+              Error: {error}
             </div>
           )}
 
-          {/* Preview và danh sách ảnh đã upload */}
+          {/* Preview and list of uploaded images */}
           {uploadedUrls.length > 0 && (
             <div>
-              <h4>Hình ảnh đã upload:</h4>
+              <h4>Uploaded images:</h4>
               <Space wrap>
                 {uploadedUrls.map((url, index) => (
                   <Card
@@ -140,7 +140,7 @@ const CloudinaryImageUpload = ({
                         icon={<DeleteOutlined />}
                         onClick={() => handleRemove(url)}
                       >
-                        Xóa
+                        Delete
                       </Button>
                     ]}
                   >

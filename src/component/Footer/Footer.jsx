@@ -10,24 +10,24 @@ const Footer = () => {
           <div>
             <h2 className="text-2xl font-bold mb-4">AssignmentHub</h2>
             <p className="text-gray-400">
-              Nền tảng quản lý bài tập thông minh dành cho sinh viên và giảng viên.
+              Smart assignment management platform for students and instructors.
             </p>
           </div>
 
           {/* Quick Links */}
           <div>
-            <h3 className="text-lg font-semibold mb-4">Liên kết nhanh</h3>
+            <h3 className="text-lg font-semibold mb-4">Quick Links</h3>
             <ul className="space-y-2">
-              <li><a href="#" className="text-gray-400 hover:text-white">Tính năng</a></li>
-              <li><a href="#" className="text-gray-400 hover:text-white">Hướng dẫn sử dụng</a></li>
-              <li><a href="#" className="text-gray-400 hover:text-white">Hỗ trợ</a></li>
-              <li><a href="#" className="text-gray-400 hover:text-white">Liên hệ</a></li>
+              <li><a href="#" className="text-gray-400 hover:text-white">Features</a></li>
+              <li><a href="#" className="text-gray-400 hover:text-white">User Guide</a></li>
+              <li><a href="#" className="text-gray-400 hover:text-white">Support</a></li>
+              <li><a href="#" className="text-gray-400 hover:text-white">Contact</a></li>
             </ul>
           </div>
 
           {/* Contact Info */}
           <div>
-            <h3 className="text-lg font-semibold mb-4">Liên hệ</h3>
+            <h3 className="text-lg font-semibold mb-4">Contact</h3>
             <ul className="space-y-2">
               <li className="text-gray-400">support@assignmenthub.com</li>
               <li className="text-gray-400">+84 123 456 789</li>

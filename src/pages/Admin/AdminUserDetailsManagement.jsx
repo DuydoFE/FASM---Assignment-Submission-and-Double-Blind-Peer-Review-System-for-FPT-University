@@ -246,7 +246,7 @@ export default function AdminUserDetailsManagement() {
               <span className="text-3xl">📋</span> Basic Information
             </h3>
 
-            {/* Khi editing = false, hiển thị info user */}
+            {/* When editing = false, display user info */}
             {!editing ? (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <InfoCard icon={<School />} label="Campus" value={campuses.find(c => c.campusId === user.campusId)?.campusName || "N/A"} />
@@ -297,7 +297,7 @@ export default function AdminUserDetailsManagement() {
                       </select>
                     </div>
 
-                    {/* Major (nếu student) */}
+                    {/* Major (if student) */}
                     {isStudent && (
                       <div className="mt-2">
                         <label className="block text-gray-500 text-sm mb-1">

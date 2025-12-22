@@ -157,7 +157,7 @@ const CrossClassReviewPage = () => {
           studentName: reviewData.studentName,
           criteriaFeedbacks: reviewData.rubric.criteria.map((c) => ({
             criteriaId: c.criteriaId,
-            criteriaName: c.title || c.criteriaName || "Tiêu chí", 
+            criteriaName: c.title || c.criteriaName || "Criteria",
             score: scores[c.criteriaId] || 0,
             maxScore: c.maxScore,
           })),

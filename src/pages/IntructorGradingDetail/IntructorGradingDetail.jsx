@@ -134,7 +134,7 @@ const InstructorGradingDetail = () => {
     
     const handleAiSummary = async () => {
         setIsAiLoading(true);
-        setAiError(null); // Xóa lỗi cũ trước mỗi lần gọi mới
+        setAiError(null); // Clear old errors before each new call
         toast.info('Generating AI summary, please wait...');
         try {
             const response = await instructorService.generateAiCriteriaFeedback(submissionId);
@@ -161,18 +161,18 @@ const InstructorGradingDetail = () => {
                     })
                 );
                 
-                // Vẫn thông báo thành công vì đã nhận được phân tích, dù là phân tích lỗi
+                // Still notify success because analysis was received, even if it's an error analysis
                 toast.success('AI analysis completed!'); 
 
             } else if (!response.statusCode) { 
-                // Ném lỗi nếu response không có cấu trúc như mong đợi VÀ không phải là lỗi nghiệp vụ đã xử lý
+                // Throw error if response doesn't have expected structure AND is not a handled business error
                 throw new Error('Invalid response format from AI service.');
             }
 
         } catch (error) {
             console.error('Error generating AI Summary:', error);
             const errorMessage = error.response?.data?.message || error.message || 'Failed to generate AI summary.';
-            setAiError(errorMessage); // Hiển thị lỗi mạng hoặc lỗi khác lên UI
+            setAiError(errorMessage); // Display network error or other error on UI
             toast.error(errorMessage);
         } finally {
             setIsAiLoading(false);
