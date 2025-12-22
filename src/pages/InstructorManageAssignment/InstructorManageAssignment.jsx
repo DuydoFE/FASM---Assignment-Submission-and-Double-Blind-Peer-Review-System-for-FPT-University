@@ -20,6 +20,7 @@ import DeleteAssignmentModal from "../../component/Assignment/DeleteAssignmentMo
 import PublishAssignmentModal from "../../component/Assignment/PublishAssignmentModal";
 import ExportExcelModal from "../../component/Assignment/ExportExcelModal";
 import UpdateDeadlineModal from "../../component/Assignment/UpdateDeadlineModal";
+import InstructorViewAssignmentModal from "../../component/Assignment/InstructorViewAssignmentModal";
 import InstructorAssignmentStatsCards from "../../component/Assignment/InstructorAssignmentStatsCards";
 import InstructorManageAssignmentTable from "../../component/Assignment/InstructorManageAssignmentTable";
 
@@ -41,6 +42,8 @@ const InstructorManageAssignment = () => {
   const [editingAssignment, setEditingAssignment] = useState(null);
   const [showExportModal, setShowExportModal] = useState(false);
   const [showPublishModal, setShowPublishModal] = useState(false);
+  const [showViewModal, setShowViewModal] = useState(false);
+  const [viewingAssignment, setViewingAssignment] = useState(null);
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -198,6 +201,24 @@ const InstructorManageAssignment = () => {
     }
   };
 
+  const handleViewDetailClick = async (assignment) => {
+    try {
+      const fullDetails = await assignmentService.getAssignmentDetailsById(
+        assignment.assignmentId
+      );
+      setViewingAssignment(fullDetails);
+      setShowViewModal(true);
+    } catch (error) {
+      console.error("Failed to fetch assignment details:", error);
+      toast.error("Failed to load assignment details. Please try again.");
+    }
+  };
+
+  const handleCloseViewModal = () => {
+    setShowViewModal(false);
+    setViewingAssignment(null);
+  };
+
   const handleUpdateAssignment = async (updatedData, file) => {
     try {
       const response = await updateAssignment(updatedData, file);
@@ -350,13 +371,14 @@ const InstructorManageAssignment = () => {
         transition={{ duration: 0.5, delay: 0.2 }}
       >
         <InstructorManageAssignmentTable
-        assignments={assignments}
-        loading={loading}
-        onUpdateDeadline={handleUpdateDeadlineClick}
-        onDelete={handleDeleteClick}
-        onEdit={handleEditClick}
-        onViewSubmissions={handleViewSubmissions}
+          assignments={assignments}
+          loading={loading}
+          onUpdateDeadline={handleUpdateDeadlineClick}
+          onDelete={handleDeleteClick}
+          onEdit={handleEditClick}
+          onViewSubmissions={handleViewSubmissions}
           onPublish={handlePublishClick}
+          onViewDetail={handleViewDetailClick}
         />
       </motion.div>
 
@@ -390,6 +412,13 @@ const InstructorManageAssignment = () => {
         }}
         onSubmit={handleUpdateAssignment}
         assignment={editingAssignment}
+        courseInstanceId={courseInstanceId}
+      />
+
+      <InstructorViewAssignmentModal
+        isOpen={showViewModal}
+        onClose={handleCloseViewModal}
+        assignment={viewingAssignment}
         courseInstanceId={courseInstanceId}
       />
 
