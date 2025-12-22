@@ -9,7 +9,7 @@ import { Input, Select, Checkbox, Modal, Button } from 'antd';
 
 const { TextArea } = Input;
 
-const EditAssignmentModal = ({ isOpen, onClose, onSubmit, assignment }) => {
+const EditAssignmentModal = ({ isOpen, onClose, onSubmit, assignment, courseInstanceId }) => {
   const [formData, setFormData] = useState({
     assignmentId: 0,
     rubricTemplateId: '',
@@ -50,7 +50,7 @@ const EditAssignmentModal = ({ isOpen, onClose, onSubmit, assignment }) => {
   const fetchRubrics = async () => {
     setLoadingRubrics(true);
     try {
-      const data = await getRubricTemplatesByUserId(currentUser.id);
+      const data = await getRubricTemplatesByUserId(currentUser.id, courseInstanceId);
       if (data && data.length > 0) {
         setRubrics(data);
       } else {
