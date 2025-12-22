@@ -40,7 +40,7 @@ const ReviewSuccessPage = () => {
             {reviewResult.assignmentTitle}
           </p>
           <p className="text-sm text-gray-500 mt-1">
-            Sinh viên: {reviewResult.studentName || "Ẩn danh"}
+            Student: {reviewResult.studentName || "Peer Student"}
           </p>
         </div>
 
