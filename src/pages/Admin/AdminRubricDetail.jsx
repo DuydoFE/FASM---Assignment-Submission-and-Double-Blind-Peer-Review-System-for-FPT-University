@@ -31,6 +31,17 @@ export default function AdminRubricDetail() {
         scoringType: "Scale",
         scoreLabel: "0-10",
     });
+    
+    // Update form fields when criteriaForm changes (for edit modal)
+    useEffect(() => {
+        if (showEditModal && currentCriteria) {
+            form.setFieldsValue({
+                title: criteriaForm.title,
+                description: criteriaForm.description,
+                weight: criteriaForm.weight,
+            });
+        }
+    }, [criteriaForm, showEditModal, currentCriteria, form]);
     const [confirmConfig, setConfirmConfig] = useState({
         open: false,
         title: "",
@@ -105,7 +116,10 @@ export default function AdminRubricDetail() {
     };
 
     const openEditModal = (criteria) => {
+        // Clear the form first to avoid data from previous criteria
+        setCriteriaForm({ title: "", description: "", weight: 0, maxScore: 10, scoringType: "Scale", scoreLabel: "0-10" });
         setCurrentCriteria(criteria);
+        // Set the criteria form with the current criteria's data
         setCriteriaForm({
             title: criteria.title || "",
             description: criteria.description || "",
@@ -183,6 +197,10 @@ export default function AdminRubricDetail() {
             const res = await updateCriteriaTemplate(payload);
             if (res?.statusCode === 200) {
                 toast.success("Criteria updated successfully");
+                // Clear form first
+                form.resetFields();
+                setCriteriaForm({ title: "", description: "", weight: 0, maxScore: 10, scoringType: "Scale", scoreLabel: "0-10" });
+                // Close modal
                 setShowEditModal(false);
                 setRubric((prev) => ({
                     ...prev,
@@ -499,14 +517,22 @@ export default function AdminRubricDetail() {
             <Modal
                 title="Edit Criteria"
                 open={showEditModal}
-                onCancel={() => setShowEditModal(false)}
+                onCancel={() => {
+                    form.resetFields();
+                    setCriteriaForm({ title: "", description: "", weight: 0, maxScore: 10, scoringType: "Scale", scoreLabel: "0-10" });
+                    setShowEditModal(false);
+                }}
                 footer={null}
+                destroyOnClose
             >
-                <Form onFinish={handleUpdateCriteria} layout="vertical">
+                <Form
+                    form={form}
+                    onFinish={handleUpdateCriteria}
+                    layout="vertical"
+                >
                     <Form.Item
                         label="Title"
                         name="title"
-                        initialValue={criteriaForm.title}
                         rules={[{ required: true, message: "Please enter a title" }]}
                     >
                         <Input
@@ -517,7 +543,7 @@ export default function AdminRubricDetail() {
                         />
                     </Form.Item>
 
-                    <Form.Item label="Description" name="description" initialValue={criteriaForm.description}>
+                    <Form.Item label="Description" name="description">
                         <Input.TextArea
                             placeholder="Enter description"
                             value={criteriaForm.description}
@@ -529,7 +555,6 @@ export default function AdminRubricDetail() {
                     <Form.Item
                         label={`Weight (%) - Available: ${Math.min(100, availableWeight + (currentCriteria?.weight || 0))}%`}
                         name="weight"
-                        initialValue={criteriaForm.weight}
                         rules={[
                             { required: true, message: "Please enter weight" },
                         ]}
@@ -554,7 +579,11 @@ export default function AdminRubricDetail() {
 
                     <Form.Item>
                         <div className="flex justify-end gap-3">
-                            <Button onClick={() => setShowEditModal(false)}>Cancel</Button>
+                            <Button onClick={() => {
+                                form.resetFields();
+                                setCriteriaForm({ title: "", description: "", weight: 0, maxScore: 10, scoringType: "Scale", scoreLabel: "0-10" });
+                                setShowEditModal(false);
+                            }}>Cancel</Button>
                             <Button
                                 type="primary"
                                 htmlType="submit"
