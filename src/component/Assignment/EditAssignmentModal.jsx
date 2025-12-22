@@ -114,11 +114,23 @@ const EditAssignmentModal = ({ isOpen, onClose, onSubmit, assignment, courseInst
           type: assignment.fileType || ''
         };
         setSelectedFile(existingFile);
-        setInitialFormData(initialData);
+        // Include file information in initialFormData to track file changes properly
+        setInitialFormData({
+          ...initialData,
+          fileName: assignment.fileName,
+          fileSize: assignment.fileSize,
+          fileType: assignment.fileType
+        });
       } else {
         // If assignment has no file or if we previously marked it for removal, set to null
         setSelectedFile(null);
-        setInitialFormData(initialData);
+        // Include file information in initialFormData to track file changes properly
+        setInitialFormData({
+          ...initialData,
+          fileName: assignment.fileName, // Keep original file info for comparison
+          fileSize: assignment.fileSize,
+          fileType: assignment.fileType
+        });
         // Reset the fileRemoved flag when the modal is opened with no file
         if (!assignment.fileName) {
           setFileRemoved(false);
@@ -277,11 +289,6 @@ const EditAssignmentModal = ({ isOpen, onClose, onSubmit, assignment, courseInst
 
   const removeFile = () => {
     setSelectedFile({ name: '', size: 0, type: '', removed: true });
-    // Also update the initialFormData to reflect the file removal
-    setInitialFormData(prev => ({
-      ...prev,
-      fileName: null
-    }));
     // Mark that the file has been removed
     setFileRemoved(true);
   };
@@ -317,13 +324,31 @@ const EditAssignmentModal = ({ isOpen, onClose, onSubmit, assignment, courseInst
   const hasFormChanged = () => {
     if (!initialFormData) return false;
     
-    const fileChanged = (selectedFile && !selectedFile.removed && !assignment.fileName) || // New file uploaded
-                        (selectedFile && selectedFile.removed) || // Existing file removed
-                        (!selectedFile && assignment.fileName && assignment.fileName !== ''); // Existing file was present but now cleared
+    // Create copies of form data without file-related properties for comparison
+    const { fileName: initialFileName, fileSize: initialFileSize, fileType: initialFileType, ...initialFormFields } = initialFormData;
+    const { fileName: currentFileName, fileSize: currentFileSize, fileType: currentFileType, ...currentFormFields } = formData;
     
-    if (fileChanged) return true;
+    const formChanged = JSON.stringify(currentFormFields) !== JSON.stringify(initialFormFields);
     
-    return JSON.stringify(formData) !== JSON.stringify(initialFormData);
+    // Check if file has changed - consider different scenarios
+    // Get original file info from initialFormData which contains the original assignment file info
+    const originalFileExisted = !!initialFormData.fileName;
+    const currentFileSelected = selectedFile && !selectedFile.removed;
+    const currentFileMarkedForRemoval = selectedFile && selectedFile.removed;
+    const currentFileIsDifferent = originalFileExisted && currentFileSelected && selectedFile.name !== initialFormData.fileName;
+    
+    // Case 1: Had file initially, now it's marked for removal
+    const fileRemoved = originalFileExisted && currentFileMarkedForRemoval;
+    
+    // Case 2: No file initially, now has file selected
+    const fileAdded = !originalFileExisted && currentFileSelected;
+    
+    // Case 3: Had file initially, now has different file selected (replaced)
+    const fileReplaced = currentFileIsDifferent;
+    
+    const fileChanged = fileRemoved || fileAdded || fileReplaced;
+    
+    return formChanged || fileChanged;
   };
 
   const validateForm = () => {
