@@ -87,7 +87,7 @@ const InstructorManageAssignmentTable = ({
           },
         ]
       : []),
-    ...(assignment.status === "Draft" || assignment.status === "Upcoming"
+    ...(assignment.status === "Draft"
       ? [
           {
             label: (
@@ -109,7 +109,7 @@ const InstructorManageAssignmentTable = ({
       ),
       onClick: () => onViewSubmissions(assignment),
     },
-    ...(assignment.status === "Draft" || assignment.status === "Upcoming"
+    ...(assignment.status === "Draft" 
       ? [
           {
             type: "divider",
