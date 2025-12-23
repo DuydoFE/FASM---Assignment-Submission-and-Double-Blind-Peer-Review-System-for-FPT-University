@@ -99,6 +99,13 @@ const GradesTable = ({
     } catch (e) {}
   };
 
+  // Get weights from the first student record (all students have the same weights)
+  const peerWeight = filteredStudents && filteredStudents.length > 0 ? filteredStudents[0].peerWeight : null;
+  const instructorWeight = filteredStudents && filteredStudents.length > 0 ? filteredStudents[0].instructorWeight : null;
+  
+  // Debug log
+  console.log('Weights:', { peerWeight, instructorWeight, filteredStudents });
+
   const columns = [
     {
       title: 'No.',
@@ -120,7 +127,14 @@ const GradesTable = ({
       render: (name) => <span className="text-gray-800">{name}</span>,
     },
     {
-      title: 'Average Peer Review Score',
+      title: (
+        <div className="text-center">
+          <div>Average Peer Review Score</div>
+          {peerWeight !== null && peerWeight !== undefined && (
+            <div className="mt-1 text-sm font-medium text-gray-700">({peerWeight}%)</div>
+          )}
+        </div>
+      ),
       dataIndex: 'peerReview',
       key: 'peerReview',
       width: '18%',
@@ -154,7 +168,14 @@ const GradesTable = ({
       ),
     },
     {
-      title: 'Instructor Score',
+      title: (
+        <div className="text-center">
+          <div>Instructor Score</div>
+          {instructorWeight !== null && instructorWeight !== undefined && (
+            <div className="mt-1 text-sm font-medium text-gray-700">({instructorWeight}%)</div>
+          )}
+        </div>
+      ),
       dataIndex: 'instructorGrade',
       key: 'instructorGrade',
       width: '14%',

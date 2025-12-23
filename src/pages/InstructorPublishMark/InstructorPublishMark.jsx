@@ -98,7 +98,9 @@ const InstructorPublishMark = () => {
         submittedAt: submission.submittedAt,
         gradedAt: submission.gradedAt,
         status: submission.status,
-        assignmentStatus: submission.assignmentStatus
+        assignmentStatus: submission.assignmentStatus,
+        peerWeight: submission.peerWeight,
+        instructorWeight: submission.instructorWeight
       }));
       
       setStudents(mappedStudents);
