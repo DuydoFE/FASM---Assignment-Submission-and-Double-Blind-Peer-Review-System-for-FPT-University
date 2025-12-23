@@ -8,16 +8,51 @@ import {
   RotateCcw,
   Send,
   Sparkles,
-  Star,
   Bot,
   Loader2,
-  Zap,
   MessageSquare,
 } from "lucide-react";
+import { motion } from "framer-motion";
+import {
+  Card,
+  Button,
+  Input,
+  Progress,
+  Tag,
+  Space,
+  Breadcrumb,
+  Avatar,
+  Divider,
+  Tooltip,
+  Badge,
+  InputNumber,
+  Typography,
+  Alert,
+  Collapse,
+} from "antd";
+import {
+  HomeOutlined,
+  UserOutlined,
+  FileTextOutlined,
+  EyeOutlined,
+  DownloadOutlined,
+  RobotOutlined,
+  ThunderboltOutlined,
+  ReloadOutlined,
+  SendOutlined,
+} from "@ant-design/icons";
 
 import { reviewService } from "../../service/reviewService";
 import { getCurrentAccount } from "../../utils/accountUtils";
 import { toast } from "react-toastify";
+
+import LoadingAnimation from "../../component/Review/LoadingAnimation";
+import AIAnalyzingAnimation from "../../component/Review/AIAnalyzingAnimation";
+import AIOverviewCard from "../../component/Review/AIOverviewCard";
+
+const { TextArea } = Input;
+const { Title, Text } = Typography;
+const { Panel } = Collapse;
 
 const PeerReviewPage = () => {
   const { courseId, assignmentId } = useParams();
@@ -88,7 +123,7 @@ const PeerReviewPage = () => {
   }, [assignmentId]);
 
   const handleScoreChange = (criteriaId, value) => {
-    if (value === "") {
+    if (value === null || value === "") {
       setScores((prev) => ({ ...prev, [criteriaId]: null }));
       return;
     }
@@ -257,297 +292,349 @@ const PeerReviewPage = () => {
     }
   };
 
-  if (isLoading)
-    return <div className="p-8 text-center text-xl">Finding Assignment...</div>;
+  if (isLoading) return <LoadingAnimation message="Finding Assignment..." />;
+  
   if (error)
-    return <div className="p-8 text-center text-red-500 text-xl">{error}</div>;
+    return (
+      <motion.div
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="p-8"
+      >
+        <Alert
+          message="Error"
+          description={error}
+          type="error"
+          showIcon
+          className="max-w-2xl mx-auto"
+        />
+      </motion.div>
+    );
 
   return (
-    <div className="bg-gray-50 min-h-screen p-8">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 p-6">
       <div className="max-w-7xl mx-auto">
-        <div className="mb-6">
-          <div className="flex items-center text-sm text-gray-600 mb-4">
-            <Link
-              to={`/assignment/${courseId}/${assignmentId}`}
-              className="hover:underline"
-            >
-              Dashboard
-            </Link>
-            <ChevronRight className="w-4 h-4 mx-1" />
-            <span className="font-semibold text-gray-800">Peer Review</span>
-          </div>
+        {/* Header with Breadcrumb */}
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="mb-6"
+        >
+          <Breadcrumb className="mb-4">
+            <Breadcrumb.Item>
+              <Link to={`/assignment/${courseId}/${assignmentId}`}>
+                <HomeOutlined className="mr-1" />
+                Dashboard
+              </Link>
+            </Breadcrumb.Item>
+            <Breadcrumb.Item>
+              <FileTextOutlined className="mr-1" />
+              Peer Review
+            </Breadcrumb.Item>
+          </Breadcrumb>
+
           <div className="flex justify-between items-center">
-            <h1 className="text-3xl font-bold text-gray-900">
+            <Title level={2} className="!mb-0">
+              <Bot className="inline-block mr-3 text-blue-600" size={32} />
               Peer Review - {reviewData.assignmentTitle}
-            </h1>
-            <button
+            </Title>
+            <Button
+              icon={<ArrowLeft size={16} />}
               onClick={() => navigate(-1)}
-              className="flex items-center px-4 py-2 border rounded-md font-semibold text-gray-700 hover:bg-gray-100"
+              size="large"
             >
-              <ArrowLeft size={16} className="mr-2" /> Back
-            </button>
+              Back
+            </Button>
           </div>
-        </div>
+        </motion.div>
 
-        <div className="space-y-8">
-          <div className="bg-white p-4 rounded-lg border">
-            <div className="flex justify-between items-center">
-              <div className="flex items-center">
-                <div className="w-10 h-10 bg-gray-600 text-white flex items-center justify-center rounded-full font-bold text-xl mr-4">
-                  {(reviewData.studentName ?? "S").charAt(0).toUpperCase()}
-                </div>
-                <div>
-                  <p className="font-bold text-gray-900 text-lg">
-                    Assignment - {reviewData.studentName ?? "Unknown user"}
-                  </p>
-                </div>
-              </div>
-              <div className="px-3 py-1 text-sm font-semibold bg-yellow-100 text-yellow-700 rounded-full">
-                Not Reviewed
-              </div>
-            </div>
-            {reviewData.fileUrl && (
-              <div className="mt-4 pt-4 border-t flex items-center text-sm">
-                <p className="font-bold text-gray-900 mr-4 truncate text-base">
-                  {reviewData.fileName ?? "submission.pdf"}
-                </p>
-                <div className="ml-auto flex space-x-2">
-                  <a
-                    href={reviewData.previewUrl || reviewData.fileUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="p-2 hover:bg-gray-100 rounded-full text-gray-700"
+        <Space direction="vertical" size="large" className="w-full">
+          {/* Student Info Card */}
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.5, delay: 0.1 }}
+          >
+            <Card className="shadow-md hover:shadow-lg transition-shadow">
+              <div className="flex justify-between items-center">
+                <Space size="large">
+                  <Avatar
+                    size={64}
+                    style={{ backgroundColor: "#1890ff" }}
+                    icon={<UserOutlined />}
                   >
-                    <Eye size={18} />
-                  </a>
-                  <a
-                    href={reviewData.fileUrl}
-                    download={reviewData.fileName}
-                    className="p-2 hover:bg-gray-100 rounded-full text-gray-700"
-                  >
-                    <Download size={18} />
-                  </a>
-                </div>
-              </div>
-            )}
-          </div>
-
-          <div className="bg-white p-6 rounded-lg border">
-            <div className="flex items-center space-x-2 mb-6 p-3 bg-gray-50 rounded-lg border">
-              <button
-                onClick={handleAutoScore}
-                disabled={!aiSummaryData}
-                className="flex items-center px-4 py-2 border rounded-md font-semibold text-sm text-blue-600 border-blue-200 hover:bg-blue-50 disabled:text-gray-400 disabled:border-gray-200"
-              >
-                <Sparkles size={14} className="mr-2" /> Auto Score
-              </button>
-              <button
-                onClick={handleGenerateAiSummary}
-                disabled={isGeneratingAi}
-                className="flex items-center px-4 py-2 bg-green-600 text-white rounded-md font-semibold hover:bg-green-700 text-sm disabled:bg-green-400"
-              >
-                {isGeneratingAi ? (
-                  <Loader2 size={14} className="mr-2 animate-spin" />
-                ) : (
-                  <Bot size={14} className="mr-2" />
-                )}{" "}
-                Create Summary AI
-              </button>
-              <button
-                onClick={() => {
-                  setScores({});
-                  setComment("");
-                  setAiSummaryData(null);
-                  setCriteriaFeedbacks({});
-                }}
-                className="flex items-center px-4 py-2 border rounded-md font-semibold text-gray-700 hover:bg-gray-100 text-sm"
-              >
-                <RotateCcw size={14} className="mr-2" /> Reset
-              </button>
-            </div>
-
-            <div className="grid grid-cols-12 gap-4 px-4 pb-2 border-b font-bold text-gray-600">
-              <div className="col-span-5">Form Grading</div>
-              <div className="col-span-5">AI Summary</div>
-              <div className="col-span-2 text-center">Score</div>
-            </div>
-
-            <div className="divide-y">
-              {reviewData?.rubric?.criteria?.map((criterion) => {
-                const aiFeedbackForItem = aiSummaryData?.data?.feedbacks?.find(
-                  (f) => f.criteriaId === criterion.criteriaId
-                );
-                return (
-                  <div
-                    key={criterion.criteriaId}
-                    className="grid grid-cols-12 gap-4 p-4"
-                  >
-                    <div className="col-span-5 flex flex-col">
-                      <div>
-                        <h4 className="font-bold text-gray-900">
-                          {criterion.title || criterion.criteriaName}
-                        </h4>
-                        <p className="text-sm text-gray-700 mt-1 font-medium">
-                          {criterion.description}
-                        </p>
-                        <div className="mt-2 flex items-center mb-3">
-                          <div className="w-full bg-gray-200 rounded-full h-1.5">
-                            <div
-                              className="bg-blue-600 h-1.5 rounded-full"
-                              style={{ width: `${criterion.weight}%` }}
-                            ></div>
-                          </div>
-                          <span className="ml-3 text-sm font-bold text-blue-700">
-                            {criterion.weight}%
-                          </span>
-                        </div>
-                      </div>
-
-                      <div className="mt-auto pt-2">
-                        <label className="flex items-center text-xs font-bold text-gray-800 mb-1">
-                          <MessageSquare size={12} className="mr-1" />
-                          Specific Feedback
-                        </label>
-                        <textarea
-                          rows={3}
-                          className="w-full p-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white text-gray-900 placeholder-gray-500"
-                          placeholder="Your feedback for this criterion..."
-                          value={criteriaFeedbacks[criterion.criteriaId] || ""}
-                          onChange={(e) =>
-                            handleCriteriaFeedbackChange(
-                              criterion.criteriaId,
-                              e.target.value
-                            )
-                          }
-                        />
-                      </div>
-                    </div>
-
-                    {/* Middle Column: AI */}
-                    <div className="col-span-5 border-l pl-4">
-                      {isGeneratingAi ? (
-                        <div className="flex items-center text-gray-700 font-medium mt-2">
-                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                          <span>Analyzing...</span>
-                        </div>
-                      ) : aiFeedbackForItem ? (
-                        <div className="mt-1">
-                          <div className="flex items-center mb-1">
-                            <Bot size={14} className="text-blue-600 mr-2" />
-                            <span className="font-bold text-gray-900 text-sm">
-                              AI Suggestions
-                            </span>
-                          </div>
-                          <p
-                            className={`text-sm ${
-                              aiSummaryData.statusCode === 400 ||
-                              aiFeedbackForItem.summary.includes("⚠")
-                                ? "text-red-700 bg-red-50 p-2 rounded border border-red-200"
-                                : "text-gray-800 bg-blue-50 p-2 rounded border border-blue-100"
-                            }`}
-                          >
-                            {aiFeedbackForItem.summary}
-                          </p>
-                        </div>
-                      ) : (
-                        <div className="text-center text-gray-500 py-4">
-                          <p className="text-xs italic">
-                            No AI summary available
-                          </p>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Right Column: Score */}
-                    <div className="col-span-2 flex flex-col items-center justify-start pt-2">
-                      <span className="text-xs font-bold text-gray-500 mb-1">
-                        Score
-                      </span>
-                      <div className="flex items-center">
-                        <input
-                          type="number"
-                          min="0"
-                          max={criterion.maxScore}
-                          step="0.25"
-                          value={
-                            scores[criterion.criteriaId] === null
-                              ? ""
-                              : scores[criterion.criteriaId]
-                          }
-                          onChange={(e) =>
-                            handleScoreChange(
-                              criterion.criteriaId,
-                              e.target.value
-                            )
-                          }
-                          onBlur={() => handleScoreBlur(criterion.criteriaId)}
-                          className={`w-20 text-center font-bold text-lg text-gray-900 border rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                            validationError &&
-                            scores[criterion.criteriaId] === null
-                              ? "border-red-500 ring-red-200"
-                              : "border-gray-400"
-                          }`}
-                        />
-                        <span className="text-gray-500 text-sm font-bold ml-2">
-                          / {criterion.maxScore}
-                        </span>
-                      </div>
-                    </div>
+                    {(reviewData.studentName ?? "S").charAt(0).toUpperCase()}
+                  </Avatar>
+                  <div>
+                    <Title level={4} className="!mb-1">
+                      Assignment - {reviewData.studentName ?? "Unknown user"}
+                    </Title>
+                    {reviewData.fileUrl && (
+                      <Text type="secondary" className="block">
+                        <FileTextOutlined className="mr-2" />
+                        {reviewData.fileName ?? "submission.pdf"}
+                      </Text>
+                    )}
                   </div>
-                );
-              })}
-            </div>
-          </div>
-          {aiSummaryData && (
-            <div className="bg-white p-6 rounded-lg border animate-fade-in">
-              <h3 className="text-lg font-bold text-gray-800 flex items-center mb-4">
-                <Bot className="w-6 h-6 mr-3 text-blue-600" /> AI Overview
-              </h3>
-              <div
-                className={`p-4 rounded-lg border ${
-                  aiSummaryData.statusCode === 400
-                    ? "bg-red-50 border-red-200"
-                    : "bg-blue-50 border-blue-200"
-                }`}
-              >
-                <p className="text-gray-700">
-                  {aiSummaryData.data?.overallComment || aiSummaryData.message}
-                </p>
+                </Space>
+                <Space>
+                  <Badge status="warning" text="Not Reviewed" />
+                  {reviewData.fileUrl && (
+                    <>
+                      <Tooltip title="Preview">
+                        <Button
+                          type="text"
+                          icon={<EyeOutlined />}
+                          href={reviewData.previewUrl || reviewData.fileUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        />
+                      </Tooltip>
+                      <Tooltip title="Download">
+                        <Button
+                          type="text"
+                          icon={<DownloadOutlined />}
+                          href={reviewData.fileUrl}
+                          download={reviewData.fileName}
+                        />
+                      </Tooltip>
+                    </>
+                  )}
+                </Space>
               </div>
-            </div>
-          )}
+            </Card>
+          </motion.div>
 
-          <div className="bg-white p-6 rounded-lg border">
-            <div className="flex justify-between items-center bg-blue-50 p-4 rounded-lg">
-              <span className="text-xl font-bold text-blue-800">
-                Total Score
-              </span>
-              <span className="text-3xl font-extrabold text-blue-600">
-                {weightedTotalScore} / 10
-              </span>
-            </div>
-            <div className="mt-6">
-              <label className="font-bold text-gray-800 mb-2 block">
-                General Feedback
-              </label>
-              <textarea
-                value={comment}
-                onChange={(e) => setComment(e.target.value)}
-                className="w-full p-3 border rounded-md h-32 focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 placeholder-gray-500"
-                placeholder="Enter general feedback for the student..."
-              />
-            </div>
-          </div>
+          {/* AI Tools Card */}
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+          >
+            <Card className="shadow-md bg-gradient-to-r from-blue-50 to-green-50">
+              <Space wrap>
+                <Button
+                  type="primary"
+                  icon={<ThunderboltOutlined />}
+                  onClick={handleAutoScore}
+                  disabled={!aiSummaryData}
+                  className="bg-blue-600 hover:bg-blue-700"
+                >
+                  Auto Score
+                </Button>
+                <Button
+                  type="primary"
+                  icon={isGeneratingAi ? <Loader2 size={14} className="animate-spin" /> : <RobotOutlined />}
+                  onClick={handleGenerateAiSummary}
+                  disabled={isGeneratingAi}
+                  loading={isGeneratingAi}
+                  className="bg-green-600 hover:bg-green-700"
+                >
+                  Create Summary AI
+                </Button>
+                <Button
+                  icon={<ReloadOutlined />}
+                  onClick={() => {
+                    setScores({});
+                    setComment("");
+                    setAiSummaryData(null);
+                    setCriteriaFeedbacks({});
+                  }}
+                >
+                  Reset
+                </Button>
+              </Space>
+            </Card>
+          </motion.div>
 
-          <div className="flex justify-end">
-            <button
-              onClick={handleSubmitReview}
-              className="flex items-center px-6 py-3 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700"
+          {/* Grading Criteria */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.3 }}
+          >
+            <Card
+              title={
+                <Title level={4} className="!mb-0">
+                  <FileTextOutlined className="mr-2" />
+                  Grading Criteria
+                </Title>
+              }
+              className="shadow-md"
             >
-              <Send size={18} className="mr-2" /> Send Review
-            </button>
-          </div>
-        </div>
+              <Collapse accordion defaultActiveKey={["0"]} ghost>
+                {reviewData?.rubric?.criteria?.map((criterion, index) => {
+                  const aiFeedbackForItem = aiSummaryData?.data?.feedbacks?.find(
+                    (f) => f.criteriaId === criterion.criteriaId
+                  );
+                  return (
+                    <Panel
+                      header={
+                        <div className="flex justify-between items-center pr-4">
+                          <Space>
+                            <Badge count={index + 1} style={{ backgroundColor: '#1890ff' }} />
+                            <Text strong>{criterion.title || criterion.criteriaName}</Text>
+                          </Space>
+                          <Space>
+                            <Tag color="blue">{criterion.weight}%</Tag>
+                            <Text type="secondary">Max: {criterion.maxScore}</Text>
+                          </Space>
+                        </div>
+                      }
+                      key={index}
+                    >
+                      <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ duration: 0.3 }}
+                      >
+                        <div className="grid grid-cols-12 gap-6">
+                          {/* Left Column - Criterion Details */}
+                          <div className="col-span-5">
+                            {criterion.description && (
+                              <div className="mb-4 p-3 bg-gray-50 rounded-lg">
+                                <Text strong className="block mb-2">Description:</Text>
+                                {criterion.description.split("\n").map(
+                                  (line, lineIndex) =>
+                                    line.trim() && (
+                                      <div key={lineIndex} className="flex items-start mb-1">
+                                        <span className="mr-2 text-blue-500">•</span>
+                                        <Text>{line.replace(/^- /, "").trim()}</Text>
+                                      </div>
+                                    )
+                                )}
+                              </div>
+                            )}
+
+                            <div className="mb-3">
+                              <Text type="secondary" className="block mb-2">Weight Distribution:</Text>
+                              <Progress
+                                percent={criterion.weight}
+                                strokeColor={{
+                                  '0%': '#108ee9',
+                                  '100%': '#87d068',
+                                }}
+                              />
+                            </div>
+
+                            <Divider className="my-3" />
+
+                            <div>
+                              <Text strong className="block mb-2">
+                                <MessageSquare size={14} className="inline mr-1" />
+                                Specific Feedback
+                              </Text>
+                              <TextArea
+                                rows={4}
+                                placeholder="Your feedback for this criterion..."
+                                value={criteriaFeedbacks[criterion.criteriaId] || ""}
+                                onChange={(e) =>
+                                  handleCriteriaFeedbackChange(
+                                    criterion.criteriaId,
+                                    e.target.value
+                                  )
+                                }
+                                className="rounded-lg"
+                              />
+                            </div>
+                          </div>
+
+                          {/* Middle Column - AI Summary */}
+                          <div className="col-span-5 border-l pl-6">
+                            <AIAnalyzingAnimation
+                              isAnalyzing={isGeneratingAi}
+                              aiFeedback={aiFeedbackForItem}
+                              aiSummaryData={aiSummaryData}
+                            />
+                          </div>
+
+                          {/* Right Column - Score Input */}
+                          <div className="col-span-2 flex flex-col items-center justify-start">
+                            <Text strong className="mb-2">Score</Text>
+                            <InputNumber
+                              min={0}
+                              max={criterion.maxScore}
+                              step={0.25}
+                              value={scores[criterion.criteriaId]}
+                              onChange={(value) =>
+                                handleScoreChange(criterion.criteriaId, value)
+                              }
+                              onBlur={() => handleScoreBlur(criterion.criteriaId)}
+                              status={
+                                validationError && scores[criterion.criteriaId] === null
+                                  ? "error"
+                                  : ""
+                              }
+                              className="w-full"
+                              addonAfter={`/ ${criterion.maxScore}`}
+                              size="large"
+                            />
+                          </div>
+                        </div>
+                      </motion.div>
+                    </Panel>
+                  );
+                })}
+              </Collapse>
+            </Card>
+          </motion.div>
+
+          {/* AI Overview */}
+          <AIOverviewCard aiSummaryData={aiSummaryData} />
+
+          {/* Total Score & General Feedback */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.4 }}
+          >
+            <Card className="shadow-md">
+              <div className="bg-gradient-to-r from-blue-500 to-blue-600 p-6 rounded-lg mb-6 text-white">
+                <div className="flex justify-between items-center">
+                  <Title level={3} className="!mb-0 !text-white">
+                    Total Score
+                  </Title>
+                  <Title level={1} className="!mb-0 !text-white">
+                    {weightedTotalScore} / 10
+                  </Title>
+                </div>
+              </div>
+
+              <div>
+                <Text strong className="block mb-3 text-lg">
+                  General Feedback
+                </Text>
+                <TextArea
+                  rows={6}
+                  value={comment}
+                  onChange={(e) => setComment(e.target.value)}
+                  placeholder="Enter general feedback for the student..."
+                  className="rounded-lg"
+                  size="large"
+                />
+              </div>
+            </Card>
+          </motion.div>
+
+          {/* Submit Button */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.5 }}
+            className="flex justify-end"
+          >
+            <Button
+              type="primary"
+              size="large"
+              icon={<SendOutlined />}
+              onClick={handleSubmitReview}
+              className="bg-blue-600 hover:bg-blue-700 h-12 px-8"
+            >
+              Send Review
+            </Button>
+          </motion.div>
+        </Space>
       </div>
     </div>
   );
