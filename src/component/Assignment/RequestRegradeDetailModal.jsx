@@ -1,5 +1,3 @@
-// RequestRegradeDetailModal.js
-
 import { Modal, Button, Spin } from "antd";
 import {
   FileText,
@@ -11,7 +9,6 @@ import {
 } from "lucide-react";
 import { StatusTag } from "../../pages/RegradeRequest/ViewRequestHistoryPage";
 
-// MODIFIED: Props now include 'details' and 'loading'
 const RequestRegradeDetailModal = ({ visible, details, loading, onClose }) => {
   return (
     <Modal

@@ -3,6 +3,7 @@ import UseReactQuerry from "../component/UseReactQuerry";
 import Test from "../Test";
 import MainLayout from "../layout/MainLayout";
 import HomePage from "../pages/HomePage/HomePage";
+import LandingPage from "../pages/LandingPage/LandingPage";
 import LoginPage from "../pages/Authenticate/LoginPage";
 import AccessDeniedPage from "../pages/AccessDenied/AccessDeniedPage";
 import ForbiddenPage from "../pages/AccessDenied/ForbiddenPage";
@@ -111,6 +112,10 @@ export const router = createBrowserRouter([
       {
         index: true,
         element: <HomePage />,
+      },
+      {
+        path: "landing",
+        element: <LandingPage />,
       },
       {
         path: "profile",

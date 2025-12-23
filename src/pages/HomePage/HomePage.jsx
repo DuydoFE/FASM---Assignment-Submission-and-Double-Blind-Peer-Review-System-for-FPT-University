@@ -1,18 +1,18 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { Search, ListChecks, Upload, Sparkles, TrendingUp, Zap } from "lucide-react";
+import { 
+  Search, ListChecks, Upload, GraduationCap, Users,
+  Eye, BarChart, MessageSquare, Shield, Award, FileText,
+  CheckCircle, Star, Clock, ArrowRight
+} from "lucide-react";
 import { motion, useScroll, useTransform } from "framer-motion";
 import BlurText from "@/components/BlurText";
-import SplitText from "@/components/SplitText";
 
 import fasmLogo from "../../assets/img/FASM.png";
 
-const handleAnimationComplete = () => {
-  console.log("All letters have animated!");
-};
-
 const HomePage = () => {
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+  const [activeRole, setActiveRole] = useState("student");
   const { scrollYProgress } = useScroll();
   const y = useTransform(scrollYProgress, [0, 1], [0, -100]);
 
@@ -24,35 +24,108 @@ const HomePage = () => {
     return () => window.removeEventListener("mousemove", handleMouseMove);
   }, []);
 
-  const features = [
+  const smartFeatures = [
     {
       icon: Search,
       title: "Smart Search",
       description: "Quickly find assignments, courses, and announcements.",
-      color: "orange",
       gradient: "from-orange-500 to-red-500",
-      shadowColor: "orange-500/20",
       link: "/Search",
     },
     {
       icon: ListChecks,
       title: "Assignment Management",
       description: "Keep track of all assignments, due dates, and instructions.",
-      color: "purple",
       gradient: "from-purple-500 to-pink-500",
-      shadowColor: "purple-500/20",
       link: "/my-assignments",
     },
     {
       icon: Upload,
       title: "Easy Submission",
       description: "Upload files, enter metadata, and tag with just a few clicks.",
-      color: "green",
       gradient: "from-green-500 to-emerald-500",
-      shadowColor: "green-500/20",
       link: "/my-assignments",
     },
   ];
+
+  const roles = {
+    student: {
+      icon: GraduationCap,
+      title: "For Students",
+      gradient: "from-blue-500 to-cyan-500",
+      features: [
+        {
+          icon: Upload,
+          title: "Easy Submission",
+          description: "Submit assignments with just a few clicks. Upload files and track submission status in real-time.",
+        },
+        {
+          icon: Eye,
+          title: "Peer Review",
+          description: "Review classmates' work anonymously and receive constructive feedback on your submissions.",
+        },
+        {
+          icon: BarChart,
+          title: "Track Progress",
+          description: "Monitor your grades, view detailed feedback, and track your academic progress over time.",
+        },
+        {
+          icon: MessageSquare,
+          title: "AI Assistance",
+          description: "Get AI-powered suggestions and instant feedback to improve your work quality.",
+        },
+        {
+          icon: Shield,
+          title: "Regrade Requests",
+          description: "Request grade reviews if you believe your work deserves reconsideration.",
+        },
+        {
+          icon: Award,
+          title: "Achievement System",
+          description: "Earn badges and recognition for quality submissions and helpful peer reviews.",
+        },
+      ],
+    },
+    instructor: {
+      icon: Users,
+      title: "For Instructors",
+      gradient: "from-orange-500 to-red-500",
+      features: [
+        {
+          icon: FileText,
+          title: "Assignment Management",
+          description: "Create, publish, and manage assignments with customizable rubrics and deadlines.",
+        },
+        {
+          icon: CheckCircle,
+          title: "Efficient Grading",
+          description: "Grade submissions quickly with AI assistance and batch processing capabilities.",
+        },
+        {
+          icon: BarChart,
+          title: "Analytics Dashboard",
+          description: "View detailed analytics on class performance, submission rates, and grade distribution.",
+        },
+        {
+          icon: Star,
+          title: "Rubric Builder",
+          description: "Design flexible rubrics with weighted criteria for fair and consistent grading.",
+        },
+        {
+          icon: Shield,
+          title: "Plagiarism Detection",
+          description: "Automatically detect potential plagiarism and ensure academic integrity.",
+        },
+        {
+          icon: Clock,
+          title: "Time Management",
+          description: "Set deadlines, extensions, and manage late submissions efficiently.",
+        },
+      ],
+    },
+  };
+
+  const currentRole = roles[activeRole];
 
   return (
     <div className="relative overflow-hidden">
@@ -135,13 +208,13 @@ const HomePage = () => {
             <motion.img
               src={fasmLogo}
               alt="FASM Logo"
-              className="h-48 md:h-80 w-auto object-contain mb-8 drop-shadow-2xl"
+              className="h-32 md:h-48 w-auto object-contain mb-8 drop-shadow-2xl"
               animate={{
                 y: [0, -20, 0],
                 filter: [
-                  "drop-shadow(0 25px 25px rgba(59, 130, 246, 0.3))",
-                  "drop-shadow(0 35px 35px rgba(139, 92, 246, 0.5))",
-                  "drop-shadow(0 25px 25px rgba(59, 130, 246, 0.3))",
+                  "drop-shadow(0 25px 25px rgba(59, 130, 246, 0.5))",
+                  "drop-shadow(0 35px 35px rgba(139, 92, 246, 0.7))",
+                  "drop-shadow(0 25px 25px rgba(59, 130, 246, 0.5))",
                 ],
               }}
               transition={{
@@ -157,10 +230,21 @@ const HomePage = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.5, duration: 0.8 }}
           >
-            <BlurText
-              text="Fpt Assignment Submission & Management"
-              className="text-2xl md:text-3xl font-bold text-white mb-6"
-            />
+            <motion.div
+              animate={{
+                y: [0, -20, 0],
+              }}
+              transition={{
+                duration: 2,
+                repeat: Infinity,
+                ease: "easeInOut",
+              }}
+            >
+              <BlurText
+                text="Fpt Assignment Submission & Management"
+                className="text-2xl md:text-3xl font-bold text-white mb-6"
+              />
+            </motion.div>
           </motion.div>
 
           <motion.div
@@ -169,9 +253,19 @@ const HomePage = () => {
             transition={{ delay: 0.9, duration: 0.8 }}
             className="mb-4"
           >
-            <h2 className="text-xl md:text-2xl font-semibold text-center bg-gradient-to-r from-blue-400 via-orange-400 to-green-400 bg-clip-text text-transparent">
+            <motion.h2
+              className="text-3xl md:text-5xl font-bold text-center bg-gradient-to-r from-blue-400 via-orange-400 to-green-400 bg-clip-text text-transparent"
+              animate={{
+                y: [0, -20, 0],
+              }}
+              transition={{
+                duration: 2,
+                repeat: Infinity,
+                ease: "easeInOut",
+              }}
+            >
               Fair Assessments, Transparent Grading
-            </h2>
+            </motion.h2>
           </motion.div>
 
           <motion.div
@@ -191,7 +285,7 @@ const HomePage = () => {
 
             <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
               <Link
-                to="/features"
+                to="/landing"
                 className="inline-flex items-center px-8 py-3 border-2 border-white/30 text-white bg-white/5 hover:bg-white/10 backdrop-blur-sm rounded-lg font-semibold transition-all hover:border-white/50"
               >
                 Learn More
@@ -216,114 +310,113 @@ const HomePage = () => {
         </motion.div>
       </section>
 
-      {/* Features Section */}
-      <motion.section
-        className="relative py-16 lg:py-24 bg-black/30 backdrop-blur-md border-y border-white/10"
-        style={{ y }}
-      >
+      {/* Smart Assignment Management Section */}
+      <section className="relative py-20 bg-black/30 backdrop-blur-md border-y border-white/10">
         <div className="container mx-auto px-4">
           <motion.div
-            className="text-center mb-12"
+            className="text-center mb-16"
             initial={{ opacity: 0, y: 50 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.8 }}
           >
             <motion.h2
-              className="text-3xl lg:text-4xl font-bold text-white mb-4"
+              className="text-3xl lg:text-4xl font-bold text-white mb-2"
               initial={{ opacity: 0, scale: 0.9 }}
               whileInView={{ opacity: 1, scale: 1 }}
               viewport={{ once: true }}
             >
-              <span className="bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
-                Outstanding Features
+              <span className="bg-gradient-to-r from-blue-400 via-orange-400 to-green-400 bg-clip-text text-transparent">
+                Smart Assignment Management
               </span>
             </motion.h2>
             <motion.p
-              className="text-zinc-400 mt-2 max-w-2xl mx-auto"
+              className="text-zinc-300 mt-2 text-lg mb-8"
               initial={{ opacity: 0 }}
               whileInView={{ opacity: 1 }}
               viewport={{ once: true }}
               transition={{ delay: 0.2 }}
             >
-              Everything you need for a seamless assignment submission and
-              grading process.
+              For FPT University
             </motion.p>
+            <p className="text-xl text-zinc-300">
+              Choose your role to explore tailored features
+            </p>
           </motion.div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
-            {features.map((feature, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 50 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: "-100px" }}
-                transition={{ delay: index * 0.2, duration: 0.6 }}
-              >
-                <Link to={feature.link} className="block group">
-                  <motion.div
-                    className={`relative bg-white/5 rounded-xl border border-white/10 p-8 text-left overflow-hidden`}
-                    whileHover={{
-                      scale: 1.05,
-                      y: -10,
-                      boxShadow: `0 20px 40px rgba(0,0,0,0.3)`,
-                    }}
-                    transition={{ type: "spring", stiffness: 300 }}
-                  >
-                    {/* Gradient overlay on hover */}
-                    <motion.div
-                      className={`absolute inset-0 bg-gradient-to-br ${feature.gradient} opacity-0 group-hover:opacity-10 transition-opacity duration-500`}
-                    />
-
-                    {/* Animated border */}
-                    <motion.div
-                      className={`absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500`}
-                      style={{
-                        background: `linear-gradient(45deg, transparent, ${feature.shadowColor}, transparent)`,
-                        filter: "blur(20px)",
-                      }}
-                    />
-
-                    <div className="relative z-10">
-                      <motion.div
-                        className={`inline-flex items-center justify-center w-14 h-14 mb-6 rounded-xl bg-gradient-to-br ${feature.gradient}`}
-                        whileHover={{ rotate: 360, scale: 1.1 }}
-                        transition={{ duration: 0.6 }}
-                      >
-                        <feature.icon className="w-7 h-7 text-white" />
-                      </motion.div>
-
-                      <h3 className="text-xl font-semibold text-zinc-100 mb-3 group-hover:text-white transition-colors">
-                        {feature.title}
-                      </h3>
-
-                      <p className="text-zinc-400 group-hover:text-zinc-300 transition-colors">
-                        {feature.description}
-                      </p>
-
-                      {/* Arrow indicator */}
-                      <motion.div
-                        className="mt-4 flex items-center text-sm font-medium text-transparent bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text"
-                        initial={{ x: 0 }}
-                        whileHover={{ x: 5 }}
-                      >
-                        Explore
-                        <motion.span
-                          className="ml-2"
-                          animate={{ x: [0, 5, 0] }}
-                          transition={{ duration: 1, repeat: Infinity }}
-                        >
-                          →
-                        </motion.span>
-                      </motion.div>
-                    </div>
-                  </motion.div>
-                </Link>
-              </motion.div>
-            ))}
+          {/* Role Tabs */}
+          <div className="flex justify-center gap-4 mb-12">
+            {Object.entries(roles).map(([key, role]) => {
+              const Icon = role.icon;
+              return (
+                <motion.button
+                  key={key}
+                  onClick={() => setActiveRole(key)}
+                  className={`flex items-center gap-3 px-8 py-4 rounded-xl font-semibold text-lg transition-all ${
+                    activeRole === key
+                      ? `bg-gradient-to-r ${role.gradient} text-white shadow-lg scale-105`
+                      : "bg-white/10 text-white/70 hover:bg-white/20 border border-white/20"
+                  }`}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <Icon className="w-6 h-6" />
+                  {role.title}
+                </motion.button>
+              );
+            })}
           </div>
+
+          {/* Features Grid */}
+          <motion.div
+            className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-7xl mx-auto"
+            key={activeRole}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.5 }}
+          >
+            {currentRole.features.map((feature, index) => {
+              const Icon = feature.icon;
+              return (
+                <motion.div
+                  key={index}
+                  className="bg-white/5 rounded-xl p-6 shadow-lg border border-white/10 hover:shadow-2xl transition-all group backdrop-blur-sm"
+                  initial={{ opacity: 0, y: 50 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: index * 0.1 }}
+                  whileHover={{ y: -10 }}
+                >
+                  <motion.div
+                    className={`inline-flex items-center justify-center w-16 h-16 rounded-xl bg-gradient-to-br ${currentRole.gradient} mb-4`}
+                    whileHover={{ rotate: 360, scale: 1.1 }}
+                    transition={{ duration: 0.6 }}
+                  >
+                    <Icon className="w-8 h-8 text-white" />
+                  </motion.div>
+
+                  <h3 className="text-xl font-bold text-white mb-2 group-hover:text-blue-400 transition-colors">
+                    {feature.title}
+                  </h3>
+
+                  <p className="text-zinc-300 leading-relaxed">
+                    {feature.description}
+                  </p>
+
+                  <motion.div
+                    className="mt-4 flex items-center text-sm font-medium text-blue-400"
+                    initial={{ x: 0 }}
+                    whileHover={{ x: 5 }}
+                  >
+                    Learn more
+                    <ArrowRight className="w-4 h-4 ml-1" />
+                  </motion.div>
+                </motion.div>
+              );
+            })}
+          </motion.div>
         </div>
-      </motion.section>
+      </section>
+
     </div>
   );
 };
