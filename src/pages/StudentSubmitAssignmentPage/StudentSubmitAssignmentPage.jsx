@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
@@ -23,6 +23,8 @@ import SubmissionCard from "../../component/Submission/SubmissionCard";
 import PeerReviewCard from "../../component/Submission/PeerReviewCard";
 import RubricCard from "../../component/Submission/RubricCard";
 import CrossClassReviewCard from "@/component/Submission/CrossClassReviewCard";
+import InstructionModal from "../../component/Instruction/InstructionModal";
+
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSelector } from "react-redux";
@@ -91,6 +93,7 @@ const StudentSubmitAssignmentPage = () => {
   const queryClient = useQueryClient();
   const currentUser = useSelector((state) => state.user);
   const userId = currentUser?.userId;
+  const [isInstructionModalOpen, setIsInstructionModalOpen] = useState(false);
 
   const handleSubmissionSuccess = () => {
     queryClient.invalidateQueries({
@@ -347,7 +350,7 @@ const StudentSubmitAssignmentPage = () => {
               Submit and Grading
             </motion.h2>
             <motion.div variants={cardVariants}>
-              <SubmissionGuideCard />
+              <SubmissionGuideCard onSeeInstructions={() => setIsInstructionModalOpen(true)} />
             </motion.div>
             {userId && (
               <motion.div variants={cardVariants}>
@@ -396,6 +399,19 @@ const StudentSubmitAssignmentPage = () => {
           </motion.div>
         </div>
       </motion.div>
+
+      <InstructionModal
+        isOpen={isInstructionModalOpen}
+        onClose={() => setIsInstructionModalOpen(false)}
+        assignmentData={{
+          instructorName: assignment?.instructorName || "Instructor",
+          instructorEmail: assignment?.instructorEmail || "",
+          guidelines: assignment?.guidelines || "",
+          title: assignment?.title || "",
+          previewUrl: assignment?.previewUrl || "",
+          fileName: assignment?.fileName || "",
+        }}
+      />
 
       <style jsx>{`
         @keyframes typing {

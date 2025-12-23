@@ -80,9 +80,9 @@ const AssignmentDetailPage = () => {
 
   const stats = {
     total: assignments.length,
-    submitted: assignments.filter((a) => a.submissionStatus === "Submitted").length,
-    dueSoon: assignments.filter((a) => a.daysUntilDeadline <= 3 && !a.isOverdue).length,
-    warning: assignments.filter((a) => a.daysUntilDeadline > 3 && a.daysUntilDeadline <= 7).length,
+    inReview: assignments.filter((a) => a.status === "InReview").length,
+    active: assignments.filter((a) => a.status === "Active").length,
+    closed: assignments.filter((a) => a.status === "Closed").length,
   };
 
   if (isLoading || isLoadingCourseInstance) {
@@ -228,7 +228,7 @@ const AssignmentDetailPage = () => {
         )}
 
         {/* Stats Grid */}
-        <motion.div
+       <motion.div
           variants={containerVariants}
           initial="hidden"
           animate="visible"
@@ -242,27 +242,30 @@ const AssignmentDetailPage = () => {
               color="blue"
             />
           </motion.div>
+
           <motion.div variants={itemVariants}>
             <StatCard
               icon={CheckCircleOutlined}
-              value={stats.submitted}
-              label="Submitted"
+              value={stats.inReview}
+              label="In Review"
               color="green"
             />
           </motion.div>
+
           <motion.div variants={itemVariants}>
             <StatCard
               icon={ClockCircleOutlined}
-              value={stats.dueSoon}
-              label="About to expire"
+              value={stats.closed}
+              label="Closed"
               color="red"
             />
           </motion.div>
+
           <motion.div variants={itemVariants}>
             <StatCard
               icon={WarningOutlined}
-              value={stats.warning}
-              label="Note the time"
+              value={stats.active}
+              label="Active"
               color="yellow"
             />
           </motion.div>
