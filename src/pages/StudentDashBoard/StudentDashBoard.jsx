@@ -267,7 +267,7 @@ const StudentDashBoard = () => {
                 Quick action
               </h2>
               <div className="space-y-3">
-                <ViewAllScore />
+                <ViewAllScore studentId={studentId} />
                 <AssignmentSchedule studentId={studentId} />
               </div>
             </motion.div>
