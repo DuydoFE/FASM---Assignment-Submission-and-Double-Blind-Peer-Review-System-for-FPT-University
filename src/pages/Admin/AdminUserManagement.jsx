@@ -199,7 +199,7 @@ function AdminCreateUserForm({ campuses, majors, onClose, onUserCreated }) {
                 initialValue={true}
                 rules={[{ required: true, message: "Please select status" }]}
               >
-                <Select>
+                <Select disabled>
                   <Option value={true}>Active</Option>
                   <Option value={false}>Inactive</Option>
                 </Select>

@@ -1,11 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
-import {
-  ArrowLeft,
-  Bot,
-  Loader2,
-  MessageSquare,
-} from "lucide-react";
+import { ArrowLeft, Bot, Loader2, MessageSquare } from "lucide-react";
 import { motion } from "framer-motion";
 import {
   Card,
@@ -128,7 +123,6 @@ const PeerReviewPage = () => {
     )?.maxScore;
 
     if (!isNaN(newScore) && maxScore !== undefined) {
-      // Only clamp to min/max, don't round during typing
       newScore = Math.max(0, Math.min(newScore, maxScore));
       setScores((prevScores) => ({ ...prevScores, [criteriaId]: newScore }));
     }
@@ -202,10 +196,10 @@ const PeerReviewPage = () => {
         newTriggers[fb.criteriaId] = Date.now(); // Trigger animation
       }
     });
-    
+
     setAnimationTrigger(newTriggers);
     setScores(newScores);
-    
+
     if (isErrorCase) {
       toast.info("Submission is off-topic. System auto-filled 0 score.");
     } else {
@@ -294,7 +288,7 @@ const PeerReviewPage = () => {
   };
 
   if (isLoading) return <LoadingAnimation message="Finding Assignment..." />;
-  
+
   if (error)
     return (
       <motion.div
@@ -426,7 +420,13 @@ const PeerReviewPage = () => {
                 </Button>
                 <Button
                   type="primary"
-                  icon={isGeneratingAi ? <Loader2 size={14} className="animate-spin" /> : <RobotOutlined />}
+                  icon={
+                    isGeneratingAi ? (
+                      <Loader2 size={14} className="animate-spin" />
+                    ) : (
+                      <RobotOutlined />
+                    )
+                  }
                   onClick={handleGenerateAiSummary}
                   disabled={isGeneratingAi}
                   loading={isGeneratingAi}
@@ -464,22 +464,35 @@ const PeerReviewPage = () => {
               }
               className="shadow-md"
             >
-              <Collapse defaultActiveKey={reviewData?.rubric?.criteria?.map((_, index) => index.toString())} ghost>
+              <Collapse
+                defaultActiveKey={reviewData?.rubric?.criteria?.map(
+                  (_, index) => index.toString()
+                )}
+                ghost
+              >
                 {reviewData?.rubric?.criteria?.map((criterion, index) => {
-                  const aiFeedbackForItem = aiSummaryData?.data?.feedbacks?.find(
-                    (f) => f.criteriaId === criterion.criteriaId
-                  );
+                  const aiFeedbackForItem =
+                    aiSummaryData?.data?.feedbacks?.find(
+                      (f) => f.criteriaId === criterion.criteriaId
+                    );
                   return (
                     <Panel
                       header={
                         <div className="flex justify-between items-center pr-4">
                           <Space>
-                            <Badge count={index + 1} style={{ backgroundColor: '#1890ff' }} />
-                            <Text strong>{criterion.title || criterion.criteriaName}</Text>
+                            <Badge
+                              count={index + 1}
+                              style={{ backgroundColor: "#1890ff" }}
+                            />
+                            <Text strong>
+                              {criterion.title || criterion.criteriaName}
+                            </Text>
                           </Space>
                           <Space>
                             <Tag color="blue">{criterion.weight}%</Tag>
-                            <Text type="secondary">Max: {criterion.maxScore}</Text>
+                            <Text type="secondary">
+                              Max: {criterion.maxScore}
+                            </Text>
                           </Space>
                         </div>
                       }
@@ -495,13 +508,22 @@ const PeerReviewPage = () => {
                           <div className="col-span-5">
                             {criterion.description && (
                               <div className="mb-4 p-3 bg-gray-50 rounded-lg">
-                                <Text strong className="block mb-2">Description:</Text>
+                                <Text strong className="block mb-2">
+                                  Description:
+                                </Text>
                                 {criterion.description.split("\n").map(
                                   (line, lineIndex) =>
                                     line.trim() && (
-                                      <div key={lineIndex} className="flex items-start mb-1">
-                                        <span className="mr-2 text-blue-500">•</span>
-                                        <Text>{line.replace(/^- /, "").trim()}</Text>
+                                      <div
+                                        key={lineIndex}
+                                        className="flex items-start mb-1"
+                                      >
+                                        <span className="mr-2 text-blue-500">
+                                          •
+                                        </span>
+                                        <Text>
+                                          {line.replace(/^- /, "").trim()}
+                                        </Text>
                                       </div>
                                     )
                                 )}
@@ -509,12 +531,14 @@ const PeerReviewPage = () => {
                             )}
 
                             <div className="mb-3">
-                              <Text type="secondary" className="block mb-2">Weight Distribution:</Text>
+                              <Text type="secondary" className="block mb-2">
+                                Weight Distribution:
+                              </Text>
                               <Progress
                                 percent={criterion.weight}
                                 strokeColor={{
-                                  '0%': '#108ee9',
-                                  '100%': '#87d068',
+                                  "0%": "#108ee9",
+                                  "100%": "#87d068",
                                 }}
                               />
                             </div>
@@ -527,18 +551,23 @@ const PeerReviewPage = () => {
                               aiFeedback={aiFeedbackForItem}
                               aiSummaryData={aiSummaryData}
                             />
-                            
+
                             <Divider className="my-3" />
 
                             <div>
                               <Text strong className="block mb-2">
-                                <MessageSquare size={14} className="inline mr-1" />
+                                <MessageSquare
+                                  size={14}
+                                  className="inline mr-1"
+                                />
                                 Specific Feedback
                               </Text>
                               <TextArea
                                 rows={4}
                                 placeholder="Your feedback for this criterion..."
-                                value={criteriaFeedbacks[criterion.criteriaId] || ""}
+                                value={
+                                  criteriaFeedbacks[criterion.criteriaId] || ""
+                                }
                                 onChange={(e) =>
                                   handleCriteriaFeedbackChange(
                                     criterion.criteriaId,
@@ -552,7 +581,9 @@ const PeerReviewPage = () => {
 
                           {/* Right Column - Score Input */}
                           <div className="col-span-2 flex flex-col items-center justify-start">
-                            <Text strong className="mb-2">Score</Text>
+                            <Text strong className="mb-2">
+                              Score
+                            </Text>
                             <AnimatedScoreInput
                               min={0}
                               max={criterion.maxScore}
@@ -561,16 +592,21 @@ const PeerReviewPage = () => {
                               onChange={(value) =>
                                 handleScoreChange(criterion.criteriaId, value)
                               }
-                              onBlur={() => handleScoreBlur(criterion.criteriaId)}
+                              onBlur={() =>
+                                handleScoreBlur(criterion.criteriaId)
+                              }
                               status={
-                                validationError && scores[criterion.criteriaId] === null
+                                validationError &&
+                                scores[criterion.criteriaId] === null
                                   ? "error"
                                   : ""
                               }
                               addonAfter={`/ ${criterion.maxScore}`}
                               size="large"
                               criteriaId={criterion.criteriaId}
-                              animationTrigger={animationTrigger[criterion.criteriaId]}
+                              animationTrigger={
+                                animationTrigger[criterion.criteriaId]
+                              }
                             />
                           </div>
                         </div>
