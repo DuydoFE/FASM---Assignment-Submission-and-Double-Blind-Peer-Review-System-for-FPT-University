@@ -73,14 +73,6 @@ const ViewRequestModal = ({ isOpen, onClose, details }) => {
                                 </span>
                             </DetailRow>
 
-                            {details.gradeInfo?.instructorScore != null && (
-                                <DetailRow icon={<GraduationCap size={16} />} label="Instructor Score">
-                                    <span className="font-semibold text-lg text-blue-600">
-                                        {details.gradeInfo.instructorScore.toFixed(2)}
-                                    </span>
-                                </DetailRow>
-                            )}
-
                             {details.status === 'Approved' && details.gradeInfo?.finalScoreAfterRegrade != null && (
                                  <DetailRow icon={<Award size={16} />} label="Score After Regrade">
                                     <span className="font-bold text-2xl text-green-600">

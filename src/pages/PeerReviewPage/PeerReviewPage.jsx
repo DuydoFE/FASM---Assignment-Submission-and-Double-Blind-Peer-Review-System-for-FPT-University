@@ -264,7 +264,12 @@ const PeerReviewPage = () => {
         })),
       };
 
-      await reviewService.submitPeerReview(payload);
+      const response = await reviewService.submitPeerReview(payload);
+
+      // Show success message from API if available
+      if (response?.message) {
+        toast.success(response.message);
+      }
 
       navigate("/review-success", {
         state: {
@@ -283,7 +288,9 @@ const PeerReviewPage = () => {
       });
     } catch (err) {
       console.error(err);
-      toast.error("Error sending score, please try again!");
+      // Display error message from API response
+      const errorMessage = err.response?.data?.message || err.message || "Error sending score, please try again!";
+      toast.error(errorMessage);
     }
   };
 
