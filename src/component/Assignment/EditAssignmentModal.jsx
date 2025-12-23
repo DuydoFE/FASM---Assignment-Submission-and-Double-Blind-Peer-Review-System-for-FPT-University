@@ -37,6 +37,7 @@ const EditAssignmentModal = ({ isOpen, onClose, onSubmit, assignment, courseInst
   const [loadingRubrics, setLoadingRubrics] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
   const [initialFormData, setInitialFormData] = useState(null);
+  const [fileRemoved, setFileRemoved] = useState(false);
   const currentUser = getCurrentAccount();
 
   const formatDateTimeLocal = (dateString) => {
@@ -102,12 +103,47 @@ const EditAssignmentModal = ({ isOpen, onClose, onSubmit, assignment, courseInst
           : '',
         includeAIScore: assignment.includeAIScore || false
       };
+      
       setFormData(initialData);
-      setInitialFormData(initialData);
-      setSelectedFile(null);
+      // Check if the file was previously marked for removal
+      // Use the fileRemoved state to determine if file should be shown
+      if (assignment.fileName && !fileRemoved) {
+        const existingFile = {
+          name: assignment.fileName,
+          size: assignment.fileSize || 0,
+          type: assignment.fileType || ''
+        };
+        setSelectedFile(existingFile);
+        // Include file information in initialFormData to track file changes properly
+        setInitialFormData({
+          ...initialData,
+          fileName: assignment.fileName,
+          fileSize: assignment.fileSize,
+          fileType: assignment.fileType
+        });
+      } else {
+        // If assignment has no file or if we previously marked it for removal, set to null
+        setSelectedFile(null);
+        // Include file information in initialFormData to track file changes properly
+        setInitialFormData({
+          ...initialData,
+          fileName: assignment.fileName, // Keep original file info for comparison
+          fileSize: assignment.fileSize,
+          fileType: assignment.fileType
+        });
+        // Reset the fileRemoved flag when the modal is opened with no file
+        if (!assignment.fileName) {
+          setFileRemoved(false);
+        }
+      }
       fetchRubrics();
+    } else if (!isOpen) {
+      // Reset file state when modal is closed
+      setSelectedFile(null);
+      // Also reset the fileRemoved flag when modal closes
+      setFileRemoved(false);
     }
-  }, [isOpen, assignment]);
+  }, [isOpen, assignment, fileRemoved]);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -252,15 +288,15 @@ const EditAssignmentModal = ({ isOpen, onClose, onSubmit, assignment, courseInst
   };
 
   const removeFile = () => {
-    setSelectedFile(null);
+    setSelectedFile({ name: '', size: 0, type: '', removed: true });
+    // Mark that the file has been removed
+    setFileRemoved(true);
   };
 
-  // Get current time to prevent past dates/times
   const now = new Date();
 
   const handleDateTimeChange = (name, date) => {
     if (date) {
-      // Format as local datetime string without timezone conversion
       const year = date.getFullYear();
       const month = String(date.getMonth() + 1).padStart(2, '0');
       const day = String(date.getDate()).padStart(2, '0');
@@ -285,13 +321,34 @@ const EditAssignmentModal = ({ isOpen, onClose, onSubmit, assignment, courseInst
     }
   };
 
-  // Check if form data has changed
   const hasFormChanged = () => {
     if (!initialFormData) return false;
-    if (selectedFile) return true; // If file is uploaded, consider as changed
     
-    // Compare all form fields
-    return JSON.stringify(formData) !== JSON.stringify(initialFormData);
+    // Create copies of form data without file-related properties for comparison
+    const { fileName: initialFileName, fileSize: initialFileSize, fileType: initialFileType, ...initialFormFields } = initialFormData;
+    const { fileName: currentFileName, fileSize: currentFileSize, fileType: currentFileType, ...currentFormFields } = formData;
+    
+    const formChanged = JSON.stringify(currentFormFields) !== JSON.stringify(initialFormFields);
+    
+    // Check if file has changed - consider different scenarios
+    // Get original file info from initialFormData which contains the original assignment file info
+    const originalFileExisted = !!initialFormData.fileName;
+    const currentFileSelected = selectedFile && !selectedFile.removed;
+    const currentFileMarkedForRemoval = selectedFile && selectedFile.removed;
+    const currentFileIsDifferent = originalFileExisted && currentFileSelected && selectedFile.name !== initialFormData.fileName;
+    
+    // Case 1: Had file initially, now it's marked for removal
+    const fileRemoved = originalFileExisted && currentFileMarkedForRemoval;
+    
+    // Case 2: No file initially, now has file selected
+    const fileAdded = !originalFileExisted && currentFileSelected;
+    
+    // Case 3: Had file initially, now has different file selected (replaced)
+    const fileReplaced = currentFileIsDifferent;
+    
+    const fileChanged = fileRemoved || fileAdded || fileReplaced;
+    
+    return formChanged || fileChanged;
   };
 
   const validateForm = () => {
@@ -390,19 +447,22 @@ const EditAssignmentModal = ({ isOpen, onClose, onSubmit, assignment, courseInst
 
       console.log('Updating assignment:', submitData);
 
-      // Call onSubmit and wait for result
-      const result = await onSubmit(submitData, selectedFile);
+      let fileToSend = null;
+      if (selectedFile && selectedFile.removed) {
+        fileToSend = { removed: true };
+      } else if (selectedFile && selectedFile.name && selectedFile.removed === undefined) {
+        fileToSend = selectedFile;
+      }
+
+      const result = await onSubmit(submitData, fileToSend);
       
-      // Only close modal if the edit was successful
-      // The backend notification (success/error) is handled by the parent component
       if (result !== false) {
+        // Reset the fileRemoved flag after successful submission
+        setFileRemoved(false);
         onClose();
       }
-      // If result is false, modal stays open and error is already shown by parent
     } catch (error) {
       console.error('Error updating assignment:', error);
-      // Don't close modal on error - let the error notification show
-      // Parent component should handle the error toast
     }
   };
 
@@ -517,7 +577,7 @@ const EditAssignmentModal = ({ isOpen, onClose, onSubmit, assignment, courseInst
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Document <span className="text-gray-400">(Optional)</span>
                 </label>
-                {!selectedFile ? (
+                {!selectedFile || (selectedFile && selectedFile.removed && selectedFile.name === '') ? (
                   <label className="flex items-center justify-center w-full px-4 py-6 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition-colors">
                     <div className="flex flex-col items-center gap-2">
                       <Upload className="w-8 h-8 text-gray-400" />
@@ -535,8 +595,11 @@ const EditAssignmentModal = ({ isOpen, onClose, onSubmit, assignment, courseInst
                     <div className="flex items-center gap-3">
                       <File className="w-5 h-5 text-blue-600" />
                       <div>
-                        <p className="text-sm font-medium text-gray-900">{selectedFile.name}</p>
-                        <p className="text-xs text-gray-500">{(selectedFile.size / 1024).toFixed(2)} KB</p>
+                        <p className="text-sm font-medium text-gray-900">{selectedFile.name || assignment.fileName}</p>
+                        <p className="text-xs text-gray-500">
+                          {selectedFile.size ? `${(selectedFile.size / 1024).toFixed(2)} KB` :
+                           assignment.fileSize ? `${(assignment.fileSize / 1024).toFixed(2)} KB` : ''}
+                        </p>
                       </div>
                     </div>
                     <Button

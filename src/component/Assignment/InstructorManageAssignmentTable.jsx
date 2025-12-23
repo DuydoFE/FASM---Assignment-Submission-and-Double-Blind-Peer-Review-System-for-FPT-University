@@ -7,6 +7,7 @@ import {
   Edit,
   MoreVertical,
   Upload,
+  Eye,
 } from "lucide-react";
 
 const InstructorManageAssignmentTable = ({
@@ -17,6 +18,7 @@ const InstructorManageAssignmentTable = ({
   onEdit,
   onViewSubmissions,
   onPublish,
+  onViewDetail,
 }) => {
   const getDeadlineColor = (deadline) => {
     if (!deadline) return "text-gray-900";
@@ -50,6 +52,15 @@ const InstructorManageAssignmentTable = ({
   };
 
   const getDropdownItems = (assignment) => [
+    {
+      label: (
+        <div className="flex items-center gap-2 px-2 py-1">
+          <Eye className="w-4 h-4 text-purple-600" />
+          <span>View Detail</span>
+        </div>
+      ),
+      onClick: () => onViewDetail(assignment),
+    },
     ...(assignment.status === "Draft"
       ? [
           {

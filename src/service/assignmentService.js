@@ -163,7 +163,12 @@ export const updateAssignment = async (assignmentData, file = null) => {
     formData.append('CrossClassTag', assignmentData.crossClassTag || '');
     formData.append('GradingScale', assignmentData.gradingScale);
     
-    if (file) {
+    // Handle file upload or removal
+    if (file && file.removed) {
+      // If file should be removed, send a flag to indicate removal
+      formData.append('RemoveFile', true);
+    } else if (file) {
+      // If it's a new file to upload
       formData.append('File', file);
     }
 
