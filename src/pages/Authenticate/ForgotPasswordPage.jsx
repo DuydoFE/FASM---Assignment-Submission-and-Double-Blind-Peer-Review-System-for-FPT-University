@@ -22,7 +22,6 @@ const ForgotPasswordPage = () => {
       return;
     }
 
-    // Email format validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       toast.error("Please enter a valid email address");
@@ -37,14 +36,14 @@ const ForgotPasswordPage = () => {
         setIsSuccess(true);
         toast.success("Password reset link has been sent to your email!");
       } else {
-        toast.error(response.data.message || "Failed to send reset link");
+        toast.error(response.data.message || "Failed to send password ");
       }
     } catch (error) {
       console.error("Forgot password error:", error);
       if (error.response?.data?.message) {
         toast.error(error.response.data.message);
       } else {
-        toast.error("Failed to send reset link. Please try again.");
+        toast.error("Failed to send reset password. Please try again.");
       }
     } finally {
       setIsSubmitting(false);
@@ -148,7 +147,7 @@ const ForgotPasswordPage = () => {
                     Sending...
                   </span>
                 ) : (
-                  "Send Reset Link"
+                  "Send Reset password Email"
                 )}
               </button>
 

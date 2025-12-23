@@ -1,18 +1,20 @@
 import React, { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
-import { Card, Avatar, Spin, Alert, Descriptions, Typography, Tag, message } from "antd";
-import { UserOutlined } from "@ant-design/icons";
+import { Card, Avatar, Spin, Alert, Descriptions, Typography, Tag, message, Button } from "antd";
+import { UserOutlined, LockOutlined } from "@ant-design/icons";
 import { getUserById, updateUserAvatar } from "../../service/userService";
 import { selectUser } from "../../redux/features/userSlice";
 import AvatarUpload from "../../component/AvatarUpload";
+import ChangePasswordModal from "../../component/Profile/ChangePasswordModal";
 
 const { Title } = Typography;
 
 const ProfilePage = () => {
-  const currentUser = useSelector(selectUser); 
+  const currentUser = useSelector(selectUser);
   const [userData, setUserData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
 
   useEffect(() => {
     if (currentUser && currentUser.userId) {
@@ -121,6 +123,17 @@ const ProfilePage = () => {
               <Tag color="blue" key={role}>{role}</Tag>
             ))}
           </div>
+          
+          <div className="mt-4">
+            <Button
+              type="primary"
+              icon={<LockOutlined />}
+              onClick={() => setIsPasswordModalOpen(true)}
+              className="bg-blue-600 hover:bg-blue-700"
+            >
+              Change Password
+            </Button>
+          </div>
         </div>
         
         <Descriptions bordered column={1} className="mt-8">
@@ -135,10 +148,16 @@ const ProfilePage = () => {
               {userData.isActive ? 'Active' : 'Inactive'}
             </Tag>
           </Descriptions.Item>
-        </Descriptions>
-      </Card>
-    </div>
-  );
+       </Descriptions>
+     </Card>
+
+     <ChangePasswordModal
+       isOpen={isPasswordModalOpen}
+       onClose={() => setIsPasswordModalOpen(false)}
+       userId={currentUser?.userId}
+     />
+   </div>
+ );
 };
 
 export default ProfilePage;
