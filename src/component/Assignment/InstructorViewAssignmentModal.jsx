@@ -269,69 +269,30 @@ const InstructorViewAssignmentModal = ({ isOpen, onClose, assignment, courseInst
           </h3>
 
           <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Grading Scale
-                </label>
-                <Select
-                  value={assignmentData.gradingScale}
-                  disabled
-                  className="w-full"
-                  size="large"
-                  options={[
-                    { label: 'Scale 10', value: 'Scale10' },
-                    { label: 'Pass/Fail', value: 'PassFail' }
-                  ]}
-                />
-              </div>
-
-              {assignmentData.gradingScale === 'PassFail' && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Pass Threshold
-                  </label>
-                  <Select
-                    value={assignmentData.passThreshold || undefined}
-                    disabled
-                    className="w-full"
-                    size="large"
-                    options={[
-                      { label: '≥ 0.0', value: '0' },
-                      { label: '≥ 4.0', value: '4' },
-                      { label: '≥ 5.0', value: '5' }
-                    ]}
-                  />
-                </div>
-              )}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Instructor Weight (%)
+              </label>
+              <Input
+                type="number"
+                value={assignmentData.instructorWeight}
+                disabled
+                className="bg-white"
+                style={{ color: '#1f2937', cursor: 'not-allowed' }}
+              />
             </div>
 
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Instructor Weight (%)
-                </label>
-                <Input
-                  type="number"
-                  value={assignmentData.instructorWeight}
-                  disabled
-                  className="bg-white"
-                  style={{ color: '#1f2937', cursor: 'not-allowed' }}
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Peer Weight (%)
-                </label>
-                <Input
-                  type="number"
-                  value={assignmentData.peerWeight}
-                  disabled
-                  className="bg-white"
-                  style={{ color: '#1f2937', cursor: 'not-allowed' }}
-                />
-              </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Peer Weight (%)
+              </label>
+              <Input
+                type="number"
+                value={assignmentData.peerWeight}
+                disabled
+                className="bg-white"
+                style={{ color: '#1f2937', cursor: 'not-allowed' }}
+              />
             </div>
           </div>
         </div>
