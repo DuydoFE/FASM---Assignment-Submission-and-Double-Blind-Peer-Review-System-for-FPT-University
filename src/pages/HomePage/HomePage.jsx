@@ -13,6 +13,8 @@ import fasmLogo from "../../assets/img/FASM.png";
 const HomePage = () => {
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [activeRole, setActiveRole] = useState("student");
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadingProgress, setLoadingProgress] = useState(0);
   const { scrollYProgress } = useScroll();
   const y = useTransform(scrollYProgress, [0, 1], [0, -100]);
 
@@ -22,6 +24,20 @@ const HomePage = () => {
     };
     window.addEventListener("mousemove", handleMouseMove);
     return () => window.removeEventListener("mousemove", handleMouseMove);
+  }, []);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setLoadingProgress((prev) => {
+        if (prev >= 100) {
+          clearInterval(interval);
+          setTimeout(() => setIsLoading(false), 300);
+          return 100;
+        }
+        return prev + 1;
+      });
+    }, 35);
+    return () => clearInterval(interval);
   }, []);
 
   const smartFeatures = [
@@ -128,7 +144,292 @@ const HomePage = () => {
   const currentRole = roles[activeRole];
 
   return (
-    <div className="relative overflow-hidden">
+    <>
+      {/* Loading Screen */}
+      {isLoading && (
+        <motion.div
+          className="fixed inset-0 z-50 flex items-center justify-center"
+          initial={{ opacity: 1 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+        >
+          {/* FPT 3-color gradient background */}
+          <div className="absolute inset-0">
+            <motion.div
+              className="absolute inset-0"
+              style={{
+                background: "linear-gradient(135deg, #667eea 0%, #764ba2 25%, #f093fb 35%, #f5576c 50%, #ff9a56 65%, #feca57 75%, #48dbfb 85%, #0abde3 100%)",
+              }}
+              animate={{
+                backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"],
+                backgroundSize: ["200% 200%", "200% 200%", "200% 200%"],
+              }}
+              transition={{
+                duration: 10,
+                repeat: Infinity,
+                ease: "linear",
+              }}
+            />
+            <div className="absolute inset-0 bg-gradient-to-r from-blue-600/90 via-orange-500/90 to-green-500/90" />
+            <div className="absolute inset-0 backdrop-blur-3xl bg-black/20" />
+          </div>
+          {/* Animated Background Particles - Falling into Space Effect */}
+          <div className="absolute inset-0 overflow-hidden perspective-1000">
+            {[...Array(100)].map((_, i) => {
+              const size = Math.random() * 3 + 1;
+              const startX = Math.random() * 100;
+              const endX = startX + (Math.random() - 0.5) * 50;
+              return (
+                <motion.div
+                  key={i}
+                  className="absolute rounded-full"
+                  style={{
+                    width: `${size}px`,
+                    height: `${size}px`,
+                    left: `${startX}%`,
+                    top: `-10%`,
+                    background: `radial-gradient(circle, rgba(255,255,255,${Math.random() * 0.4 + 0.2}) 0%, transparent 70%)`,
+                    boxShadow: `0 0 ${size * 2}px rgba(255,255,255,${Math.random() * 0.5})`,
+                  }}
+                  animate={{
+                    y: ["0vh", "120vh"],
+                    x: [`0vw`, `${(endX - startX)}vw`],
+                    scale: [0, 1.5, 1, 0.5],
+                    opacity: [0, 0.8, 0.6, 0],
+                    rotate: [0, 360],
+                  }}
+                  transition={{
+                    duration: 4 + Math.random() * 4,
+                    repeat: Infinity,
+                    delay: Math.random() * 3,
+                    ease: "easeIn",
+                  }}
+                />
+              );
+            })}
+          </div>
+
+          {/* Depth Effect - Moving Stars in Background */}
+          <div className="absolute inset-0 overflow-hidden">
+            {[...Array(50)].map((_, i) => (
+              <motion.div
+                key={`bg-${i}`}
+                className="absolute w-0.5 h-0.5 bg-white/10 rounded-full"
+                style={{
+                  left: `${Math.random() * 100}%`,
+                  top: `${Math.random() * 100}%`,
+                }}
+                animate={{
+                  scale: [0, 2, 0],
+                  opacity: [0, 0.2, 0],
+                }}
+                transition={{
+                  duration: 5 + Math.random() * 5,
+                  repeat: Infinity,
+                  delay: Math.random() * 5,
+                }}
+              />
+            ))}
+          </div>
+
+          {/* Speed Lines Effect */}
+          <div className="absolute inset-0 overflow-hidden">
+            {[...Array(20)].map((_, i) => (
+              <motion.div
+                key={`line-${i}`}
+                className="absolute w-0.5 bg-gradient-to-b from-transparent via-white/30 to-transparent"
+                style={{
+                  left: `${Math.random() * 100}%`,
+                  height: `${Math.random() * 100 + 50}px`,
+                  top: `-20%`,
+                }}
+                animate={{
+                  y: ["0vh", "120vh"],
+                  opacity: [0, 0.5, 0],
+                }}
+                transition={{
+                  duration: 1.5 + Math.random() * 1,
+                  repeat: Infinity,
+                  delay: Math.random() * 2,
+                  ease: "linear",
+                }}
+              />
+            ))}
+          </div>
+
+          {/* Center Loading Animation */}
+          <div className="relative z-10 flex flex-col items-center">
+            {/* Logo Animation */}
+            <motion.div
+              initial={{ scale: 0, rotate: -180, z: -1000 }}
+              animate={{ scale: 1, rotate: 0, z: 0 }}
+              transition={{
+                type: "spring",
+                stiffness: 200,
+                damping: 15,
+                duration: 1.5,
+              }}
+            >
+              <motion.img
+                src={fasmLogo}
+                alt="FASM Logo"
+                className="h-32 md:h-48 w-auto object-contain mb-8"
+                animate={{
+                  y: [0, -20, 0],
+                  scale: [1, 1.05, 1],
+                  filter: [
+                    "drop-shadow(0 0 20px rgba(255, 255, 255, 0.8))",
+                    "drop-shadow(0 0 40px rgba(255, 255, 255, 1))",
+                    "drop-shadow(0 0 20px rgba(255, 255, 255, 0.8))",
+                  ],
+                }}
+                transition={{
+                  duration: 2,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                }}
+              />
+            </motion.div>
+
+            {/* Loading Text */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5 }}
+              className="text-center"
+            >
+              <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">
+                Welcome to FASM
+              </h2>
+              
+              {/* Rotating Text */}
+              <div className="relative h-12 overflow-hidden">
+                <motion.div
+                  className="absolute whitespace-nowrap"
+                  animate={{
+                    x: [0, -2000],
+                  }}
+                  transition={{
+                    duration: 25,
+                    repeat: Infinity,
+                    ease: "linear",
+                  }}
+                >
+                  {[...Array(10)].map((_, i) => (
+                    <span key={i} className="text-xl md:text-2xl font-semibold bg-gradient-to-r from-blue-400 via-orange-400 to-green-400 bg-clip-text text-transparent mx-8">
+                      Fpt Assignment Submission Management
+                    </span>
+                  ))}
+                </motion.div>
+              </div>
+            </motion.div>
+
+            {/* Circular Progress */}
+            <motion.div
+              className="relative w-48 h-48 mt-8"
+              initial={{ opacity: 0, scale: 0 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.5, type: "spring", stiffness: 200 }}
+            >
+              {/* Background Circle */}
+              <svg className="w-full h-full transform -rotate-90">
+                <circle
+                  cx="96"
+                  cy="96"
+                  r="88"
+                  stroke="rgba(255,255,255,0.15)"
+                  strokeWidth="6"
+                  fill="none"
+                />
+                {/* Progress Circle */}
+                <circle
+                  cx="96"
+                  cy="96"
+                  r="88"
+                  stroke="url(#gradient)"
+                  strokeWidth="6"
+                  fill="none"
+                  strokeLinecap="round"
+                  strokeDasharray="552.92"
+                  strokeDashoffset={552.92 - (552.92 * loadingProgress) / 100}
+                  style={{
+                    transition: "stroke-dashoffset 0.35s ease-out",
+                  }}
+                />
+                {/* Gradient Definition */}
+                <defs>
+                  <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="#3b82f6" />
+                    <stop offset="50%" stopColor="#f97316" />
+                    <stop offset="100%" stopColor="#22c55e" />
+                  </linearGradient>
+                </defs>
+              </svg>
+              
+              {/* Percentage Text */}
+              <div className="absolute inset-0 flex flex-col items-center justify-center">
+                <span className="text-5xl font-bold text-white mb-1">
+                  {loadingProgress}%
+                </span>
+                <span className="text-sm text-white/60 font-medium tracking-wider">
+                  Loading...
+                </span>
+              </div>
+
+              {/* Subtle Glow Effect */}
+              <div
+                className="absolute inset-0 rounded-full blur-xl opacity-30"
+                style={{
+                  background: `radial-gradient(circle, rgba(59, 130, 246, 0.4), rgba(249, 115, 22, 0.3), rgba(34, 197, 94, 0.2))`,
+                }}
+              />
+            </motion.div>
+          </div>
+
+          {/* Rotating Rings - Multiple Layers */}
+          <motion.div
+            className="absolute w-96 h-96 border-4 border-white/30 rounded-full"
+            animate={{
+              rotate: 360,
+              scale: [1, 1.1, 1],
+            }}
+            transition={{
+              rotate: { duration: 3, repeat: Infinity, ease: "linear" },
+              scale: { duration: 2, repeat: Infinity, ease: "easeInOut" },
+            }}
+          />
+          <motion.div
+            className="absolute w-80 h-80 border-4 border-white/20 rounded-full"
+            animate={{
+              rotate: -360,
+              scale: [1, 0.95, 1],
+            }}
+            transition={{
+              rotate: { duration: 4, repeat: Infinity, ease: "linear" },
+              scale: { duration: 2.5, repeat: Infinity, ease: "easeInOut" },
+            }}
+          />
+          <motion.div
+            className="absolute w-64 h-64 border-2 border-white/10 rounded-full"
+            animate={{
+              rotate: 360,
+              scale: [1, 1.05, 1],
+            }}
+            transition={{
+              rotate: { duration: 5, repeat: Infinity, ease: "linear" },
+              scale: { duration: 3, repeat: Infinity, ease: "easeInOut" },
+            }}
+          />
+        </motion.div>
+      )}
+
+      {/* Main Content */}
+      <motion.div
+        className="relative overflow-hidden"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: isLoading ? 0 : 1 }}
+        transition={{ duration: 0.5 }}
+      >
       {/* Animated gradient background - FPT 3 colors */}
       <div className="fixed inset-0 -z-10">
         <motion.div
@@ -416,8 +717,8 @@ const HomePage = () => {
           </motion.div>
         </div>
       </section>
-
-    </div>
+      </motion.div>
+    </>
   );
 };
 
