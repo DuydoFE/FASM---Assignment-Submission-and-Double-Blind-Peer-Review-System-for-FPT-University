@@ -44,14 +44,6 @@ const RequestRegradeDetailModal = ({ visible, details, loading, onClose }) => {
           </div>
 
           <div className="flex items-start">
-            <FileText className="w-5 h-5 mr-3 mt-1 text-gray-600 flex-shrink-0" />
-            <div>
-              <p className="font-semibold text-gray-800">Instructor Score</p>
-              <p className="text-gray-700">{details.submission?.instructorScore}</p>
-            </div>
-          </div>
-
-          <div className="flex items-start">
             <Edit className="w-5 h-5 mr-3 mt-1 text-gray-600 flex-shrink-0" />
             <div>
               <p className="font-semibold text-gray-800">Your Reason</p>
