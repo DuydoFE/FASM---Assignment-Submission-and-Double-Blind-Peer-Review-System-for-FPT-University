@@ -55,6 +55,7 @@ const CrossClassReviewPage = () => {
 
   const [reviewData, setReviewData] = useState(null);
   const [scores, setScores] = useState({});
+  const [specificFeedbacks, setSpecificFeedbacks] = useState({});
   const [comment, setComment] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -86,6 +87,15 @@ const CrossClassReviewPage = () => {
             {}
           );
           setScores(initialScores);
+          
+          const initialFeedbacks = data.rubric.criteria.reduce(
+            (acc, criterion) => {
+              acc[criterion.criteriaId] = "";
+              return acc;
+            },
+            {}
+          );
+          setSpecificFeedbacks(initialFeedbacks);
         } else {
           throw new Error("Invalid grading data returned.");
         }
@@ -234,7 +244,7 @@ const CrossClassReviewPage = () => {
         criteriaFeedbacks: reviewData.rubric.criteria.map((c) => ({
           criteriaId: c.criteriaId,
           score: scores[c.criteriaId] || 0,
-          feedback: "",
+          feedback: specificFeedbacks[c.criteriaId] || "",
         })),
       };
       await reviewService.submitPeerReview(payload);
@@ -360,7 +370,7 @@ const CrossClassReviewPage = () => {
                               type="text"
                               size="small"
                               icon={<EyeOutlined />}
-                              href={reviewData.fileUrl}
+                              href={reviewData.previewUrl}
                               target="_blank"
                               rel="noopener noreferrer"
                             />
@@ -521,8 +531,11 @@ const CrossClassReviewPage = () => {
                               <TextArea
                                 rows={4}
                                 placeholder="Your feedback for this criterion..."
-                                value=""
-                                disabled
+                                value={specificFeedbacks[criterion.criteriaId] || ""}
+                                onChange={(e) => setSpecificFeedbacks(prev => ({
+                                  ...prev,
+                                  [criterion.criteriaId]: e.target.value
+                                }))}
                                 className="rounded-lg"
                               />
                             </div>
