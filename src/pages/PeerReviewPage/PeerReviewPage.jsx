@@ -1,13 +1,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import {
-  ChevronRight,
   ArrowLeft,
-  Download,
-  Eye,
-  RotateCcw,
-  Send,
-  Sparkles,
   Bot,
   Loader2,
   MessageSquare,
@@ -25,7 +19,6 @@ import {
   Divider,
   Tooltip,
   Badge,
-  InputNumber,
   Typography,
   Alert,
   Collapse,
@@ -49,6 +42,7 @@ import { toast } from "react-toastify";
 import LoadingAnimation from "../../component/Review/LoadingAnimation";
 import AIAnalyzingAnimation from "../../component/Review/AIAnalyzingAnimation";
 import AIOverviewCard from "../../component/Review/AIOverviewCard";
+import AnimatedScoreInput from "../../component/Review/AnimatedScoreInput";
 
 const { TextArea } = Input;
 const { Title, Text } = Typography;
@@ -70,6 +64,7 @@ const PeerReviewPage = () => {
 
   const [isGeneratingAi, setIsGeneratingAi] = useState(false);
   const [aiSummaryData, setAiSummaryData] = useState(null);
+  const [animationTrigger, setAnimationTrigger] = useState({});
 
   useEffect(() => {
     const fetchReviewData = async () => {
@@ -133,6 +128,7 @@ const PeerReviewPage = () => {
     )?.maxScore;
 
     if (!isNaN(newScore) && maxScore !== undefined) {
+      // Only clamp to min/max, don't round during typing
       newScore = Math.max(0, Math.min(newScore, maxScore));
       setScores((prevScores) => ({ ...prevScores, [criteriaId]: newScore }));
     }
@@ -185,6 +181,7 @@ const PeerReviewPage = () => {
       return;
     }
     const newScores = { ...scores };
+    const newTriggers = {};
     const isErrorCase = aiSummaryData.statusCode === 400;
 
     aiSummaryData.data.feedbacks.forEach((fb) => {
@@ -202,9 +199,13 @@ const PeerReviewPage = () => {
         if (aiScore > criteria.maxScore) aiScore = criteria.maxScore;
         if (aiScore < 0) aiScore = 0;
         newScores[fb.criteriaId] = aiScore;
+        newTriggers[fb.criteriaId] = Date.now(); // Trigger animation
       }
     });
+    
+    setAnimationTrigger(newTriggers);
     setScores(newScores);
+    
     if (isErrorCase) {
       toast.info("Submission is off-topic. System auto-filled 0 score.");
     } else {
@@ -371,37 +372,37 @@ const PeerReviewPage = () => {
                       Assignment - {reviewData.studentName ?? "Unknown user"}
                     </Title>
                     {reviewData.fileUrl && (
-                      <Text type="secondary" className="block">
-                        <FileTextOutlined className="mr-2" />
-                        {reviewData.fileName ?? "submission.pdf"}
-                      </Text>
+                      <>
+                        <Text type="secondary" className="block mb-2">
+                          <FileTextOutlined className="mr-2" />
+                          {reviewData.fileName ?? "submission.pdf"}
+                        </Text>
+                        <Space size="small">
+                          <Tooltip title="Preview">
+                            <Button
+                              type="text"
+                              size="small"
+                              icon={<EyeOutlined />}
+                              href={reviewData.previewUrl || reviewData.fileUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                            />
+                          </Tooltip>
+                          <Tooltip title="Download">
+                            <Button
+                              type="text"
+                              size="small"
+                              icon={<DownloadOutlined />}
+                              href={reviewData.fileUrl}
+                              download={reviewData.fileName}
+                            />
+                          </Tooltip>
+                        </Space>
+                      </>
                     )}
                   </div>
                 </Space>
-                <Space>
-                  <Badge status="warning" text="Not Reviewed" />
-                  {reviewData.fileUrl && (
-                    <>
-                      <Tooltip title="Preview">
-                        <Button
-                          type="text"
-                          icon={<EyeOutlined />}
-                          href={reviewData.previewUrl || reviewData.fileUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                        />
-                      </Tooltip>
-                      <Tooltip title="Download">
-                        <Button
-                          type="text"
-                          icon={<DownloadOutlined />}
-                          href={reviewData.fileUrl}
-                          download={reviewData.fileName}
-                        />
-                      </Tooltip>
-                    </>
-                  )}
-                </Space>
+                <Badge status="warning" text="Not Reviewed" />
               </div>
             </Card>
           </motion.div>
@@ -463,7 +464,7 @@ const PeerReviewPage = () => {
               }
               className="shadow-md"
             >
-              <Collapse accordion defaultActiveKey={["0"]} ghost>
+              <Collapse defaultActiveKey={reviewData?.rubric?.criteria?.map((_, index) => index.toString())} ghost>
                 {reviewData?.rubric?.criteria?.map((criterion, index) => {
                   const aiFeedbackForItem = aiSummaryData?.data?.feedbacks?.find(
                     (f) => f.criteriaId === criterion.criteriaId
@@ -517,7 +518,16 @@ const PeerReviewPage = () => {
                                 }}
                               />
                             </div>
+                          </div>
 
+                          {/* Middle Column - AI Summary & Specific Feedback */}
+                          <div className="col-span-5 border-l pl-6">
+                            <AIAnalyzingAnimation
+                              isAnalyzing={isGeneratingAi}
+                              aiFeedback={aiFeedbackForItem}
+                              aiSummaryData={aiSummaryData}
+                            />
+                            
                             <Divider className="my-3" />
 
                             <div>
@@ -540,19 +550,10 @@ const PeerReviewPage = () => {
                             </div>
                           </div>
 
-                          {/* Middle Column - AI Summary */}
-                          <div className="col-span-5 border-l pl-6">
-                            <AIAnalyzingAnimation
-                              isAnalyzing={isGeneratingAi}
-                              aiFeedback={aiFeedbackForItem}
-                              aiSummaryData={aiSummaryData}
-                            />
-                          </div>
-
                           {/* Right Column - Score Input */}
                           <div className="col-span-2 flex flex-col items-center justify-start">
                             <Text strong className="mb-2">Score</Text>
-                            <InputNumber
+                            <AnimatedScoreInput
                               min={0}
                               max={criterion.maxScore}
                               step={0.25}
@@ -566,9 +567,10 @@ const PeerReviewPage = () => {
                                   ? "error"
                                   : ""
                               }
-                              className="w-full"
                               addonAfter={`/ ${criterion.maxScore}`}
                               size="large"
+                              criteriaId={criterion.criteriaId}
+                              animationTrigger={animationTrigger[criterion.criteriaId]}
                             />
                           </div>
                         </div>
@@ -579,9 +581,6 @@ const PeerReviewPage = () => {
               </Collapse>
             </Card>
           </motion.div>
-
-          {/* AI Overview */}
-          <AIOverviewCard aiSummaryData={aiSummaryData} />
 
           {/* Total Score & General Feedback */}
           <motion.div
