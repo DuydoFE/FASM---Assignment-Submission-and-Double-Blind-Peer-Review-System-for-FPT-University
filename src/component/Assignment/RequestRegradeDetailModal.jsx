@@ -1,5 +1,3 @@
-// RequestRegradeDetailModal.js
-
 import { Modal, Button, Spin } from "antd";
 import {
   FileText,
@@ -11,7 +9,6 @@ import {
 } from "lucide-react";
 import { StatusTag } from "../../pages/RegradeRequest/ViewRequestHistoryPage";
 
-// MODIFIED: Props now include 'details' and 'loading'
 const RequestRegradeDetailModal = ({ visible, details, loading, onClose }) => {
   return (
     <Modal
@@ -40,14 +37,6 @@ const RequestRegradeDetailModal = ({ visible, details, loading, onClose }) => {
             <div>
               <p className="font-semibold text-gray-800">Status</p>
               <StatusTag status={details.status} />
-            </div>
-          </div>
-
-          <div className="flex items-start">
-            <FileText className="w-5 h-5 mr-3 mt-1 text-gray-600 flex-shrink-0" />
-            <div>
-              <p className="font-semibold text-gray-800">Instructor Score</p>
-              <p className="text-gray-700">{details.submission?.instructorScore}</p>
             </div>
           </div>
 
