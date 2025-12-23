@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Pencil, Trash2, Plus, Loader, ArrowLeft, MoreVertical } from 'lucide-react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Dropdown } from 'antd';
+import { motion } from 'framer-motion';
 import { deleteCriterion, createCriterion, updateCriterion } from '../../service/criteriaService';
 import { updateRubric, getRubricById } from '../../service/rubricService';
 import AddCriterionModal from '../../component/Criteria/AddCriterionModal';
@@ -222,7 +223,12 @@ function InstructorManageCriteria() {
             <div className="max-w-6xl mx-auto">
 
                 {/* Header Section */}
-                <div className="mb-6">
+                <motion.div
+                    initial={{ opacity: 0, y: -20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5 }}
+                    className="mb-6"
+                >
                     <button
                         onClick={handleBack}
                         className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors font-medium mb-4"
@@ -254,11 +260,16 @@ function InstructorManageCriteria() {
                             )}
                         </div>
                     </div>
-                </div>
+                </motion.div>
 
                 {/* Course, Class and Assignment Information Card */}
                 {(courseName || className || assignmentTitle) && (
-                    <div className="bg-gradient-to-r from-indigo-50 to-blue-50 border border-indigo-200 rounded-lg p-4 mb-6">
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.5, delay: 0.1 }}
+                        className="bg-gradient-to-r from-indigo-50 to-blue-50 border border-indigo-200 rounded-lg p-4 mb-6"
+                    >
                         <div className="flex items-center gap-6 flex-wrap">
                             {courseName && (
                                 <div className="flex items-center gap-2">
@@ -279,11 +290,16 @@ function InstructorManageCriteria() {
                                 </div>
                             )}
                         </div>
-                    </div>
+                    </motion.div>
                 )}
 
                 {/* Rubric Summary Card */}
-                <div className="bg-white rounded-lg shadow-sm p-6 mb-8">
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: 0.2 }}
+                    className="bg-white rounded-lg shadow-sm p-6 mb-8"
+                >
                     <h2 className="text-lg font-semibold text-gray-900 mb-4">Rubric Summary</h2>
                     <div className="flex gap-12">
                         <div>
@@ -295,10 +311,15 @@ function InstructorManageCriteria() {
                             <div className="text-3xl font-bold text-gray-900">{criteria.length || 0}</div>
                         </div>
                     </div>
-                </div>
+                </motion.div>
 
                 {/* Evaluation Criteria Section */}
-                <div className="flex justify-between items-center mb-6">
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: 0.3 }}
+                    className="flex justify-between items-center mb-6"
+                >
                     <div>
                         <h2 className="text-xl font-semibold text-gray-900">Evaluation Criteria</h2>
                         <p className="text-sm text-gray-600">Manage and configure assessment criteria</p>
@@ -312,10 +333,15 @@ function InstructorManageCriteria() {
                             Add Criterion
                         </button>
                     )}
-                </div>
+                </motion.div>
 
                 {/* Criteria Cards */}
-                <div className="space-y-4">
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: 0.4 }}
+                    className="space-y-4"
+                >
                     {criteria.length > 0 ? (
                         criteria.map((criterion, index) => (
                             <div
@@ -395,7 +421,7 @@ function InstructorManageCriteria() {
                             <p className="text-gray-500">No criteria found for this rubric.</p>
                         </div>
                     )}
-                </div>
+                </motion.div>
 
                 {/* Weight Warning */}
                 {remainingWeight !== 0 && (
