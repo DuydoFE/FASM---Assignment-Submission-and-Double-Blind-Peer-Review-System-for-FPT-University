@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Loader, ArrowLeft } from 'lucide-react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { getCriteriaByTemplateId } from '../../service/criteriaService';
 import { toast } from 'react-toastify';
 
@@ -74,7 +75,12 @@ function InstructorManageCriteriaTemplate() {
             <div className="max-w-6xl mx-auto">
                 
                 {/* Header Section */}
-                <div className="mb-6">
+                <motion.div
+                    initial={{ opacity: 0, y: -20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5 }}
+                    className="mb-6"
+                >
                     <button
                         onClick={handleBack}
                         className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors font-medium mb-4"
@@ -97,10 +103,15 @@ function InstructorManageCriteriaTemplate() {
                             </div>
                         </div>
                     </div>
-                </div>
+                </motion.div>
 
                 {/* Template Summary Card */}
-                <div className="bg-white rounded-lg shadow-sm p-6 mb-8">
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: 0.1 }}
+                    className="bg-white rounded-lg shadow-sm p-6 mb-8"
+                >
                     <h2 className="text-lg font-semibold text-gray-900 mb-4">Template Summary</h2>
                     <div className="flex gap-12">
                         <div>
@@ -112,18 +123,28 @@ function InstructorManageCriteriaTemplate() {
                             <div className="text-3xl font-bold text-gray-900">{criteria.length || 0}</div>
                         </div>
                     </div>
-                </div>
+                </motion.div>
 
                 {/* Evaluation Criteria Section */}
-                <div className="flex justify-between items-center mb-6">
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: 0.2 }}
+                    className="flex justify-between items-center mb-6"
+                >
                     <div>
                         <h2 className="text-xl font-semibold text-gray-900">Evaluation Criteria</h2>
                         <p className="text-sm text-gray-600">View assessment criteria templates</p>
                     </div>
-                </div>
+                </motion.div>
 
                 {/* Criteria Cards */}
-                <div className="space-y-4">
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: 0.3 }}
+                    className="space-y-4"
+                >
                     {criteria.length > 0 ? (
                         criteria.map((criterion, index) => (
                             <div
@@ -188,7 +209,7 @@ function InstructorManageCriteriaTemplate() {
                             <p className="text-gray-500">No criteria templates found.</p>
                         </div>
                     )}
-                </div>
+                </motion.div>
 
                 {/* Weight Warning */}
                 {remainingWeight !== 0 && (

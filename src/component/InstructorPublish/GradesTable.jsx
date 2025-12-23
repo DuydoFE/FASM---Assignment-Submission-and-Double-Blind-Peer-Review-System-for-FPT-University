@@ -99,6 +99,13 @@ const GradesTable = ({
     } catch (e) {}
   };
 
+  // Get weights from the first student record (all students have the same weights)
+  const peerWeight = filteredStudents && filteredStudents.length > 0 ? filteredStudents[0].peerWeight : null;
+  const instructorWeight = filteredStudents && filteredStudents.length > 0 ? filteredStudents[0].instructorWeight : null;
+  
+  // Debug log
+  console.log('Weights:', { peerWeight, instructorWeight, filteredStudents });
+
   const columns = [
     {
       title: 'No.',
@@ -120,7 +127,14 @@ const GradesTable = ({
       render: (name) => <span className="text-gray-800">{name}</span>,
     },
     {
-      title: 'Average Peer Review Score',
+      title: (
+        <div className="text-center">
+          <div>Average Peer Review Score</div>
+          {peerWeight !== null && peerWeight !== undefined && (
+            <div className="mt-1 text-sm font-medium text-gray-700">({peerWeight}%)</div>
+          )}
+        </div>
+      ),
       dataIndex: 'peerReview',
       key: 'peerReview',
       width: '18%',
@@ -128,16 +142,24 @@ const GradesTable = ({
       render: (peerReview, student) => (
         <span
           className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-            student.status === "Not Submitted" ||
-            student.status === "Submitted" ||
-            isPeerReviewNotGraded(student)
+            student.status === "Not Submitted"
+              ? "text-gray-400 bg-gray-50"
+              : student.status === "Submitted" || student.status === "Graded"
+              ? peerReview !== null && peerReview !== undefined
+                ? getGradeColor(peerReview)
+                : "text-gray-400 bg-gray-50"
+              : isPeerReviewNotGraded(student)
               ? "text-gray-400 bg-gray-50"
               : getGradeColor(peerReview)
           }`}
         >
-          {student.status === "Not Submitted" ||
-          student.status === "Submitted" ||
-          isPeerReviewNotGraded(student)
+          {student.status === "Not Submitted"
+            ? "--"
+            : student.status === "Submitted" || student.status === "Graded"
+            ? peerReview !== null && peerReview !== undefined
+              ? peerReview.toFixed(1)
+              : "--"
+            : isPeerReviewNotGraded(student)
             ? "--"
             : peerReview !== null && peerReview !== undefined
             ? peerReview.toFixed(1)
@@ -146,7 +168,14 @@ const GradesTable = ({
       ),
     },
     {
-      title: 'Instructor Score',
+      title: (
+        <div className="text-center">
+          <div>Instructor Score</div>
+          {instructorWeight !== null && instructorWeight !== undefined && (
+            <div className="mt-1 text-sm font-medium text-gray-700">({instructorWeight}%)</div>
+          )}
+        </div>
+      ),
       dataIndex: 'instructorGrade',
       key: 'instructorGrade',
       width: '14%',
@@ -154,17 +183,21 @@ const GradesTable = ({
       render: (instructorGrade, student) => (
         <span
           className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-            student.status === "Not Submitted" ||
-            student.status === "Submitted"
+            student.status === "Not Submitted"
               ? "text-gray-400 bg-gray-50"
-              : getGradeColor(instructorGrade)
+              : student.status === "Submitted" || student.status === "Graded"
+              ? instructorGrade !== null && instructorGrade !== undefined
+                ? getGradeColor(instructorGrade)
+                : "text-gray-400 bg-gray-50"
+              : "text-gray-400 bg-gray-50"
           }`}
         >
-          {student.status === "Not Submitted" ||
-          student.status === "Submitted"
+          {student.status === "Not Submitted"
             ? "--"
-            : instructorGrade !== null && instructorGrade !== undefined
-            ? instructorGrade.toFixed(1)
+            : student.status === "Submitted" || student.status === "Graded"
+            ? instructorGrade !== null && instructorGrade !== undefined
+              ? instructorGrade.toFixed(1)
+              : "--"
             : "--"}
         </span>
       ),
@@ -178,17 +211,21 @@ const GradesTable = ({
       render: (finalGrade, student) => (
         <span
           className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-            student.status === "Not Submitted" ||
-            student.status === "Submitted"
+            student.status === "Not Submitted"
               ? "text-gray-400 bg-gray-50"
-              : getGradeColor(finalGrade)
+              : student.status === "Submitted" || student.status === "Graded"
+              ? finalGrade !== null && finalGrade !== undefined
+                ? getGradeColor(finalGrade)
+                : "text-gray-400 bg-gray-50"
+              : "text-gray-400 bg-gray-50"
           }`}
         >
-          {student.status === "Not Submitted" ||
-          student.status === "Submitted"
+          {student.status === "Not Submitted"
             ? "--"
-            : finalGrade !== null && finalGrade !== undefined
-            ? finalGrade.toFixed(1)
+            : student.status === "Submitted" || student.status === "Graded"
+            ? finalGrade !== null && finalGrade !== undefined
+              ? finalGrade.toFixed(1)
+              : "--"
             : "--"}
         </span>
       ),
