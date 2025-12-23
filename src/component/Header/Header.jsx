@@ -33,22 +33,36 @@ const Header = () => {
 
   const menu = (
     <Menu
+      className="!rounded-xl !shadow-2xl !border !border-gray-200 !overflow-hidden"
+      style={{
+        backgroundColor: 'rgba(255, 255, 255, 0.98)',
+        backdropFilter: 'blur(12px)',
+        minWidth: '200px',
+      }}
       items={[
         {
           key: "profile",
           label: (
-            <Link to="/profile" className="flex items-center">
-              <User className="w-4 h-4 mr-2" /> Profile
+            <Link to="/profile" className="flex items-center text-gray-700 hover:text-blue-600 transition-colors py-2">
+              <User className="w-5 h-5 mr-3 text-blue-500" />
+              <span className="font-semibold">Profile</span>
             </Link>
           ),
+          className: "!px-4 !py-3 hover:!bg-blue-50 !transition-all !duration-200",
+        },
+        {
+          type: 'divider',
+          className: '!bg-gray-200 !my-1',
         },
         {
           key: "logout",
           label: (
-            <span onClick={handleLogout} className="flex items-center">
-              <LogOut className="w-4 h-4 mr-2" /> Log Out
+            <span onClick={handleLogout} className="flex items-center text-gray-700 hover:text-red-600 transition-colors py-2">
+              <LogOut className="w-5 h-5 mr-3 text-red-500" />
+              <span className="font-semibold">Log Out</span>
             </span>
           ),
+          className: "!px-4 !py-3 hover:!bg-red-50 !transition-all !duration-200",
         },
       ]}
     />
