@@ -128,16 +128,24 @@ const GradesTable = ({
       render: (peerReview, student) => (
         <span
           className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-            student.status === "Not Submitted" ||
-            student.status === "Submitted" ||
-            isPeerReviewNotGraded(student)
+            student.status === "Not Submitted"
+              ? "text-gray-400 bg-gray-50"
+              : student.status === "Submitted" || student.status === "Graded"
+              ? peerReview !== null && peerReview !== undefined
+                ? getGradeColor(peerReview)
+                : "text-gray-400 bg-gray-50"
+              : isPeerReviewNotGraded(student)
               ? "text-gray-400 bg-gray-50"
               : getGradeColor(peerReview)
           }`}
         >
-          {student.status === "Not Submitted" ||
-          student.status === "Submitted" ||
-          isPeerReviewNotGraded(student)
+          {student.status === "Not Submitted"
+            ? "--"
+            : student.status === "Submitted" || student.status === "Graded"
+            ? peerReview !== null && peerReview !== undefined
+              ? peerReview.toFixed(1)
+              : "--"
+            : isPeerReviewNotGraded(student)
             ? "--"
             : peerReview !== null && peerReview !== undefined
             ? peerReview.toFixed(1)
@@ -154,17 +162,21 @@ const GradesTable = ({
       render: (instructorGrade, student) => (
         <span
           className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-            student.status === "Not Submitted" ||
-            student.status === "Submitted"
+            student.status === "Not Submitted"
               ? "text-gray-400 bg-gray-50"
-              : getGradeColor(instructorGrade)
+              : student.status === "Submitted" || student.status === "Graded"
+              ? instructorGrade !== null && instructorGrade !== undefined
+                ? getGradeColor(instructorGrade)
+                : "text-gray-400 bg-gray-50"
+              : "text-gray-400 bg-gray-50"
           }`}
         >
-          {student.status === "Not Submitted" ||
-          student.status === "Submitted"
+          {student.status === "Not Submitted"
             ? "--"
-            : instructorGrade !== null && instructorGrade !== undefined
-            ? instructorGrade.toFixed(1)
+            : student.status === "Submitted" || student.status === "Graded"
+            ? instructorGrade !== null && instructorGrade !== undefined
+              ? instructorGrade.toFixed(1)
+              : "--"
             : "--"}
         </span>
       ),
@@ -178,17 +190,21 @@ const GradesTable = ({
       render: (finalGrade, student) => (
         <span
           className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-            student.status === "Not Submitted" ||
-            student.status === "Submitted"
+            student.status === "Not Submitted"
               ? "text-gray-400 bg-gray-50"
-              : getGradeColor(finalGrade)
+              : student.status === "Submitted" || student.status === "Graded"
+              ? finalGrade !== null && finalGrade !== undefined
+                ? getGradeColor(finalGrade)
+                : "text-gray-400 bg-gray-50"
+              : "text-gray-400 bg-gray-50"
           }`}
         >
-          {student.status === "Not Submitted" ||
-          student.status === "Submitted"
+          {student.status === "Not Submitted"
             ? "--"
-            : finalGrade !== null && finalGrade !== undefined
-            ? finalGrade.toFixed(1)
+            : student.status === "Submitted" || student.status === "Graded"
+            ? finalGrade !== null && finalGrade !== undefined
+              ? finalGrade.toFixed(1)
+              : "--"
             : "--"}
         </span>
       ),
