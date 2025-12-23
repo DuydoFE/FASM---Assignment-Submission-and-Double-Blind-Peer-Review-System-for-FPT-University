@@ -1,5 +1,4 @@
 import { createBrowserRouter, Navigate, useLocation } from "react-router-dom";
-import UseReactQuerry from "../component/UseReactQuerry";
 import Test from "../Test";
 import MainLayout from "../layout/MainLayout";
 import HomePage from "../pages/HomePage/HomePage";
@@ -183,10 +182,6 @@ export const router = createBrowserRouter([
   {
     path: "/test",
     element: <Test />,
-  },
-  {
-    path: "/a",
-    element: <UseReactQuerry />,
   },
   {
     path: "/instructor",
