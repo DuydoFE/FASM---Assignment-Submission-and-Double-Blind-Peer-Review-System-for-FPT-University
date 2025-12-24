@@ -16,8 +16,8 @@ const submitAssignment = async (submissionData) => {
     });
     return response.data;
   } catch (error) {
-    console.error("Lỗi khi nộp bài:", error.response?.data || error.message);
-    throw error.response?.data || new Error("Lỗi mạng hoặc server không phản hồi");
+    console.error("Error Submission", error.response?.data || error.message);
+    throw error.response?.data || new Error("Network or server error");
   }
 };
 

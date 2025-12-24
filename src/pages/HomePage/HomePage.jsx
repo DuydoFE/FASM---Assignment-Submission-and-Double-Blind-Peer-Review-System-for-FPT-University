@@ -31,12 +31,12 @@ const HomePage = () => {
       setLoadingProgress((prev) => {
         if (prev >= 100) {
           clearInterval(interval);
-          setTimeout(() => setIsLoading(false), 300);
+          setTimeout(() => setIsLoading(false), 200);
           return 100;
         }
-        return prev + 1;
+        return prev + 2; // Tăng 2% mỗi lần thay vì 1%
       });
-    }, 35);
+    }, 25); // Giảm từ 35ms xuống 25ms
     return () => clearInterval(interval);
   }, []);
 
@@ -92,13 +92,8 @@ const HomePage = () => {
         },
         {
           icon: Shield,
-          title: "Regrade Requests",
-          description: "Request grade reviews if you believe your work deserves reconsideration.",
-        },
-        {
-          icon: Award,
-          title: "Achievement System",
-          description: "Earn badges and recognition for quality submissions and helpful peer reviews.",
+          title: "Plagiarism Detection",
+          description: "Automatically detect potential plagiarism and ensure academic integrity.",
         },
       ],
     },
@@ -173,85 +168,81 @@ const HomePage = () => {
             <div className="absolute inset-0 bg-gradient-to-r from-blue-600/90 via-orange-500/90 to-green-500/90" />
             <div className="absolute inset-0 backdrop-blur-3xl bg-black/20" />
           </div>
-          {/* Animated Background Particles - Falling into Space Effect */}
-          <div className="absolute inset-0 overflow-hidden perspective-1000">
-            {[...Array(100)].map((_, i) => {
-              const size = Math.random() * 3 + 1;
+          {/* Animated Background Particles - Optimized */}
+          <div className="absolute inset-0 overflow-hidden">
+            {[...Array(30)].map((_, i) => {
+              const size = Math.random() * 2 + 1;
               const startX = Math.random() * 100;
-              const endX = startX + (Math.random() - 0.5) * 50;
               return (
                 <motion.div
                   key={i}
-                  className="absolute rounded-full"
+                  className="absolute rounded-full will-change-transform"
                   style={{
                     width: `${size}px`,
                     height: `${size}px`,
                     left: `${startX}%`,
-                    top: `-10%`,
-                    background: `radial-gradient(circle, rgba(255,255,255,${Math.random() * 0.4 + 0.2}) 0%, transparent 70%)`,
-                    boxShadow: `0 0 ${size * 2}px rgba(255,255,255,${Math.random() * 0.5})`,
+                    top: `-5%`,
+                    background: `radial-gradient(circle, rgba(255,255,255,${Math.random() * 0.3 + 0.1}) 0%, transparent 70%)`,
                   }}
                   animate={{
-                    y: ["0vh", "120vh"],
-                    x: [`0vw`, `${(endX - startX)}vw`],
-                    scale: [0, 1.5, 1, 0.5],
-                    opacity: [0, 0.8, 0.6, 0],
-                    rotate: [0, 360],
+                    y: ["0vh", "110vh"],
+                    opacity: [0, 0.6, 0],
                   }}
                   transition={{
-                    duration: 4 + Math.random() * 4,
+                    duration: 3 + Math.random() * 2,
                     repeat: Infinity,
-                    delay: Math.random() * 3,
-                    ease: "easeIn",
+                    delay: Math.random() * 2,
+                    ease: [0.25, 0.1, 0.25, 1],
                   }}
                 />
               );
             })}
           </div>
 
-          {/* Depth Effect - Moving Stars in Background */}
+          {/* Depth Effect - Optimized Stars */}
           <div className="absolute inset-0 overflow-hidden">
-            {[...Array(50)].map((_, i) => (
+            {[...Array(25)].map((_, i) => (
               <motion.div
                 key={`bg-${i}`}
-                className="absolute w-0.5 h-0.5 bg-white/10 rounded-full"
+                className="absolute w-0.5 h-0.5 bg-white/10 rounded-full will-change-transform"
                 style={{
                   left: `${Math.random() * 100}%`,
                   top: `${Math.random() * 100}%`,
                 }}
                 animate={{
-                  scale: [0, 2, 0],
-                  opacity: [0, 0.2, 0],
+                  scale: [0, 1.5, 0],
+                  opacity: [0, 0.3, 0],
                 }}
                 transition={{
-                  duration: 5 + Math.random() * 5,
+                  duration: 3 + Math.random() * 3,
                   repeat: Infinity,
-                  delay: Math.random() * 5,
+                  delay: Math.random() * 3,
+                  ease: [0.4, 0, 0.6, 1],
                 }}
               />
             ))}
           </div>
 
-          {/* Speed Lines Effect */}
+          {/* Speed Lines Effect - Optimized */}
           <div className="absolute inset-0 overflow-hidden">
-            {[...Array(20)].map((_, i) => (
+            {[...Array(12)].map((_, i) => (
               <motion.div
                 key={`line-${i}`}
-                className="absolute w-0.5 bg-gradient-to-b from-transparent via-white/30 to-transparent"
+                className="absolute w-px bg-gradient-to-b from-transparent via-white/20 to-transparent will-change-transform"
                 style={{
                   left: `${Math.random() * 100}%`,
-                  height: `${Math.random() * 100 + 50}px`,
-                  top: `-20%`,
+                  height: `${Math.random() * 80 + 40}px`,
+                  top: `-10%`,
                 }}
                 animate={{
-                  y: ["0vh", "120vh"],
-                  opacity: [0, 0.5, 0],
+                  y: ["0vh", "110vh"],
+                  opacity: [0, 0.4, 0],
                 }}
                 transition={{
-                  duration: 1.5 + Math.random() * 1,
+                  duration: 1.2 + Math.random() * 0.8,
                   repeat: Infinity,
-                  delay: Math.random() * 2,
-                  ease: "linear",
+                  delay: Math.random() * 1.5,
+                  ease: [0.25, 0.1, 0.25, 1],
                 }}
               />
             ))}
@@ -353,7 +344,7 @@ const HomePage = () => {
                   strokeDasharray="552.92"
                   strokeDashoffset={552.92 - (552.92 * loadingProgress) / 100}
                   style={{
-                    transition: "stroke-dashoffset 0.35s ease-out",
+                    transition: "stroke-dashoffset 0.15s cubic-bezier(0.4, 0, 0.2, 1)",
                   }}
                 />
                 {/* Gradient Definition */}
@@ -386,38 +377,41 @@ const HomePage = () => {
             </motion.div>
           </div>
 
-          {/* Rotating Rings - Multiple Layers */}
+          {/* Rotating Rings - Optimized for Performance */}
           <motion.div
-            className="absolute w-96 h-96 border-4 border-white/30 rounded-full"
+            className="absolute w-96 h-96 border-2 border-white/20 rounded-full will-change-transform"
+            style={{ transformOrigin: 'center' }}
             animate={{
-              rotate: 360,
-              scale: [1, 1.1, 1],
+              rotate: [0, 360],
             }}
             transition={{
-              rotate: { duration: 3, repeat: Infinity, ease: "linear" },
-              scale: { duration: 2, repeat: Infinity, ease: "easeInOut" },
+              duration: 8,
+              repeat: Infinity,
+              ease: [0.4, 0, 0.6, 1], // Custom cubic-bezier for smoothness
             }}
           />
           <motion.div
-            className="absolute w-80 h-80 border-4 border-white/20 rounded-full"
+            className="absolute w-80 h-80 border-2 border-white/15 rounded-full will-change-transform"
+            style={{ transformOrigin: 'center' }}
             animate={{
-              rotate: -360,
-              scale: [1, 0.95, 1],
+              rotate: [0, -360],
             }}
             transition={{
-              rotate: { duration: 4, repeat: Infinity, ease: "linear" },
-              scale: { duration: 2.5, repeat: Infinity, ease: "easeInOut" },
+              duration: 12,
+              repeat: Infinity,
+              ease: [0.4, 0, 0.6, 1],
             }}
           />
           <motion.div
-            className="absolute w-64 h-64 border-2 border-white/10 rounded-full"
+            className="absolute w-64 h-64 border border-white/10 rounded-full will-change-transform"
+            style={{ transformOrigin: 'center' }}
             animate={{
-              rotate: 360,
-              scale: [1, 1.05, 1],
+              rotate: [0, 360],
             }}
             transition={{
-              rotate: { duration: 5, repeat: Infinity, ease: "linear" },
-              scale: { duration: 3, repeat: Infinity, ease: "easeInOut" },
+              duration: 15,
+              repeat: Infinity,
+              ease: [0.4, 0, 0.6, 1],
             }}
           />
         </motion.div>

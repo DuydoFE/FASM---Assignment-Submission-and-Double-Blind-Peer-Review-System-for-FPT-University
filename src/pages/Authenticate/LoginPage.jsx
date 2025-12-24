@@ -192,7 +192,7 @@ const LoginPage = () => {
               </div>
               
               <div className="flex justify-end">
-                <a href="#" className="text-sm text-orange-400 hover:text-orange-300 transition-colors">
+                <a href="/forgot-password" className="text-sm text-orange-400 hover:text-orange-300 transition-colors">
                   Lost password?
                 </a>
               </div>
@@ -225,7 +225,7 @@ const LoginPage = () => {
             </button>
             
             <p className="text-xs text-zinc-500 mt-3 text-center">
-              @fpt.edu.vn (For lecturer only)
+              @fpt.edu.vn (For instructor only)
             </p>
 
             <div className="mt-auto pt-8 flex items-center justify-center md:justify-start text-orange-400/80">

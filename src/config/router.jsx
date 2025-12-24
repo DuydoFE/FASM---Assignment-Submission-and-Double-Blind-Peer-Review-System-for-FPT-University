@@ -1,10 +1,10 @@
 import { createBrowserRouter, Navigate, useLocation } from "react-router-dom";
-import UseReactQuerry from "../component/UseReactQuerry";
 import Test from "../Test";
 import MainLayout from "../layout/MainLayout";
 import HomePage from "../pages/HomePage/HomePage";
 import LandingPage from "../pages/LandingPage/LandingPage";
 import LoginPage from "../pages/Authenticate/LoginPage";
+import ForgotPasswordPage from "../pages/Authenticate/ForgotPasswordPage";
 import AccessDeniedPage from "../pages/AccessDenied/AccessDeniedPage";
 import ForbiddenPage from "../pages/AccessDenied/ForbiddenPage";
 import NotFoundPage from "../pages/NotFound/NotFoundPage";
@@ -173,6 +173,10 @@ export const router = createBrowserRouter([
     element: <PublicRoute><LoginPage /></PublicRoute>,
   },
   {
+    path: "/forgot-password",
+    element: <PublicRoute><ForgotPasswordPage /></PublicRoute>,
+  },
+  {
     path: "/access-denied",
     element: <AccessDeniedPage />,
   },
@@ -183,10 +187,6 @@ export const router = createBrowserRouter([
   {
     path: "/test",
     element: <Test />,
-  },
-  {
-    path: "/a",
-    element: <UseReactQuerry />,
   },
   {
     path: "/instructor",
