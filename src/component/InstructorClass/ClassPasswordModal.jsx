@@ -19,10 +19,10 @@ const ClassPasswordModal = ({
 
   useEffect(() => {
     const fetchEnrollKey = async () => {
-      if (isOpen && selectedClass?.id && userId) {
+      if (isOpen && selectedClass?.courseInstanceId && userId) {
         setIsLoading(true);
         try {
-          const response = await getEnrollKey(selectedClass.id, userId);
+          const response = await getEnrollKey(selectedClass.courseInstanceId, userId);
           const enrollKey = response?.data || '';
           setPassword(enrollKey);
           setOriginalPassword(enrollKey);
@@ -37,7 +37,7 @@ const ClassPasswordModal = ({
     };
 
     fetchEnrollKey();
-  }, [isOpen, selectedClass?.id, userId, initialPassword]);
+  }, [isOpen, selectedClass?.courseInstanceId, userId, initialPassword]);
 
   const PasswordRequirement = ({ met, text }) => (
   <div className="flex items-center gap-3">
