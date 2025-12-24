@@ -62,14 +62,14 @@ const InstructorViewClass = () => {
 
   const handleSavePassword = async (password) => {
     try {
-      const response = await updateEnrollKey(selectedClass.id, password, currentUser.id);
+      const response = await updateEnrollKey(selectedClass.courseInstanceId, password, currentUser.id);
       const message = response?.message || "Updated enroll key successfully!";
       toast.success(message);
       
       // Update local state
       setClasses(prevClasses =>
         prevClasses.map(cls =>
-          cls.id === selectedClass.id
+          cls.courseInstanceId === selectedClass.courseInstanceId
             ? { ...cls, enrollmentKey: password }
             : cls
         )
